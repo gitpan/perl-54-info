@@ -1,0 +1,1827 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Sort/PolySort, Next: Sort/Versions, Prev: Socket, Up: Module List
+
+general rules-based sorting of lists
+************************************
+
+
+
+NAME
+====
+
+     Sort::PolySort -- general rules-based sorting of lists
+
+
+SYNOPSIS
+========
+
+     use Sort::PolySort;
+     $s=new Sort::PolySort;			# defaults to 'name'
+     @people=('John Doe','Jane Doll','John Quasimodo Doe');
+     print join(", ",$s->sort(@people),"\n";
+
+     use Sort::PolySort;
+     $s=new Sort::PolySort('dateus');	# sets internal
+     @dates=$s->sort(@dates);		# uses internal
+     $s->by('email');			# sets internal
+     @names=$s->sortby('name',@names);	# overrides internal
+     @emails=$s->sort(@emails);		# internal is still 'email'
+
+
+DESCRIPTION
+===========
+
+This module provides methods to sort a list of strings based on parsing
+the strings according to a configurable set of specifications.
+
+
+METHODS
+-------
+
+The following methods are available:
+
+new
+     Creates a new polysort object. Takes optional arguement of initial
+     named spec set (defaults to name).
+
+by
+     Configures for the named set of sorting specs. Arguement is name of
+     spec set.
+
+sort
+     Sorts by the previously-set (by new or by) specs. Arguement is a
+     list of items to sort. Returns the sorted list, leaving the
+     original unchanged.
+
+sortby
+     Sorts by the given (named) set of specs. The specs are only changed
+     for this particular sort, so future calls to sort will use whatever
+     specs were in effect before the sortby call. First arguement is
+     name of spec set, second arguement is a list of items to
+     sort. Returns the sorted list, leaving the original unchanged.
+
+get
+     Returns an associative array of the current sort specs. See `' in
+     this node.
+
+set
+     Sets the current sort specs to the given associative array. Specs
+     not appearing in the passed array retain their previous values, so
+     this method can be used along with get to keep state during a
+     subroutine call or to alter particular specs to get new sorting
+     results. Arguement is an associative array. See `' in this node.
+
+
+Specs
+-----
+
+The following specifications are local to each Sort::PolySort object:
+
+`GLOBTOP'
+     Lump last two levels together?
+
+`LEVELS'
+     Number of levels to consider (0=all)
+
+`R2L'
+     Count fields right to left?
+
+`NUMERIC'
+     Do numerical sort?
+
+`CASE'
+     Do case-sensitive sort?
+
+`DELIM1'
+     Primary element delimiter (must not be null).
+
+`DELIM2'
+     Secondary element delimiter (can be null).
+
+
+Parsing Scheme
+--------------
+
+The following order is followed to determine the keys used to sort the
+given array:
+
+  1. *DELIM2* (if given)
+
+     Remove up to leftmost (rightmost if *R2L* is true) occurance of
+     *DELIM2* (will be brought back later).
+
+  2. *DELIM1*
+
+     Split remainder at all occurances of *DELIM1*.
+
+  3. *GLOBTOP* (if true)
+
+     Rejoin left (right if *R2L* is true) 2 elements (always joined
+     left-to-right, regardless of *R2L*).
+
+  4. *R2L* (if true)
+
+     Reverse list of elements.
+
+  5. *LEVELS*
+
+     Store first *LEVELS* (all if =0) elements (last 2 considered as a
+     single element if *GLOBTOP* is true).
+
+  6. *DELIM2* (if true)
+
+     Store string from left of *DELIM2* as next element.
+
+  7. *LEVELS* (unless 0)
+
+     Rejoin remaining elements (in original order, regardless of
+     *R2L*) and store as next element.
+
+
+Named Specs
+-----------
+
+The following (case-sensitive) names are used by new, by and sortby to
+represent pre-defined sets of specs:
+
+datebr
+     by European (dd/mm/yy) date
+
+dateus
+     by US-style (mm/dd/yy) date
+
+email
+     by user for each machine (all parts of FQDN)
+
+email2
+     by user for each top-level domain (last 2 atoms)
+
+emaild
+     by user for each domain-name (next-to-last atom)
+
+ip
+     by numerical (aaa.bbb.ccc.ddd) ip address
+
+name
+     by last name/first name/middle name or initials
+
+
+ERRORS
+======
+
+The following errors may occur:
+
+*No specname given*
+     by or sortby wasn't passed a specname.
+
+*Never heard of specname ``foo''*
+     new, by, or sortby was passed a name that was not in the list of
+     known specnames.
+
+
+NOTES
+=====
+
+The whole parsing method is pretty perverse, but honestly was the first
+thing that came to mind. It works, but is not very fast or extensible.
+Enough interested folks mailed me that I wanted to get this out now, but
+it's dyin' for a rewrite. So this is just a beta. The main interface
+will remain the same, but the parser will be rewritten and the spec
+variables changed. Accessor methods will change as a result (using
+`%s=$s-'get; ...  ;$s->set(%s) will probably still work to save state,
+though). And accessor methods wll be added so that new names spec sets
+can be added at runtime or known ones modified. And new named spec sets
+will be added. And on and on and on...
+
+
+AUTHOR
+======
+
+Daniel Macks <dmacks@netspace.org>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 by Daniel Macks. All rights reserved.  This module is
+free software; you may redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Sort/Versions, Next: Sprite, Prev: Sort/PolySort, Up: Module List
+
+a perl 5 module for sorting of revision-like numbers
+****************************************************
+
+
+
+NAME
+====
+
+Sort::Versions - a perl 5 module for sorting of revision-like numbers
+
+
+SYNOPSIS
+========
+
+     use Sort::Versions;
+     @l = sort versions qw( 1.2 1.2.0 1.2a.0 1.2.a 1.a 02.a );
+
+     ...
+
+     use Sort::Versions;
+     print "lower" if versioncmp("1.2","1.2a")==-1;
+
+     ...
+
+     use Sort::Versions;
+     %h = (1 => "d", 2 => "c", 3 => "b", 4 => "a");
+     @h = sort {versioncmp $h{$a}, $h{$b}} keys %h;
+
+
+DESCRIPTION	
+================
+
+Sort::Versions allows easy sorting of mixed non-numeric and numeric
+strings, like the "version numbers" that many shared library systems and
+revision control packages use. This is quite useful if you are trying to
+deal with shared libraries. It can also be applied to applications that
+intersperse variable-width numeric fields within text. Other
+applications can undoubtedly be found.
+
+For an explanation of the algorithm, it's simplest to look at these
+examples:
+
+     1.1   <  1.2
+     1.1a  <  1.2
+     1.1   <  1.1.1
+     1.1   <  1.1a
+     1.1.a <  1.1a
+     1     <  a
+     a     <  b
+     1     <  2
+     1     <  0002
+     1.5   <  1.06
+
+More precisely (but less comprehensibly), the two strings are treated as
+subunits delimited by periods. Each subunit can contain any number of
+groups of digits or non-digits. If digit groups are being compared on
+both sides, a numeric comparison is used, otherwise a ASCII ordering is
+used. A group or subgroup with more units will win if all comparisons
+are equal.
+
+One important thing to note is that if a numeric comparison is made,
+then leading zeros are ignored. Thus `1.5' sorts before `1.06', since
+two separate comparisons are being made: `1 == 1', and `5 < 6'. This is
+*not* the same as `if(1.5 < 1.06) {...}'.
+
+
+USAGE
+=====
+
+Sort::Versions exports `versions' and `versioncmp'. The former is a
+function suitable for handing directly to sort. The second function,
+`versioncmp', takes two arguments and returns a cmp style comparison
+value.  This is handy in indirect comparisons, as shown above.
+
+
+AUTHOR
+======
+
+Kenneth J. Albanowski kjahds@kjahds.com
+       
+Copyright (c) 1996, Kenneth J. Albanowski. All rights reserved.  This
+program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Sprite, Next: Statistics/ChiSquare, Prev: Sort/Versions, Up: Module List
+
+Perl 5.0 module to manipulate text delimited databases.
+*******************************************************
+
+
+
+NAME
+====
+
+Sprite - Perl 5.0 module to manipulate text delimited databases.
+
+
+SYNOPSIS
+========
+
+     use Sprite;
+
+     $rdb = new Sprite ();
+
+     $rdb->set_delimiter ("Read", "::");
+     $rdb->set_delimiter ("Write", "::");
+
+     $rdb->set_os ("UNIX");
+
+     $rdb->sql (<<Query);
+         .
+         .
+         .
+     Query
+
+     $rdb->close ();
+     $rdb->close ($database);
+
+
+DESCRIPTION
+===========
+
+Here is a simple database where the fields are delimted by commas:
+
+     Player,Years,Points,Rebounds,Assists,Championships
+     ...                                                         
+     Larry Joe Bird,12,28,10,7,3
+     Michael Jordan,10,33,6,5,3
+     Earvin Magic Johnson,12,22,7,12,5
+     ...
+
+*Note:* The first line must contain the field names (case sensitive).
+
+
+Supported SQL Commands
+======================
+
+Here are a list of the SQL commands that are supported by Sprite:
+
+select - retrieves records that match specified criteria:
+          select col1 [,col2] from database 
+              where (cond1 OPERATOR value1) 
+              [and|or cond2 OPERATOR value2 ...] 
+
+     The '*' operator can be used to select all columns.
+
+     The *database* is simply the file that contains the data.  If the
+     file is not in the current directory, the path must be specified.
+
+     Sprite does *not* support multiple tables (or commonly knows as
+     "joins").
+
+     Valid column names can be used where [cond1..n] and [value1..n] are
+     expected, such as:
+
+     Example 1:
+
+          select Player, Points from my_db
+              where (Rebounds > Assists) 
+
+     The following SQL operators can be used: =, <, >, <=, >=, <> as
+     well as Perl's special operators: =~ and !~. The =~ and !~
+     operators are used to specify regular expressions, such as:
+
+     Example 2:
+
+          select * from my_db
+              where (Name =~ /Bird$/i) 
+
+     Selects records where the Name column ends with "Bird" (case
+     insensitive). For more information, look at a manual on regexps.
+
+update - updates records that match specified criteria.
+          update database set (cond1 OPERATOR value1)[,(cond2 OPERATOR value2)...]*
+             where (cond1 OPERATOR value1)
+             [and|or cond2 OPERATOR value2 ...] 
+
+          * = This feature was added as of version 3.1.
+
+     Example:
+
+          update my_db 
+          	set Championships = (Championships + 1) 
+              where (Player = 'Larry Joe Bird') 
+
+          update my_db
+               set Championships = (Championships + 1),
+          	    Years = (12)
+
+          where (Player = 'Larry Joe Bird')
+
+delete - removes records that match specified criteria:
+          delete from database 
+              where (cond1 OPERATOR value1) 
+              [and|or cond2 OPERATOR value2 ...] 
+
+     Example:
+
+          delete from my_db
+              where (Player =~ /Johnson$/i) or
+                    (Years > 12) 
+
+alter - simplified version of SQL-92 counterpart
+     Removes the specified column from the database. The other standard
+     SQL functions for alter table are not supported:
+
+          alter table database 
+              drop column column-name 
+
+     Example:
+
+          alter table my_db 
+              drop column Championships 
+
+insert - inserts a record into the database:
+          insert into database 
+              (col1, col2, ... coln) 
+          values 
+              (val1, val2, ... valn) 
+
+     Example:
+
+          insert into my_db 
+              (Player, Years, Points, Championships) 
+          values 
+              ('Kareem Abdul-Jabbar', 21, 27, 5) 
+
+     *Note:* You do not have to specify all of the fields in the 
+     database! Sprite also does not require you to specify the fields in
+     the same order as that of the database.
+
+     *Note:* You should make it a habit to quote strings.
+
+
+METHODS
+=======
+
+Here are the four methods that are available:
+
+set_delimiter
+     The set_delimiter function sets the read and write delimiter for
+     the the SQL command. The delimiter is not limited to one character;
+     you can have a string, and even a regexp (for reading only).
+
+     *Return Value*
+
+     None
+
+set_os
+     The set_os function can be used to notify Sprite as to the
+     operating system that you're using. Valid arguments are: "UNIX",
+     "VMS", "MSDOS", "NT" and "MacOS". UNIX is the default.
+
+     *Return Value*
+
+     The previous OS value
+
+sql
+     The sql function is used to pass a SQL command to this module. All
+     of the SQL commands described above are supported. The select SQL
+     command returns an array containing the data, where the first
+     element is the status. All of the other other SQL commands simply
+     return a status.
+
+     *Return Value*
+         1 - Success
+         0 - Error
+
+close
+     The close function closes the file, and destroys the database
+     object.  You can pass a filename to the function, in which case
+     Sprite will save the database to that file.
+
+     *Return Value*
+
+     None
+
+
+EXAMPLES
+========
+
+Here are two simple examples that illustrate some of the functions of
+this module:
+
+
+Example 1
+---------
+
+     #!/usr/local/bin/perl5 
+
+     use Sprite; 
+
+     $rdb = new Sprite (); 
+
+     # Sets the read delimiter to a comma (,) character. The delimiter
+     # is not limited to one character; you can have a string, or even
+     # a regexp.
+
+     $rdb->set_delimiter ("Read", ","); 
+
+     # Retrieves all records that match the criteria.
+
+     @data = $rdb->sql (<<End_of_Query);
+
+     select * from /shishir/nba
+         where (Points > 25) 
+
+     End_of_Query
+
+     # Close the database and destroy the database object (i.e $rdb).
+     # Since we did not pass a argument to this function, the data
+     # is not updated in any manner.
+
+     $rdb->close (); 
+
+     # The first element of the array indicates the status.
+
+     $status = shift (@data);
+     $no_records = scalar (@data);
+
+     if (!$status) {
+     	die "Sprite database error. Check your query!", "\n";
+     } elsif (!$no_records) {
+     	print "There are no records that match your criteria!", "\n";
+     	exit (0);
+     } else {
+         print "Here are the records that match your criteria: ", "\n";
+
+     # The database returns a record where each field is
+     # separated by the "\0" character.
+
+     foreach $record (@data) { 
+                 $record =~ s/\0/,/g;
+                 print $record, "\n";
+             }
+         } 
+
+
+Example 2
+---------
+
+     #!/usr/local/bin/perl5 
+
+     use Sprite; 
+
+     $rdb = new Sprite (); 
+     $rdb->set_delimiter ("Read", ","); 
+
+     # Deletes all records that match the specified criteria. If the
+     # query contains an error, Sprite returns a status of 1.
+
+     $rdb->sql (<<Delete_Query) 
+     		|| die "Database Error. Check your query", "\n";
+
+     delete from /shishir/nba
+         where (Rebounds <= 5) 
+
+     Delete_Query
+
+     # Access the database again! This time, select all the records that
+     # match the specified criteria. The database is updated *internally*
+     # after the previous delete statement.
+
+     # Notice the fact that the full path to the database does not
+     # need to specified after the first SQL command. This
+     # works correctly as of version 3.1.
+
+     @data = $rdb->sql (<<End_of_Query);
+
+     select Player from nba
+         where (Points > 25)
+
+     End_of_Query
+
+     # Sets the write delimiter to the (:) character, and outputs the
+     # updated information to the file: "nba.new". If you do not pass
+     # an argument to the close function after you update the database,
+     # the modified information will not be saved.
+
+     $rdb->set_delimiter ("Write", ":"); 
+     $rdb->close ("nba.new"); 
+
+     # The first element of the array indicates the status.
+
+     $status = shift (@data);
+     $no_records = scalar (@data);
+
+     if (!$status) {
+     	die "Sprite database error. Check your query!", "\n";
+     } elsif (!$no_records) {
+     	print "There are no records that match your criteria!", "\n";
+     	exit (0);
+     } else {
+         print "Here are the records that match your criteria: ", "\n";
+
+     # The database returns a record where each field is
+     # separated by the "\0" character.
+
+     foreach $record (@data) { 
+                 $record =~ s/\0/,/g;
+                 print $record, "\n";
+             }
+         } 
+
+
+ADVANTAGES
+==========
+
+Here are the advantages of Sprite over mSQL by David Hughes available on
+the Net:
+
+Allows for column names to be specified in the update command:
+
+Perl's Regular Expressions allows for powerful pattern matching
+
+The database is stored as text. Very Important! Information can be
+added/modified/removed with a text editor.
+
+Can add/delete columns quickly and easily
+
+
+DISADVANTAGES
+=============
+
+Here are the disadvantages of Sprite compared to mSQL:
+
+Speed. No where close to mSQL! Sprite was designed to be used to
+manipulate very small databases (~1000-2000 records).
+
+Does not have the ability to "join" multiple tables (databases) during a
+search operation. This will be added soon!
+
+
+RESTRICTIONS
+============
+
+  1. If a value for a field contains the comma (,) character or the
+     field delimiter, then you need to quote the value. Here is an
+     example:
+
+          insert into $database
+          (One, Two)
+          values
+          ('$some_value', $two)
+
+     The information in the variable $some_value *might* contain the
+     delimiter, so it is quoted -- you can use either the single quote
+     (') or the double quote (").
+
+  2. All single quotes and double quotes within a value must be escaped.
+     Looking back at the previous example, if you think the variable
+     $some_value contains quotes, do the following:
+
+          $some_value =~ s/(['"])/\\$1/g;
+
+  3. If a field's value contains a newline character, you need to
+     convert the newline to some other character (or string):
+
+          $some_value =~ s/\n/<BR>/g;
+
+  4. If you want to search a field by using a regular expression:
+
+          select * from $database
+              where (Player =~ /Bird/i)
+
+     the only delimiter you are allowed is the standard one (i.e
+     */../*).  You *cannot* use any other delimeter:
+
+          select * from $database
+              where (Player =~ m|Bird|i)
+
+  5. Field names can only be made up of the following characters:
+
+          "A-Z", "a-z", and "_"
+
+     In other words,
+    
+         [A-Za-z_]
+
+  6. If your update value contains parentheses, you need to escape them:
+
+          $rdb->sql (<<End_of_Query);
+
+          update my_db
+              set Phone = ('\\(111\\) 222 3333')
+              where (Name = /Gundavaram\$/i)
+
+          End_of_Query
+
+     Notice how the "$" (matches end of line) is escaped as well!
+
+
+SEE ALSO
+========
+
+RDB (available at the Metronet Perl archive)
+
+
+REVISION HISTORY
+================
+
+v3.1 - June 18, 1996
+     Added the following features:
+
+        * As of this version, Sprite allows you to update multiple
+          fields with a single update command. See the Supported SQL
+          Commands section above.
+
+        * You can execute your scripts with the following:
+
+               #!/usr/local/bin/perl5 -wT
+
+               use strict;
+
+          Sprite no longer generates the "Use of uninitialized value..."
+          errors.
+
+        * For records that don't contain quotes or escaped strings,
+          Perl's split is used to dramatically speed up database
+          loading.
+
+        * The set_os function will allow you to set the operating system
+          that you're using.
+
+        * Added a "require 5.002" as Sprite fails on versions of Perl
+          older than 5.002 with the following error:
+ 
+              "Bad free() ignored at Sprite.pm..."
+
+     Fixed the following bugs:
+
+        * If you call the close method with a database as an argument 
+          *without* opening a database first, Sprite will warn you as
+          opposed to wiping out the database, as was the case in earlier
+          versions of Sprite.
+
+        * Sprite no longer chops off the trailing "0" on records.
+
+        * The *drop column* works as it should.
+
+        * You can safely escape parentheses in the update command.
+
+        * Extra spaces between field names in the select command and
+          values in the update command no longer cause fatal errors.
+
+        * In earlier versions of Sprite, if you opened two databases
+          that were located in different directories, *but* with the
+          same name, Sprite incorrectly assumed that it was the same
+          database.  As a result, the second database would never be
+          loaded.
+
+        * Can be used on the Mac OS and Windows NT.
+
+v3.01 - March 5, 1996
+     Fixed a bug in *parse_expression* subroutine so that it recognizes
+     the "_" character as valid in field names.
+
+v3.0 - Febraury 20, 1996
+     Totally re-wrote parser; works reasonably well even in the worst
+     case scenarios.
+
+v2.0 - November 23, 1995
+     Fixed *numerous* errors in parsing, and added pod style
+     documentation.
+
+v1.5 - September 10, 1995
+     Created Perl 5 module instead of a command-line interface.
+
+v1.0 - September 7, 1995
+     Initial Release
+
+
+ACKNOWLEDGEMENTS
+================
+
+I would like to thank the following for finding bugs and offering
+suggestions:
+
+Dave Moore (dmoore@videoactv.com)
+Shane Hutchins (hutchins@ctron.com)
+Josh Hochman (josh@bcdinc.com)
+Barry Harrison (barryh@topnet.net)
+Lisa Farley (lfarley@segue.com)
+Loyd Gore (lgore@ascd.org)
+Tanju Cataltepe (tanju@netlabs.net)
+
+COPYRIGHT INFORMATION
+=====================
+
+     Copyright (c) 1995, 1996
+                    Shishir Gundavaram and O' Reilly & Associates
+        All Rights Reserved
+
+     Permission to use, copy, modify and distribute is hereby granted,
+     providing  that  no charges are involved and the above  copyright
+     notice and this permission appear in all copies and in supporting
+     documentation. Requests for other distribution  rights, including
+     incorporation in commercial  products,  such as  books,  magazine
+     articles, or CD-ROMS should be made to the authors.
+
+     This  program  is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY;  without  even  the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: Statistics/ChiSquare, Next: Statistics/LTU, Prev: Sprite, Up: Module List
+
+How random is your data?
+************************
+
+
+
+NAME
+====
+
+`Statistics::ChiSquare' - How random is your data?
+
+
+SYNOPSIS
+========
+
+     use Statistics::ChiSquare;
+
+
+     print chisquare(@actual_occurrences);
+     print chisquare_nonuniform([actual_occurrences], [expected_occurrences]);
+
+The Statistics::ChiSquare module is available at a CPAN site near you.
+
+
+DESCRIPTION
+===========
+
+Suppose you flip a coin 100 times, and it turns up heads 70 times.
+*Is the coin fair?*
+
+Suppose you roll a die 100 times, and it shows 30 sixes.  *Is the die
+loaded?*
+
+In statistics, the *chi-square* test calculates "how random" a series of
+numbers is.  But it doesn't simply say "random" or "not random".
+Instead, it gives you a *confidence interval*, which sets upper and
+lower bounds on the likelihood that the variation in your data is due to
+chance.  See the examples below.
+
+If you've ever studied elementary genetics, you've probably heard about
+Gregor Mendel.  He was a wacky Austrian botanist who discovered (in
+1865) that traits could be inherited in a predictable fashion.  He
+performed lots of experiments with cross-fertilizing peas: green peas,
+yellow peas, smooth peas, wrinkled peas.  A veritable Brave New World of
+legumes.
+
+How many fertilizations are needed to be sure that the variations in the
+results aren't due to chance?  Well, you can never be entirely sure.
+But the chi-square test tells you *how sure you should be*.
+
+(As it turns out, Mendel faked his data.  A statistician by the name of
+R. A. Fisher used the chi-square test again, in a slightly more
+sophisticated way, to show that Mendel was either very very lucky or a
+little dishonest.)
+
+There are two functions in this module: chisquare() and
+chisquare_nonuniform().  chisquare() expects an array of occurrences: if
+you flip a coin seven times, yielding three heads and four tails, that
+array is (3, 4).  chisquare_nonuniform() is a bit trickier--more about
+it later.
+
+Instead of returning the bounds on the confidence interval in a tidy
+little two-element array, these functions return an English string.
+This was a deliberate design choice--many people misinterpret chi-square
+results; the text helps clarify the meaning.  Both chisquare() and
+chisquare_nonuniform() return UNDEF if the arguments aren't "proper".
+
+Upon success, the string returned by chisquare() will always match one
+of these patterns:
+
+     There's a >\d+% chance, and a <\d+% chance, that this data is random.
+
+or
+
+     There's a <\d+% chance that this data is random.
+
+unless there's an error.  Here's one error you should know about:
+
+     (I can't handle \d+ choices without a better table.)
+
+That deserves an explanation.  The "modern" chi-square test uses a table
+of values (based on Pearson's approximation) to avoid expensive
+calculations.  Thanks to the table, the chisquare() calculation is quite
+fast, but there are some collections of data it can't handle, including
+any collection with more than 21 slots.  So you can't calculate the
+randomness of a 30-sided die.
+
+chisquare_nonuniform() expects *two* arguments: a reference to an array
+of actual occurrences followed by a reference to an array of expected
+occurrences.
+
+chisquare_nonuniform() is used when you expect a nonuniform distribution
+of your data; for instance, if you expect twice as many heads as tails
+and want to see if your coin lives up to that hypothesis.  With such a
+coin, you'd expect 40 heads (and 20 tails) in 60 flips; if you actually
+observed 42 heads (and 18 tails), you'd call
+
+     chisquare_nonuniform([42, 18], [40, 20])
+
+The strings returned by chisquare_nonuniform() look like this:
+
+     There's a >\d+% chance, and a <\d+% chance, 
+          that this data is distributed as you expect.
+
+
+EXAMPLES
+========
+
+Imagine a coin flipped 1000 times.  The most likely outcome is 500 heads
+and 500 tails:
+
+     @coin = (500, 500);
+     print chisquare(@coin);
+
+which prints
+
+     There's a >99% chance, and a <100% chance, 
+          that this data is evenly distributed.
+
+Imagine a die rolled 60 times that shows sixes just a wee bit too often.
+
+     @die1  = (9, 8, 10, 9, 9, 15);
+     print chisquare(@die1);
+
+which prints
+
+     There's a >50% chance, and a <70% chance, 
+          that this data is evenly distributed.
+
+Imagine a die rolled 600 times that shows sixes *way* too often.
+
+     @die2  = (80, 70, 90, 80, 80, 200);
+     print chisquare(@die2);
+
+which prints
+
+     There's a <1% chance that this data is evenly distributed.
+
+How random is rand()?
+
+     srand(time ^ $$);
+     @rands = ();
+     for ($i = 0; $i < 60000; $i++) {
+         $slot = int(rand(6));
+         $rands[$slot]++;
+     }
+     print "@rands\n";
+     print chisquare(@rands);
+
+which prints (on my machine):
+
+     9987 10111 10036 9975 9984 9907
+       There's a >70% chance, and a <90% chance, 
+            that this data is evenly distributed.
+
+(So much for pseudorandom number generation.)
+
+All the above examples assume that you're testing a uniform
+distribution--testing whether the coin is fair (i.e. a 1:1
+distribution), or whether the die is fair (i.e. a 1:1:1:1:1:1
+distribution).  That's why chisquare() could be used instead of
+chisquare_nonuniform().
+
+Suppose a mother with blood type AB, and a father with blood type Ai
+(that is, blood type A, but heterozygous) have one hundred children.
+You'd expect 50 kids to have blood type A, 25 to have blood type AB, and
+25 to have blood type B.  Plain old chisquare() isn't good enough when
+you expect a nonuniform distribution like 2:1:1.
+
+Let's say that couple has 40 kids with blood type A, 30 with blood type
+AB, and 30 with blood type B.  Here's how you'd settle any nagging
+questions of paternity:
+
+     @data = (40, 30, 30);
+     @dist = (50, 25, 25);
+     print chisquare_nonuniform(\@data, \@dist);
+
+which prints
+
+     There's a >10% chance, and a <30% chance, 
+          that this data is distributed as you expect.
+
+
+AUTHOR
+======
+
+Jon Orwant
+
+MIT Media Lab
+
+*orwant@media.mit.edu*
+
+
+
+
+File: pm.info, Node: Statistics/LTU, Next: Storable, Prev: Statistics/ChiSquare, Up: Module List
+
+An implementation of Linear Threshold Units
+*******************************************
+
+
+
+NAME
+====
+
+Statistics::LTU - An implementation of Linear Threshold Units
+
+
+SYNOPSIS
+========
+
+     use Statistics::LTU;
+
+     my $acr_ltu = new Statistics::LTU::ACR(3, 1);    # 3 attributes, scaled
+
+     $ltu->train([1,3,2],  $LTU_PLUS);
+     $ltu->train([-1,3,0], $LTU_MINUS);
+     ...
+     print "LTU looks like this:\n";
+     $ltu->print;
+
+     print "[1,5,2] is in class ";
+     if ($ltu->test([1,5,2]) > $LTU_THRESHOLD) { print "PLUS" }
+     	                                 else { print "MINUS" };
+
+     $ltu->save("ACR.saved") or die "Save failed!";
+     $ltu2 = restore Statistics::LTU("ACR.saved");
+
+
+EXPORTS
+=======
+
+For readability, LTU.pm exports three scalar constants: $LTU_PLUS (+1),
+$LTU_MINUS (-1) and $LTU_THRESHOLD (0).
+
+
+DESCRIPTION
+===========
+
+Statistics::LTU defines methods for creating, destroying, training and
+testing Linear Threshold Units.  A linear threshold unit is a 1-layer
+neural network, also called a perceptron.  LTU's are used to learn
+classifications from examples.
+
+An LTU learns to distinguish between two classes based on the data given
+to it.  After training on a number of examples, the LTU can then be used
+to classify new (unseen) examples.  Technically, LTU's learn to
+distinguish two classes by fitting a hyperplane between examples; if the
+examples have n features, the hyperplane will have n dimensions.  In
+general, the LTU's weights will converge to a define the separating
+hyperplane.
+
+The LTU.pm file defines an uninstantiable base class, LTU, and four
+other instantiable classes built on top of LTU.  The four individual
+classes differs in the training rules used:
+
+ACR - Absolute Correction Rule TACR - Thermal Absolute Correction Rule
+(thermal annealing) LMS - Least Mean Squares rule RLS - Recursive Least
+Squares rule Each of these training rules behaves somewhat differently.
+Exact details of how these work are beyond the scope of this document;
+see the additional documentation file (`ltu.doc') for discussion.
+
+
+SCALARS
+=======
+
+$LTU_PLUS and $LTU_MINUS (+1 and -1, respectively) may be passed to the
+*train* method.  $LTU_THRESHOLD (set to zero) may be used to compare
+values returned from the test method.
+
+
+METHODS
+=======
+
+Each LTU has the following methods:
+
+*new TYPE(n_features, scaling)*
+     Creates an LTU of the given TYPE.  TYPE must be one of:
+
+     Statistics::LTU::ACR, Statistics::LTU::TACR, Statistics::LTU::LMS,
+     =item Statistics::LTU::RLS.  `n_features' sets the number of
+     attributes in the examples.  If `scaling' is 1, the LTU will
+     automatically scale the input features to the range (-1, +1).  For
+     example:
+
+          $ACR_ltu = new Statistics::LTU::ACR(5, 1);
+
+     creates an LTU that will train using the absolute correction rule.
+     It will have 5 variables and scale features automatically.
+
+copy
+     Copies the LTU and returns the copy.
+
+destroy
+     Destroys the LTU (undefines its substructures).  This method is kept
+     for compatibility; it's probably sufficient simply to call
+     *undef($ltu)*.
+
+print
+     Prints a human-readable description of the LTU, including the
+     weights.
+
+save(filename)
+     Saves the LTU to the file filename.  All the weights and necessary
+     permanent data are saved.  Returns 1 if the LTU was saved
+     successfully, else 0.
+
+*restore LTU(filename)*
+     Static method.  Creates and returns a new LTU from filename.  The
+     new LTU will be of the same type.
+
+test(instance)
+     Tests the LTU on *instance*, the instance vector, which must be a
+     reference to an array.  Returns the raw (non-thresholded) result.
+     A typical use of this is:
+
+          if ($ltu->test($instance) >= $LTU_PLUS) {
+             # instance is in class 1
+          } else {
+             # instance is in class 2
+          }
+
+*correctly_classifies(instance, realclass)*
+     Tests the LTU against an instance vector *instance*, which must be
+     a reference to an array.  *realclass* must be a number.  Returns 1
+     if the LTU classifies *instance* in the same class as *realclass*.
+     Technically: Returns 1 iff instance is on the *realclass* side of
+     the LTU's hyperplane.
+
+weights
+     Returns a reference to a copy of the LTU's weights.
+
+set_origin_restriction(orig)
+     Sets LTU's origin restriction to *orig*, which should be 1 or 0.
+     If an LTU is origin-restricted, its hyperplane must pass through
+     the origin (ie, so its intercept is zero).  This is usually used
+     for preference predicates, whose classifications must be
+     symmetrical.
+
+is_cycling(n)
+     Returns 1 if the LTU's weights seem to be cycling.  This is a
+     heuristic test, based on whether the LTU's weights have been pushed
+     out in the past n training instances.  See comments with the code.
+
+version
+     Returns the version of the LTU implementation.
+
+In addition to the methods above, each of the four classes of LTU defines a
+*train* method.  The *train* method "trains" the LTU that an instance
+belongs in a particular class.  For each *train* method, *instance* must
+be a reference to an array of numbers, and value must be a number.  For
+convenience, two constants are defined: `$LTU_PLUS' and `$LTU_MINUS',
+set to +1 and -1 respectively.  These can be given as arguments to the
+*train* method.  A typical *train* call looks like:
+
+     $ltu->train([1,3,-5], $Statistics_LTU_PLUS);
+
+which trains the LTU that the instance vector (1,3,-5) should be in the
+PLUS class.
+
+   * For ACR: 	*train(instance, value)*
+
+     Returns 1 iff the LTU already classified the instance correctly,
+     else 0.
+
+   * For RLS: 	*train(instance, value)*
+
+     Returns undef.
+
+   * For LMS: 	*train(instance, value, rho)*
+
+     Returns 1 if the LTU already classified the *instance* correctly,
+     else 0.  *Rho* determines how much the weights are adjusted on each
+     training instance.  It must be a positive number.
+
+   * For TACR: 	*train(instance, value, temperature, rate)*
+
+     Uses the thermal perceptron (absolute correction) rule to train the
+     specified linear threshold unit on a particular instance_vector.
+     The instance_vector is a vector of numbers; each number is one
+     attribute. The desired_value should be either $LTU_PLUS (for
+     positive instances) or $LTU_MINUS (for negative instances).  The
+     *temperature* and *rate* must be floating point numbers.
+
+     This method returns 1 if the linear threshold unit already
+     classified the instance correctly, otherwise it returns 0.  The
+     TACR rule only trains on instances that it does not already
+     classify correctly.
+
+
+AUTHOR
+======
+
+fawcett@nynexst.com (Tom Fawcett)
+
+LTU.pm is based on a C implementation by James Callan at the
+University of Massachusetts.  His version has been in use for a long
+time, is stable, and seems to be bug-free.  This Perl module was
+created by Tom Fawcett, and any bugs you find were probably introduced
+in translation.  Send bugs, comments and suggestions to 
+*fawcett@nynexst.com*.
+
+
+BUGS
+====
+
+None known.  This Perl module has been moderately exercised but I don't
+guarantee anything.
+
+
+
+
+File: pm.info, Node: Storable, Next: String/Approx, Prev: Statistics/LTU, Up: Module List
+
+persistency for perl data structures
+************************************
+
+
+
+NAME
+====
+
+Storable - persistency for perl data structures
+
+
+SYNOPSIS
+========
+
+     use Storable;
+     store \%table, 'file';
+     $hashref = retrieve('file');
+
+
+DESCRIPTION
+===========
+
+The Storable package brings you persistency for your perl data
+structures containing SCALAR, ARRAY, HASH or REF objects, i.e. anything
+that can be convenientely stored to disk and retrieved at a later time.
+
+It can be used in the regular procedural way by calling `store' with a
+reference to the object to store, and providing a file name. The routine
+returns undef for I/O problems or other internal error, a true value
+otherwise. Serious errors are propagated as a die exception.
+
+To retrieve data stored to disk, you use `retrieve' with a file name,
+and the objects stored into that file are recreated into memory for you,
+and a *reference* to the root object is returned. In case an I/O error
+occurred while reading, undef is returned instead. Other serious errors
+are propagated via die.
+
+Since storage is performed recursively, you might want to stuff
+references to objects that share a lot of common data into a single
+array or hash table, and then store that object. That way, when you
+retrieve back the whole thing, the objects will continue to share what
+they originally shared.
+
+At the cost of a slight header overhead, you may store to an already
+opened file descriptor using the `store_fd' routine, and retrieve from a
+file via `retrieve_fd'. Those names aren't imported by default, so you
+will have to do that explicitely if you need those routines.  The file
+descriptor name you supply must be fully qualified.
+
+You can also store data in network order to allow easy sharing across
+multiple platforms, or when storing on a socket known to be remotely
+connected. The routines to call have an initial n prefix for *network*,
+as in `nstore' and `nstore_fd'. At retrieval time, your data will be
+correctly restored so you don't have to know whether you're restoring
+from native or network ordered data.
+
+When using `retrieve_fd', objects are retrieved in sequence, one object
+(i.e. one recursive tree) per associated `store_fd'.
+
+If you're more from the object-oriented camp, you can inherit from
+Storable and directly store your objects by invoking `store' as a
+method. The fact that the root of the to-be-stored tree is a blessed
+reference (i.e. an object) is special-cased so that the retrieve does
+not provide a reference to that object but rather the blessed object
+reference itself. (Otherwise, you'd get a reference to that blessed
+object).
+
+
+MEMORY STORE
+============
+
+The Storable engine can also store data into a Perl scalar instead, to
+later retrieve them. This is mainly used to freeze a complex structure
+in some safe compact memory place (where it can possibly be sent to
+another process via some IPC, since freezing the structure also
+serializes it in effect). Later on, and maybe somewhere else, you can
+thaw the Perl scalar out and recreate the original complex structure in
+memory.
+
+Surprisingly, the routines to be called are named `freeze' and `thaw'.
+If you wish to send out the frozen scalar to another machine, use
+`nfreeze' instead to get a portable image.
+
+Note that freezing an object structure and immediately thawing it
+actually achieves a deep cloning of that structure. Storable provides
+you with a `dclone' interface which does not create that intermediary
+scalar but instead freezes the structure in some internal memory space
+and then immediatly thaws it out.
+
+
+SPEED
+=====
+
+The heart of Storable is written in C for decent speed. Extra low-level
+optimization have been made when manipulating perl internals, to
+sacrifice encapsulation for the benefit of a greater speed.
+
+Storage is usually faster than retrieval since the latter has to
+allocate the objects from memory and perform the relevant I/Os, whilst
+the former mainly performs I/Os.
+
+On my HP 9000/712 machine running HPUX 9.03 and with perl 5.004, I can
+store 0.8 Mbyte/s and I can retrieve at 0.72 Mbytes/s, approximatively
+(CPU + system time).  This was measured with Benchmark and the *Magic:
+The Gathering* database from Tom Christiansen (1.9 Mbytes).
+
+
+EXAMPLES
+========
+
+Here are some code samples showing a possible usage of Storable:
+
+     use Storable qw(store retrieve freeze thaw dclone);
+
+     %color = ('Blue' => 0.1, 'Red' => 0.8, 'Black' => 0, 'White' => 1);
+
+     store(\%color, '/tmp/colors') or die "Can't store %a in /tmp/colors!\n";
+
+     $colref = retrieve('/tmp/colors');
+     die "Unable to retrieve from /tmp/colors!\n" unless defined $colref;
+     printf "Blue is still %lf\n", $colref->{'Blue'};
+
+     $colref2 = dclone(\%color);
+
+     $str = freeze(\%color);
+     printf "Serialization of %%color is %d bytes long.\n", length($str);
+     $colref3 = thaw($str);
+
+which prints (on my machine):
+
+     Blue is still 0.100000
+     Serialization of %color is 102 bytes long.
+
+
+WARNING
+=======
+
+If you're using references as keys within your hash tables, you're bound
+to disapointment when retrieving your data. Indeed, Perl stringifies
+references used as hash table keys. If you later wish to access the
+items via another reference stringification (i.e. using the same
+reference that was used for the key originally to record the value into
+the hash table), it will work because both references stringify to the
+same string.
+
+It won't work across a `store' and `retrieve' operations however,
+because the addresses in the retrieved objects, which are part of the
+stringified references, will probably differ from the original
+addresses. The topology of your structure is preserved, but not hidden
+semantics like those.
+
+
+BUGS
+====
+
+You can't store GLOB, CODE, FORMLINE, etc... If you can define semantics
+for those operations, feel free to enhance Storable so that it can deal
+with those.
+
+The store functions will croak if they run into such references unless
+you set `$Storable::forgive_me' to some TRUE value. In this case, the
+fatal message is turned in a warning and some meaningless string is
+stored instead.
+
+Due to the aforementionned optimizations, Storable is at the mercy of
+perl's internal redesign or structure changes. If that bothers you, you
+can try convincing Larry that what is used in Storable should be
+documented and consistently kept in future revisions.  As I said, you
+may try.
+
+
+AUTHOR
+======
+
+Raphael Manfredi `<Raphael_Manfredi@grenoble.hp.com>'
+
+
+
+
+File: pm.info, Node: String/Approx, Next: String/BitCount, Prev: Storable, Up: Module List
+
+match and substitute approximately (aka fuzzy matching)
+*******************************************************
+
+
+
+NAME
+====
+
+String::Approx - match and substitute approximately (aka fuzzy matching)
+
+
+SYNOPSIS
+========
+
+     use String::Approx qw(amatch asubstitute);
+
+
+DESCRIPTION
+===========
+
+*Approximate* is defined here as *k-differences*.  One *difference*
+is an insertion, a deletion, or a substitution of one character.  The k
+in the *k-differences* is the maximum number of differences.
+
+For example *1-difference* means that a match is found if there is one
+character too many (insertion) or one character missing (deletion) or
+one character changed (substitution).  Those are *exclusive or*s: that
+is, *not* one of each type of modification but *exactly one*.
+
+
+The default approximateness
+---------------------------
+
+The default approximateness is *10 %* of the length of the approximate
+pattern or *at least 1*: *0-differences* being the exact matching which
+can be done very effectively using the usual Perl function `index()' or
+normal regular expression matching.
+
+
+amatch
+------
+
+     use String::Approx qw(amatch);
+
+     amatch("PATTERN");
+     amatch("PATTERN", @LIST);
+     amatch("PATTERN", [ @MODS ]);
+     amatch("PATTERN", [ @MODS ], @LIST);
+
+The PATTERN is *a string*, not a regular expression.  The regular
+expression metanotation (`. ? * + {...,...} ( ) | [ ] ^ $ \w ...')  will
+be understood as literal characters, that is, a * means in regex terms
+`\*', not *"match 0 or more times"*.
+
+The LIST is the list of strings to match against the pattern.  If no
+LIST is given matches against $_.
+
+The MODS are the modifiers that tell how approximately to match.  See
+below for more detailed explanation.  NOTE: The syntax really is `[
+@MODS ]', the square brackets `[ ]' must be in there.  See below for
+examples.
+
+In scalar context `amatch()' returns the number of successful matches.
+In list context `amatch()' returns the strings that had matches.
+
+Example:
+
+     use String::Approx qw(amatch);
+
+     open(WORDS, '/usr/dict/words') or die;
+
+     while (<WORDS>) {
+         print if amatch('perl');
+     }
+
+or the same ignoring case:
+
+     use String::Approx qw(amatch);
+
+     open(WORDS, '/usr/dict/words') or die;
+
+     while (<WORDS>) {
+         print if amatch('perl', ['i']);
+     }
+
+
+asubstitute
+-----------
+
+     use String::Approx qw(asubstitute);
+
+     asubstitute("PATTERN", "SUBSTITUTION");
+     asubstitute("PATTERN", "SUBSTITUTION", @LIST);
+     asubstitute("PATTERN", "SUBSTITUTION", [ @MODS ]);
+     asubstitute("PATTERN", "SUBSTITUTION", [ @MODS ], @LIST);
+
+The PATTERN is *a string*, not a regular expression.  The regular
+expression metanotation (`. ? * + {...,...} ( ) | [ ] ^ $ \w ...')  will
+be understood as literal characters, that is, a * means in regex terms
+`\*', not *"match 0 or more times"*.
+
+Also the SUBSTITUTION is *a string*, not a regular expression.  Well,
+mostly.  *Most of the* regular expression metanotation (., `?',
+*, `+', ...) will be not understood as literal characters, that
+is, a * means in regex terms `\*', not *"match 0 or more times"*.  The
+understood notations are
+
+`$`'
+     the part *before* the approximate match
+
+$&
+     the approximately matched part
+
+`$''
+     the part *after* the approximate match
+
+The MODS are the modifiers that tell how approximately to match.  See
+below for more detailed explanation.  NOTE: Yes, the syntax is really `[
+@MODS ]', the square brackets `[ ]' must be in there.  See below for
+examples.
+
+The LIST is the list of strings to substitute against the pattern.  If
+no LIST is given substitutes against $_.
+
+In scalar context `asubstitute()' returns the number of successful
+substitutions.  In list context `asubstitute()' returns the strings that
+had substitutions.
+
+Examples:
+
+     use String::Approx qw(asubstitute);
+
+     open(WORDS, '/usr/dict/words') or die;
+     while (<WORDS>) {
+         print if asubstitute('perl', '($&)');
+     }
+
+or the same ignoring case:
+
+     use String::Approx qw(asubstitute);
+
+     open(WORDS, '/usr/dict/words') or die;
+     while (<WORDS>) {
+         print if asubstitute('perl', '($&)', [ 'i' ]);
+     }
+
+
+Modifiers
+---------
+
+The MODS argument both in amatch() and asubstitute() is a list of
+strings that control the matching of PATTERN.  The first two, i and g,
+are the usual regular expression match/substitute modifiers, the rest
+are special for approximate matching/substitution.
+
+i
+     Match/Substitute ignoring case, case-insensitively.
+
+g
+     Substitute *globally*, that is, all the approximate matches, not
+     just the first one.
+
+k
+     The maximum number of differences.  For example 2.
+
+Ik
+     The maximum number of insertions.  For example 'I2'.
+
+Dk
+     The maximum number of deletions.  For example 'D2'.
+
+Sk
+     The maximum number of substitutions.  For example 'S2'.
+
+k%
+     The maximum relative number of differences.  For example '10%'.
+
+Ik%
+     The maximum relative number of insertions.  For example 'I5%'.
+
+Dk%
+     The maximum relative number of deletions.  For example 'D5%'.
+
+Sk%
+     The maximum relative number of substitutions.  For example 'S5%'.
+
+*The regular expression modifiers* `o m s x' *are* *not supported*
+because their definitions for approximate matching are less than clear.
+
+The relative number of differences is relative to the length of the
+PATTERN, rounded up: if, for example, the PATTERN is `'bouillabaise''
+and the MODS is `['20%']' the k becomes 3.
+
+If you want to *disable* a particular kind of difference you need to
+explicitly set it to zero: for example `'D0'' allows no deletions.
+
+In case of conflicting definitions the later ones silently override, for
+example:
+
+     [2, 'I3', 'I1']
+
+equals
+
+     ['I1', 'D2', 'S2']
+
+
+EXAMPLES
+========
+
+The following examples assume the following template:
+
+     use String::Approx qw(amatch asubstitute);
+
+     open(WORDS, "/usr/dict/words") or die;
+     while (<WORDS>) {
+     	# <---
+     }
+
+and the following examples just replace the above '`# <---'' line.
+
+
+Matching from the $_
+--------------------
+
+Match 'perl' with one difference
+          print if amatch('perl');
+
+     The *one difference* is automatically the result in this case
+     because first the rule of the *10 %* of the length of the pattern
+     ('`perl'') is used and then the *at least 1* rule.
+
+Match 'perl' with case ignored
+          print if amatch('perl', [ 'i' ]);
+
+     The case is ignored in matching (i).
+
+Match 'perl' with one insertion
+          print if amatch('perl', [ '0', 'I1' ]);
+
+     The *one insertion* is easiest achieved with first disabling any
+     approximateness (`0') and then enabling one insertion (`I1').
+
+Match 'perl' with zero deletions
+          print if amatch('perl', [ 'D0' ]);
+
+     The *zero deletion* is easily achieved with simply disabling any
+     deletions (`D0'), the other types of differences, the insertions
+     and substitutions, are still enabled.
+
+Substitute 'perl' approximately with HTML emboldening
+          print if amatch('perl', '<B>$&</B>', [ 'g' ]);
+
+     All (g) of the approximately matching parts of the input are
+     surrounded by the HTML emboldening markup.
+
+
+Matching from a list
+--------------------
+
+The above examples match against the default variable $_.  The rest of
+the examples show how the match from a list.  The template is now:
+
+     use String::Approx qw(amatch asubstitute);
+
+     open(WORDS, "/usr/dict/words") or die;
+     @words = <words>;
+     # <---
+
+and the examples still go where the '`# <---'' line is.
+
+Match 'perl' with one difference from a list
+          @matched = amatch('perl', @words);
+
+     The `@matched' contains the elements of the `@words' that matched
+     approximately.
+
+Substitute 'perl' approximately with HTML emphasizing from a list
+          @substituted = asubstitute('perl', '<EM>$&</EM>', [ 'g' ], @words);
+
+     The `@substituted' contains *with all* (g) *the substitutions* the
+     elements of the `@words' that matched approximately.
+
+
+ERROR MESSAGES
+==============
+
+amatch: $_ is undefined: what are you matching against?
+asubstitute: $_ is undefined: what are you matching against?
+     These happen when you have nothing in $_ and try to `amatch()' or
+     `asubstitute()'.  Perhaps you are using the Perl option -e but you
+     did forget the Perl option -n?
+
+amatch: too long pattern.
+     This happens when the pattern is too long for matching.
+
+     When matching long patterns, `String::Approx' attempts to partition
+     the match.  In other words, it tries to do the matching
+     incrementally in smaller parts.
+
+     If this fails the above message is shown.  Please try using shorter
+     match patterns.
+
+     See below for `LIMITATIONS' in this node for more detailed
+     explanation why this happens.
+
+asubstitute: too long pattern.
+     This happens when the pattern is too long for substituting.
+
+     The partitioning scheme explained above that is used for matching
+     long patterns cannot, sadly enough, be used substituting.
+
+     Please try using shorter substitution patterns.
+
+     See below for `LIMITATIONS' in this node for more detailed
+     explanation why this happens.
+
+
+VERSION
+=======
+
+Version 2.1.
+
+
+LIMITATIONS
+===========
+
+
+Fixed pattern
+-------------
+
+The PATTERNs of `amatch()' and `asubstitute()' are fixed strings, they
+are not regular expressions.  The *SUBSTITUTION* of `asubstitute()' is a
+bit more flexible than that but not by much.
+
+
+Pattern length
+--------------
+
+The approximate matching algorithm is *very aggressive*.  In
+mathematical terms it is *O(exp(n) * x**2)*. This means that when the
+pattern length and/or the approximateness grows the matching or
+substitution take much longer time and memory.
+
+For `amatch()' this can be avoided by *partitioning* the pattern,
+matching it in shorter subpatterns.  This makes matching a bit slower
+and a bit more fuzzier, more approximate.  For `asubstitute()' this
+partitioning cannot be done, the absolute maximum for the substitution
+pattern length is *19* but sometimes, for example it the approximateness
+is increased, even shorter patterns are too much.  When this happens,
+you must use shorter patterns.
+
+
+Speed
+-----
+
+*Despite the about 20-fold speed increase* from the `String::Approx'
+*version 1* *agrep is still faster*.  If you do not know what
+`agrep' is: it is a program like the UNIX grep but it knows, among other
+things, how to do approximate matching.  `agrep' is still about 30 times
+faster than Perl + `String::Approx'.  NOTE: all these speeds were
+measured in one particular system using one particular set of tests:
+your mileage will vary.
+
+For long patterns, more than about *40*, the first
+
+
+Incompatibilities with `String::Approx' *v1.**
+----------------------------------------------
+
+If you have been using regular expression modifiers (i, g) you lose.
+Sorry about that.  The syntax simply is not compatible.  I had to choose
+between having `amatch()' match and `asubstitute()' substitute elsewhere
+than just in $_ and the old messy way of having an unlimited number of
+modifiers.  The first need won.
+
+*There is a backward compability mode*, though, if you do not want to
+change your `amatch()' and `asubstitute()' calls.  You *have* to change
+your use line, however:
+
+     use String::Approx qw(amatch compat1);
+
+That is, you must add the `compat1' symbol if you want to be compatible
+with the `String::Approx' version 1 call syntax.
+
+
+AUTHOR
+======
+
+Jarkko Hietaniemi `<jhi@iki.fi>'
+
+
+ACKNOWLEDGEMENTS
+================
+
+Nathan Torkington `<gnat@frii.com>'
+
+
+
+

@@ -1,0 +1,1576 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Pod/test, Next: Proc/Forkfunc, Prev: Pod/newvar2, Up: Module List
+   * foo
+     *bold**italic***bold-italic**
+
+     X<abc/def>
+
+     X<foo;abc/def;xyz/qed>
+
+     `a\bc' in this node
+
+     `$;' in this node
+
+     Y<a\bc/def>
+
+     X<*abc*;abc/def>
+
+     Back in pod.
+
+          This is a verbatim paragraph
+
+   * foo bar bletch This is an item.  Back to paragraphs.
+
+   * foobar bletch.
+
+
+
+File: pm.info, Node: Proc/Forkfunc, Next: Proc/Simple, Prev: Pod/test, Up: Module List
+
+fork off a function
+*******************
+
+
+
+NAME
+====
+
+Proc::Forkfunk -- fork off a function
+
+
+SYNOPSIS
+========
+
+     use Proc::Forkfunc;
+
+     forkfunc(\&child_func,@child_args);
+
+
+DESCRIPTION
+===========
+
+Fork off a process.  Call a function on the child process the function
+should be passed in as a reference.  The child function should not
+return.
+
+Logic copied from somewhere, probably Larry Wall.
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com>
+
+
+
+
+File: pm.info, Node: Proc/Simple, Next: Proc/SyncExec, Prev: Proc/Forkfunc, Up: Module List
+
+launch and control background processes
+***************************************
+
+
+
+NAME
+====
+
+Proc::Simple -- launch and control background processes
+
+
+SYNOPSIS
+========
+
+     use Proc::Simple;
+
+     $myproc = Proc::Simple->new();        # Create a new process object
+
+     $myproc->start("shell-command-line"); # Launch a shell process
+     $myproc->start(sub { ... });          # Launch a perl subroutine
+     $myproc->start(\&subroutine);         # Launch a perl subroutine
+
+     $running = $myproc->poll();           # Poll Running Process
+
+     $myproc->kill();                      # Kill Process (SIGTERM)
+
+     $myproc->kill("SIGUSR1");             # Send specified signal
+
+     Proc::Simple->debug($level);          # Turn debug on
+
+
+DESCRIPTION
+===========
+
+The Proc::Simple package provides objects that model real-life processes
+from a user's point of view. A new process object is created by
+
+     $myproc = Proc::Simple->new();
+
+Either shell-like command lines or references to perl subroutines can be
+specified for launching a process in background.  A 10-second sleep
+process, for example, can be started via the shell as
+
+     $myproc->start("sleep 10");
+
+or, as a perl subroutine, with
+
+     $myproc->start(sub { sleep(10); });
+
+The *start* Method returns immediately after starting the specified
+process in background, i.e. non-blocking mode.  It returns 1 if the
+process has been launched sucessfully and *0* if not.
+
+The *poll* method checks if the process is still running
+
+     $running = $myproc->poll();
+
+and returns 1 if it is, *0* if it's not. Finally,
+
+     $myproc->kill();
+
+terminates the process by sending it the SIGTERM signal. As an option,
+another signal can be specified.
+
+     $myproc->kill("SIGUSR1");
+
+sends the SIGUSR1 signal to the running process. kill returns 1 if it
+succeeds in sending the signal, *0* if it doesn't.
+
+
+NOTE
+====
+
+Please keep in mind that there is no guarantee that the SIGTERM signal
+really terminates a process. Processes can have signal handlers defined
+that avoid the shutdown.  If in doubt, whether a process still exists,
+check it repeatedly with the *poll* routine after sending the signal.
+
+
+AUTHOR
+======
+
+Michael Schilli <schilli@tep.e-technik.tu-muenchen.de>
+
+
+
+
+File: pm.info, Node: Proc/SyncExec, Next: Proc/WaitStat, Prev: Proc/Simple, Up: Module List
+
+Spawn processes but report exec() errors
+****************************************
+
+
+
+NAME
+====
+
+Proc::SyncExec - Spawn processes but report exec() errors
+
+
+SYNOPSIS
+========
+
+     XXX
+
+
+DESCRIPTION
+===========
+
+This module contains functions for synchronized process spawning with
+full error return.  If the child's exec() call fails the reason for the
+failure is reported back to the parent.
+
+These functions will croak() if they encounter an unexpected system
+error, such as a pipe() failure or a repeated fork() failure.
+
+Nothing is exported by default.
+
+fork_retry [*max-retries* [*sleep-between*]]
+     This function runs fork() until it succeeds or until *max-retries*
+     (default 5) attempts have been made, sleeping *sleep-between*
+     seconds (default 5) between attempts.  If the last fork() fails
+     fork_retry croak()s.
+
+sync_exec [code] command...
+     This function is similar to a fork()/exec() sequence but with a few
+     twists.
+
+     sync_exec does not return until after the fork()ed child has
+     already performed its exec().  The synchronization this provides is
+     useful in some unusual circumstances.
+
+     Normally the pid of the child process is returned.  However, if the
+     child fails its exec() sync_exec returns undef and sets $! to the
+     reason for the child's exec() failure.
+
+     Since the @cmd array is passed directly to Perl's exec() Perl might
+     choose to invoke the command via the shell if @cmd contains only
+     one element and it looks like it needs a shell to interpret it.  If
+     this happens the return value of sync_exec only indicates whether
+     the exec() of the shell worked.
+
+     The optional initial code argument must be a code reference.  If it
+     is present it is run in the child just before exec() is called.
+     You can use this to set up redirections or whatever.  If code
+     returns false no exec is performed, instead a failure is returned
+     using the current $!  value (or EINTR if $! is 0).
+
+     If the fork() fails or if there is some other unexpected system
+     error sync_exec croak()s rather than returning.
+
+sync_fhpopen_noshell fh type *cmd* [*arg*]...
+     This is a popen() but it never invokes the shell and it uses
+     sync_exec() under the covers.  See `' in this node.
+
+     The type is either `'r'' to read from the process or `'w'' to write
+     to it.
+
+     The return value is the pid of the forked process.
+
+sync_popen_noshell type *cmd* *arg*...
+     This is like sync_fhpopen_noshell, but you don't have to supply the
+     filehandle.
+
+     If called in an array context the return value is a list consisting
+     of the filehandle and the PID of the child.  In a scalar context
+     only the filehandle is returned.
+
+sync_open fh [*open-spec*]
+     This is like a Perl open() except that if a pipe is involved and
+     the implied exec() fails sync_open() fails with $! set
+     appropriately.  See `' in this node.
+
+     Like sync_exec, sync_open croak()s if there is an unexpected system
+     error (such as a failed pipe()).
+
+     Also like sync_exec, if you use a command which Perl needs to use
+     the shell to interpret you'll only know if the exec of the shell
+     worked.  Use sync_fhpopen_noshell or sync_exec to be sure that this
+     doesn't happen.
+
+
+EXAMPLES
+========
+
+     XXX
+
+
+AUTHOR
+======
+
+Roderick Schertler <`roderick@argon.org'>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: Proc/WaitStat, Next: Religion, Prev: Proc/SyncExec, Up: Module List
+
+Interpret and act on wait() status values
+*****************************************
+
+
+
+NAME
+====
+
+Proc::WaitStat - Interpret and act on wait() status values
+
+
+SYNOPSIS
+========
+
+     $description = waitstat $?;
+     exit waitstat_reuse $?;
+     waitstat_die $?, 'program-name';
+     close_die COMMAND, 'program-name';
+
+
+DESCRIPTION
+===========
+
+This module contains functions for interpreting and acting on wait
+status values.
+
+Nothing is exported by default.
+
+waitstat *wait-status*
+     Returns a string representation of wait() status value
+     *wait-status*.  Values returned are like `"0"' and `"64"' and
+     `"killed (SIGHUP)"'.
+
+     This function is prototyped to take a single scalar argument.
+
+waitstat_reuse *wait-status*
+     Turn *wait-status* into a value which can be passed to exit,
+     converted in the same manner the shell uses.  If *wait-status*
+     indicates a normal exit, return the exit value.  If *wait-status*
+     instead indicates death by signal, return 128 plus the signal
+     number.
+
+     This function is prototyped to take a single scalar argument.
+
+waitstat_die *wait-status* *program-name*
+     die() if *wait-status* is non-zero (mentioning *program-name* as
+     the source of the error).
+
+     This function is prototyped to take two scalar arguments.
+
+close_die *filehandle* name
+     Close *filehandle*, if that fails die() with an appropriate message
+     which refers to name.  This handles failed closings of both
+     programs and files properly.
+
+     This function is prototyped to take a filehandle (actually, a glob
+     ref) and a scalar.
+
+
+EXAMPLES
+========
+
+     close SENDMAIL;
+     exit if $? == 0;
+     log "sendmail failure: ", waitstat $?;
+     exit EX_TEMPFAIL;
+
+     $pid == waitpid $pid, 0 or croak "Failed to reap $pid: $!";
+     exit waitstat_reuse $?;
+
+     $output = `some-program -with args`;
+     waitstat_die $?, 'some-program';
+     print "Output from some-process:\n", $output;
+
+     open PROGRAM, '| post-processor' or die "Can't fork: $!";
+     while (<IN>) {
+     	print PROGRAM pre_process $_
+     	    or die "Error writing to post-processor: $!";
+     }
+     # This handles both flush failures at close time and a non-zero exit
+     # from the subprocess.
+     close_die PROGRAM, 'post-processor';
+
+
+AUTHOR
+======
+
+Roderick Schertler <`roderick@argon.org'>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: Religion, Next: Resources, Prev: Proc/WaitStat, Up: Module List
+
+Generate tracebacks and create and install die() and  warn() handlers.
+**********************************************************************
+
+
+
+NAME
+====
+
+Religion - Generate tracebacks and create and install die() and
+ warn() handlers.
+
+
+DESCRIPTION
+===========
+
+This is a second go at a module to simplify installing die() and warn()
+handlers, and to make such handlers easier to write and control.
+
+For most people, this just means that if use `use Religion;' then you'll
+get noticably better error reporting from warn() and die(). This is
+especially useful if you are using eval().
+
+Religion provides four classes, WarnHandler, DieHandler, WarnPreHandler,
+and DiePreHandler, that when you construct them return closures that can
+be stored in variables that in turn get invoked by $SIG{__DIE__} and
+$SIG{__WARN__}. Note that if Religion is in use, you should not modify
+$SIG{__DIE__} or $SIG{__WARN__}, unless you are careful about invoking
+chaining to the old handler.
+
+Religion also provides a TraceBack function, which is used by a
+DieHandler after you `die()' to give a better handle on the current
+scope of your situation, and provide information about where you were,
+which might influence where you want to go next, either returning back
+to where you were, or going on to the very last. [Sorry - Ed.]
+
+See below for usage and examples.
+
+
+USAGE
+=====
+
+DieHandler SUB
+     Invoke like this:
+
+          $Die::Handler = new DieHandler sub {
+          	#...
+          };
+
+     where `#...' contains your handler code. Your handler will receive
+     the following arguments:
+
+          $message, $full_message, $level, $eval, 
+          		    $iline, $ifile, $oline, $ofile, $oscope
+
+     `$message' is the message provided to die(). Note that the default
+     addition of " at FILE line LINE.\n" will have been stripped off if
+     it was present.  If you want to add such a message back on, feel
+     free to do so with $iline and $ifile.
+
+     C<$full_message) is the message with a scope message added on if
+     there was no newline at the end of `$message'. Currently, this is
+     *not* the original message that die() tacked on, but something
+     along the lines of " at line 3 of the eval at line 4 of Foo.pl\n".
+
+     `$eval' is non-zero if the die() was invoked inside an eval.
+
+     The rest of the arguments are explained in the source for
+     Religion::TraceBack. Yes, I need to document these, but not just
+     now, for they are a pain to explain.
+
+     Whenever you install a DieHandler, it will automatically store the
+     current value of $Die::Handler so it can chain to it. If you want
+     to install a handler only temporarily, use local().
+
+     If your handler returns data using return or by falling off the
+     end, then the items returns will be used to fill back in the
+     argument list, and the next handler in the chain, if any, will be
+     invoked. *Don't fall off the end if you don't want to change the
+     error message.*
+
+     If your handler exits using last, then no further handlers will be
+     invoked, and the program will die immediatly.
+
+     If your handler exits using next, then the next handler in the
+     chain will be invoked directly, without giving you a chance to
+     change its arguments as you could if you used return.
+
+     If your handler invokes die(), then die() will proceed as if no
+     handlers were installed. If you are inside an eval, then it will
+     exit to the scope enclosing the eval, otherwise it will exit the
+     program.
+
+WarnHandler SUB
+     Invoke like this:
+
+          $Warn::Handler = new WarnHandler sub {
+          	#...
+          };
+
+          For the rest of its explanation, see DieHandler, and subsitute warn() for
+          die(). Note that once the last DieHandler completes (or C<last> is invoked)
+          then execution will return to the code that invoked warn().
+
+DiePreHandler SUB
+     Invoke like this:
+
+          $Die::PreHandler = new DiePreHandler sub {
+          	#...
+          };
+
+          This works identically to $Die::Handler, except that it forms a separate chain
+          that is invoked I<before> the DieHandler chain. Since you can use C<last> to
+          abort all the handlers and die immediately, or change the messages or scope
+          details, this can be useful for modifying data that all future handlers will
+          see, or to dispose of some messages from further handling.
+
+     This is even more useful in $Warn::PreHandler, since you can just
+     throw away warnings that you *know* aren't needed.
+
+WarnPreHandler SUB
+     Invoke like this:
+
+          $Warn::PreHandler = new WarnPreHandler sub {
+          	#...
+          };
+
+          This works identically to $Warn::Handler, except that it forms a separate
+          chain that is invoked I<before> the WarnHandler chain. Since you can use
+          C<last> to abort all the handlers and return to the program, or change
+          the messages or scope details, this can be useful for modifying data that
+          all future handlers will see, or to dispose of some messages.
+
+     This is very useful, since you can just throw away warnings that
+     you *know* aren't needed.
+
+
+EXAMPLES
+========
+
+A dialog error message:
+          $Die::Handler = new DieHandler sub {
+             my($msg,$fmsg,$level,$eval) = @_;
+             if($eval) {
+          		# if we are in an eval, skip to the next handler
+          		next;
+          	} else {
+          		# show a message box describing the error.
+          	 	print "ShowMessageBox $fmsg";
+	 	
+          	 	# force the program to exit
+          	 	exit 0;
+          	 	next;
+          	}
+          };
+
+A handler that changes die() messages back to the original format
+          local($Die::Handler) = new DieHandler sub {
+             my($msg,$fmsg,$level,@trace) = @_;
+
+          $fmsg = $msg . ((substr($msg,-1,1) ne "\n") ?
+          			 " at $trace[2] line $trace[1].\n"
+          			 : "");
+          return ($msg,$fmsg);
+           };
+
+A warn handler that does nothing.
+          $Warn::Handler = new WarnHandler sub {next;};
+
+A warn prehandler that throws away a warning.
+          $Warn::PreHandler = new WarnPreHandler sub {
+          	my($msg,$fmsg,$level,$eval) = @_;
+          	if($msg =~ /Use of uninitialized/) {
+          		last;
+          	}
+          	next;
+          };
+
+
+
+
+File: pm.info, Node: Resources, Next: SDBM_File, Prev: Religion, Up: Module List
+
+handling application defaults in Perl.
+**************************************
+
+
+
+NAME
+====
+
+Resources - handling application defaults in Perl.
+
+
+SYNOPSIS
+========
+
+     use Resources;
+
+     $res = new Resources;
+     $res = new Resources "resfile";
+
+
+DESCRIPTION
+===========
+
+Resources are a way to specify information of interest to program or
+packages.
+
+Applications use resource files to specify and document the values of
+quantities or attributes of interest.
+
+Resources can be loaded from or saved to resource files. Methods are
+provided to search, modify and create resources.
+
+Packages use resources to hardwire in their code the default values for
+their attributes, along with documentation for the attibutes themselves.
+
+Packages inherit resources when subclassed, and the resource names are
+updated dynamically to reflect a class hierarchy.
+
+Methods are provided for interactive resource inspection and editing.
+
+
+1. Resource inheritance
+-----------------------
+
+Package attributes are inherited from base and member classes, their
+names are dynamically updated to reflect the inheritance, and values
+specified in derived/container classes override those inherited from
+base/member classes.
+
+More precisely, there a few rules governing the inheritance of resource
+names and values, and they will be explained by way of examples.
+
+As far as resource names, the rules are:
+
+Base class
+     If Vehicle has a "speed" property, then it can use a resource named
+     "vehicle.speed" to specify its default value.
+
+Derived class
+     If Car *is a* Vehicle, then Car has a "car.speed" resource
+     automagically defined by inheritance from the base class.
+
+Container class
+     If Car *has a* member object called Tire, and Tire has a
+     "tire.pressure" resource, then Car inherits a "car.tire.pressure"
+     resource from the member class.
+
+Application class
+     All resources of Car objects used by a program named "race" have
+     the prefix "race." prepended to their names, e.g. "race.car.speed",
+     "race.car.tire.pressure", etc.
+
+With regard to assigning values to resources, the rules are:
+
+Specification in a file
+     Resources specified in a resource file always override hardcoded
+     resources (with the exception of "hidden" resources, see below).
+
+Inheritance
+     Resources defined in a derived class (like Car) override those
+     specified in a base class. Likewise, resources defined in a
+     container class override those specified in the members.
+
+     In the above example, a default value for "car.speed" in Car
+     overrides the value of "vehicle.speed" in any Car object, otherwise
+     "car.speed" assumes the value of "vehicle.speed".  Same for
+     "car.tire.pressure".
+
+
+2. Resource Files.
+------------------
+
+A resource specification in a (text) resource file is a line of the
+form:
+
+     sequence: value
+
+There may be any number of whitespaces between the name and the colon
+character, and between the colon and the value.
+
+sequence can have four forms:
+          (1) word
+
+     A word not containing whitespaces, colons (':'), dots ('.') or
+     asterisks ('*'), nor starting with an underscore ('_').
+
+     Or, recursively:
+
+          (2) word.sequence   
+          (3) word*sequence   
+          (4) *sequence
+
+     The asterisks in a resource name act as wildcards, matching any
+     sequence of characters.
+
+     For cases (3) or (4) the word must be or match the current
+     application class, otherwise the resource specification is silently
+     ignored (this means that an applications loads from a file only its
+     own resources, and those whose application class is a wildcard).
+
+     No distinction is made between uppercase and lowercase letters.
+
+value can be:
+     An unadorned word or a quoted sequence of whitespace-separated
+     words. Both single (' ') and double quotes quotes (" ") are
+     allowed, and they must be paired.
+
+     Any *constant* scalar constructor in Perl, including anon
+     references to constant arrays or hashes.
+
+     The special words *yes*, *true*, no, *false* (case insensitive) are
+     treated as boolean resources and converted 1 and 0, unless they are
+     quoted.
+
+Examples of valid resource specifications:
+
+     car*brand       : Ferrari    # A word.
+     car.price       : 200K       # Another word
+     car.name        : '312 BB'   # A quoted sentence
+     car*runs*alot   : yes        # A boolean, converted to 1.
+     car*noise*lotsa : 'yes'      # yes, taken verbatim
+     car.size        : [1, [2, 3]]           # An anon array.
+     car.lett        : {"P"=>1, "Q"=>[2, 3]} # An anon hash.
+
+Examples of illegal resource names:
+
+     car pedal    # Whitespace in the name.
+     .carpedal    # Leading dot in name.
+     car._pedal   # Leading underscore in _dog.
+     carpedal*    # Trailing asterisk.
+     carpedal.    # Trailing dot.
+
+A resource file may contain comments: anything from a hash ('#')
+character to the end of a line is ignored, unless the hash character
+appears inside a quoted value string.
+
+Resource specifications may be split across successive lines, by
+terminating the split lines with a backslash, as per cpp(1).
+
+
+3. The Resources hash
+---------------------
+
+A non-my hash named %Resources can be used to specify the default values
+for the attributes of a package in its source code, along with
+documentation for the attributes themselves. The documentation itself is
+"dynamical" (as opposed to the static, pod-like variety) in that it
+follows a class hyerarchy and is suitable for interactive display and
+editing.
+
+The %Resources hash is just a hash of
+
+     $Name => [$Value, $Doc]
+
+things. Each hash key *$Name* is a resource name in the above sequence
+form. Each hash value is a reference to an anon array *[$Value, $Doc]*, with
+*$Doc* being an optional resource documentation.
+
+The resource $Name *cannot* contain wildcard ('*') or colon
+(':') characters, nor start or end with a dot ('.'). Also, it must
+*not* be prefixed with the package name (since this is
+automatically prepended by the *merge* method, see below). Names
+starting with an underscore ('_') character are special in that they
+define "hidden" resources. These may not be specified in resource files,
+nor dynamically viewed/edited: they come handy to specify global
+parameters when you do not want to use global application-wide
+variables, and/or want to take advantage of the inheritance mechanism.
+
+The resource $Value can be any *constant* scalar Perl constructor,
+including references to arrays and/or hashes of constants (or references
+thereof). Boolean values must be specified as 1 or 0.
+
+The resource documentation is a just string of any length: it will be
+appropriately broken into lines for visualization purposes. It can also
+be missing, in which case an inherited documentation is used (if any
+exists, see the *merge* method below).
+
+The content of a resource hash is registered in a global Resource object
+using the *merge* method.
+
+Here is an example of deafults specification for a package.
+
+     package Car;
+     @ISA = qw( Vehicle );
+     use vars qw( %Resources );
+
+     %Resources = (
+         brand    => ["FIAT", "The carmaker"],
+         noise    => ["Ashtmatic", "Auditory feeling"],
+         sucks    => [1, "Is it any good?"],
+     	 nuts     => [ { on => 2, off => [3, 5] }, "Spares"],
+     	 '_ghost' => [0, "Hidden. Mr. Invisible"] 
+     	 'tire.flat' => [0],
+     );
+
+The last line overrides a default in member class Tire. The
+corresponding doc string is supposedly in the source of that class. The
+last two hash keys are quoted because of the non alphanumeric characters
+in them.
+
+
+4. Objects and resources
+------------------------
+
+The recommended way to use resources with Perl objects is to pass a
+Resource object to the "new" method of a package.  The method itself
+will merge the passed resources with the package defaults, and the
+passed resource will override the defaults where needed.
+
+Resource inheritance via subclassing is then easily achieved via the
+*merge* method, as shown in the EXAMPLES section.
+
+
+5. Methods in class Resources
+-----------------------------
+
+
+5.1. Creation and initialization
+--------------------------------
+
+*new Resources ($resfile);*
+     Creates a new resource database, initialized with the defaults for
+     class Resources (see below for a list of them).
+
+     If a nonempty file name is specified in $resfile, it initializes
+     the object with the content of the so named resource file. For safe
+     (non overwriting) loading, see the *load* method below.
+
+     If the special file name "_RES_NODEFAULTS" is specified, the object
+     is created completely empty, with not even the Resources class
+     defaults in it.
+
+     Returns the new object, or undef in case of error.
+
+*load($resfile, $nonew);*
+     Loads resources from a file named $resfile into a resource
+     database.
+
+     The $nonew argument controls whether loading of non already defined
+     resurces is allowed. If it is true, safe loading is performed:
+     attempting to load non-wildcarded resource names that do not match
+     those already present in the database causes an error. This can be
+     useful if you want to make sure that only pre-defined resources
+     (for which you presumably have hardwired defaults) are loaded. It
+     can be a safety net against typos in a resource file.
+
+     Use is made of *Safe::reval* to parse values specified through Perl
+     constructors (only constants, anon hashes and anon arrays are
+     allowed).
+
+     Returns 1 if ok, 0 if error.
+
+*merge($class, @memberclasses);*
+     Merges the %Resources hash of the package defining $class with
+     those of its @memberclasses, writing the result in the resource
+     database.
+
+     The merging reflects the resource inheritance explained above: the
+     %Resources of all base classes and member classes of $class are
+     inherited along the way. Eventually all these resources have their
+     names prefixed with the name of the package in which $class is
+     defined (lowercased and stripped of all foo::bar:: prefixes), and
+     with the application class as well.
+
+     In the above example, the defaults of a Car object will be renamed,
+     after merging as:
+
+          car.brand, car.noise, ..., 
+          car.tire.flat
+
+     and for a Civic object, where Civic is a (i.e. ISA) Car, they will
+     be translated instead as
+
+          civic.brand, civic.noise, ..., 
+          civic.tire.flat
+
+     Finally, the application name ($0, a.k.a $PROGRAM_NAME in English)
+     is prepended to all resource names, so, if the above Civic package
+     is used by a Perl script named "ilove.pl", the final names after
+     merging are
+
+          ilove.civic.brand, ilove.civic.noise, ..., 
+          ilove.civic.tire.flat
+
+     The new names are the ones to use when accessing these resources by
+     name.
+
+     The resource values are inherited accoring to the rules previously
+     indicated, hence with resource files having priority over hardcoded
+     defaults, nnd derived or container classes over base or member
+     classes.
+
+     Returns 1 if for success, otherwise 0.
+
+
+5.2. Looking up resources
+-------------------------
+
+The values and documentation strings stored in a Resource object can be
+accessed by specifying their names in three basic ways:
+
+directly ("byname" methods)
+     As in "my.nice.cosy.couch" .
+
+by a pattern ("bypattern" methods)
+     As in "m??nice.*" .
+
+hierarchically ("byclass" methods)
+     If class Nice *is a* Cosy, then asking for "couch" in package Cosy
+     gets you the value/doc of "my.couch". If, instead, Nice *has a*
+     Cosy member, that the method gets you "my.nice.cosy.couch". This
+     behaviour is essential for the proper initialization of subclassed
+     and member packages, as explained in detail below.
+
+It is also possible to retrieve the whole content of a resource database
+("names" and "each" methods)
+
+Note that all the resource lookup methods return named (non
+"wildcarded") resources only. Wildcarded resources (i.e. those specified
+in resource files, and whose names contain one or more '*') are best
+thought as placeholders, to be used when the value of an actual named
+resource is set.
+
+For example, a line in a resource file like
+
+     *background : yellow
+
+fixes to yellow the color of all resources whose name ends with
+"background".  However, your actual packages will never worry about
+unless they really need a background. In this case they either have a
+"background" resource in their defaults hash, or subclass a package that
+has one.
+
+valbyname($name);
+     Retrieves the value of a named resource from a Resource
+     database. The $name argument is a string containing a resource name
+     with no wildcards.
+
+     Returns the undefined value if no such resource is defined.
+
+docbyname($name);
+     Retrieves the documentation string of a named resource from a
+     Resource database. The $name argument is a string containing a
+     resource name with no wildcards.
+
+     Returns the undefined value if no such resource is defined.
+
+bypattern($pattern);
+     Retrieves the full names, values and documentation strings of all
+     the named (non wildcarded) resources whose name matches the given
+     $pattern. The pattern itself is string containing a Perl regular
+     expression, *not* enclosed in slashes.
+
+     Returns a new Resource object containing only the matching
+     resources, or the undefined value if no matches are found.
+
+valbypattern($pattern);
+     Retrieves the full names and values of all named (non wildcarded)
+     resources whose name matches the given pattern.
+
+     Returns a new Resource object containing only names and values of
+     the matching resources (i.e. with undefined doc strings), or the
+     undefined value if no matches are found.
+
+docbypattern($pattern);
+     Retrieves the full names and documentation strings of all named
+     (non wildcarded) resources whose name matches the given pattern.
+
+     Returns a new Resource object containing only names and docs of the
+     matching resources (i.e. with undefined resource values), or the
+     undefined value if no matches are found.
+
+*byclass($object, $suffix);*
+     To properly initialize the attributes of a package via resources we
+     need a way to know whether the package defaults (contained in its
+     %Resources hash) have been overridden by a derived or container
+     class.  For example, to set a field like $dog->{Weight} in a Dog
+     object, we must know if this $dog is being subclassed by Poodle or
+     Bulldog, or if it is a member of Family, since all these other
+     classes might override whatever "weight" default is defined in the
+     %Resources hash of Dog.pm.
+
+     This information must of course be gathered at runtime: if you
+     tried to name explicitly a resource like "family.dog.weight" inside
+     Dog.pm all the OOP crowd would start booing at you. Your object
+     would not be reusable anymore, being explicitly tied to a
+     particular container class. After all we do use objects mainly
+     because we want to easily reuse code...
+
+     Enter the "by class" resource lookup methods: *byclass*, *valbyclass* and
+     *docbyclass*.
+
+     Given an $object and a resource $suffix (i.e. a resource name
+     stripped of all container and derived class prefixes), the
+     *byclass* method returns a 3 element list containing the
+     name/value/doc of that resource in $object. The returned name will
+     be fully qualified with all derived/container classes, up to the
+     application class.
+
+     For example, in a program called "bark", the statements
+
+          $dog = new Dog ($res); # $res is a Resources database
+          ($name,$value,$doc) = $res->byclass($dog, "weight");
+
+     will set $name, $value and $doc equal to those of the
+     "bark.poodle.weight" resource, if this Dog is subclassed by Poodle,
+     and to those of "bark.family.dog.weight", if it is a member of
+     Family instead.
+
+     The passed name suffix must not contain wildcards nor dots.
+
+     Be careful not to confuse the "byclass" with the "byname" and
+     "bypattern" retrieval methods: they are used for two radically
+     different goals. See the EXAMPLES section for more.
+
+     Returns the empty list if no resources are found for the given
+     suffix, or if the suffix is incorrect.
+
+*namebyclass($obj, $suffix);*
+     As the *byclass* method above, but returns just the resource name
+     (i.e. the suffix with all the subclasses prepended).
+
+*valbyclass($obj, $suffix);*
+     As the *byclass* method above, but returns just the resource value.
+
+docbyclass($suffix);
+     As the *byclass* method above, but returns just the resource
+     documentation.
+
+each;
+     Returns the next name/[value,doc] pair of the named (non
+     wildcarded) resources in a resource database, exactly as the each
+     Perl routine.
+
+names;
+     Returns a list of the names of all named (non-wildcarded) resources
+     in a resource database, or undef if the databasee is empty.
+
+
+5.3. Assigning and removing Resources
+-------------------------------------
+
+*put($name, $value, $doc);*
+     Writes the value and doc of a resource in the database.  It is
+     possible to specify an empty documentation string, but name and
+     value must be defined.
+
+     Wildcards ('*' characters) are allowed in the $name, but the $doc
+     is ignored in this case (documentation is intended for single
+     resources, not for sets of them).
+
+     The value is written unchanged unless the resource database already
+     contains a wildcarded resource whose name includes $name (foo*bar
+     includes foo.bar, foo.baz.bar, etc.). In this case the value of the
+     wildcarded resource overrides the passed $value.
+
+     Returns 1 if ok, 0 if error.
+
+removebyname($name);
+     Removes the named (non wildcarded) resources from the database.
+
+     Returns 1 if OK, 0 if the resource is not found in the database.
+
+removebypattern($name);
+     Removes from the database all resources (both named and wildcarded)
+     whose name mathes $pattern. An exactly matching name must be
+     specified for wildcarded resources (foo*bar to remove foo*bar).
+
+     Returns the number of removed resources.
+
+
+5.6. Viewing and editing resources.
+-----------------------------------
+
+view;
+     Outputs the current content of a Resource object by piping to a
+     pager program.
+
+     The environment variable $ENV{RESPAGER}, the resource
+     "resources.pager" and the environment variable $ENV{PAGER} are
+     looked up, in this very order, to find the pager program. Defaults
+     to */bin/more* if none of them is found.
+
+     The output format is the same of a resource file, with the resource
+     names alphabetically ordered, and the resource documentation
+     strings written as comments.
+
+     Returns 1 if ok, 0 if error.
+
+edit($nonew);
+     Provides dynamical resource editing of a Resource object via an
+     external editor program. Only resource names and values can be
+     edited (anyway, what is the point of editing a resource comment on
+     the fly?).
+
+     The environment variables $ENV{RESEDITOR} and the resource "resouces.editor",
+     are looked up, in this very order, to find the editor program. Defaults to
+     */bin/vi* if none is found.
+
+     The editor buffer is initialized in the same format of a resource
+     file, with the resource names alphabetically ordered, and the
+     resource documentation strings written as comments. The temporary
+     file specified by the "resources.tmpfil" resource is used to
+     initialize the editor, or '/tmp/resedit<pid>' if that resource is
+     undefined.
+
+     When the editor is exited (after saving the buffer) the method
+     attempts to reload the edited resources. If an error is found the
+     initial object is left unchanged, a warning with the first
+     offending line in the file is printed, and the method returns with
+     undef. Controlled resource loading is obtained by specifying a true
+     value for the $nonew argument (see *load*).
+
+     If the loading is successful, a new (edited) resource object is
+     returned, which can be assigned to the old one for replacement.
+
+     After a successful edit, the value of the resource
+     "resources.updates" (which is always defined to 0 whenever a new
+     resource is created) is increased by one. This is meant to notify
+     program the and/or packages of the resource change, so they can
+     proceed accordingly if they wish.
+
+
+5.5. Miscellaneous methods
+--------------------------
+
+write($filename);
+     Outputs all resources of a resource database into a resource file
+     (overwriting it).
+
+     The resource documentation strings are normally written as
+     comments, so the file itself is immediately available for resource
+     loading. However, if the boolean resource "resources.writepod" is
+     true, then the (non wildcarded) resources are output in POD format
+     for your documentational pleasure.
+
+     As usual in Perl, the filename can allo be of the form "|command",
+     in which case the output is piped into "comma1nd".
+
+     For resources whose value is a reference to an anon array or hash,
+     it produces the appropriate constant Perl contructor by reverse
+     parsing. The parser itself is available as a separate method named
+     *_parse* (see package source for documentation).
+
+     Returns 1 if ok, 0 if error.
+
+
+5. Resources of Resources
+-------------------------
+
+As you may have guessed at this point, the default configuration of this
+package itself is defined by resources. The resource class is, of
+course, "resources" (meaning that all the names have a leading
+"resources.").
+
+To prevent chaos, however, these resources cannot be subclassed. This
+should not be a problem in normal applications, since the Resource
+package itself is not meant to be subclassed, but to help building a
+hierarchy of classes instead.
+
+The currently recognized resources, and their default values, are:
+
+resources.appclass : "$PROGRAM_NAME"
+     The application name of this Resource object.
+
+resources.editor : /bin/vi
+     Resource editor.
+
+resources.mergeclass : true
+     Boolean. True to merge with class inheritance.
+
+resources.pager : /bin/more
+     Resource pager.
+
+resources.separator : ':'
+     Pattern separating names from values in resource files.
+
+resources.tmpfil : ''
+     Editor temporary file.
+
+resources.updates : 0
+     Number of resource updates.
+
+resources.verbosity : 1
+     True to print warnings.
+
+resources.viewcols : 78
+     Width of view/edit window.
+
+resources.writepod : false
+     Boolean. True if the write method should output in POD format.
+
+
+EXAMPLES
+========
+
+Here is an example of resource inheritance.  HotDog is a subclass of
+Food, and has a member Wiener whichi happens to be a Food as well.
+
+The subclass has defaults for two resources defined by the base classes
+("edible" and "wiener.mustard"), and their values will override the base
+class defaults.
+
+Remember that after merging all resources names are prefixed with the
+current class name.
+
+     use Resources;
+     package Food;
+     %Resources = ( 
+       edible => [1, "Can it be eaten."], 
+       tasty  => ["sort_of",  "D'ya like it?"],
+     );
+
+     sub new {
+        my ($type, $res) = @_;
+        $res || $res =  new Resources || (return undef);
+        $res->merge($type) || die ("can't merge defaults");
+    
+        my $food= bless({}, type);
+        $food->{Edible} = $res->valbyclass("edible");
+        $food->{Tasty}  = $res->valbyclass("tasty");
+        # Use valbyclass so a subclass like HotDog can change this by its
+        # defaults.   
+     }
+ 
+     # A Food method to say if it can be eaten.
+     sub eatok { 
+        my $food=shift; 
+        return $food->{Edible}; 
+     }
+
+     package Wiener;
+     @ISA = qw( Food );
+     %Resources = (
+          tasty => ["very"], # this overrides a base class default
+          mustard => ["plenty", "How much yellow stuff?"],
+     );
+     # Nothing else: all methods are inherited from the base class.
+
+     package HotDog;
+     @ISA = qw( Food );
+
+     %Resources = (
+         edible    => [0],
+         tasty     => ["yuck!"],
+         'wiener.mustard' => ["none"], # To override member class default.
+     );
+
+     sub new {
+        my ($type, $res) = @_;
+   
+        $res || $res =  new Resources || (return undef);
+        $res->merge($type) || die ("can't merge defaults");
+	       
+        my $hd = bless(new Food ($res), $type);
+        $hd->{Wien} = new Wiener ($res);
+        return $hd;
+     }
+
+     # All tastes of hotdog
+     sub tastes {
+        my $hd = shift;
+        return ($hd->{Tasty}, $hd->{Wien}->{Tasty});
+     }
+
+     package main;
+     # Whatever
+     #
+     $res = new Resources("AppDefltFile") || die;
+     $snack = new HotDog($res);  
+     $gnam = $snack->eat();  # hotdog.edible overridees food.edible, 
+                             # so here $gnam equals 0
+
+     @slurp = $snack->tastes()    # @slurp equals ("yuck!", "very") 
+                                  # the resources were overridden 
+                                  # by a subclass of HotDog , or
+                                  # differently specified in 
+                                  # "AppDefltFile"
+
+
+SEE ALSO
+========
+
+Safe(3).
+
+
+BUGS
+====
+
+The underlying idea is to use a centralized resource database for the
+whole application. This ensures uniformity of behaviour across kin
+objects, but allow special characterizations only at the cost of
+subclassing.
+
+
+AUTHOR
+======
+
+     Francesco Callari <franco@cim.mcgill.ca> 
+     Artifical Perception Laboratory,
+     Center for Intelligent Machines, 
+     McGill University.
+
+     WWW: http://www.cim.mcgill.ca/~franco/Home.html
+
+
+COPYRIGHT
+=========
+
+Copyright 1996 Francesco Callari, McGill University
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose without fee is hereby granted without fee,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of McGill not be used in
+advertising or publicity pertaining to distribution of the software
+without specific, written prior permission.  McGill makes no
+representations about the suitability of this software for any purpose.
+It is provided "as is" without express or implied warranty.
+
+MCGILL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.  IN NO EVENT
+SHALL MCGILL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+
+
+
+
+File: pm.info, Node: SDBM_File, Next: SGMLS, Prev: Resources, Up: Module List
+
+Tied access to sdbm files
+*************************
+
+
+
+NAME
+====
+
+SDBM_File - Tied access to sdbm files
+
+
+SYNOPSIS
+========
+
+     use SDBM_File;
+
+     tie(%h, 'SDBM_File', 'Op.dbmx', O_RDWR|O_CREAT, 0640);
+
+     untie %h;
+
+
+DESCRIPTION
+===========
+
+See `tie', *Note Perlfunc: (perl.info)perlfunc,
+
+
+
+
+File: pm.info, Node: SGMLS, Next: SGMLS/Output, Prev: SDBM_File, Up: Module List
+
+class for postprocessing the output from the *sgmls* and *nsgmls* parsers.
+**************************************************************************
+
+
+
+NAME
+====
+
+SGMLS - class for postprocessing the output from the *sgmls* and
+*nsgmls* parsers.
+
+
+SYNOPSIS
+========
+
+     use SGMLS;
+
+     my $parse = new SGMLS(STDIN);
+
+     my $event = $parse->next_event;
+     while ($event) {
+
+     SWITCH: {
+
+     ($event->type eq 'start_element') && do {
+       my $element = $event->data;    # An object of class SGMLS_Element
+       [[your code for the beginning of an element]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'end_element') && do {
+       my $element = $event->data;    # An object of class SGMLS_Element
+       [[your code for the end of an element]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'cdata') && do {
+       my $cdata = $event->data;      # A string
+       [[your code for character data]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'sdata') && do {
+       my $sdata = $event->data;      # A string
+       [[your code for system data]]
+       last SWITCH;
+     };
+
+     ($event->type eq 're') && do {
+       [[your code for a record end]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'pi') && do {
+       my $pi = $event->data;         # A string
+       [[your code for a processing instruction]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'entity') && do {
+       my $entity = $event->data;     # An object of class SGMLS_Entity
+       [[your code for an external entity]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'start_subdoc') && do {
+       my $entity = $event->data;     # An object of class SGMLS_Entity
+       [[your code for the beginning of a subdoc entity]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'end_subdoc') && do {
+       my $entity = $event->data;     # An object of class SGMLS_Entity
+       [[your code for the end of a subdoc entity]]
+       last SWITCH;
+     };
+
+     ($event->type eq 'conforming') && do {
+       [[your code for a conforming document]]
+       last SWITCH;
+     };
+
+     die "Internal error: unknown event type " . $event->type . "\n";
+         }
+
+     $event = $parse->next_event;
+       }
+
+
+DESCRIPTION
+===========
+
+The *SGMLS* package consists of several related classes: see `"SGMLS"'
+in this node, `"SGMLS_Event"' in this node, `"SGMLS_Element"' in this
+node, `"SGMLS_Attribute"' in this node, `"SGMLS_Notation"' in this node,
+and `"SGMLS_Entity"' in this node.  All of these classes are available
+when you specify
+
+     use SGMLS;
+
+Generally, the only object which you will create explicitly will belong
+to the `SGMLS' class; all of the others will then be created
+automatically for you over the course of the parse.  Much fuller
+documentation is available in the `.sgml' files in the `DOC/' directory
+of the `SGMLS.pm' distribution.
+
+
+The `SGMLS' class
+-----------------
+
+This class holds a single parse.  When you create an instance of it, you
+specify a file handle as an argument (if you are reading the output of
+*sgmls* or *nsgmls* from a pipe, the file handle will ordinarily be
+`STDIN'):
+
+     my $parse = new SGMLS(STDIN);
+
+The most important method for this class is next_event, which reads and
+returns the next major event from the input stream.  It is important to
+note that the `SGMLS' class deals with most *ESIS* events itself:
+attributes and entity definitions, for example, are collected and stored
+automatically and invisibly to the user.  The following list contains
+all of the methods for the `SGMLS' class:
+
+`next_event()': Return an `SGMLS_Event' object containing the next major event from the SGML parse.
+`element()': Return an `SGMLS_Element' object containing the current element in the document.
+`file()': Return a string containing the name of the current SGML source file (this will work only if the -l option was given to *sgmls* or *nsgmls*).
+`line()': Return a string containing the current line number from the source file (this will work only if the -l option was given to *sgmls* or *nsgmls*).
+`appinfo()': Return a string containing the `APPINFO' parameter (if any) from the SGML declaration.
+`notation(NNAME)': Return an `SGMLS_Notation' object representing the notation named `NNAME'.  With newer versions of *nsgmls*, all notations are available; otherwise, only the notations which are actually used will be available.
+`entity(ENAME)': Return an `SGMLS_Entity' object representing the entity named `ENAME'.  With newer versions of *nsgmls*, all entities are available; otherwise, only external data entities and internal entities used as attribute values will be available.
+`ext()': Return a reference to an associative array for user-defined extensions.
+
+The `SGMLS_Event' class
+-----------------------
+
+This class holds a single major event, as generated by the next_event
+method in the `SGMLS' class.  It uses the following methods:
+
+`type()': Return a string describing the type of event: "start_element", "end_element", "cdata", "sdata", "re", "pi", "entity", "start_subdoc", "end_subdoc", and "conforming".  See `"SYNOPSIS"' in this node, above, for the values associated with each of these.
+`data()': Return the data associated with the current event (if any).  For "start_element" and "end_element", returns an `SGMLS_ELement' object; for "entity", "start_subdoc", and "end_subdoc", returns an `SGMLS_Entity' object; for "cdata", "sdata", and "pi", returns a string; and for "re" and "conforming", returns the empty string.  See `"SYNOPSIS"' in this node, above, for an example of this method's use.
+`key()': Return a string key to the event, such as an element or entity name (otherwise, the same as `data()').
+`file()': Return the current file name, as in the `SGMLS' class.
+`line()': Return the current line number, as in the `SGMLS' class.
+`element()': Return the current element, as in the `SGMLS' class.
+`parse()': Return the `SGMLS' object which generated the event.
+`entity(ENAME)': Look up an entity, as in the `SGMLS' class.
+`notation(ENAME)': Look up a notation, as in the `SGMLS' class.
+`ext()': Return a reference to an associative array for user-defined extensions.
+
+The `SGMLS_Element' class
+-------------------------
+
+This class is used for elements, and contains all associated information
+(such as the element's attributes).  It recognises the following
+methods:
+
+`name()': Return a string containing the name, or Generic Identifier, of the element, in upper case.
+`parent()': Return the `SGMLS_Element' object for the element's parent (if any).
+`parse()': Return the `SGMLS' object for the current parse.
+`attributes()': Return a reference to an associative array of attribute names and `SGMLS_Attribute' structures.  Attribute names will be all in upper case.
+`attribute_names()': Return an array of strings containing the names of all attributes defined for the current element, in upper case.
+`attribute(ANAME)': Return the `SGMLS_Attribute' structure for the attribute `ANAME'.
+`set_attribute(ATTRIB)': Add the `SGMLS_Attribute' object `ATTRIB' to the current element, replacing any other attribute structure with the same name.
+`in(GI)': Return `true' (ie. 1) if the string `GI' is the name of the current element's parent, or `false' (ie. 0) if it is not.
+`within(GI)': Return `true' (ie. 1) if the string `GI' is the name of any of the ancestors of the current element, or `false' (ie. 0) if it is not.
+`ext()': Return a reference to an associative array for user-defined extensions.
+
+The `SGMLS_Attribute' class
+---------------------------
+
+Each instance of an attribute for each `SGMLS_Element' is an object
+belonging to this class, which recognises the following methods:
+
+`name()': Return a string containing the name of the current attribute, all in upper case.
+`type()': Return a string containing the type of the current attribute, all in upper case.  Available types are "IMPLIED", "CDATA", "NOTATION", "ENTITY", and "TOKEN".
+`value()': Return the value of the current attribute, if any. This will be an empty string if the type is "IMPLIED", a string of some sort if the type is "CDATA" or "TOKEN" (if it is "TOKEN", you may want to split the string into a series of separate tokens), an `SGMLS_Notation' object if the type is "NOTATION", or an `SGMLS_Entity' object if the type is "ENTITY".  Note that if the value is "CDATA", it will *not* have escape sequences for 8-bit characters, record ends, or SDATA processed -- that will be your responsibility.
+`is_implied()': Return `true' (ie. 1) if the value of the attribute is implied, or `false' (ie. 0) if it is specified in the document.
+`set_type(TYPE)': Change the type of the attribute to the string TYPE (which should be all in upper case).  Available types are "IMPLIED", "CDATA", "NOTATION", "ENTITY", and "TOKEN".
+`set_value(VALUE)': Change the value of the attribute to `VALUE', which may be a string, an `SGMLS_Entity' object, or an `SGMLS_Notation' subject, depending on the attribute's type.
+`ext()': Return a reference to an associative array available for user-defined extensions.
+
+The `SGMLS_Notation' class
+--------------------------
+
+All declared notations appear as objects belonging to this class, which
+recognises the following methods:
+
+`name()': Return a string containing the name of the notation.
+`sysid()': Return a string containing the system identifier of the notation, if any.
+`pubid()': Return a string containing the public identifier of the notation, if any.
+`ext()': Return a reference to an associative array available for user-defined extensions.
+
+The `SGMLS_Entity' class
+------------------------
+
+All declared entities appear as objects belonging to this class, which
+recognises the following methods:
+
+`name()': Return a string containing the name of the entity, in mixed case.
+`type()': Return a string containing the type of the entity, in upper case.  Available types are "CDATA", "SDATA", "NDATA" (external entities only), "SUBDOC", "PI" (newer versions of *nsgmls* only), or "TEXT" (newer versions of *nsgmls* only).
+`value()': Return a string containing the value of the entity, if it is internal.
+`sysid()': Return a string containing the system identifier of the entity (if any), if it is external.
+`pubid()': Return a string containing the public identifier of the entity (if any), if it is external.
+`filenames()': Return an array of strings containing any file names generated from the identifiers, if the entity is external.
+`notation()': Return the `SGMLS_Notation' object associated with the entity, if it is external.
+`data_attributes()': Return a reference to an associative array of data attribute names (in upper case) and the associated `SGMLS_Attribute' objects for the current entity.
+`data_attribute_names()': Return an array of data attribute names (in upper case) for the current entity.
+`data_attribute(ANAME)': Return the `SGMLS_Attribute' object for the data attribute named `ANAME' for the current entity.
+`set_data_attribute(ATTRIB)': Add the `SGMLS_Attribute' object `ATTRIB' to the current entity, replacing any other data attribute with the same name.
+`ext()': Return a reference to an associative array for user-defined extensions.
+
+AUTHOR AND COPYRIGHT
+====================
+
+Copyright 1994 and 1995 by David Megginson, `dmeggins@aix1.uottawa.ca'.
+Distributed under the terms of the Gnu General Public License (version
+2, 1991) -- see the file COPYING which is included in the *SGMLS.pm*
+distribution.
+
+
+SEE ALSO:
+=========
+
+*Note SGMLS/Output: SGMLS/Output, and *Note SGMLS/Refs: SGMLS/Refs,.
+
+
+
+

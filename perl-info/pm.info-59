@@ -1,0 +1,1793 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: WWW/Robot, Next: WWW/RobotRules, Prev: VRML/VRML2/Standard, Up: Module List
+
+configurable web traversal engine (for web robots & agents)
+***********************************************************
+
+
+
+NAME
+====
+
+WWW::Robot - configurable web traversal engine (for web robots & agents)
+
+
+SYNOPSIS
+========
+
+     use WWW::Robot;
+
+     $robot = new WWW::Robot('NAME'     => 'MyRobot',
+     			   'VERSION'  => '1.000',
+     			   'EMAIL'    => 'fred@foobar.com');
+
+     # ... configure the robot's operation ...
+
+     $robot->run('http://www.foobar.com/');
+
+
+DESCRIPTION
+===========
+
+This module implements a configurable web traversal engine, for a
+*robot* or other web agent.  Given an initial web page (URL), the Robot
+will get the contents of that page, and extract all links on the page,
+adding them to a list of URLs to visit.
+
+Features of the Robot module include:
+
+   * Follows the *Robot Exclusion Protocol*.
+
+   * Supports the META element proposed extensions to the Protocol.
+
+   * Implements many of the *Guidelines for Robot Writers*.
+
+   * Configurable.
+
+   * Builds on standard Perl 5 modules for WWW, HTTP, HTML, etc.
+
+A particular application (robot instance) has to configure the engine
+using *hooks*, which are perl functions invoked by the Robot engine at
+specific points in the control loop.
+
+The robot engine obeys the Robot Exclusion protocol, as well as a
+proposed addition.  See `SEE ALSO' in this node for references to
+documents describing the Robot Exclusion protocol and web robots.
+
+
+QUESTIONS
+=========
+
+This section contains a number of questions. I'm interested in hearing
+what people think, and what you've done faced with similar questions.
+
+   * What style of API is preferable for setting attributes? Maybe
+     something like the following:
+
+          $robot->verbose(1);
+          $traversal = $robot->traversal();
+
+     I.e. a method for setting and getting each attribute, depending on
+     whether you passed an argument?
+
+   * Should the robot module support a standard logging mechanism?  For
+     example, an LOGFILE attribute, which is set to either a filename,
+     or a filehandle reference.  This would need a useful file format.
+
+   * Should the AGENT be an attribute, so you can set this to whatever
+     UserAgent object you want to use?  Then if the attribute is not set
+     by the first time the `run()' method is invoked, we'd fall back on
+     the default.
+
+   * Should TMPDIR and WORKFILE be attributes? I don't see any big
+     reason why they should, but someone else's application might
+     benefit?
+
+   * Should the module also support an ERRLOG attribute, with all
+     warnings and error messages sent there?
+
+   * At the moment the robot will print warnings and error messages to
+     stderr, as well as returning error status. Should this behaviour be
+     configurable?  I.e. the ability to turn off warnings.
+
+The basic architecture of the Robot is as follows:
+
+     Hook: restore-state
+     Get Next URL
+         Hook: invoke-on-all-url
+         Hook: follow-url-test
+         Hook: invoke-on-follow-url
+         Get contents of URL
+         Hook: invoke-on-contents
+         Skip if not HTML
+         Foreach link on page:
+             Hook: invoke-on-link
+             Add link to robot's queue
+     Continue? Hook: continue-test
+     Hook: save-state
+     Hook: generate-report
+
+Each of the hook procedures and functions is described below.  A robot
+must provide a follow-url-test hook, and at least one of the following:
+
+   * invoke-on-all-url
+
+   * invoke-on-followed-url
+
+   * invoke-on-contents
+
+   * invoke-on-link
+
+
+CONSTRUCTOR
+===========
+
+     $robot = new WWW::Robot( <attribute-value-pairs> );
+
+Create a new robot engine instance.  If the constructor fails for any
+reason, a warning message will be printed, and undef will be returned.
+
+Having created a new robot, it should be configured using the methods
+described below.  Certain attributes of the Robot can be set during
+creation; they can be (re)set after creation, using the `setAttribute()'
+method.
+
+The attributes of the Robot are described below, in the *Robot
+Attributes* section.
+
+
+METHODS
+=======
+
+
+run
+---
+
+     $robot->run( LIST );
+
+Invokes the robot, initially traversing the root URLs provided in LIST,
+and any which have been provided with the `addUrl()' method before
+invoking `run()'.  If you have not correctly configured the robot, the
+method will return undef.
+
+The initial set of URLs can either be passed as arguments to the
+*run()* method, or with the *addUrl()* method before you
+invoke *run()*.  Each URL can be specified either as a string, or as a
+URI::URL object.
+
+Before invoking this method, you should have provided at least some of
+the hook functions.  See the example given in the EXAMPLES section
+below.
+
+By default the *run()* method will iterate until there are no more URLs
+in the queue.  You can override this behavior by providing a
+continue-test hook function, which checks for the termination
+conditions.  This particular hook function, and use of hook functions in
+general, are described below.
+
+
+setAttribute
+------------
+
+     $robot->setAttribute( ... attribute-value-pairs ... );
+
+Change the value of one or more robot attributes.  Attributes are
+identified using a string, and take scalar values.  For example, to
+specify the name of your robot, you set the NAME attribute:
+
+     $robot->setAttribute('NAME' => 'WebStud');
+
+The supported attributes for the Robot module are listed below, in the
+ROBOT ATTRIBUTES section.
+
+
+getAttribute
+------------
+
+     $value = $robot->getAttribute('attribute-name');
+
+Queries a Robot for the value of an attribute.  For example, to query
+the version number of your robot, you would get the VERSION attribute:
+
+     $version = $robot->getAttribute('VERSION');
+
+The supported attributes for the Robot module are listed below, in the
+ROBOT ATTRIBUTES section.
+
+
+addUrl
+------
+
+     $robot->addUrl( $url1, ..., $urlN );
+
+Used to add one or more URLs to the queue for the robot.  Each URL can
+be passed as a simple string, or as a URI::URL object.
+
+Returns True (non-zero) if all URLs were successfully added, False
+(zero) if at least one of the URLs could not be added.
+
+
+addHook
+-------
+
+     $robot->addHook($hook_name, \&hook_function);
+
+     sub hook_function { ... }
+
+Register a *hook* function which should be invoked by the robot at
+a specific point in the control flow. There are a number of
+*hook points* in the robot, which are identified by a string.
+For a list of hook points, see the SUPPORTED HOOKS section below.
+
+If you provide more than one function for a particular hook, then the
+hook functions will be invoked in the order they were added.  I.e. the
+first hook function called will be the first hook function you added.
+
+
+proxy, no_proxy, env_proxy
+--------------------------
+
+These are convenience functions are setting proxy information on the
+User agent being used to make the requests.
+
+     $robot->proxy( protocol, proxy );
+
+Used to specify a proxy for the given scheme.  The protocol argument can
+be a reference to a list of protocols.
+
+     $robot->no_proxy(domain1, ... domainN);
+
+Specifies that proxies should not be used for the specified domains or
+hosts.
+
+     $robot->env_proxy();
+
+Load proxy settings from protocol*_proxy* environment variables:
+`ftp_proxy', http_proxy, `no_proxy', etc.
+
+
+ROBOT ATTRIBUTES
+================
+
+This section lists the attributes used to configure a Robot object.
+Attributes are set using the `setAttribute()' method, and queried using
+the `getAttribute()' method.
+
+Some of the attributes *must* be set before you start the Robot (with
+the `run()' method).  These are marked as *mandatory* in the list below.
+
+NAME
+     The name of the Robot.  This should be a sequence of alphanumeric
+     characters, and is used to identify your Robot.  This is used to
+     set the `User-Agent' field of HTTP requests, and so will appear in
+     server logs.
+
+     *mandatory*
+
+VERSION
+     The version number of your Robot.  This should be a floating point
+     number, in the format *N.NNN*.
+
+     *mandatory*
+
+EMAIL
+     A valid email address which can be used to contact the Robot's
+     owner, for example by someone who wishes to complain about the
+     behavior of your robot.
+
+     *mandatory*
+
+VERBOSE
+     A boolean flag which specifies whether the Robot should display
+     verbose status information as it runs.
+
+     Default: 0 (false)
+
+TRAVERSAL
+     Specifies what traversal style should be adopted by the Robot.
+     Valid values are *depth* and *breadth*.
+
+     Default: depth
+
+REQUEST_DELAY
+     Specifies whether the delay (in minutes) between successive GETs
+     from the same server.
+
+     Default: 1
+
+IGNORE_TEXT
+     Specifies whether the HTML structure passed to the
+     invoke-on-contents hook function should include the textual content
+     of the page, or just the HTML elements.
+
+     Default: 1 (true)
+
+
+SUPPORTED HOOKS
+===============
+
+This section lists the hooks which are supported by the WWW::Robot
+module.  The first two arguments passed to a hook function are always
+the Robot object followed by the name of the hook being
+invoked. I.e. the start of a hook function should look something like:
+
+     sub my_hook_function
+     {
+         my $robot = shift;
+         my $hook  = shift;
+         # ... other, hook-specific, arguments
+
+Wherever a hook function is passed a `$url' argument, this will be a
+URI::URL object, with the URL fully specified.  I.e. even if the URL was
+seen in a relative link, it will be passed as an absolute URL.
+
+
+restore-state
+-------------
+
+     sub hook { my($robot, $hook_name) = @_; }
+
+This hook is invoked just before entering the main iterative loop of the
+robot.  The intention is that the hook will be used to restore state, if
+such an operation is required.
+
+This can be helpful if the robot is running in an incremental mode,
+where state is saved between each run of the robot.
+
+
+invoke-on-all-url
+-----------------
+
+     sub hook { my($robot, $hook_name, $url) = @_; }
+
+This hook is invoked on all URLs seen by the robot, regardless of
+whether the URL is actually traversed.  In addition to the standard
+`$robot' and `$hook' arguments, the third argument is `$url', which is
+the URL being travered by the robot.
+
+For a given URL, the hook function will be invoked at most once,
+regardless of how many times the URL is seen by the Robot.  If you are
+interested in seeing the URL every time, you can use the invoke-on-link
+hook.
+
+
+follow-url-test
+---------------
+
+     sub hook { my($robot, $hook_name, $url) = @_; return $boolean; }
+
+This hook is invoked to determine whether the robot should traverse the
+given URL.  If the hook function returns 0 (zero), then the robot will
+do nothing further with the URL.  If the hook function returns non-zero,
+then the robot will get the contents of the URL, invoke further hooks,
+and extract links if the contents are HTML.
+
+
+invoke-on-followed-url
+----------------------
+
+     sub hook { my($robot, $hook_name, $url) = @_; }
+
+This hook is invoked on URLs which are about to be traversed by the
+robot; i.e. URLs which have passed the follow-url-test hook.
+
+
+invoke-on-get-error
+-------------------
+
+     sub hook { my($robot, $hook_name, $url, $response) = @_; }
+
+This hook is invoked if the Robot ever fails to get the contents of a
+URL.  The `$response' argument is an object of type HTTP::Response.
+
+
+invoke-on-contents
+------------------
+
+     sub hook { my($robot, $hook, $url, $response, $structure, $filename) = @_; }
+
+This hook function is invoked for all URLs for which the contents are
+successfully retrieved.
+
+The `$url' argument is a URI::URL object for the URL currently being
+processed by the Robot engine.
+
+The `$response' argument is an HTTP::Response object, the result of the
+GET request on the URL.
+
+The `$structure' argument is an HTML::Element object which is the root
+of a tree structure constructed from the contents of the URL.  You can
+set the IGNORE_TEXT attribute to specify whether the structure passed
+includes the textual content of the page, or just the HTML elements.
+
+The $filename argument is the path to a local temporary file which
+contains a local copy of the URL contents.  You cannot assume that the
+file will exist after control has returned from your hook function.
+
+
+invoke-on-link
+--------------
+
+     sub hook { my($robot, $hook_name, $from_url, $to_url) = @_; }
+
+This hook function is invoked for all links seen as the robot traverses.
+When the robot is parsing a page (*$from_url*) for links, for every link
+seen the invoke-on-link hook is invoked with the URL of the source page,
+and the destination URL.  The destination URL is in canonical form.
+
+
+continue-test
+-------------
+
+     sub hook { my($robot) = @_; }
+
+This hook is invoked at the end of the robot's main iterative loop.  If
+the hook function returns non-zero, then the robot will continue
+execution with the next URL.  If the hook function returns zero, then
+the Robot will terminate the main loop, and close down after invoking
+the following two hooks.
+
+If no continue-test hook function is provided, then the robot will
+always loop.
+
+
+save-state
+----------
+
+     sub hook { my($robot) = @_; }
+
+This hook is used to save any state information required by the robot
+application.
+
+
+generate-report
+---------------
+
+     sub hook { my($robot) = @_; }
+
+This hook is used to generate a report for the run of the robot, if such
+is desired.
+
+
+modified-since
+--------------
+
+If you provide this hook function, it will be invoked for each URL
+before the robot actually requests it.  The function can return a time
+to use with the If-Modified-Since HTTP header.  This can be used by a
+robot to only process those pages which have changed since the last
+visit.
+
+Your hook function should be declared as follows:
+
+     sub modifed_since_hook
+     {
+         my $robot = shift;        # instance of Robot module
+         my $hook  = shift;        # name of hook invoked
+         my $url   = shift;        # URI::URL for the url in question
+
+         # ... calculate time ...
+         return $time;
+     }
+
+If your function returns anything other than undef, then a
+*If-Modified-Since:* field will be added to the request header.
+
+
+invoke-after-get
+----------------
+
+This hook function is invoked immediately after the robot makes each GET
+request.  This means your hook function will see every type of response,
+not just successful GETs.  The hook function is passed two arguments:
+the `$url' we tried to GET, and the `$response' which resulted.
+
+If you provided a `modified-since' in this node hook, then provide an
+invoke-after-get function, and look for error code 304 (or
+RC_NOT_MODIFIED if you are using HTTP::Status, which you should be :-):
+
+     sub after_get_hook
+     {
+         my($robot, $hook, $url, $response) = @_;
+    
+         if ($response->code == RC_NOT_MODIFIED)
+         {
+         }
+     }
+
+
+EXAMPLES
+========
+
+This section illustrates use of the Robot module, with code snippets
+from several sample Robot applications.  The code here is not intended
+to show the right way to code a web robot, but just illustrates the API
+for using the Robot.
+
+
+Validating Robot
+----------------
+
+This is a simple robot which you could use to validate your web site.
+The robot uses *weblint* to check the contents of URLs of type
+*text/html*
+
+     #!/usr/bin/perl require 5.002; use WWW::Robot;
+
+     $rootDocument = $ARGV[0];
+
+     $robot = new WWW::Robot('NAME'     =>  'Validator',
+     			   'VERSION'  =>  1.000,
+     			   'EMAIL'    =>  'fred@foobar.com');
+
+     $robot->addHook('follow-url-test', \&follow_test);
+     $robot->addHook('invoke-on-contents', \&validate_contents);
+
+     $robot->run($rootDocument);
+
+     #-------------------------------------------------------
+     sub follow_test {
+        my($robot, $hook, $url) = @_;
+
+        return 0 unless $url->scheme eq 'http';
+        return 0 if $url =~ /\.(gif|jpg|png|xbm|au|wav|mpg)$/;
+  
+        #---- we're only interested in pages on our site ----
+        return $url =~ /^$rootDocument/;
+     }
+
+     #-------------------------------------------------------
+     sub validate_contents {
+        my($robot, $hook, $url, $response, $filename) = @_;
+
+        return unless $response->content_type eq 'text/html';
+
+        print STDERR "\n$url\n";
+
+        #---- run weblint on local copy of URL contents -----
+        system("weblint -s $filename");
+     }
+
+If you are behind a firewall, then you will have to add something like
+the following, just before calling the `run()' method:
+
+     $robot->proxy(['ftp', 'http', 'wais', 'gopher'],
+     		 'http://firewall:8080/');
+
+
+MODULE DEPENDENCIES
+===================
+
+The Robot.pm module builds on a lot of existing Net, WWW and other Perl
+modules.  Some of the modules are part of the core Perl distribution,
+and the latest versions of all modules are available from the
+Comprehensive Perl Archive Network (CPAN).  The modules used are:
+
+HTTP::Request
+     This module is used to construct HTTP requests, when retrieving the
+     contents of a URL, or using the HEAD request to see if a URL
+     exists.
+
+HTML::Parse
+     This module builds a tree data structure from the contents of an
+     HTML page.  This is used to extract the URLs from the links on a
+     page.  This is also used to check for page-specific Robot exclusion
+     commands, using the META element.
+
+URI::URL
+     This module implements a class for URL objects, providing
+     resolution of relative URLs, and access to the different components
+     of a URL.
+
+LWP::RobotUA
+     This is a wrapper around the LWP::UserAgent class.
+     A *UserAgent* is used to connect to servers over the network,
+     and make requests.
+     The RobotUA module provides transparent compliance with the
+     *Robot Exclusion Protocol*.
+
+HTTP::Status
+     This has definitions for HTTP response codes, so you can say
+     RC_NOT_MODIFIED instead of 304.
+
+All of these modules are available as part of the libwww-perl5
+distribution, which is also available from CPAN.
+
+
+SEE ALSO
+========
+
+The SAS Group Home Page
+     http://www.cre.canon.co.uk/sas.html
+
+     This is the home page of the Group at Canon Research Centre Europe
+     who are responsible for Robot.pm.
+
+Robot Exclusion Protocol
+     http://info.webcrawler.com/mak/projects/robots/norobots.html
+
+     This is a *de facto* standard which defines how a `well behaved'
+     Robot client should interact with web servers and web pages.
+
+Guidelines for Robot Writers
+     http://info.webcrawler.com/mak/projects/robots/guidelines.html
+
+     Guidelines and suggestions for those who are (considering)
+     developing a web robot.
+
+Weblint Home Page
+     http://www.cre.canon.co.uk/~neilb/weblint/
+
+     Weblint is a perl script which is used to check HTML for syntax
+     errors and stylistic problems, in the same way *lint* is used to
+     check C.
+
+Comprehensive Perl Archive Network (CPAN)
+     http://www.perl.com/perl/CPAN/
+
+     This is a well-organized collection of Perl resources, such as
+     modules, documents, and scripts.  CPAN is mirrored at FTP sites
+     around the world.
+
+
+VERSION
+=======
+
+This documentation describes version 0.011 of the Robot module.  The
+module requires at least version 5.002 of Perl.
+
+
+AUTHOR
+======
+
+Neil Bowers `<neilb@cre.canon.co.uk>' SAS Group, Canon Research Centre
+Europe
+
+
+COPYRIGHT
+=========
+
+Copyright (C) 1997, Canon Research Centre Europe.
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: WWW/RobotRules, Next: WWW/RobotRules/AnyDBM_File, Prev: WWW/Robot, Up: Module List
+
+Parse robots.txt files
+**********************
+
+
+
+NAME
+====
+
+WWW::RobotsRules - Parse robots.txt files
+
+
+SYNOPSIS
+========
+
+     require WWW::RobotRules;
+     my $robotsrules = new WWW::RobotRules 'MOMspider/1.0';
+
+     use LWP::Simple qw(get);
+
+     $url = "http://some.place/robots.txt";
+     my $robots_txt = get $url;
+     $robotsrules->parse($url, $robots_txt);
+
+     $url = "http://some.other.place/robots.txt";
+     my $robots_txt = get $url;
+     $robotsrules->parse($url, $robots_txt);
+
+     # Now we are able to check if a URL is valid for those servers that
+     # we have obtained and parsed "robots.txt" files for.
+     if($robotsrules->allowed($url)) {
+         $c = get $url;
+         ...
+     }
+
+
+DESCRIPTION
+===========
+
+This module parses a `robots.txt' file as specified in "A Standard for
+Robot Exclusion", described in
+<URL:http://info.webcrawler.com/mak/projects/robots/norobots.html>
+Webmasters can use the `robots.txt' file to disallow conforming robots
+access to parts of their WWW server.
+
+The parsed file is kept in the WWW::RobotRules object, and this object
+provide methods to check if access to a given URL is prohibited.  The
+same WWW::RobotRules object can parse multiple `robots.txt' files.
+
+
+METHODS
+=======
+
+
+$rules = new WWW::RobotRules 'MOMspider/1.0'
+--------------------------------------------
+
+This is the constructor for WWW::RobotRules objects.  The first argument
+given to new() is the name of the robot.
+
+
+$rules->parse($url, $content, $fresh_until)
+-------------------------------------------
+
+The parse() method takes as arguments the URL that was used to retrieve
+the `/robots.txt' file, and the contents of the file.
+
+
+$rules->allowed($url)
+---------------------
+
+Returns TRUE if this robot is allowed to retrieve this URL.
+
+
+$rules->agent([$name])
+----------------------
+
+Get/set the agent name. NOTE: Changing the agent name will clear the
+robots.txt rules and expire times out of the cache.
+
+
+ROBOTS.TXT
+==========
+
+The format and semantics of the "/robots.txt" file are as follows (this
+is an edited abstract of
+<URL:http://info.webcrawler.com/mak/projects/robots/norobots.html>):
+
+The file consists of one or more records separated by one or more blank
+lines. Each record contains lines of the form
+
+     <field-name>: <value>
+
+The field name is case insensitive.  Text after the '#' character on a
+line is ignored during parsing.  This is used for comments.  The
+following <field-names> can be used:
+
+User-Agent
+     The value of this field is the name of the robot the record is
+     describing access policy for.  If more than one *User-Agent* field
+     is present the record describes an identical access policy for more
+     than one robot. At least one field needs to be present per record.
+     If the value is '*', the record describes the default access policy
+     for any robot that has not not matched any of the other records.
+
+Disallow
+     The value of this field specifies a partial URL that is not to be
+     visited. This can be a full path, or a partial path; any URL that
+     starts with this value will not be retrieved
+
+
+Examples
+--------
+
+The following example "/robots.txt" file specifies that no robots should
+visit any URL starting with "/cyberworld/map/" or "/tmp/":
+
+     # robots.txt for http://www.site.com/
+
+     User-agent: *
+     Disallow: /cyberworld/map/ # This is an infinite virtual URL space
+     Disallow: /tmp/ # these will soon disappear
+
+This example "/robots.txt" file specifies that no robots should visit
+any URL starting with "/cyberworld/map/", except the robot called
+"cybermapper":
+
+     # robots.txt for http://www.site.com/
+
+     User-agent: *
+     Disallow: /cyberworld/map/ # This is an infinite virtual URL space
+
+     # Cybermapper knows where to go.
+     User-agent: cybermapper
+     Disallow:
+
+This example indicates that no robots should visit this site further:
+
+     # go away
+     User-agent: *
+     Disallow: /
+
+
+SEE ALSO
+========
+
+*Note LWP/RobotUA: LWP/RobotUA,, *Note WWW/RobotRules/AnyDBM_File: WWW/RobotRules/AnyDBM_File,
+
+
+
+
+File: pm.info, Node: WWW/RobotRules/AnyDBM_File, Next: WWW/Search, Prev: WWW/RobotRules, Up: Module List
+
+Persistent RobotRules
+*********************
+
+
+
+NAME
+====
+
+WWW::RobotRules::AnyDBM_File - Persistent RobotRules
+
+
+SYNOPSIS
+========
+
+     require WWW::RobotRules::AnyDBM_File;
+     require LWP::RobotUA;
+
+     # Create a robot useragent that uses a diskcaching RobotRules
+     my $rules = new WWW::RobotRules::AnyDBM_File 'my-robot/1.0', 'cachefile';
+     my $ua = new WWW::RobotUA 'my-robot/1.0', 'me@foo.com', $rules;
+
+     # Then just use $ua as usual
+     $res = $ua->request($req);
+
+
+DESCRIPTION
+===========
+
+This is a subclass of *WWW::RobotRules* that uses the AnyDBM_File
+package to implement persistent diskcaching of `robots.txt' and host
+visit information.
+
+The constructor (the new() method) takes an extra argument specifying
+the name of the DBM file to use.  If the DBM file already exists, then
+you can specify undef as agent name as the name can be obtained from the
+DBM database.
+
+
+SE ALSO
+=======
+
+*Note WWW/RobotRules: WWW/RobotRules,, *Note LWP/RobotUA: LWP/RobotUA,
+
+
+AUTHORS
+=======
+
+Hakan Ardo <hakan@munin.ub2.lu.se>, Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: WWW/Search, Next: WWW/Search/AltaVista, Prev: WWW/RobotRules/AnyDBM_File, Up: Module List
+
+Virtual base class for WWW searches
+***********************************
+
+
+
+NAME
+====
+
+WWW::Search - Virtual base class for WWW searches
+
+
+DESCRIPTION
+===========
+
+This class is the parent for all access methods supported by the
+`WWW::Search' library.  This library implements a Perl API to web-based
+search engines.
+
+Current search engines supported include AltaVista (both web and news),
+Dejanews, Excite (web only), HotBot (web only), Infoseek (e-mail, web,
+and news) and Lycos.
+
+Search results are limited and there is a pause between each request for
+results to avoid overloading either the client or the server.
+
+
+Sample program
+--------------
+
+Using the library should be straightforward.  Here's a sample program:
+
+     my($search) = new WWW::Search('AltaVista');
+     $search->native_query(WWW::Search::escape_query($query));
+     my($result);
+     while ($result = $search->next_result()) {
+     	print $result->url, "\n";
+     };
+
+Results are objects of `WWW::SearchResult' (see *Note WWW/SearchResult:
+WWW/SearchResult,) .
+
+
+SEE ALSO
+========
+
+For more details see *Note LWP: LWP,.
+
+For specific search engines, see `WWW::Search::TheEngineName' in this
+node (replacing TheEngineName with a particular search engine).
+
+For details about the results of a search, see *Note WWW/SearchResult:
+WWW/SearchResult,.
+
+
+METHODS AND FUNCTIONS
+=====================
+
+
+new
+---
+
+To create a new WWW::Search, call
+    $search = new WWW::Search('SearchEngineName'); where
+SearchEngineName is replaced with a particular search engine.  For
+example:
+    $search = new WWW::Search('AltaVista');
+
+If no search engine is specified a default will be chosen for you.
+
+The next step is usually:
+    $search->native_query('search-engine-specific+query+string');
+
+
+native_query
+------------
+
+Specify a query (and optional options) to the current search object.
+The query and options must be escaped; call `escape_query', *Note
+WWW/Search: WWW/Search, to escape a plain query.  The actual search is
+not actually begun until results or next_result is called.
+
+Example:
+
+     $search->native_query('search-engine-specific+query+string',
+     	{ option1 => 'able', option2 => 'baker' } );
+
+The hash of options following the query string is optional.  The query
+string is back-end specific.  There are two kinds of options: options
+specific to the back-end and generic options applicable to mutliple
+back-ends.
+
+Generic options all begin with ``search_''.  Currently two are
+supported:
+
+search_url Specifies the root of the URL for the
+search_debug Enables back-end debugging.
+search_parse_debug Enables back-end parser debugging.
+search_method Specifies the HTTP method (GET or POST) for HTTP-based queries. =back
+     Some back-ends may not implement generic options, but any which do
+     implement them must provide these semantics.
+
+     Back-end-specific options are described in the documentation for
+     each back-ends.  Typically they are packed together to create the
+     query portion of the final URL.
+
+     Details about how the search string and option hash are interpreted
+     in the search-engine-specific manual pages
+     (WWW::Search::SearchEngineName).
+
+     After native_query, the next step is usually:
+
+          @results = $search->results();
+
+     or
+
+          while ($result = $search->next_result()) {
+          	# do_something;
+          };
+
+
+results
+-------
+
+Return all the results of a query as a reference to array of
+SearchResult objects.
+
+Example:
+    @results = $search->results();
+    foreach $result (@results) {
+        print $result->url(), "\n";
+    };
+
+On error, results() will return undef and set `response()' to the HTTP
+response code.
+
+
+next_result
+-----------
+
+Return each result of a query as a SearchResult object.
+
+Example:
+    while ($result = $search->next_result()) {
+	print $result->url(), "\n";
+    };
+
+On error, results() will return undef and set `response()' to the HTTP
+response code.
+
+
+response
+--------
+
+Return the HTTP Response code for the last query (see *Note
+HTTP/Response: HTTP/Response,).  If the query returns undef, errors
+could be reported like this:
+
+     my($response) = $search->response();
+     if ($response->is_success) {
+     	print "no search results\n";
+     } else {
+     	print "error:  " . $response->as_string() . "\n";
+     };
+
+Note: even if the back-end does not involve the web it should return
+HTTP::Response-style codes.
+
+
+`seek_result($offset)'
+----------------------
+
+Set which result next_result should return (like lseek in Unix).
+Results are zero-indexed.
+
+The only guaranteed valid offset is 0 which will replay the results from
+the beginning.  In particular, seeking past the end of the current
+cached results probably won't do what you might think it should.
+
+Results are cached, so this doesn't re-issue the query or cause IO
+(unless you go off the end of the results).  To re-do the query, create
+a new search object.
+
+Example:
+    $search->seek_result(0);
+
+
+maximum_to_retrieve
+-------------------
+
+The maximum number of hits to return (approximately).  Queries resulting
+in more than this many hits will return the first hits, up to this
+limit.
+
+Defaults to 500.
+
+Example:
+    $max = $search->maximum_to_retrieve(100);
+
+
+timeout
+-------
+
+The maximum length of time any portion of the query should take, in
+seconds.
+
+Defaults to 60.
+
+Example:
+    $search->timeout(120);
+
+
+opaque
+------
+
+This function provides an application a place to store one opaque data
+element (or many via a Perl reference).  This facility is useful to (for
+example), maintain client-specific information in each active query when
+you have multiple concurrent queries.
+
+
+escape_query
+------------
+
+Escape a query.  Before queries are made special characters must be
+escaped so that a proper URL can be formed.
+
+This is like escaping a URL but all non-alphanumeric characters are
+escaped and and spaces are converted to "+"'s.
+
+Example:
+    $escaped = Search::escape_query('+lsam +replication'); (Returns
+"%22lsam+replication%22").
+
+See also unescape_query.
+
+
+unescape_query
+--------------
+
+Unescape a query.  See escape_query for details.
+
+Example:
+    $unescaped = Search::unescape_query('%22lsam+replication%22');
+(Returns "+lsam +replication").
+
+See also unescape_query.
+
+
+http_proxy
+----------
+
+Set-up an HTTP proxy (Perhaps for connections from behind a firewall.)
+
+This routine should be called before the first retrival is attempted.
+
+Example:
+
+     $search->http_proxy("http://gateway:8080");
+
+
+generic_option (PRIVATE)
+------------------------
+
+This internal routine checks if an option is generic or back-end
+specific.  Currently all generic options begin with ``search_''.  This
+routine is not a method.
+
+
+setup_search (PRIVATE)
+----------------------
+
+This internal routine does generic Search setup.  It calls
+`native_setup_search' to do back-end specific setup.
+
+
+user_agent($NON_ROBOT) (PRIVATE)
+--------------------------------
+
+This internal routine creates a user-agent for dervived classes that
+query the web.  If `$NON_ROBOT', a normal user-agent (rather than a
+robot-style user-agent) is used.
+
+Back-ends should use robot-style user-agents whereever possible.  Also,
+back-ends should call `user_agent_delay' every page retrival to avoid
+swamping search-engines.
+
+
+user_agent_delay (PRIVATE)
+--------------------------
+
+Derived classes should call this between requests to remote servers to
+avoid overloading them with many, fast back-to-back requests.
+
+
+retrieve_some (PRIVATE)
+-----------------------
+
+An internal routine to interface with `native_retrieve_some'.  Checks
+for overflow.
+
+
+IMPLEMENTING NEW BACK-ENDS
+==========================
+
+`WWW::Search' supports back-ends to separate search engines.
+Each back-end is implemented as a subclass of `WWW::Search'.
+*Note WWW/Search/AltaVista: WWW/Search/AltaVista, provides a good sample back-end.
+
+A back-end usually has two routines, `native_retrieve_some' and
+`native_setup_search'.
+
+`native_retrieve_some' is the core of a back-end.  It will be called
+periodically to fetch URLs.  Each call it should fetch a page with about
+10 or so hits and add them to the cache.  It should return the number of
+hits found or undef when there are no more hits.
+
+Internally, `native_retrieve_some' typically will parse the HTML,
+extract the links and descriptions, then find the ``next'' button and
+save the URL.  See the code for the AltaVista implementation for an
+example.
+
+`native_setup_search' is invoked before the search.  It is passed a
+single argument: the escaped, native version of the query.
+
+The front- and back-ends share a single object (a hash) The back-end can
+change any hash element beginning with underscore, and `{response}' (an
+`HTTP::Response' code) and `{cache}' (the array of `WWW::SearchResult'
+objects caching all results).
+
+If you implement a new back-end, please let the authors know.
+
+
+BUGS AND DESIRED FEATURES
+=========================
+
+The bugs are there for you to find (some people call them Easter Eggs).
+
+Desired features:
+
+A portable query language. A portable language would easily allow you to move queries easily between different search engines. A  query abstraction is non-trivial and won't be done anytime soon at ISI. If you want to take a shot at it, please let me know.
+
+AUTHOR
+======
+
+`WWW::Search' is written by John Heidemann, <johnh@isi.edu>.
+
+Back-ends and applications for WWW::Search have been done by John
+Heidemann, Wm. L. Scheding, Cesare Feroldi de Rosa, and GLen Pringle.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/AltaVista, Next: WWW/Search/AltaVista/AdvancedNews, Prev: WWW/Search, Up: Module List
+
+class for searching Alta Vista
+******************************
+
+
+
+NAME
+====
+
+WWW::Search::AltaVista - class for searching Alta Vista
+
+
+DESCRIPTION
+===========
+
+This class is an AltaVista specialization of WWW::Search.  It handles
+making and interpreting AltaVista searches
+`http://www.altavista.digital.com'.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+OPTIONS
+=======
+
+The default is for simple web queries.
+Specialized back-ends for simple and advanced web and news searches
+are available (see
+*Note WWW/Search/AltaVista/Web: WWW/Search/AltaVista/Web,,
+*Note WWW/Search/AltaVista/AdvancedWeb: WWW/Search/AltaVista/AdvancedWeb,,
+*Note WWW/Search/AltaVista/News: WWW/Search/AltaVista/News,,
+*Note WWW/Search/AltaVista/AdvancedNews: WWW/Search/AltaVista/AdvancedNews,).
+These back-ends set different combinations following options.
+
+search_url=URL
+     Specifies who to query with the AltaVista protocol.  The default is
+     at `http://www.altavista.digital.com/cgi-bin/query'; you may wish
+     to retarget it to `http://www.altavista.telia.com/cgi-bin/query' or
+     other hosts if you think that they're ``closer''.
+
+search_debug, search_parse_debug, search_ref Specified at *Note WWW/Search: WWW/Search,.
+pg=aq
+     Do advanced queries.  (It defaults to simple queries.)
+
+what=news
+     Search Usenet instead of the web.  (It defaults to search the web.)
+
+
+SEE ALSO
+========
+
+To make new back-ends, see *Note WWW/Search: WWW/Search,, or the
+specialized AltaVista searches described in options.
+
+
+HOW DOES IT WORK?
+=================
+
+`native_setup_search' is called before we do anything.  It initializes
+our private variables (which all begin with underscores) and sets up a
+URL to the first results page in `{_next_url}'.
+
+`native_retrieve_some' is called (from `WWW::Search::retrieve_some')
+whenever more hits are needed.  It calls the LWP library to fetch the
+page specified by `{_next_url}'.  It parses this page, appending any
+search hits it finds to `{cache}'.  If it finds a ``next'' button in the
+text, it sets `{_next_url}' to point to the page for the next set of
+results, otherwise it sets it to undef to indicate we're done.
+
+
+AUTHOR
+======
+
+`WWW::Search::AltaVista' is written by John Heidemann, <johnh@isi.edu>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/AltaVista/AdvancedNews, Next: WWW/Search/AltaVista/AdvancedWeb, Prev: WWW/Search/AltaVista, Up: Module List
+
+class for advanced Alta Vista news searching
+********************************************
+
+
+
+NAME
+====
+
+WWW::Search::AltaVista::Web - class for advanced Alta Vista news
+searching
+
+
+DESCRIPTION
+===========
+
+This class implements the advanced AltaVista news search (specializing
+AltaVista and WWW::Search).  It handles making and interpreting
+AltaVista web searches `http://www.altavista.digital.com'.
+
+Details of AltaVista can be found at *Note WWW/Search/AltaVista:
+WWW/Search/AltaVista,.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+AUTHOR
+======
+
+`WWW::Search' is written by John Heidemann, <johnh@isi.edu>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/AltaVista/AdvancedWeb, Next: WWW/Search/AltaVista/News, Prev: WWW/Search/AltaVista/AdvancedNews, Up: Module List
+
+class for advanced Alta Vista web searching
+*******************************************
+
+
+
+NAME
+====
+
+WWW::Search::AltaVista::Web - class for advanced Alta Vista web
+searching
+
+
+DESCRIPTION
+===========
+
+This class implements the advanced mode of AltaVista web search
+(specializing AltaVista and WWW::Search).  It handles making and
+interpreting AltaVista searches `http://www.altavista.digital.com'.
+
+Details of AltaVista can be found at *Note WWW/Search/AltaVista:
+WWW/Search/AltaVista,.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+AUTHOR
+======
+
+`WWW::Search' is written by John Heidemann, <johnh@isi.edu>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/AltaVista/News, Next: WWW/Search/AltaVista/Web, Prev: WWW/Search/AltaVista/AdvancedWeb, Up: Module List
+
+class for Alta Vista news searching
+***********************************
+
+
+
+NAME
+====
+
+WWW::Search::AltaVista::News - class for Alta Vista news searching
+
+
+DESCRIPTION
+===========
+
+This class implements the AltaVista news search (specializing AltaVista
+and WWW::Search).  It handles making and interpreting AltaVista news
+searches `http://www.altavista.digital.com'.
+
+Details of AltaVista can be found at *Note WWW/Search/AltaVista:
+WWW/Search/AltaVista,.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+AUTHOR
+======
+
+`WWW::Search' is written by John Heidemann, <johnh@isi.edu>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/AltaVista/Web, Next: WWW/Search/Dejanews, Prev: WWW/Search/AltaVista/News, Up: Module List
+
+class for Alta Vista web searching
+**********************************
+
+
+
+NAME
+====
+
+WWW::Search::AltaVista::Web - class for Alta Vista web searching
+
+
+DESCRIPTION
+===========
+
+This class implements the AltaVista web search (specializing AltaVista
+and WWW::Search).  It handles making and interpreting AltaVista web
+searches `http://www.altavista.digital.com'.
+
+Details of AltaVista can be found at *Note WWW/Search/AltaVista:
+WWW/Search/AltaVista,.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+AUTHOR
+======
+
+`WWW::Search' is written by John Heidemann, <johnh@isi.edu>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/Dejanews, Next: WWW/Search/Excite, Prev: WWW/Search/AltaVista/Web, Up: Module List
+
+Perl class for searching Dejanews
+*********************************
+
+
+
+NAME
+====
+
+WWW::Search::Dejanews - Perl class for searching Dejanews
+
+
+DESCRIPTION
+===========
+
+This class is a `WWW::Search' back-end for the Dejanews search engine
+for Usenet news.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+OPTIONS
+=======
+
+defaultOp AND or OR (defaults to OR).
+groups Ex. comp.foo.bar. Defaults to all groups.
+
+SEE ALSO
+========
+
+To make new back-ends, see *Note WWW/Search: WWW/Search,.
+
+
+AUTHOR
+======
+
+Cesare Feroldi de Rosa, <C.Feroldi@IT.net>, 1996.  (Derived from
+AltaVista.pm.)
+
+
+COPYRIGHT
+=========
+
+This back-end was contributed to USC/ISI by Cesare Feroldi de Rosa.
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/Excite, Next: WWW/Search/HotBot, Prev: WWW/Search/Dejanews, Up: Module List
+
+class for searching Excite
+**************************
+
+
+
+NAME
+====
+
+WWW::Search::Excite - class for searching Excite
+
+
+DESCRIPTION
+===========
+
+This class is an Excite specialization of WWW::Search.  It handles
+making and interpreting Excite searches `http://www.excite.com'.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+SEE ALSO
+========
+
+To make new back-ends, see *Note WWW/Search: WWW/Search,.
+
+
+HOW DOES IT WORK?
+=================
+
+`native_setup_search' is called before we do anything.  It initializes
+our private variables (which all begin with underscores) and sets up a
+URL to the first results page in `{_next_url}'.
+
+`native_retrieve_some' is called (from `WWW::Search::retrieve_some')
+whenever more hits are needed.  It calls the LWP library to fetch the
+page specified by `{_next_url}'.  It parses this page, appending any
+search hits it finds to `{cache}'.  If it finds a ``next'' button in the
+text, it sets `{_next_url}' to point to the page for the next set of
+results, otherwise it sets it to undef to indicate we're done.
+
+
+BUGS
+====
+
+This module should support options and a back-end specific for news.
+
+
+AUTHOR
+======
+
+`WWW::Search::Excite' is written by GLen Pringle
+(`pringle@cs.monash.edu.au') based upon `WWW::Search::Lycos'.
+
+
+COPYRIGHT
+=========
+
+This back-end was contributed to USC/ISI by GLen Pringle.
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+
+File: pm.info, Node: WWW/Search/HotBot, Next: WWW/Search/Infoseek, Prev: WWW/Search/Excite, Up: Module List
+
+class for searching HotBot
+**************************
+
+
+
+NAME
+====
+
+WWW::Search::HotBot - class for searching HotBot
+
+
+DESCRIPTION
+===========
+
+This class is an HotBot specialization of WWW::Search.  It handles
+making and interpreting HotBot searches `http://www.hotbot.com'.
+
+This class exports no public interface; all interaction should be done
+through WWW::Search objects.
+
+
+SEE ALSO
+========
+
+To make new back-ends, see *Note WWW/Search: WWW/Search,.
+
+
+HOW DOES IT WORK?
+=================
+
+`native_setup_search' is called before we do anything.  It initializes
+our private variables (which all begin with underscores) and sets up a
+URL to the first results page in `{_next_url}'.
+
+`native_retrieve_some' is called (from `WWW::Search::retrieve_some')
+whenever more hits are needed.  It calls the LWP library to fetch the
+page specified by `{_next_url}'.  It parses this page, appending any
+search hits it finds to `{cache}'.  If it finds a ``next'' button in the
+text, it sets `{_next_url}' to point to the page for the next set of
+results, otherwise it sets it to undef to indicate we're done.
+
+
+BUGS
+====
+
+This module should support options.
+
+
+AUTHOR
+======
+
+`WWW::Search::HotBot' is by Wm. L. Scheding, based on
+`WWW::Search::AltaVista'.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 University of Southern California.  All rights
+reserved.
+                                                               
+Redistribution and use in source and binary forms are permitted provided
+that the above copyright notice and this paragraph are duplicated in all
+such forms and that any documentation, advertising materials, and other
+materials related to such distribution and use acknowledge that the
+software was developed by the University of Southern California,
+Information Sciences Institute.  The name of the University may not be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+
+

@@ -1,0 +1,1610 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: GIFgraph, Next: GIFgraph/colour, Prev: GD, Up: Module List
+
+Graph Plotting Module for Perl 5
+********************************
+
+
+
+NAME
+====
+
+GIFgraph - Graph Plotting Module for Perl 5
+
+
+DESCRIPTION
+===========
+
+*GIFgraph* is a *perl5* module to create and display GIF output 
+for a graph.  The following classes for graphs with axes are defined:
+
+`GIFgraph::lines'
+     Create a line chart.
+
+`GIFgraph::bars'
+     Create a bar chart.
+
+`GIFgraph::points'
+     Create an chart, displaying the data as points.
+
+`GIFgraph::linespoints'
+     Combination of lines and points.
+
+`GIFgraph::area'
+     Create a graph, representing the data as areas under a line.
+
+Additional types:
+
+`GIFgraph::pie'
+     Create a pie chart.
+
+
+USAGE
+=====
+
+Fill an array of arrays with the x values and the values of the data sets.
+Make sure that every array is the same size.
+*NB.* Necessary to extend with a function setting the values in [x,y1,y2..] 
+sets?
+
+     @data = ( 
+         ["1st","2nd","3rd","4th","5th","6th","7th", "8th", "9th"],
+         [    1,    2,    5,    6,    3,  1.5,    1,     3,     4]
+     );
+
+Create a new Graph object by calling the new operator on the graph type
+you want to create (`chart' is `bars, lines, points, linespoints' or
+`pie').
+
+     $my_graph = new GIFgraph::chart( );
+
+Set the graph options.
+
+     $my_graph->set( 'x_label'           => 'X Label',
+                     'y_label'           => 'Y label',
+                     'title'             => 'A Simple Line Graph',
+                     'y_max_value'       => 8,
+                     'y_tick_number'     => 8,
+                     'y_label_skip'      => 2 );
+
+Output the graph
+
+     $my_graph->plot_to_gif( "sample01.gif", \@data );
+
+
+METHODS AND FUNCTIONS
+=====================
+
+
+Methods for all graphs
+----------------------
+
+new GIFgraph::chart([width,height])
+     Create a new object $graph with optional width and heigth.  Default
+     width = 400, default height = 300. `chart' is either `bars, lines,
+     points, linespoints, area' or `pie'.
+
+set_text_clr( *colour name* )
+     Set the colour of the text.
+
+set_title_font( *fontname* )
+     Set the font that will be used for the title of the chart.  Possible
+     choices are defined in GD. 
+     *NB.* If you want to use this function, you'll
+     need to use GD. At some point I'll rewrite this, so you can give
+     this a number from 1 to 4, or a string like 'large' or 'small'
+
+plot( \@data> )
+     Plot the chart, and return the GIF data.
+
+plot_to_gif( *"filename", \@data* )
+     Plot the chart, and write the GIF data to filename.
+
+ReadFile ( "filename", *some array of columns?* )
+     Read data from filename, which must be a data file formatted for
+     GNUplot.
+     *NB.* Have to figure out how to call the function.
+
+set( *key1 =* value1, key2 => value2 ....> )
+     Set chart options. See OPTIONS section.
+
+
+Methods for Pie charts
+----------------------
+
+set_label_font( *fontname* )
+set_value_font( *fontname* )
+     Set the font that will be used for the vabel of the pie or the 
+     values on the pie.  Possible choices are defined in GD. 
+     *NB.* If you want to use this function, you'll
+     need to use GD. At some point I'll rewrite this, so you can give
+     this a number from 1 to 4, or a string like 'large' or 'small'
+
+
+Methods for charts with axes.
+-----------------------------
+
+set_x_label_font ( *font name* )
+set_y_label_font ( *font name* )
+set_x_axis_font ( *font name* )
+set_y_axis_font ( *font name* )
+     Set the font for the x and y axis label, and for the x and y axis value labels.
+     *NB.* If you want to use this function, you'll
+     need to use GD. At some point I'll rewrite this, so you can give
+     this a number from 1 to 4, or a string like 'large' or 'small'
+
+
+OPTIONS
+=======
+
+
+Options for all graphs
+----------------------
+
+gifx, gify
+     The width and height of the gif file in pixels Default: 400 x 300.
+
+t_margin, b_margin, l_margin, r_margin
+     Top, bottom, left and right margin of the GIF. These margins will
+     be left blank.  Default: 0 for all.
+
+logo
+     Name of the logo file. This should be a GIF file.  Default: no
+     logo.
+
+logo_resize, logo_position
+     Factor to resize the logo by, and the position on the canvas of the
+     logo. Possible values for logo_position are 'LL', 'LR', 'UL', and
+     'UR'.  (lower and upper left and right).  Default: 'LR'.
+
+transparent
+     If 1, the produced GIF will have the background colour marked as
+     transparent.  Default: 1.
+
+interlaced
+     If 1, the produced GIF will be interlaced.  Default: 1.
+
+bgclr, fgclr, textclr, labelclr, axislabelclr, accentclr
+     Background, foreground, text, label, axis label and accent colours.
+
+
+Options for graphs with axes.
+-----------------------------
+
+options for `bars, lines, points, linespoints' and area charts.
+
+long_ticks, tick_length
+     If *long_ticks* = 1, ticks will be drawn the same length as the
+     axes.  Otherwise ticks will be drawn with length *tick_length*.
+     Default: long_ticks = 0, tick_length = 4.
+
+y_tick_number
+     Number of ticks to print for the Y axis.  Default: 5.
+
+x_label_skip, y_label_skip
+     Print every *x_label_skip*th number under the tick on the x axis,
+     and every *y_label_skip*th number next to the tick on the y axis.
+     Default: 1 for both.
+
+x_plot_values, y_plot_values
+     If set to 1, the values of the ticks on the x or y axes will be
+     plotted next to the tick. Also see *x_label_skip, y_label_skip*.
+     Default: 1 for both.
+
+box_axis
+     Draw the axes as a box, if 1.  Default: 1.
+
+two_axes
+     Use two separate axes for the first and second data set. The first
+     data set will be set against the left axis, the second against the
+     right axis. If this is set to 1, trying to use anything else than 2
+     datasets will generate an error.  Default: 0.
+
+marker_size
+     The size of the markers used in *points* and *linespoints* graphs,
+     in pixels.  Default: 4.
+
+line_width
+     The width of the line used in *lines* and *linespoints* graphs, in
+     pixels.  Default: 2.
+
+axis_space
+     This space will be left blank between the axes and the text.
+     Default: 4.
+
+overwrite
+     In bar graphs, if this is set to 1, bars will be drawn on top of
+     each other, otherwise next to eeach other.  Default: 0.
+
+
+Options for pie graphs
+----------------------
+
+3d
+     If 1, the pie chart will be drawn with a 3d look.  Default: 1.
+
+pie_height
+     The thickness of the pie when 3d is 1.  Default: 0.1 x GIF y size.
+
+start_angle
+     The angle at which the first data slice will be displayed, with 0
+     degrees being "3 o'clock".  Default: 0.
+
+
+AUTHOR
+======
+
+Martien Verbruggen
+
+
+Contact info
+------------
+
+email: mgjv@comdyn.com.au
+
+
+Copyright
+---------
+
+Copyright (C) 1996 Martien Verbruggen.  All rights reserved.  This
+package is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: GIFgraph/colour, Next: Getopt/EvaP, Prev: GIFgraph, Up: Module List
+
+Colour manipulation routines for use with GIFgraph
+**************************************************
+
+
+
+NAME
+====
+
+Colour - Colour manipulation routines for use with GIFgraph
+
+
+DESCRIPTION
+===========
+
+The *Colour* Package provides a few routines to convert some colour
+names to RGB values. Also included are some functions to calculate the
+hue and luminance of the colours, mainly to be able to sort them.
+
+
+FUNCTIONS
+=========
+
+Colour::list( *number of colours* )
+     Returns a list of *number of colours* colour names known to the
+     package.
+
+Colour::sorted_list( *number of colours* )
+     Returns a list of *number of colours* colour names known to the package, 
+     sorted by luminance or hue.
+     *NB.* Right now it always sorts by luminance. Will add an option in a later
+     stage to decide sorting method at run time.
+
+Colour::rgb( *colour name* )
+     Returns a list of the RGB values of *colour name*.
+
+Colour::hue( *[R,G,B]* )
+     Returns the hue of the colour with the specified RGB values.
+
+Colour::luminance( *[R,G,B]* )
+     Returns the luminance of the colour with the specified RGB values.
+
+
+
+
+File: pm.info, Node: Getopt/EvaP, Next: Getopt/Long, Prev: GIFgraph/colour, Up: Module List
+
+evaluate Perl command line parameters.
+**************************************
+
+
+
+NAME
+====
+
+     Getopt::EvaP() - evaluate Perl command line parameters.
+
+
+SYNOPSIS
+========
+
+     use vars qw(@PDT @MM %OPT);
+     use Getopt::EvaP;
+
+     EvaP \@PDT, \@MM, \%OPT;
+
+
+DESCRIPTION
+===========
+
+*@PDT*
+is the Parameter Description Table, which is a reference to a list of
+strings describing the command line parameters, aliases,
+types and default values.
+*@MM*
+is the Message Module, which is also a reference to a list of strings
+describing the command and it's parameters.
+*%OPT*
+is an optional hash reference where Evaluate Parameters should place its
+results.  If specified, the historical behaviour of modifying the calling
+routines' namespace by storing option values in *%Options*, *%options* and
+*$opt** is disabled.
+
+*** Introduction ***
+
+Function Evaluate Parameters parses a Perl command line in a simple and
+consistent manner, performs type checking of parameter values, and
+provides the user with first-level help.  Evaluate Parameters is also
+embeddable in your application; refer to the *evap_pac(2)* man page for
+complete details.  Evaluate Parameters handles command lines in the
+following format:
+
+     command [-parameters] [file_list]
+
+where parameters and file_list are all optional.  A typical example is
+the C compiler:
+
+     cc -O -o chunk chunk.c
+
+In this case there are two parameters and a file_list consisting of a
+single file name for the cc command.
+
+*** Parameter Description Table (PDT) Syntax ***
+
+Here is the PDT syntax.  Optional constructs are enclosed in [], and the
+| character separates possible values in a list.
+
+     PDT [program_name, alias]
+       [parameter_name[, alias]: type [ = [default_variable,] default_value]]
+     PDTEND [optional_file_list | required_file_list | no_file_list]
+
+So, the simplest possible PDT would be:
+
+     PDT
+     PDTEND
+
+This PDT would simply define a *-help* switch for the command, but is
+rather useless.
+
+A typical PDT would look more like this:
+
+     PDT frog
+       number, n: integer = 1
+     PDTEND no_file_list
+
+This PDT, for command frog, defines a single parameter, number (or n),
+of type integer with a default value of 1.  The PDTEND *no_file_list*
+indicator indicates that no trailing file_list can appear on the command
+line.  Of course, the *-help* switch is defined automatically.
+
+The
+*default_variable*
+is an environment variable - see the section Usage Notes for complete
+details.
+
+*** Usage Notes ***
+
+Usage is similar to getopt/getopts/newgetopt: define a Parameter
+Description Table declaring a list of command line parameters, their
+aliases, types and default values.  The command line parameter
+*-help* (alias -h) is automatically included by Evaluate
+Parameters.  After the evaluation the values of the command line
+parameters are stored in variable names of the form *$opt_parameter*,
+except for lists which are returned as *@opt_parameter*, where
+*parameter* is the full spelling of the command line parameter.
+NOTE: values are also returned in the hashes *%options* and
+*%Options*, with lists being passed as a reference to a list.
+
+Of course, you can specify where you want Evaluate Parameters to return
+its results, in which case this historical feature of writing into your
+namespace is disabled.
+ 
+An optional PDT line can be included that tells Evaluate Parameters whether
+or not trailing file names can appear on the command line after all the
+parameters.  It can read *no_file_list*, *optional_file_list* or
+*required_file_list* and, if not specified, defaults to optional.  Although
+placement is not important, this line is by convention the last line of
+the PDT declaration.
+
+Additionally a Message Module is declared that describes the command
+and provides examples.  Following the main help text an optional
+series of help text messages can be specified for individual command
+line parameters.  In the following sample program all the parameters
+have this additional text which describes that parameter's type.  The
+leadin character is a dot in column one followed by the full spelling
+of the command line parameter.  Use *-full_help* rather than *-help*
+to see this supplemental information.  This sample program illustrates
+the various types and how to use *EvaP()*.  The key type is a
+special type that enumerates valid values for the command line
+parameter.  The boolean type may be specified as TRUE/FALSE,
+YES/NO, ON/OFF or 1/0.  Parameters of type *file* have ~ and $HOME
+expanded, and default values *stdin* and *stdout* converted to `-'
+and `>-', respectively.  Of special note is the default value
+*$required*: when specified, Evaluate Parameters will ensure a value
+is specified for that command line parameter.
+
+All types except *switch* may be *list of*, like the *tty* parameter
+below.  A list parameter can be specified multiple times on the command
+line.  NOTE: in general you should ALWAYS quote components of your
+lists, even if they're not type string, since Evaluate Parameters uses
+eval to parse them.  Doing this prevents eval from evaluating
+expressions that it shouldn't, such as file name shortcuts like $HOME,
+and backticked items like `hostname`.  Although the resulting PDT looks
+cluttered, Evaluate Parameters knows what to do and eliminates
+superfluous quotes appropriately.
+ 
+Finally, you can specify a default value via an environment variable.
+If a command line parameter is not specified and there is a
+corresponding environment variable defined then Evaluate Parameters will
+use the value of the environment variable.  Examine the command
+parameter for the syntax.  With this feature users can easily customize
+command parameters to their liking.  Although the name of the
+environment variable can be whatever you choose, the following scheme is
+suggested for consistency and to avoid conflicts in names:
+
+   * Use all uppercase characters.
+
+   * Begin the variable name with D_, to suggest a default variable.
+
+   * Continue with the name of the command or its alias followed by an
+     underscore.
+
+   * Complete the variable name with the name of the parameter or its
+     alias.
+
+So, for example, D_DISCI_DO would name a default variable for the
+display_option (do) parameter of the display_command_information (disci)
+command.  Works for MS-DOS and Unix.
+
+Example:
+
+     #!/usr/local/bin/perl
+    
+     use Getopt::EvaP;
+
+     @PDT = split /\n/, <<'end-of-PDT';
+     PDT sample
+       verbose, v: switch
+       command, c: string = D_SAMPLE_COMMAND, "ps -el"
+       scale_factor, sf: real = 1.2340896e-1
+       millisecond_update_interval, mui: integer = $required
+       ignore_output_file_column_one, iofco: boolean = TRUE
+       output, o: file = stdout
+       queue, q: key plotter, postscript, text, printer, keyend = printer
+       destination, d: application = `hostname`
+       tty, t: list of name = ("/dev/console", "/dev/tty0", "/dev/tty1")
+     PDTEND optional_file_list
+     end-of-PDT
+
+     @MM = split /\n/, <<'end-of-MM';
+     sample
+
+     A sample program demonstrating typical Evaluate Parameters
+     usage.
+
+     Examples:
+
+     sample
+     sample -usage_help
+     sample -help
+     sample -full_help
+     sample -mui 1234
+      .verbose
+             A switch type parameter emulates a typical standalone
+             switch. If the switch is specified Evaluate Parameters
+             returns a '1'.
+      .command
+             A string type parameter is just a list of characters,
+             which must be quoted if it contains whitespace. 
+             NOTE:  for this parameter you can also create and
+             initialize the environment variable D_SAMPLE_COMMAND to
+             override the standard default value for this command
+             line parameter.  All types except switch may have a
+             default environment variable for easy user customization.
+      .scale_factor
+             A real type parameter must be a real number that may
+             contain a leading sign, a decimal point and an exponent.
+      .millisecond_update_interval
+             An integer type parameter must consist of all digits
+             with an optional leading sign.  NOTE: this parameter's
+             default value is $required, meaning that
+             Evaluate Parameters ensures that this parameter is
+             specified and given a valid value.  All types except
+             switch may have a default value of $required.
+      .ignore_output_file_column_one
+             A boolean type parameter may be TRUE/YES/ON/1 or
+             FALSE/NO/OFF/0, either upper or lower case.  If TRUE,
+             Evaluate Parameters returns a value of '1', else '0'.
+      .output
+             A file type parameter expects a filename.  For Unix
+             $HOME and ~ are expanded.  For EvaP/Perl stdin and
+             stdout are converted to '-' and '>-' so they can be
+             used in a Perl open() function.
+      .queue
+             A key type parameter enumerates valid values.  Only the
+             specified keywords can be entered on the command line.
+      .destination
+             An application type parameter is not type-checked in
+             any - the treatment of this type of parameter is
+             application specific.  NOTE:  this parameter' default
+             value is enclosed in grave accents (or "backticks").
+             Evaluate Parameters executes the command and uses it's
+             standard output as the default value for the parameter.
+      .tty
+             A name type parameter is similar to a string except
+             that embedded white-space is not allowed.  NOTE: this
+             parameter is also a LIST, meaning that it can be
+             specified multiple times and that each value is pushed
+             onto a Perl LIST variable.  In general you should quote
+             all list elements.  All types except switch may be
+             'list of'.
+      end-of-MM
+
+     EvaP \@PDT, \@MM;		# evaluate parameters
+
+     print "\nProgram name:\n  $Options{'help'}\n\n";
+
+     if (defined $Options{'verbose'}) {print "\nverbose = $Options{'verbose'}\n";}
+     print "command = \"$Options{'command'}\"\n";
+     print "scale_factor  = $Options{'scale_factor'}\n";
+     print "millisecond_update_interval = $Options{'millisecond_update_interval'}\n";
+     print "ignore_output_file_column_one = $Options{'ignore_output_file_column_one'}\n";
+     print "output = $Options{'output'}\n";
+     print "queue = $Options{'queue'}\n";
+     print "destination = $Options{'destination'}\n";
+     print "'list of' tty = \"", join('", "', @{$Options{'tty'}}), "\"\n";
+
+     print "\nFile names:\n  ", join ' ', @ARGV, "\n" if @ARGV;
+
+Using the PDT as a guide, Evaluate Parameters parses a user's
+command line, returning the results of the evaluation to global
+variables of the form *$opt_parameter*, *@opt_parameter*,
+*%Options{'parameter'}* or *%options{'parameter'}*, where *parameter*
+is the full spelling of the command line parameter.
+
+Of course, you can specify where you want Evaluate Parameters to return
+its results, in which case this historical feature of writing into your
+namespace is disabled.
+
+Every command using Evaluate Parameters automatically has a
+*-help* switch which displays parameter help; no special code is
+required in your application.
+
+*** Customization of EvaP's Help Output ***
+
+There are several Help Hook strings that can be altered to customize
+*EvaP*'s help output.  Currently there is only one general area that can
+be customized: usage and error text dealing with the trailing file_list.
+For instance, if a command requires one or more trailing file names
+after all the command line switches, the default *-help* text is:
+
+     file(s) required by this command
+
+Some commands do not want trailing "file names", but rather some other
+type of information.  An example is *display_command_information* where
+a single Program_Name is expected.  The following code snippet shows how
+to do this:
+
+     $Getopt::EvaP::evap_Help_Hooks{'P_HHURFL'} = " Program_Name\n";
+     $Getopt::EvaP::evap_Help_Hooks{'P_HHBRFL'} =
+           "\nA Program_Name is required by this command.\n\n";
+     $Getopt::EvaP::evap_Help_Hooks{'P_HHERFL'} =
+           "A trailing Program_Name is required by this command.\n";
+     EvaP \@PDT, \@MM;
+
+As you can see, the hash *%evap_Help_Hooks* is indexed by a simple
+ordinal.  The ordinals are shown below and are mostly self-explanatory.
+In case you don't have access to the source for Evaluate Parameters,
+here are the default values of the Help Hook strings.
+
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHURFL'} = " file(s)\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHUOFL'} = " [file(s)]\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHUNFL'} = "\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHBRFL'} =
+            "\nfile(s) required by this command\n\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHBOFL'} =
+           "\n[file(s)] optionally required by this command\n\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHBNFL'} = "\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHERFL'} =
+           "Trailing file name(s) required.\n";
+     $Getopt::EvaP:evap_Help_Hooks{'P_HHENFL'} =
+           "Trailing file name(s) not permitted.\n";
+
+The Help Hooks naming convention is rather simple:
+
+     P_HHtf
+
+     where:
+
+     P_HH  implies an Evaluate Parameters Help Hook
+          t     type:
+             U=Usage Help
+             B=Brief and Full Help
+             E=error message
+     f     file_list:
+             RFL=required_file_list
+             OFL=optional_file_list
+             NFL=no_file_list
+
+Note to *genPerlTk* and *genTclTk* users: using these Help Hooks may
+cause the "genTk programs" to generate an unuseable Tk script.  This
+happens because the "genTk programs" look for the strings "required by
+this command" or "optionally required by this command" in order to
+generate the file_list Entry widget - if these string are missing the
+widget is not created.  An easy solution is to ensure that your Help
+Hook text contains said string, just like the code snippet above;
+otherwise you must manually add the required Tk code yourself.
+
+*** Human Interface Guidelines ***
+
+To make Evaluate Parameters successful, you, the application developer,
+must follow certain conventions when choosing parameter names and
+aliases.
+
+Parameter names consist of one or more words, separated by underscores,
+and describe the parameter (for example, verbose and *spool_directory*).
+
+You can abbreviate parameters: use the first letter of each word in the
+parameter name.  Do not use underscores.  For example, you can
+abbreviate command as c and *delay_period* as *dp*.
+
+There are exceptions to this standard:
+
+   * password is abbreviated *pw*.
+
+   * The words minimum and *maximum* are abbreviated min and max.  So,
+     the abbreviation for the parameter *maximum_byte_count* is *maxbc*.
+
+   * There are no abbreviations for the parameters
+     *usage_help* and *full_help*; I do not want to
+     prevent *uh* and fh from being used as valid command line
+     parameters.
+
+*** Variables MANPAGER, PAGER and D_EVAP_DO_PAGE ***
+
+The environment variable MANPAGER (or PAGER) is used to control the
+display of help information generated by Evaluate Parameters.  If
+defined and non-null, the value of the environment variable is taken as
+the name of the program to pipe the help output through.  If no paging
+program is defined then the program *more* is used.
+
+The boolean environment variable D_EVAP_DO_PAGE can be set to
+FALSE/NO/OFF/0, any case, to disable this automatic paging feature (or
+you can set your paging program to cat).
+
+*** Return Values ***
+
+*EvaP()* behaves differently depending upon whether it's called to parse an 
+application's command line, or as an embedded command line parser (for
+instance, when using *evap_pac()*).
+
+     Application      Embedded
+     Command Line     Command Line 
+      ----------------------------------------
+      error      exit(1)          return(0)
+      success    return(1)        return(1)
+      help       exit(0)          return(-1)
+
+
+SEE ALSO
+========
+
+     evap(2)
+     evap.c(2)
+     EvaP.pm(2)
+     evap.tcl(2)
+     evap_pac(2)
+     addmm, add_message_modules(1)
+     disci, display_command_information(1)
+     genmp, generate_man_page(1)
+     genpdt, generate_pdt(1)
+     genPerlTk, generate_PerlTk_program(1)
+     genTclTk, generate_TclTk_program(1)
+
+     All available from directory ftp.Lehigh.EDU:/pub/evap/evap-2.x.
+
+
+AUTHOR
+======
+
+Stephen O. Lidie <lusol@Lehigh.EDU>
+
+
+HISTORY
+=======
+
+     lusol@Lehigh.EDU 94/10/28 (PDT version 2.0)  Version 2.2
+       . Original release - derived from evap.pl version 2.1.
+       . Undef option values for subsequent embedded calls.
+
+     lusol@Lehigh.EDU 95/10/27 (PDT version 2.0)  Version 2.3.0
+       . Be a strict as possible.
+       . Revert to -h alias rather than -?.  (-? -?? -??? still available.)
+       . Move into Getopt class.
+       . Format for 80 columns (mostly).
+       . Optional third argument on EvaP call can be a reference to your own
+         %Options hash.  If specified, the variabes %Options, %options and 
+         $opt* are not used.
+
+     lusol@Lehigh.EDU 97/01/12 (PDT version 2.0)  Version 2.3.1
+       . Fix Makefile.PL so it behaves properly.  Convert nroff man data to pod
+         format.
+
+
+COPYRIGHT
+=========
+
+Copyright (C) 1993 - 1997 Stephen O. Lidie. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Getopt/Long, Next: Getopt/Mixed, Prev: Getopt/EvaP, Up: Module List
+
+extended processing of command line options
+*******************************************
+
+
+
+NAME
+====
+
+GetOptions - extended processing of command line options
+
+
+SYNOPSIS
+========
+
+     use Getopt::Long;
+     $result = GetOptions (...option-descriptions...);
+
+
+DESCRIPTION
+===========
+
+The Getopt::Long module implements an extended getopt function called
+GetOptions(). This function adheres to the POSIX syntax for command line
+options, with GNU extensions. In general, this means that options have
+long names instead of single letters, and are introduced with a double
+dash "--". Support for bundling of command line options, as was the case
+with the more traditional single-letter approach, is provided but not
+enabled by default. For example, the UNIX "ps" command can be given the
+command line "option"
+
+     -vax
+
+which means the combination of -v, -a and -x. With the new syntax
+*--vax* would be a single option, probably indicating a computer
+architecture.
+
+Command line options can be used to set values. These values can be
+specified in one of two ways:
+
+     --size 24
+     --size=24
+
+GetOptions is called with a list of option-descriptions, each of which
+consists of two elements: the option specifier and the option linkage.
+The option specifier defines the name of the option and, optionally, the
+value it can take. The option linkage is usually a reference to a
+variable that will be set when the option is used. For example, the
+following call to GetOptions:
+
+     GetOptions("size=i" => \$offset);
+
+will accept a command line option "size" that must have an integer
+value. With a command line of "--size 24" this will cause the variable
+$offset to get the value 24.
+
+Alternatively, the first argument to GetOptions may be a reference to a
+HASH describing the linkage for the options. The following call is
+equivalent to the example above:
+
+     %optctl = ("size" => \$offset);
+     GetOptions(\%optctl, "size=i");
+
+Linkage may be specified using either of the above methods, or both.
+Linkage specified in the argument list takes precedence over the linkage
+specified in the HASH.
+
+The command line options are taken from array @ARGV. Upon completion of
+GetOptions, @ARGV will contain the rest (i.e. the non-options) of the
+command line.
+ 
+Each option specifier designates the name of the option, optionally
+followed by an argument specifier. Values for argument specifiers are:
+
+<none>
+     Option does not take an argument.  The option variable will be set
+     to 1.
+
+!
+     Option does not take an argument and may be negated, i.e. prefixed
+     by "no". E.g. "foo!" will allow *--foo* (with value 1) and *-nofoo*
+     (with value 0).  The option variable will be set to 1, or 0 if
+     negated.
+
+=s
+     Option takes a mandatory string argument.  This string will be
+     assigned to the option variable.  Note that even if the string
+     argument starts with - or *--*, it will not be considered an option
+     on itself.
+
+:s
+     Option takes an optional string argument.  This string will be
+     assigned to the option variable.  If omitted, it will be assigned
+     "" (an empty string).  If the string argument starts with - or
+     *--*, it will be considered an option on itself.
+
+=i
+     Option takes a mandatory integer argument.  This value will be
+     assigned to the option variable.  Note that the value may start
+     with - to indicate a negative value.
+
+:i
+     Option takes an optional integer argument.  This value will be
+     assigned to the option variable.  If omitted, the value 0 will be
+     assigned.  Note that the value may start with - to indicate a
+     negative value.
+
+=f
+     Option takes a mandatory real number argument.  This value will be
+     assigned to the option variable.  Note that the value may start
+     with - to indicate a negative value.
+
+:f
+     Option takes an optional real number argument.  This value will be
+     assigned to the option variable.  If omitted, the value 0 will be
+     assigned.
+
+A lone dash - is considered an option, the corresponding option name is
+the empty string.
+
+A double dash on itself *--* signals end of the options list.
+
+
+Linkage specification
+---------------------
+
+The linkage specifier is optional. If no linkage is explicitly specified
+but a ref HASH is passed, GetOptions will place the value in the
+HASH. For example:
+
+     %optctl = ();
+     GetOptions (\%optctl, "size=i");
+
+will perform the equivalent of the assignment
+
+     $optctl{"size"} = 24;
+
+For array options, a reference to an array is used, e.g.:
+
+     %optctl = ();
+     GetOptions (\%optctl, "sizes=i@");
+
+with command line "-sizes 24 -sizes 48" will perform the equivalent of
+the assignment
+
+     $optctl{"sizes"} = [24, 48];
+
+For hash options (an option whose argument looks like "name=value"), a
+reference to a hash is used, e.g.:
+
+     %optctl = ();
+     GetOptions (\%optctl, "define=s%");
+
+with command line "--define foo=hello --define bar=world" will perform
+the equivalent of the assignment
+
+     $optctl{"define"} = {foo=>'hello', bar=>'world')
+
+If no linkage is explicitly specified and no ref HASH is passed,
+GetOptions will put the value in a global variable named after the
+option, prefixed by "opt_". To yield a usable Perl variable, characters
+that are not part of the syntax for variables are translated to
+underscores. For example, "--fpp-struct-return" will set the variable
+$opt_fpp_struct_return. Note that this variable resides in the namespace
+of the calling program, not necessarily *main*.  For example:
+
+     GetOptions ("size=i", "sizes=i@");
+
+with command line "-size 10 -sizes 24 -sizes 48" will perform the
+equivalent of the assignments
+
+     $opt_size = 10;
+     @opt_sizes = (24, 48);
+
+A lone dash - is considered an option, the corresponding Perl identifier
+is $opt_ .
+
+The linkage specifier can be a reference to a scalar, a reference to an
+array, a reference to a hash or a reference to a subroutine.
+
+If a REF SCALAR is supplied, the new value is stored in the referenced
+variable. If the option occurs more than once, the previous value is
+overwritten.
+
+If a REF ARRAY is supplied, the new value is appended (pushed) to the
+referenced array.
+
+If a REF HASH is supplied, the option value should look like "key" or
+"key=value" (if the "=value" is omitted then a value of 1 is implied).
+In this case, the element of the referenced hash with the key "key" is
+assigned "value".
+
+If a REF CODE is supplied, the referenced subroutine is called with two
+arguments: the option name and the option value.  The option name is
+always the true name, not an abbreviation or alias.
+
+
+Aliases and abbreviations
+-------------------------
+
+The option name may actually be a list of option names, separated by
+"|"s, e.g. "foo|bar|blech=s". In this example, "foo" is the true name of
+this option. If no linkage is specified, options "foo", "bar" and
+"blech" all will set $opt_foo.
+
+Option names may be abbreviated to uniqueness, depending on
+configuration option auto_abbrev.
+
+
+Non-option call-back routine
+----------------------------
+
+A special option specifier, <>, can be used to designate a subroutine to
+handle non-option arguments. GetOptions will immediately call this
+subroutine for every non-option it encounters in the options list.  This
+subroutine gets the name of the non-option passed.  This feature
+requires configuration option permute, see section CONFIGURATION
+OPTIONS.
+
+See also the examples.
+
+
+Option starters
+---------------
+
+On the command line, options can start with - (traditional), *--*
+(POSIX) and *+* (GNU, now being phased out). The latter is not allowed
+if the environment variable *POSIXLY_CORRECT* has been defined.
+
+Options that start with "--" may have an argument appended, separated
+with an "=", e.g. "--foo=bar".
+
+
+Return value
+------------
+
+A return status of 0 (false) indicates that the function detected one or
+more errors.
+
+
+COMPATIBILITY
+=============
+
+Getopt::Long::GetOptions() is the successor of
+*newgetopt.pl* that came with Perl 4. It is fully upward compatible.
+In fact, the Perl 5 version of newgetopt.pl is just a wrapper around the
+module.
+
+If an "@" sign is appended to the argument specifier, the option is
+treated as an array. Value(s) are not set, but pushed into array
+ @opt_name. If explicit linkage is supplied, this must be a reference to
+an ARRAY.
+
+If an "%" sign is appended to the argument specifier, the option is
+treated as a hash. Value(s) of the form "name=value" are set by setting
+the element of the hash %opt_name with key "name" to "value" (if the
+"=value" portion is omitted it defaults to 1). If explicit linkage is
+supplied, this must be a reference to a HASH.
+
+If configuration option getopt_compat is set (see section CONFIGURATION
+OPTIONS), options that start with "+" or "-" may also include their
+arguments, e.g. "+foo=bar". This is for compatiblity with older
+implementations of the GNU "getopt" routine.
+
+If the first argument to GetOptions is a string consisting of only
+non-alphanumeric characters, it is taken to specify the option starter
+characters. Everything starting with one of these characters from the
+starter will be considered an option. *Using a starter argument is
+strongly deprecated.*
+
+For convenience, option specifiers may have a leading - or *--*, so it
+is possible to write:
+
+     GetOptions qw(-foo=s --bar=i --ar=s);
+
+
+EXAMPLES
+========
+
+If the option specifier is "one:i" (i.e. takes an optional integer
+argument), then the following situations are handled:
+
+     -one -two		-> $opt_one = '', -two is next option
+     -one -2		-> $opt_one = -2
+
+Also, assume specifiers "foo=s" and "bar:s" :
+
+     -bar -xxx		-> $opt_bar = '', '-xxx' is next option
+     -foo -bar		-> $opt_foo = '-bar'
+     -foo --		-> $opt_foo = '--'
+
+In GNU or POSIX format, option names and values can be combined:
+
+     +foo=blech		-> $opt_foo = 'blech'
+     --bar=		-> $opt_bar = ''
+     --bar=--		-> $opt_bar = '--'
+
+Example of using variable references:
+
+     $ret = GetOptions ('foo=s', \$foo, 'bar=i', 'ar=s', \@ar);
+
+With command line options "-foo blech -bar 24 -ar xx -ar yy" this will
+result in:
+
+     $foo = 'blech'
+     $opt_bar = 24
+     @ar = ('xx','yy')
+
+Example of using the <> option specifier:
+
+     @ARGV = qw(-foo 1 bar -foo 2 blech);
+     GetOptions("foo=i", \$myfoo, "<>", \&mysub);
+
+Results:
+
+     mysub("bar") will be called (with $myfoo being 1)
+     mysub("blech") will be called (with $myfoo being 2)
+
+Compare this with:
+
+     @ARGV = qw(-foo 1 bar -foo 2 blech);
+     GetOptions("foo=i", \$myfoo);
+
+This will leave the non-options in @ARGV:
+
+     $myfoo -> 2
+     @ARGV -> qw(bar blech)
+
+
+CONFIGURATION OPTIONS
+=====================
+
+*GetOptions* can be configured by calling subroutine
+*Getopt::Long::config*. This subroutine takes a list of quoted
+strings, each specifying a configuration option to be set, e.g.
+ignore_case. Options can be reset by prefixing with *no_*, e.g.
+*no_ignore_case*. Case does not matter. Multiple calls to config
+are possible.
+
+Previous versions of Getopt::Long used variables for the purpose of
+configuring. Although manipulating these variables still work, it is
+strongly encouraged to use the new config routine. Besides, it is much
+easier.
+
+The following options are available:
+
+default
+     This option causes all configuration options to be reset to their
+     default values.
+
+auto_abbrev
+     Allow option names to be abbreviated to uniqueness.  Default is set
+     unless environment variable POSIXLY_CORRECT has been set, in which
+     case auto_abbrev is reset.
+
+getopt_compat
+     Allow '+' to start options.  Default is set unless environment
+     variable POSIXLY_CORRECT has been set, in which case getopt_compat
+     is reset.
+
+require_order
+     Whether non-options are allowed to be mixed with options.  Default
+     is set unless environment variable POSIXLY_CORRECT has been set, in
+     which case b<require_order> is reset.
+
+     See also permute, which is the opposite of require_order.
+
+permute
+     Whether non-options are allowed to be mixed with options.  Default
+     is set unless environment variable POSIXLY_CORRECT has been set, in
+     which case permute is reset.  Note that permute is the opposite of
+     require_order.
+
+     If permute is set, this means that
+
+          -foo arg1 -bar arg2 arg3
+
+     is equivalent to
+
+          -foo -bar arg1 arg2 arg3
+
+     If a non-option call-back routine is specified, @ARGV will always
+     be empty upon succesful return of GetOptions since all options have
+     been processed, except when *--* is used:
+
+          -foo arg1 -bar arg2 -- arg3
+
+     will call the call-back routine for arg1 and arg2, and terminate
+     leaving arg2 in @ARGV.
+
+     If require_order is set, options processing terminates when the
+     first non-option is encountered.
+
+          -foo arg1 -bar arg2 arg3
+
+     is equivalent to
+
+          -foo -- arg1 -bar arg2 arg3
+
+bundling (default: reset)
+     Setting this variable to a non-zero value will allow
+     single-character options to be bundled. To distinguish bundles from
+     long option names, long options must be introduced with *--* and
+     single-character options (and bundles) with -. For example,
+
+          ps -vax --vax
+
+     would be equivalent to
+
+          ps -v -a -x --vax
+
+     provided "vax", "v", "a" and "x" have been defined to be valid
+     options.
+
+     Bundled options can also include a value in the bundle; this value
+     has to be the last part of the bundle, e.g.
+
+          scale -h24 -w80
+
+     is equivalent to
+
+          scale -h 24 -w 80
+
+     Note: resetting bundling also resets bundling_override.
+
+bundling_override (default: reset)
+     If bundling_override is set, bundling is enabled as with bundling
+     but now long option names override option bundles. In the above
+     example, *-vax* would be interpreted as the option "vax", not the
+     bundle "v", "a", "x".
+
+     Note: resetting bundling_override also resets bundling.
+
+     *Note:* Using option bundling can easily lead to unexpected results,
+     especially when mixing long options and bundles. Caveat emptor.
+
+ignore_case  (default: set)
+     If set, case is ignored when matching options.
+
+     Note: resetting ignore_case also resets ignore_case_always.
+
+ignore_case_always (default: reset)
+     When bundling is in effect, case is ignored on single-character
+     options also.
+
+     Note: resetting ignore_case_always also resets ignore_case.
+
+pass_through (default: reset)
+     Unknown options are passed through in @ARGV instead of being
+     flagged as errors. This makes it possible to write wrapper scripts
+     that process only part of the user supplied options, and passes the
+     remaining options to some other program.
+
+     This can be very confusing, especially when permute is also set.
+
+debug (default: reset)
+     Enable copious debugging output.
+
+
+OTHER USEFUL VARIABLES
+======================
+
+$Getopt::Long::VERSION
+     The version number of this Getopt::Long implementation in the
+     format `major'.`minor'. This can be used to have Exporter check the
+     version, e.g.
+
+          use Getopt::Long 3.00;
+
+     You can inspect $Getopt::Long::major_version and
+     $Getopt::Long::minor_version for the individual components.
+
+$Getopt::Long::error
+     Internal error flag. May be incremented from a call-back routine to
+     cause options parsing to fail.
+
+
+
+
+File: pm.info, Node: Getopt/Mixed, Next: Getopt/Regex, Prev: Getopt/Long, Up: Module List
+
+getopt processing with both long and short options
+**************************************************
+
+
+
+NAME
+====
+
+Getopt::Mixed - getopt processing with both long and short options
+
+
+SYNOPSIS
+========
+
+     use Getopt::Mixed;
+     Getopt::Mixed::getOptions(...option-descriptions...);
+     ...examine $opt_* variables...
+
+or
+
+     use Getopt::Mixed "nextOption";
+     Getopt::Mixed::init(...option-descriptions...);
+     while (($option, $value) = nextOption()) {
+         ...process option...
+     }
+     Getopt::Mixed::cleanup();
+
+
+DESCRIPTION
+===========
+
+This package is my response to the standard modules Getopt::Std and
+Getopt::Long.  `Std' doesn't support long options, and `Long' doesn't
+support short options.  I wanted both, since long options are easier to
+remember and short options are faster to type.
+
+This package is intended to be the "Getopt-to-end-all-Getop's".  It
+combines (I hope) flexibility and simplicity.  It supports both short
+options (introduced by -) and long options (introduced by `--').  Short
+options which do not take an argument can be grouped together.  Short
+options which do take an argument must be the last option in their
+group, because everything following the option will be considered to be
+its argument.
+
+There are two methods for using Getopt::Mixed: the simple method and the
+flexible method.  Both methods use the same format for option
+descriptions.
+
+
+Option Descriptions
+-------------------
+
+The option-description arguments required by init and `getOptions' are
+strings composed of individual option descriptions.  Several option
+descriptions can appear in the same string if they are separated by
+whitespace.
+
+Each description consists of the option name and an optional trailing
+argument specifier.  Option names may consist of any characters but
+whitespace, =, `:', and `>'.
+
+Values for argument specifiers are:
+
+     <none>   option does not take an argument
+     =s :s    option takes a mandatory (=) or optional (:) string argument
+     =i :i    option takes a mandatory (=) or optional (:) integer argument
+     =f :f    option takes a mandatory (=) or optional (:) real number argument
+     >new     option is a synonym for option `new'
+
+The `>' specifier is not really an argument specifier.  It defines an
+option as being a synonym for another option.  For example, "a=i
+apples>a" would define -a as an option that requires an integer argument
+and *--apples* as a synonym for -a.  Only one level of synonyms is
+supported, and the root option must be listed first.  For example,
+"apples>a a=i" and "a=i apples>a oranges>apples" are illegal; use "a=i
+apples>a oranges>a" if that's what you want.
+
+For example, in the option description:
+     "a b=i c:s apple baker>b charlie:s"
+         -a and --apple do not take arguments
+         -b takes a mandatory integer argument
+         --baker is a synonym for -b
+         -c and --charlie take an optional string argument
+
+If the first argument to init or `getOptions' is entirely
+non-alphanumeric characters with no whitespace, it represents the
+characters which can begin options.
+
+
+User Interface
+--------------
+
+From the user's perspective, short options are introduced by a dash (-)
+and long options are introduced by a double dash (`--').  Short options
+may be combined ("-a -b" can be written "-ab"), but an option that takes
+an argument must be the last one in its group, because anything
+following it is considered part of the argument.  A double dash by
+itself marks the end of the options; all arguments following it are
+treated as normal arguments, not options.  A single dash by itself is
+treated as a normal argument, *not* an option.
+
+Long options may be abbreviated.  An option *--all-the-time* could be
+abbreviated *--all*, *--a--tim*, or even *--a*.  Note that *--time*
+would not work; the abbreviation must start at the beginning of the
+option name.  If an abbreviation is ambiguous, an error message will be
+printed.
+
+In the following examples, -i and *--int* take integer arguments,
+-f and *--float* take floating point arguments, and -s and
+*--string* take string arguments.  All other options do not take an
+argument.
+
+     -i24            -f24.5               -sHello
+     -i=24 --int=-27 -f=24.5 --float=0.27 -s=Hello --string=Hello
+
+If the argument is required, it can also be separated by whitespace:
+
+     -i 24 --int -27 -f 24.5 --float 0.27 -s Hello --string Hello
+
+Note that if the option is followed by =, whatever follows the =
+*is* the argument, even if it's the null string.  In the example
+
+     -i= 24 -f= 24.5 -s= Hello
+
+-i and -f will cause an error, because the null string is not a
+number, but -s is perfectly legal; its argument is the null string, not
+"Hello".
+
+Remember that optional arguments *cannot* be separated from the option
+by whitespace.
+
+
+The Simple Method
+-----------------
+
+The simple method is
+
+     use Getopt::Mixed;
+     Getopt::Mixed::getOptions(...option-descriptions...);
+
+You then examine the `$opt_*' variables to find out what options were
+specified and the `@ARGV' array to see what arguments are left.
+
+If -a is an option that doesn't take an argument, then `$opt_a' will be
+set to 1 if the option is present, or left undefined if the option is
+not present.
+
+If -b is an option that takes an argument, then `$opt_b' will be set to
+the value of the argument if the option is present, or left undefined if
+the option is not present.  If the argument is optional but not
+supplied, `$opt_b' will be set to the null string.
+
+Note that even if you specify that an option requires a string argument,
+you can still get the null string (if the user specifically enters it).
+If the option requires a numeric argument, you will never get the null
+string (because it isn't a number).
+
+When converting the option name to a Perl identifier, any non-word
+characters in the name will be converted to underscores (`_').
+
+If the same option occurs more than once, only the last occurrence will
+be recorded.  If that's not acceptable, you'll have to use the flexible
+method instead.
+
+
+The Flexible Method
+-------------------
+
+The flexible method is
+
+     use Getopt::Mixed "nextOption";
+     Getopt::Mixed::init(...option-descriptions...);
+     while (($option, $value, $pretty) = nextOption()) {
+         ...process option...
+     }
+     Getopt::Mixed::cleanup();
+
+This lets you process arguments one at a time.  You can then handle
+repeated options any way you want to.  It also lets you see option names
+with non-alphanumeric characters without any translation.  This is also
+the only method that lets you find out what order the options and other
+arguments were in.
+
+First, you call Getopt::Mixed::init with the option descriptions.  Then,
+you keep calling nextOption until it returns an empty list.  Finally,
+you call Getopt::Mixed::cleanup when you're done.  The remaining
+(non-option) arguments will be found in @ARGV.
+
+Each call to nextOption returns a list of the next option, its value,
+and the option as the user typed it.  The value will be undefined if the
+option does not take an argument.  The option is stripped of its starter
+(e.g., you get "a" and "foo", not "-a" or "--foo").  If you want to
+print an error message, use the third element, which does include the
+option starter.
+
+
+OTHER FUNCTIONS
+===============
+
+Getopt::Mixed provides one other function you can use.  `abortMsg'
+prints its arguments on STDERR, plus your program's name and a newline.
+It then exits with status 1.  For example, if `foo.pl' calls `abortMsg'
+like this:
+
+     Getopt::Mixed::abortMsg("Error");
+
+The output will be:
+
+     foo.pl: Error
+
+
+CUSTOMIZATION
+=============
+
+There are several customization variables you can set.  All of these
+variables should be set *after* calling Getopt::Mixed::init and
+*before* calling nextOption.
+
+If you set any of these variables, you *must* check the version number
+first.  The easiest way to do this is like this:
+
+     use Getopt::Mixed 1.006;
+
+If you are using the simple method, and you want to set these variables,
+you'll need to call init before calling getOptions, like this:
+
+     use Getopt::Mixed 1.006;
+     Getopt::Mixed::init(...option-descriptions...);
+     ...set configuration variables...
+     Getopt::Mixed::getOptions();      # IMPORTANT: no parameters
+
+$order
+     $order can be set to $REQUIRE_ORDER, $PERMUTE, or $RETURN_IN_ORDER.
+     The default is $REQUIRE_ORDER if the environment variable
+     POSIXLY_CORRECT has been set, $PERMUTE otherwise.
+
+     $REQUIRE_ORDER means that no options can follow the first argument
+     which isn't an option.
+
+     $PERMUTE means that all options are treated as if they preceded all
+     other arguments.
+
+     $RETURN_IN_ORDER means that all arguments maintain their ordering.
+     When nextOption is called, and the next argument is not an option,
+     it returns the null string as the option and the argument as the
+     value.  nextOption never returns the null list until all the
+     arguments have been processed.
+
+$ignoreCase
+     Ignore case when matching options.  Default is 1 unless the option
+     descriptions contain an upper-case letter.
+
+$optionStart
+     A string of characters that can start options.  Default is "-".
+
+$badOption
+     A reference to a function that is called when an unrecognized
+     option is encountered.  The function receives three arguments.
+     $_[0] is the position in @ARGV where the option came from.  $_[1]
+     is the option as the user typed it (including the option start
+     character).  $_[2] is either undef or a string describing the
+     reason the option was not recognized (Currently, the only possible
+     value is 'ambiguous', for a long option with several possible
+     matches).  The option has already been removed from @ARGV.  To put
+     it back, you can say:
+
+          splice(@ARGV,$_[0],0,$_[1]);
+
+     The function can do anything you want to @ARGV.  It should return
+     whatever you want nextOption to return.
+
+     The default is a function that prints an error message and exits
+     the program.
+
+$checkArg
+     A reference to a function that is called to make sure the argument
+     type is correct.  The function receives four arguments.  $_[0] is
+     the position in @ARGV where the option came from.  $_[1] is the
+     text following the option, or undefined if there was no text
+     following the option.  $_[2] is the name of the option as the user
+     typed it (including the option start character), suitable for error
+     messages.  $_[3] is the argument type specifier.
+
+     The function can do anything you want to @ARGV.  It should return
+     the value for this option.
+
+     The default is a function that prints an error message and exits
+     the program if the argument is not the right type for the option.
+     You can also adjust the behavior of the default function by
+     changing $intRegexp or $floatRegexp.
+
+$intRegexp
+     A regular expression that matches an integer.  Default is
+     '^[-+]?\d+$', which matches a string of digits preceded by an
+     optional sign.  Unlike the other configuration variables, this
+     cannot be changed after nextOption is called, because the pattern
+     is compiled only once.
+
+$floatRegexp
+     A regular expression that matches a floating point number.  Default
+     is '^[-+]?(\d*\.?\d+|\d+\.)$', which matches the following formats:
+     "123", "123.", "123.45", and ".123" (plus an optional sign).  It
+     does not match exponential notation.  Unlike the other
+     configuration variables, this cannot be changed after nextOption is
+     called, because the pattern is compiled only once.
+
+$typeChars
+     A string of the characters which are legal argument types.  The
+     default is 'sif', for String, Integer, and Floating point
+     arguments.  The string should consist only of letters.  Upper case
+     letters are discouraged, since this will hamper the case-folding of
+     options.  If you change this, you should set $checkType to a
+     function that will check arguments of your new type.  Unlike the
+     other configuration variables, this must be set *before* calling
+     init(), and cannot be changed afterwards.
+
+$checkType
+     If you add new types to $typeChars, you should set this to a
+     function which will check arguments of the new types.
+
+
+BUGS
+====
+
+   * This document should be expanded.
+
+   * A long option must be at least two characters long.  Sorry.
+
+   * The ! argument specifier of Getopt::Long is not supported, but you
+     could have options *--foo* and *--nofoo* and then do something
+     like:
+
+          $opt_foo = 0 if $opt_nofoo;
+
+   * The `@' argument specifier of Getopt::Long is not supported.  If
+     you want your values pushed into an array, you'll have to use
+     nextOption and do it yourself.
+
+
+LICENSE
+=======
+
+Getopt::Mixed is distributed under the terms of the GNU General Public
+License as published by the Free Software Foundation; either version 2,
+or (at your option) any later version.
+
+This means it is distributed in the hope that it will be useful, but
+*without any warranty*; without even the implied warranty of
+*merchantability* or *fitness for a particular purpose*.  See the
+GNU General Public License for more details.
+
+Since Perl scripts are only compiled at runtime, and simply calling
+Getopt::Mixed does *not* bring your program under the GPL, the only real
+restriction is that you can't use Getopt::Mixed in an binary-only
+distribution produced with dump (unless you also provide source code).
+
+
+AUTHOR
+======
+
+Christopher J. Madsen <`ac608@yfn.ysu.edu'>
+
+Thanks are also due to Andreas Koenig for helping Getopt::Mixed conform
+to the standards for Perl modules and for answering a bunch of
+questions.  Any remaining deficiencies are my fault.
+
+
+
+

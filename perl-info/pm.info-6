@@ -1,0 +1,2654 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Bundle/Apache, Next: Bundle/CPAN, Prev: Bit/Vector, Up: Module List
+
+Install Apache mod_perl and related modules
+*******************************************
+
+
+
+NAME
+====
+
+Bundle::Apache - Install Apache mod_perl and related modules
+
+
+SYNOPSIS
+========
+
+`perl -MCPAN -e 'install Bundle::Apache''
+
+
+CONTENTS
+========
+
+Apache - Perl interface to Apache server API
+
+ExtUtils::Embed - Needed to build httpd
+
+LWP::UserAgent - Web client to run mod_perl tests
+
+HTML::TreeBuilder - Used for Apache::SSI
+
+Devel::Symdump - Symbol table browsing with Apache::Status
+
+HTTPD::UserAdmin - Apache::Authen stuff
+
+CGI - CGI.pm
+
+Apache::ePerl - mod_perl adaptation of 'ePerl'
+
+Apache::DBI - Wrapper around DBI->connect to transparently maintain
+persistent connections
+
+
+DESCRIPTION
+===========
+
+This bundle contains modules used by Apache mod_perl.
+
+Asking CPAN.pm to install a bundle means to install the bundle itself
+along with all the modules contained in the CONTENTS section
+above. Modules that are up to date are not installed, of course.
+
+
+AUTHOR
+======
+
+Doug MacEachern
+
+
+
+
+File: pm.info, Node: Bundle/CPAN, Next: Bundle/Convert/BER, Prev: Bundle/Apache, Up: Module List
+
+A bundle to play with all the other modules on CPAN
+***************************************************
+
+
+
+NAME
+====
+
+Bundle::CPAN - A bundle to play with all the other modules on CPAN
+
+
+SYNOPSIS
+========
+
+`perl -MCPAN -e 'install Bundle::CPAN''
+
+
+CONTENTS
+========
+
+MD5
+
+Data::Dumper # Bundle::libnet may have problems to work without it
+
+Bundle::libnet
+
+Term::ReadKey
+
+Term::ReadLine::Perl # sorry, I'm discriminating the ::Gnu module
+
+CPAN::WAIT
+
+CPAN
+
+
+DESCRIPTION
+===========
+
+This bundle includes CPAN.pm as the base module and CPAN::WAIT, the
+first plugin for CPAN that was developed even before there was an API.
+
+After installing this bundle, it is recommended to quit the current
+session and start again in a new process to enable Term::ReadLine.
+
+
+AUTHOR
+======
+
+Andreas König
+
+
+
+File: pm.info, Node: Bundle/Convert/BER, Next: Bundle/LWP, Prev: Bundle/CPAN, Up: Module List
+
+A bundle to install all BER related modules
+*******************************************
+
+
+
+NAME
+====
+
+Bundle::Convert::BER - A bundle to install all BER related modules
+
+
+SYNOPSIS
+========
+
+`perl -MCPAN -e 'install Bundle::Convert::BER''
+
+
+CONTENTS
+========
+
+Error - used for error creation and reporting
+
+Convert::BER - The base module
+
+
+DESCRIPTION
+===========
+
+This bundle includes all the modules required by Convert::BER
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+
+
+
+File: pm.info, Node: Bundle/LWP, Next: Bundle/Tk, Prev: Bundle/Convert/BER, Up: Module List
+
+A bundle to install all libwww-perl related modules
+***************************************************
+
+
+
+NAME
+====
+
+Bundle::LWP - A bundle to install all libwww-perl related modules
+
+
+SYNOPSIS
+========
+
+     perl -MCPAN -e 'install Bundle::LWP'
+
+
+CONTENTS
+========
+
+Net::FTP 2.00 - If you want ftp://-support
+
+MIME::Base64 - Used in authentication headers
+
+MD5 - Needed to Digest authentication
+
+
+DESCRIPTION
+===========
+
+This bundle defines all reqreq modules for libwww-perl.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: Bundle/Tk, Next: Bundle/libnet, Prev: Bundle/LWP, Up: Module List
+
+CPAN Bundle for Tk and its dependencies
+***************************************
+
+
+
+NAME
+====
+
+Bundle::Tk - CPAN Bundle for Tk and its dependencies
+
+
+SYNOPSIS
+========
+
+`perl -MCPAN -e 'install Bundle::Tk''
+
+
+CONTENTS
+========
+
+ExtUtils::MakeMaker - should be in perl disribution
+
+Net::NNTP - for proto news reader, also pulls in rest of Net::* which
+LWP needs
+
+Mail::Internet - for news again
+
+LWP - for tkweb
+
+Tk - Tk itself!
+
+
+DESCRIPTION
+===========
+
+
+AUTHOR
+======
+
+Nick Ing-Simmons
+
+
+
+
+File: pm.info, Node: Bundle/libnet, Next: C/Scan, Prev: Bundle/Tk, Up: Module List
+
+A bundle to install all libnet related modules
+**********************************************
+
+
+
+NAME
+====
+
+Bundle::libnet - A bundle to install all libnet related modules
+
+
+SYNOPSIS
+========
+
+`perl -MCPAN -e 'install Bundle::libnet''
+
+
+CONTENTS
+========
+
+Data::Dumper - For Net::Config
+
+Net::Telnet - For Net::Telnet by Jay Rogers
+
+Net::Cmd - for libbet itself
+
+
+DESCRIPTION
+===========
+
+This bundle includes all the libnet distribution and the Net-Telnet
+distribution by Jay Rogers <`jay@rgrs.com'>, which is a replacement
+module for the original Net::Telnet module which was in the libnet
+distribution.
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+
+
+
+File: pm.info, Node: C/Scan, Next: CGI, Prev: Bundle/libnet, Up: Module List
+
+scan C language files for easily recognized constructs.
+*******************************************************
+
+
+
+NAME
+====
+
+C::Scan - scan C language files for easily recognized constructs.
+
+
+SYNOPSIS
+========
+
+     $c = new C::Scan 'filename' => $filename, 'filename_filter' => $filter,
+                      'add_cppflags' => $addflags;
+     $c->set('includeDirs' => [$Config::Config{shrpdir}]);
+
+     my $fdec = $c->get('parsed_fdecls');
+
+
+DESCRIPTION
+===========
+
+*This description is *VERY* incomplete.*
+
+This module uses `Data::Flow' interface, thus one uses it in the
+following fashion:
+
+     $c = new C::Scan(attr1 => $value1, attr2 => $value2);
+     $c->set( attr3 => $value3 );
+
+     $value4 = $c->get('attr4');
+
+Attributes are depending on some other attributes. The only
+*required* attribute, i.e., the attribute which *should* be set, is
+filename, which denotes which file to parse.
+
+All other attributes are either optional, or would be calculated basing
+on values of required and optional attributes.
+
+
+Output attributes
+-----------------
+
+`includes'
+     Value: reference to a list of included files.
+
+`defines_args'
+     Value: reference to hash of macros with arguments. The values are
+     references to an array of length 2, the first element is a
+     reference to the list of arguments, the second one being the
+     expansion.  Newlines are not unescaped, thus
+
+          #define C(x,y) E\
+                         F
+
+     will finish with `("C" => [ ["x", "y"], "E\nF"])'.
+
+`defines_no_args'
+     Value: reference to hash of macros without arguments.  Newlines are
+     not escaped, thus
+
+          #define A B
+
+     will finish with `("A" => "B")'.
+
+`fdecls'
+     Value: reference to list of declarations of functions.
+
+`inlines'
+     Value: reference to list of definitions of functions.
+
+`parsed_fdecls'
+     Value: reference to list of parsed declarations of functions.
+
+     A parsed declaration is a reference to a list of `(rt, nm, args,
+     ft, mod)'. Here `rt' is return type of a function, `nm' is the
+     name, `args' is the list of arguments, `ft' is the full text of the
+     declaration, and mod is the modifier (which is always undef).
+
+     Each entry in the list `args' is of the same form `(ty, nm, args,
+     ft, mod)', here `ty' is the type of an argument, `nm' is the name
+     (a generated one if missing in the declaration), `args' is undef,
+     and mod is the string of array modifiers.
+
+`typedef_hash'
+     Value: a reference to a hash which contains known `typedef's as
+     keys.
+
+`typedef_texts'
+     Value: a reference to a list which contains known expansions of
+     `typedef's.
+
+`typedefs_maybe'
+     Value: a reference to a list of `typedef'ed names. (Syncronized
+     with `typedef_texts').
+
+`vdecls'
+     Value: a reference to a list of `extern' variable declarations.
+
+
+
+
+File: pm.info, Node: CGI, Next: CGI/Apache, Prev: C/Scan, Up: Module List
+
+Simple Common Gateway Interface Class
+*************************************
+
+
+
+NAME
+====
+
+CGI - Simple Common Gateway Interface Class
+
+
+SYNOPSIS
+========
+
+     use CGI;
+     # the rest is too complicated for a synopsis; keep reading
+
+
+ABSTRACT
+========
+
+This perl library uses perl5 objects to make it easy to create Web
+fill-out forms and parse their contents.  This package defines CGI
+objects, entities that contain the values of the current query string
+and other state variables.  Using a CGI object's methods, you can
+examine keywords and parameters passed to your script, and create forms
+whose initial values are taken from the current query (thereby
+preserving state information).
+
+The current version of CGI.pm is available at
+
+     http://www.genome.wi.mit.edu/ftp/pub/software/WWW/cgi_docs.html
+     ftp://ftp-genome.wi.mit.edu/pub/software/WWW/
+
+
+INSTALLATION
+============
+
+CGI is a part of the base Perl installation.  However, you may need to
+install a newer version someday.  Therefore:
+
+To install this package, just change to the directory in which this file
+is found and type the following:
+
+     perl Makefile.PL
+     make
+     make install
+
+This will copy CGI.pm to your perl library directory for use by all perl
+scripts.  You probably must be root to do this.  Now you can load the
+CGI routines in your Perl scripts with the line:
+
+     use CGI;
+
+If you don't have sufficient privileges to install CGI.pm in the Perl
+library directory, you can put CGI.pm into some convenient spot, such as
+your home directory, or in cgi-bin itself and prefix all Perl scripts
+that call it with something along the lines of the following preamble:
+
+     use lib '/home/davis/lib';
+     use CGI;
+
+If you are using a version of perl earlier than 5.002 (such as NT perl),
+use this instead:
+
+     BEGIN {
+     	unshift(@INC,'/home/davis/lib');
+     }
+     use CGI;
+
+The CGI distribution also comes with a cute module called *Note
+CGI/Carp: CGI/Carp,.  It redefines the die(), warn(), confess() and
+croak() error routines so that they write nicely formatted error
+messages into the server's error log (or to the output stream of your
+choice).  This avoids long hours of groping through the error and access
+logs, trying to figure out which CGI script is generating error
+messages.  If you choose, you can even have fatal error messages echoed
+to the browser to avoid the annoying and uninformative "Server Error"
+message.
+
+
+DESCRIPTION
+===========
+
+
+CREATING A NEW QUERY OBJECT:
+----------------------------
+
+     $query = new CGI;
+
+This will parse the input (from both POST and GET methods) and store it
+into a perl5 object called $query.
+
+
+CREATING A NEW QUERY OBJECT FROM AN INPUT FILE
+----------------------------------------------
+
+     $query = new CGI(INPUTFILE);
+
+If you provide a file handle to the new() method, it will read
+parameters from the file (or STDIN, or whatever).  The file can be in
+any of the forms describing below under debugging (i.e. a series of
+newline delimited TAG=VALUE pairs will work).  Conveniently, this type
+of file is created by the save() method (see below).  Multiple records
+can be saved and restored.
+
+Perl purists will be pleased to know that this syntax accepts references
+to file handles, or even references to filehandle globs, which is the
+"official" way to pass a filehandle:
+
+     $query = new CGI(\*STDIN);
+
+You can also initialize the query object from an associative array
+reference:
+
+     $query = new CGI( {'dinosaur'=>'barney',
+     		       'song'=>'I love you',
+     		       'friends'=>[qw/Jessica George Nancy/]}
+     		    );
+
+or from a properly formatted, URL-escaped query string:
+
+     $query = new CGI('dinosaur=barney&color=purple');
+
+To create an empty query, initialize it from an empty string or hash:
+
+     $empty_query = new CGI("");
+          -or-
+     $empty_query = new CGI({});
+
+
+FETCHING A LIST OF KEYWORDS FROM THE QUERY:
+-------------------------------------------
+
+     @keywords = $query->keywords
+
+If the script was invoked as the result of an <ISINDEX> search, the
+parsed keywords can be obtained as an array using the keywords() method.
+
+
+FETCHING THE NAMES OF ALL THE PARAMETERS PASSED TO YOUR SCRIPT:
+---------------------------------------------------------------
+
+     @names = $query->param
+
+If the script was invoked with a parameter list
+(e.g. "name1=value1&name2=value2&name3=value3"), the param() method will
+return the parameter names as a list.  If the script was invoked as an
+<ISINDEX> script, there will be a single parameter named 'keywords'.
+
+NOTE: As of version 1.5, the array of parameter names returned will be
+in the same order as they were submitted by the browser.  Usually this
+order is the same as the order in which the parameters are defined in
+the form (however, this isn't part of the spec, and so isn't
+guaranteed).
+
+
+FETCHING THE VALUE OR VALUES OF A SINGLE NAMED PARAMETER:
+---------------------------------------------------------
+
+     @values = $query->param('foo');
+
+     -or-
+
+     $value = $query->param('foo');
+
+Pass the param() method a single argument to fetch the value of the
+named parameter. If the parameter is multivalued (e.g. from multiple
+selections in a scrolling list), you can ask to receive an array.
+Otherwise the method will return a single value.
+
+
+SETTING THE VALUE(S) OF A NAMED PARAMETER:
+------------------------------------------
+
+     $query->param('foo','an','array','of','values');
+
+This sets the value for the named parameter 'foo' to an array of values.
+This is one way to change the value of a field AFTER the script has been
+invoked once before.  (Another way is with the -override parameter
+accepted by all methods that generate form elements.)
+
+param() also recognizes a named parameter style of calling described in
+more detail later:
+
+     $query->param(-name=>'foo',-values=>['an','array','of','values']);
+
+     -or-
+
+     $query->param(-name=>'foo',-value=>'the value');
+
+
+APPENDING ADDITIONAL VALUES TO A NAMED PARAMETER:
+-------------------------------------------------
+
+     $query->append(-name=>;'foo',-values=>['yet','more','values']);
+
+This adds a value or list of values to the named parameter.  The values
+are appended to the end of the parameter if it already exists.
+Otherwise the parameter is created.  Note that this method only
+recognizes the named argument calling syntax.
+
+
+IMPORTING ALL PARAMETERS INTO A NAMESPACE:
+------------------------------------------
+
+     $query->import_names('R');
+
+This creates a series of variables in the 'R' namespace.  For example,
+$R::foo, @R:foo.  For keyword lists, a variable @R::keywords will
+appear.  If no namespace is given, this method will assume 'Q'.
+WARNING: don't import anything into 'main'; this is a major security
+risk!!!!
+
+In older versions, this method was called import().  As of version 2.20,
+this name has been removed completely to avoid conflict with the
+built-in Perl module import operator.
+
+
+DELETING A PARAMETER COMPLETELY:
+--------------------------------
+
+     $query->delete('foo');
+
+This completely clears a parameter.  It sometimes useful for resetting
+parameters that you don't want passed down between script invocations.
+
+
+DELETING ALL PARAMETERS:
+------------------------
+
+$query->delete_all();
+
+This clears the CGI object completely.  It might be useful to ensure
+that all the defaults are taken when you create a fill-out form.
+
+
+SAVING THE STATE OF THE FORM TO A FILE:
+---------------------------------------
+
+     $query->save(FILEHANDLE)
+
+This will write the current state of the form to the provided
+filehandle.  You can read it back in by providing a filehandle to the
+new() method.  Note that the filehandle can be a file, a pipe, or
+whatever!
+
+The format of the saved file is:
+
+     NAME1=VALUE1
+     NAME1=VALUE1'
+     NAME2=VALUE2
+     NAME3=VALUE3
+     =
+
+Both name and value are URL escaped.  Multi-valued CGI parameters are
+represented as repeated names.  A session record is delimited by a
+single = symbol.  You can write out multiple records and read them back
+in with several calls to new.  You can do this across several sessions
+by opening the file in append mode, allowing you to create primitive
+guest books, or to keep a history of users' queries.  Here's a short
+example of creating multiple session records:
+
+     use CGI;
+
+     open (OUT,">>test.out") || die;
+     $records = 5;
+     foreach (0..$records) {
+         my $q = new CGI;
+         $q->param(-name=>'counter',-value=>$_);
+         $q->save(OUT);
+     }
+     close OUT;
+
+     # reopen for reading
+     open (IN,"test.out") || die;
+     while (!eof(IN)) {
+         my $q = new CGI(IN);
+         print $q->param('counter'),"\n";
+     }
+
+The file format used for save/restore is identical to that used by the
+Whitehead Genome Center's data exchange format "Boulderio", and can be
+manipulated and even databased using Boulderio utilities.  See
+	
+  http://www.genome.wi.mit.edu/genome_software/other/boulder.html
+
+for further details.
+
+
+CREATING A SELF-REFERENCING URL THAT PRESERVES STATE INFORMATION:
+-----------------------------------------------------------------
+
+     $myself = $query->self_url;
+     print "<A HREF=$myself>I'm talking to myself.</A>";
+
+self_url() will return a URL, that, when selected, will reinvoke this
+script with all its state information intact.  This is most useful when
+you want to jump around within the document using internal anchors but
+you don't want to disrupt the current contents of the form(s).
+Something like this will do the trick.
+
+     $myself = $query->self_url;
+     print "<A HREF=$myself#table1>See table 1</A>";
+     print "<A HREF=$myself#table2>See table 2</A>";
+     print "<A HREF=$myself#yourself>See for yourself</A>";
+
+If you don't want to get the whole query string, call the method url()
+to return just the URL for the script:
+
+     $myself = $query->url;
+     print "<A HREF=$myself>No query string in this baby!</A>\n";
+
+You can also retrieve the unprocessed query string with query_string():
+
+     $the_string = $query->query_string;
+
+
+COMPATIBILITY WITH CGI-LIB.PL
+-----------------------------
+
+To make it easier to port existing programs that use cgi-lib.pl the
+compatibility routine "ReadParse" is provided.  Porting is simple:
+
+OLD VERSION
+    require "cgi-lib.pl";
+    &ReadParse;
+    print "The value of the antique is $in{antique}.\n";
+
+NEW VERSION
+    use CGI;
+    CGI::ReadParse
+    print "The value of the antique is $in{antique}.\n";
+
+CGI.pm's ReadParse() routine creates a tied variable named %in, which
+can be accessed to obtain the query variables.  Like ReadParse, you can
+also provide your own variable.  Infrequently used features of
+ReadParse, such as the creation of @in and $in variables, are not
+supported.
+
+Once you use ReadParse, you can retrieve the query object itself this
+way:
+
+     $q = $in{CGI};
+     print $q->textfield(-name=>'wow',
+     			-value=>'does this really work?');
+
+This allows you to start using the more interesting features of CGI.pm
+without rewriting your old scripts from scratch.
+
+
+CALLING CGI FUNCTIONS THAT TAKE MULTIPLE ARGUMENTS
+--------------------------------------------------
+
+In versions of CGI.pm prior to 2.0, it could get difficult to remember
+the proper order of arguments in CGI function calls that accepted five
+or six different arguments.  As of 2.0, there's a better way to pass
+arguments to the various CGI functions.  In this style, you pass a
+series of name=>argument pairs, like this:
+
+     $field = $query->radio_group(-name=>'OS',
+     				-values=>[Unix,Windows,Macintosh],
+     				-default=>'Unix');
+
+The advantages of this style are that you don't have to remember the
+exact order of the arguments, and if you leave out a parameter, in most
+cases it will default to some reasonable value.  If you provide a
+parameter that the method doesn't recognize, it will usually do
+something useful with it, such as incorporating it into the HTML form
+tag.  For example if Netscape decides next week to add a new
+JUSTIFICATION parameter to the text field tags, you can start using the
+feature without waiting for a new version of CGI.pm:
+
+     $field = $query->textfield(-name=>'State',
+     			      -default=>'gaseous',
+     			      -justification=>'RIGHT');
+
+This will result in an HTML tag that looks like this:
+
+     <INPUT TYPE="textfield" NAME="State" VALUE="gaseous"
+            JUSTIFICATION="RIGHT">
+
+Parameter names are case insensitive: you can use -name, or -Name or
+-NAME.  You don't have to use the hyphen if you don't want to.  After
+creating a CGI object, call the *use_named_parameters()* method with a
+nonzero value.  This will tell CGI.pm that you intend to use named
+parameters exclusively:
+
+     $query = new CGI;
+     $query->use_named_parameters(1);
+     $field = $query->radio_group('name'=>'OS',
+     				'values'=>['Unix','Windows','Macintosh'],
+     				'default'=>'Unix');
+
+Actually, CGI.pm only looks for a hyphen in the first parameter.  So you
+can leave it off subsequent parameters if you like.  Something to be
+wary of is the potential that a string constant like "values" will
+collide with a keyword (and in fact it does!) While Perl usually figures
+out when you're referring to a function and when you're referring to a
+string, you probably should put quotation marks around all string
+constants just to play it safe.
+
+
+CREATING THE HTTP HEADER:
+-------------------------
+
+     print $query->header;
+
+     -or-
+
+     print $query->header('image/gif');
+
+     -or-
+
+     print $query->header('text/html','204 No response');
+
+     -or-
+
+     print $query->header(-type=>'image/gif',
+     		     -nph=>1,
+     		     -status=>'402 Payment required',
+     		     -expires=>'+3d',
+     		     -cookie=>$cookie,
+     		     -Cost=>'$2.00');
+
+header() returns the Content-type: header.  You can provide your own
+MIME type if you choose, otherwise it defaults to text/html.  An
+optional second parameter specifies the status code and a human-readable
+message.  For example, you can specify 204, "No response" to create a
+script that tells the browser to do nothing at all.  If you want to add
+additional fields to the header, just tack them on to the end:
+
+     print $query->header('text/html','200 OK','Content-Length: 3002');
+
+The last example shows the named argument style for passing arguments
+to the CGI methods using named parameters.  Recognized parameters are
+*-type*, *-status*, *-expires*, and *-cookie*.  Any other 
+parameters will be stripped of their initial hyphens and turned into
+header fields, allowing you to specify any HTTP header you desire.
+
+Most browsers will not cache the output from CGI scripts.  Every time
+the browser reloads the page, the script is invoked anew.  You can
+change this behavior with the *-expires* parameter.  When you specify
+an absolute or relative expiration interval with this parameter, some
+browsers and proxy servers will cache the script's output until the
+indicated expiration date.  The following forms are all valid for the
+-expires field:
+
+     +30s 30 seconds from now +10m ten minutes from now +1h one hour from now
+     -1d                               yesterday (i.e. "ASAP!")
+     now                               immediately
+     +3M                               in three months
+     +10y                              in ten years time
+     Thursday, 25-Apr-96 00:40:33 GMT  at the indicated time & date
+
+(CGI::expires() is the static function call used internally that turns
+relative time intervals into HTTP dates.  You can call it directly if
+you wish.)
+
+The *-cookie* parameter generates a header that tells the browser to
+provide a "magic cookie" during all subsequent transactions with your
+script.  Netscape cookies have a special format that includes
+interesting attributes such as expiration time.  Use the cookie() method
+to create and retrieve session cookies.
+
+The *-nph* parameter, if set to a true value, will issue the correct
+headers to work with a NPH (no-parse-header) script.  This is important
+to use with certain servers, such as Microsoft Internet Explorer, which
+expect all their scripts to be NPH.
+
+
+GENERATING A REDIRECTION INSTRUCTION
+------------------------------------
+
+     print $query->redirect('http://somewhere.else/in/movie/land');
+
+redirects the browser elsewhere.  If you use redirection like this, you
+should *not* print out a header as well.  As of version 2.0, we produce
+both the unofficial Location: header and the official URI: header.  This
+should satisfy most servers and browsers.
+
+One hint I can offer is that relative links may not work correctly when
+you generate a redirection to another document on your site.  This is
+due to a well-intentioned optimization that some servers use.  The
+solution to this is to use the full URL (including the http: part) of
+the document you are redirecting to.
+
+You can use named parameters:
+
+     print $query->redirect(-uri=>'http://somewhere.else/in/movie/land',
+     			   -nph=>1);
+
+The *-nph* parameter, if set to a true value, will issue the correct
+headers to work with a NPH (no-parse-header) script.  This is important
+to use with certain servers, such as Microsoft Internet Explorer, which
+expect all their scripts to be NPH.
+
+
+CREATING THE HTML HEADER:
+-------------------------
+
+     print $query->start_html(-title=>'Secrets of the Pyramids',
+     			    -author=>'fred@capricorn.org',
+     			    -base=>'true',
+     			    -target=>'_blank',
+     			    -meta=>{'keywords'=>'pharaoh secret mummy',
+     				    'copyright'=>'copyright 1996 King Tut'},
+     			    -style=>{'src'=>'/styles/style1.css'},
+     			    -BGCOLOR=>'blue');
+
+     -or-
+
+     print $query->start_html('Secrets of the Pyramids',
+     			    'fred@capricorn.org','true',
+     			    'BGCOLOR="blue"');
+
+This will return a canned HTML header and the opening <BODY> tag.  All
+parameters are optional.  In the named parameter form, recognized
+parameters are -title, -author, -base, -xbase and -target (see below for
+the explanation).  Any additional parameters you provide, such as the
+Netscape unofficial BGCOLOR attribute, are added to the <BODY> tag.
+
+The argument *-xbase* allows you to provide an HREF for the <BASE> tag
+different from the current location, as in
+
+     -xbase=>"http://home.mcom.com/"
+
+All relative links will be interpreted relative to this tag.
+
+The argument *-target* allows you to provide a default target frame for
+all the links and fill-out forms on the page.  See the Netscape
+documentation on frames for details of how to manipulate this.
+
+     -target=>"answer_window"
+
+All relative links will be interpreted relative to this tag.  You add
+arbitrary meta information to the header with the *-meta* argument.
+This argument expects a reference to an associative array containing
+name/value pairs of meta information.  These will be turned into a
+series of header <META> tags that look something like this:
+
+     <META NAME="keywords" CONTENT="pharaoh secret mummy">
+     <META NAME="description" CONTENT="copyright 1996 King Tut">
+
+There is no support for the HTTP-EQUIV type of <META> tag.  This is
+because you can modify the HTTP header directly with the *header()*
+method.  For example, if you want to send the Refresh: header, do it in
+the header() method:
+
+     print $q->header(-Refresh=>'10; URL=http://www.capricorn.com');
+
+The *-style* tag is used to incorporate cascading stylesheets into your
+code.  See the section on CASCADING STYLESHEETS for more information.
+
+You can place other arbitrary HTML elements to the <HEAD> section with the
+*-head* tag.  For example, to place the rarely-used <LINK> element in the
+head section, use this:
+
+     print $q->header(-head=>link({-rel=>'next',
+     				  -href=>'http://www.capricorn.com/s2.html'}));
+
+To incorporate multiple HTML elements into the <HEAD> section, just pass
+an array reference:
+
+     print $q->header(-head=>[ link({-rel=>'next',
+     				    -href=>'http://www.capricorn.com/s2.html'}),
+     			      link({-rel=>'previous',
+     				    -href=>'http://www.capricorn.com/s1.html'})
+     			     ]
+     		     );
+
+JAVASCRIPTING: The *-script*, *-noScript*, *-onLoad* and *-onUnload*
+parameters are used to add Netscape JavaScript calls to your pages.
+*-script* should point to a block of text containing JavaScript function
+definitions.  This block will be placed within a <SCRIPT> block inside
+the HTML (not HTTP) header.  The block is placed in the header in order
+to give your page a fighting chance of having all its JavaScript
+functions in place even if the user presses the stop button before the
+page has loaded completely.  CGI.pm attempts to format the script in
+such a way that JavaScript-naive browsers will not choke on the code:
+unfortunately there are some browsers, such as Chimera for Unix, that
+get confused by it nevertheless.
+
+The *-onLoad* and *-onUnload* parameters point to fragments of JavaScript
+code to execute when the page is respectively opened and closed by the
+browser.  Usually these parameters are calls to functions defined in the
+*-script* field:
+
+     $query = new CGI; print $query->header; $JSCRIPT=<<END; // Ask a silly
+     question function riddle_me_this() {
+     	 var r = prompt("What walks on four legs in the morning, " +
+     		       "two legs in the afternoon, " +
+     		       "and three legs in the evening?");
+     	 response(r);
+     }
+     // Get a silly answer
+     function response(answer) {
+     	 if (answer == "man")
+     	    alert("Right you are!");
+     	 else
+     	    alert("Wrong!  Guess again.");
+     }
+     END
+     print $query->start_html(-title=>'The Riddle of the Sphinx',
+     			       -script=>$JSCRIPT);
+
+Use the *-noScript* parameter to pass some HTML text that will be
+displayed on browsers that do not have JavaScript (or browsers where
+JavaScript is turned off).
+
+Netscape 3.0 recognizes several attributes of the <SCRIPT> tag,
+including LANGUAGE and SRC.  The latter is particularly interesting, as
+it allows you to keep the JavaScript code in a file or CGI script rather
+than cluttering up each page with the source.  To use these attributes
+pass a HASH reference in the *-script* parameter containing one or more
+of -language, -src, or -code:
+
+     print $q->start_html(-title=>'The Riddle of the Sphinx',
+     			 -script=>{-language=>'JAVASCRIPT',
+                                    -src=>'/javascript/sphinx.js'}
+     			 );
+
+     print $q->(-title=>'The Riddle of the Sphinx',
+     	       -script=>{-language=>'PERLSCRIPT'},
+     			 -code=>'print "hello world!\n;"'
+     	       );
+
+See
+
+     http://home.netscape.com/eng/mozilla/2.0/handbook/javascript/
+
+for more information about JavaScript.
+
+The old-style positional parameters are as follows:
+
+Parameters:
+@asis{}
+     
+     The title
+
+@asis{}
+     
+     The author's e-mail address (will create a <LINK REV="MADE"> tag if
+     present
+
+@asis{}
+     
+     A 'true' flag if you want to include a <BASE> tag in the header.
+     This helps resolve relative addresses to absolute ones when the
+     document is moved, but makes the document hierarchy non-portable.
+     Use with care!
+
+4, 5, 6...
+     Any other parameters you want to include in the <BODY> tag.  This
+     is a good place to put Netscape extensions, such as colors and
+     wallpaper patterns.
+
+
+ENDING THE HTML DOCUMENT:
+-------------------------
+
+     print $query->end_html
+
+This ends an HTML document by printing the </BODY></HTML> tags.
+
+
+CREATING FORMS
+==============
+
+*General note*  The various form-creating methods all return strings
+to the caller, containing the tag or tags that will create the requested
+form element.  You are responsible for actually printing out these
+strings.  It's set up this way so that you can place formatting tags
+around the form elements.
+
+*Another note* The default values that you specify for the forms are only
+used the *first* time the script is invoked (when there is no query
+string).  On subsequent invocations of the script (when there is a query
+string), the former values are used even if they are blank.
+
+If you want to change the value of a field from its previous value, you
+have two choices:
+
+(1) call the param() method to set it.
+
+(2) use the -override (alias -force) parameter (a new feature in version
+2.15).  This forces the default value to be used, regardless of the
+previous value:
+
+     print $query->textfield(-name=>'field_name',
+     			   -default=>'starting value',
+     			   -override=>1,
+     			   -size=>50,
+     			   -maxlength=>80);
+
+*Yet another note* By default, the text and labels of form elements are
+escaped according to HTML rules.  This means that you can safely use
+"<CLICK ME>" as the label for a button.  However, it also interferes
+with your ability to incorporate special HTML character sequences, such
+as &Aacute;, into your fields.  If you wish to turn off automatic
+escaping, call the autoEscape() method with a false value immediately
+after creating the CGI object:
+
+     $query = new CGI;
+     $query->autoEscape(undef);
+			     
+
+
+CREATING AN ISINDEX TAG
+-----------------------
+
+     print $query->isindex(-action=>$action);
+
+     -or-
+
+     print $query->isindex($action);
+
+Prints out an <ISINDEX> tag.  Not very exciting.  The parameter
+-action specifies the URL of the script to process the query.  The
+default is to process the query with the current script.
+
+
+STARTING AND ENDING A FORM
+--------------------------
+
+     print $query->startform(-method=>$method,
+     			    -action=>$action,
+     			    -encoding=>$encoding);
+       <... various form stuff ...>
+     print $query->endform;
+
+     -or-
+
+     print $query->startform($method,$action,$encoding);
+       <... various form stuff ...>
+     print $query->endform;
+
+startform() will return a <FORM> tag with the optional method, action
+and form encoding that you specify.  The defaults are:
+	
+    method: POST
+    action: this script
+    encoding: application/x-www-form-urlencoded
+
+endform() returns the closing </FORM> tag.
+
+Startform()'s encoding method tells the browser how to package the
+various fields of the form before sending the form to the server.  Two
+values are possible:
+
+*application/x-www-form-urlencoded*
+     This is the older type of encoding used by all browsers prior to
+     Netscape 2.0.  It is compatible with many CGI scripts and is
+     suitable for short fields containing text data.  For your
+     convenience, CGI.pm stores the name of this encoding type in
+     *$CGI::URL_ENCODED*.
+
+*multipart/form-data*
+     This is the newer type of encoding introduced by Netscape 2.0.  It
+     is suitable for forms that contain very large fields or that are
+     intended for transferring binary data.  Most importantly, it
+     enables the "file upload" feature of Netscape 2.0 forms.  For your
+     convenience, CGI.pm stores the name of this encoding type in
+     *$CGI::MULTIPART*
+
+     Forms that use this type of encoding are not easily interpreted by
+     CGI scripts unless they use CGI.pm or another library designed to
+     handle them.
+
+For compatibility, the startform() method uses the older form of
+encoding by default.  If you want to use the newer form of encoding
+by default, you can call *start_multipart_form()* instead of
+*startform()*.
+
+JAVASCRIPTING: The *-name* and *-onSubmit* parameters are provided for
+use with JavaScript.  The -name parameter gives the form a name so that
+it can be identified and manipulated by JavaScript functions.  -onSubmit
+should point to a JavaScript function that will be executed just before
+the form is submitted to your server.  You can use this opportunity to
+check the contents of the form for consistency and completeness.  If you
+find something wrong, you can put up an alert box or maybe fix things up
+yourself.  You can abort the submission by returning false from this
+function.
+
+Usually the bulk of JavaScript functions are defined in a <SCRIPT> block
+in the HTML header and -onSubmit points to one of these function call.
+See start_html() for details.
+
+
+CREATING A TEXT FIELD
+---------------------
+
+     print $query->textfield(-name=>'field_name',
+     			    -default=>'starting value',
+     			    -size=>50,
+     			    -maxlength=>80);
+     	-or-
+
+     print $query->textfield('field_name','starting value',50,80);
+
+textfield() will return a text input field.
+
+Parameters
+@asis{}
+     
+     The first parameter is the required name for the field (-name).
+
+@asis{}
+     
+     The optional second parameter is the default starting value for the
+     field contents (-default).
+
+@asis{}
+     
+     The optional third parameter is the size of the field in
+           characters (-size).
+
+@asis{}
+     
+     The optional fourth parameter is the maximum number of characters
+     the
+           field will accept (-maxlength).
+
+As with all these methods, the field will be initialized with its
+previous contents from earlier invocations of the script.  When the form
+is processed, the value of the text field can be retrieved with:
+
+     $value = $query->param('foo');
+
+If you want to reset it from its initial value after the script has been
+called once, you can do so like this:
+
+     $query->param('foo',"I'm taking over this value!");
+
+NEW AS OF VERSION 2.15: If you don't want the field to take on its
+previous value, you can force its current value by using the -override
+(alias -force) parameter:
+
+     print $query->textfield(-name=>'field_name',
+     			    -default=>'starting value',
+     			    -override=>1,
+     			    -size=>50,
+     			    -maxlength=>80);
+
+JAVASCRIPTING: You can also provide *-onChange*, *-onFocus*, *-onBlur*
+and *-onSelect* parameters to register JavaScript event handlers.  The
+onChange handler will be called whenever the user changes the contents
+of the text field.  You can do text validation if you like.  onFocus and
+onBlur are called respectively when the insertion point moves into and
+out of the text field.  onSelect is called when the user changes the
+portion of the text that is selected.
+
+
+CREATING A BIG TEXT FIELD
+-------------------------
+
+     print $query->textarea(-name=>'foo',
+     			  -default=>'starting value',
+     			  -rows=>10,
+     			  -columns=>50);
+
+     -or
+
+     print $query->textarea('foo','starting value',10,50);
+
+textarea() is just like textfield, but it allows you to specify rows and
+columns for a multiline text entry box.  You can provide a starting
+value for the field, which can be long and contain multiple lines.
+
+JAVASCRIPTING: The *-onChange*, *-onFocus*, *-onBlur* and *-onSelect*
+parameters are recognized.  See textfield().
+
+
+CREATING A PASSWORD FIELD
+-------------------------
+
+     print $query->password_field(-name=>'secret',
+     				-value=>'starting value',
+     				-size=>50,
+     				-maxlength=>80);
+     	-or-
+
+     print $query->password_field('secret','starting value',50,80);
+
+password_field() is identical to textfield(), except that its contents
+will be starred out on the web page.
+
+JAVASCRIPTING: The *-onChange*, *-onFocus*, *-onBlur* and *-onSelect*
+parameters are recognized.  See textfield().
+
+
+CREATING A FILE UPLOAD FIELD
+----------------------------
+
+     print $query->filefield(-name=>'uploaded_file',
+     			    -default=>'starting value',
+     			    -size=>50,
+     			    -maxlength=>80);
+     	-or-
+
+     print $query->filefield('uploaded_file','starting value',50,80);
+
+filefield() will return a file upload field for Netscape 2.0 browsers.
+In order to take full advantage of this *you must use the new multipart
+encoding scheme* for the form.  You can do this either by calling
+*startform()* with an encoding type of *$CGI::MULTIPART*, or by calling
+the new method *start_multipart_form()* instead of vanilla
+*startform()*.
+
+Parameters
+@asis{}
+     
+     The first parameter is the required name for the field (-name).
+
+@asis{}
+     
+     The optional second parameter is the starting value for the field
+     contents to be used as the default file name (-default).
+
+     The beta2 version of Netscape 2.0 currently doesn't pay any
+     attention to this field, and so the starting value will always be
+     blank.  Worse, the field loses its "sticky" behavior and forgets
+     its previous contents.  The starting value field is called for in
+     the HTML specification, however, and possibly later versions of
+     Netscape will honor it.
+
+@asis{}
+     
+     The optional third parameter is the size of the field in characters
+     (-size).
+
+@asis{}
+     
+     The optional fourth parameter is the maximum number of characters
+     the field will accept (-maxlength).
+
+When the form is processed, you can retrieve the entered filename by
+calling param().
+
+     $filename = $query->param('uploaded_file');
+
+In Netscape Gold, the filename that gets returned is the full local
+filename on the *remote user's* machine.  If the remote user is on a
+Unix machine, the filename will follow Unix conventions:
+
+     /path/to/the/file
+
+On an MS-DOS/Windows and OS/2 machines, the filename will follow DOS
+conventions:
+
+     C:\PATH\TO\THE\FILE.MSW
+
+On a Macintosh machine, the filename will follow Mac conventions:
+
+     HD 40:Desktop Folder:Sort Through:Reminders
+
+The filename returned is also a file handle.  You can read the contents
+of the file using standard Perl file reading calls:
+
+     # Read a text file and print it out
+     while (<$filename>) {
+        print;
+     }
+
+     # Copy a binary file to somewhere safe
+     open (OUTFILE,">>/usr/local/web/users/feedback");
+     while ($bytesread=read($filename,$buffer,1024)) {
+        print OUTFILE $buffer;
+     }
+
+When a file is uploaded the browser usually sends along some information
+along with it in the format of headers.  The information usually
+includes the MIME content type.  Future browsers may send other
+information as well (such as modification date and size). To retrieve
+this information, call uploadInfo().  It returns a reference to an
+associative array containing all the document headers.
+
+     $filename = $query->param('uploaded_file');
+     $type = $query->uploadInfo($filename)->{'Content-Type'};
+     unless ($type eq 'text/html') {
+     	  die "HTML FILES ONLY!";
+     }
+
+If you are using a machine that recognizes "text" and "binary" data
+modes, be sure to understand when and how to use them (see the Camel
+book).  Otherwise you may find that binary files are corrupted during
+file uploads.
+
+JAVASCRIPTING: The *-onChange*, *-onFocus*, *-onBlur* and *-onSelect*
+parameters are recognized.  See textfield() for details.
+
+
+CREATING A POPUP MENU
+---------------------
+
+     print $query->popup_menu('menu_name',
+     			    ['eenie','meenie','minie'],
+     			    'meenie');
+
+     -or-
+
+     %labels = ('eenie'=>'your first choice',
+     	      'meenie'=>'your second choice',
+     	      'minie'=>'your third choice');
+     print $query->popup_menu('menu_name',
+     			    ['eenie','meenie','minie'],
+     			    'meenie',\%labels);
+
+     -or (named parameter style)-
+
+     print $query->popup_menu(-name=>'menu_name',
+     			    -values=>['eenie','meenie','minie'],
+     			    -default=>'meenie',
+     			    -labels=>\%labels);
+
+popup_menu() creates a menu.
+
+  1. The required first argument is the menu's name (-name).
+
+  2. The required second argument (-values) is an array *reference*
+     containing the list of menu items in the menu.  You can pass the
+     method an anonymous array, as shown in the example, or a reference
+     to a named array, such as "\@foo".
+
+  3. The optional third parameter (-default) is the name of the default
+     menu choice.  If not specified, the first item will be the default.
+     The values of the previous choice will be maintained across
+     queries.
+
+  4. The optional fourth parameter (-labels) is provided for people who
+     want to use different values for the user-visible label inside the
+     popup menu nd the value returned to your script.  It's a pointer to
+     an associative array relating menu values to user-visible labels.
+     If you leave this parameter blank, the menu values will be
+     displayed by default.  (You can also leave a label undefined if you
+     want to).
+
+When the form is processed, the selected value of the popup menu can be
+retrieved using:
+
+     $popup_menu_value = $query->param('menu_name');
+
+JAVASCRIPTING: popup_menu() recognizes the following event handlers:
+*-onChange*, *-onFocus*, and *-onBlur*.  See the textfield()
+section for details on when these handlers are called.
+
+
+CREATING A SCROLLING LIST
+-------------------------
+
+     print $query->scrolling_list('list_name',
+     				['eenie','meenie','minie','moe'],
+     				['eenie','moe'],5,'true');
+        -or-
+
+     print $query->scrolling_list('list_name',
+     				['eenie','meenie','minie','moe'],
+     				['eenie','moe'],5,'true',
+     				\%labels);
+
+     -or-
+
+     print $query->scrolling_list(-name=>'list_name',
+     				-values=>['eenie','meenie','minie','moe'],
+     				-default=>['eenie','moe'],
+     				-size=>5,
+     				-multiple=>'true',
+     				-labels=>\%labels);
+
+scrolling_list() creates a scrolling list.
+
+Parameters:
+@asis{}
+     
+     The first and second arguments are the list name (-name) and values
+     (-values).  As in the popup menu, the second argument should be an
+     array reference.
+
+@asis{}
+     
+     The optional third argument (-default) can be either a reference to
+     a list containing the values to be selected by default, or can be a
+     single value to select.  If this argument is missing or undefined,
+     then nothing is selected when the list first appears.  In the named
+     parameter version, you can use the synonym "-defaults" for this
+     parameter.
+
+@asis{}
+     
+     The optional fourth argument is the size of the list (-size).
+
+@asis{}
+     
+     The optional fifth argument can be set to true to allow multiple
+     simultaneous selections (-multiple).  Otherwise only one selection
+     will be allowed at a time.
+
+@asis{}
+     
+     The optional sixth argument is a pointer to an associative array
+     containing long user-visible labels for the list items (-labels).
+     If not provided, the values will be displayed.
+
+     When this form is processed, all selected list items will be
+     returned as a list under the parameter name 'list_name'.  The
+     values of the selected items can be retrieved with:
+
+          @selected = $query->param('list_name');
+
+JAVASCRIPTING: scrolling_list() recognizes the following event handlers:
+*-onChange*, *-onFocus*, and *-onBlur*.  See textfield() for
+the description of when these handlers are called.
+
+
+CREATING A GROUP OF RELATED CHECKBOXES
+--------------------------------------
+
+     print $query->checkbox_group(-name=>'group_name',
+     				-values=>['eenie','meenie','minie','moe'],
+     				-default=>['eenie','moe'],
+     				-linebreak=>'true',
+     				-labels=>\%labels);
+
+     print $query->checkbox_group('group_name',
+     				['eenie','meenie','minie','moe'],
+     				['eenie','moe'],'true',\%labels);
+
+     HTML3-COMPATIBLE BROWSERS ONLY:
+
+     print $query->checkbox_group(-name=>'group_name',
+     				-values=>['eenie','meenie','minie','moe'],
+     				-rows=2,-columns=>2);
+ 
+
+checkbox_group() creates a list of checkboxes that are related by the
+same name.
+
+Parameters:
+@asis{}
+     
+     The first and second arguments are the checkbox name and values,
+     respectively (-name and -values).  As in the popup menu, the second
+     argument should be an array reference.  These values are used for
+     the user-readable labels printed next to the checkboxes as well as
+     for the values passed to your script in the query string.
+
+@asis{}
+     
+     The optional third argument (-default) can be either a reference to
+     a list containing the values to be checked by default, or can be a
+     single value to checked.  If this argument is missing or undefined,
+     then nothing is selected when the list first appears.
+
+@asis{}
+     
+     The optional fourth argument (-linebreak) can be set to true to
+     place line breaks between the checkboxes so that they appear as a
+     vertical list.  Otherwise, they will be strung together on a
+     horizontal line.
+
+@asis{}
+     
+     The optional fifth argument is a pointer to an associative array
+     relating the checkbox values to the user-visible labels that will
+     be printed next to them (-labels).  If not provided, the values
+     will be used as the default.
+
+@asis{}
+     
+     *HTML3-compatible browsers* (such as Netscape) can take advantage 
+     of the optional parameters *-rows*, and *-columns*.  These
+     parameters cause checkbox_group() to return an HTML3 compatible
+     table containing the checkbox group formatted with the specified
+     number of rows and columns.  You can provide just the -columns
+     parameter if you wish; checkbox_group will calculate the correct
+     number of rows for you.
+
+     To include row and column headings in the returned table, you can
+     use the *-rowheader* and *-colheader* parameters.  Both of these
+     accept a pointer to an array of headings to use.  The headings are
+     just decorative.  They don't reorganize the interpretation of the
+     checkboxes -- they're still a single named unit.
+
+When the form is processed, all checked boxes will be returned as a list
+under the parameter name 'group_name'.  The values of the "on"
+checkboxes can be retrieved with:
+
+     @turned_on = $query->param('group_name');
+
+The value returned by checkbox_group() is actually an array of button
+elements.  You can capture them and use them within tables, lists, or in
+other creative ways:
+
+     @h = $query->checkbox_group(-name=>'group_name',-values=>\@values);
+     &use_in_creative_way(@h);
+
+JAVASCRIPTING: checkbox_group() recognizes the *-onClick* parameter.
+This specifies a JavaScript code fragment or function call to be
+executed every time the user clicks on any of the buttons in the group.
+You can retrieve the identity of the particular button clicked on using
+the "this" variable.
+
+
+CREATING A STANDALONE CHECKBOX
+------------------------------
+
+     print $query->checkbox(-name=>'checkbox_name',
+     			   -checked=>'checked',
+     			   -value=>'ON',
+     			   -label=>'CLICK ME');
+
+     -or-
+
+     print $query->checkbox('checkbox_name','checked','ON','CLICK ME');
+
+checkbox() is used to create an isolated checkbox that isn't logically
+related to any others.
+
+Parameters:
+@asis{}
+     
+     The first parameter is the required name for the checkbox (-name).
+     It will also be used for the user-readable label printed next to
+     the checkbox.
+
+@asis{}
+     
+     The optional second parameter (-checked) specifies that the
+     checkbox is turned on by default.  Synonyms are -selected and -on.
+
+@asis{}
+     
+     The optional third parameter (-value) specifies the value of the
+     checkbox when it is checked.  If not provided, the word "on" is
+     assumed.
+
+@asis{}
+     
+     The optional fourth parameter (-label) is the user-readable label
+     to be attached to the checkbox.  If not provided, the checkbox name
+     is used.
+
+The value of the checkbox can be retrieved using:
+
+     $turned_on = $query->param('checkbox_name');
+
+JAVASCRIPTING: checkbox() recognizes the *-onClick* parameter.  See
+checkbox_group() for further details.
+
+
+CREATING A RADIO BUTTON GROUP
+-----------------------------
+
+     print $query->radio_group(-name=>'group_name',
+     			     -values=>['eenie','meenie','minie'],
+     			     -default=>'meenie',
+     			     -linebreak=>'true',
+     			     -labels=>\%labels);
+
+     -or-
+
+     print $query->radio_group('group_name',['eenie','meenie','minie'],
+     					  'meenie','true',\%labels);
+
+     HTML3-COMPATIBLE BROWSERS ONLY:
+
+     print $query->radio_group(-name=>'group_name',
+     			     -values=>['eenie','meenie','minie','moe'],
+     			     -rows=2,-columns=>2);
+
+radio_group() creates a set of logically-related radio buttons (turning
+one member of the group on turns the others off)
+
+Parameters:
+@asis{}
+     
+     The first argument is the name of the group and is required
+     (-name).
+
+@asis{}
+     
+     The second argument (-values) is the list of values for the radio
+     buttons.  The values and the labels that appear on the page are
+     identical.  Pass an array *reference* in the second argument,
+     either using an anonymous array, as shown, or by referencing a
+     named array as in "\@foo".
+
+@asis{}
+     
+     The optional third parameter (-default) is the name of the default
+     button to turn on. If not specified, the first item will be the
+     default.  You can provide a nonexistent button name, such as "-" to
+     start up with no buttons selected.
+
+@asis{}
+     
+     The optional fourth parameter (-linebreak) can be set to 'true' to
+     put line breaks between the buttons, creating a vertical list.
+
+@asis{}
+     
+     The optional fifth parameter (-labels) is a pointer to an
+     associative array relating the radio button values to user-visible
+     labels to be used in the display.  If not provided, the values
+     themselves are displayed.
+
+@asis{}
+     
+     *HTML3-compatible browsers* (such as Netscape) can take advantage 
+     of the optional parameters *-rows*, and *-columns*.  These
+     parameters cause radio_group() to return an HTML3 compatible table
+     containing the radio group formatted with the specified number of
+     rows and columns.  You can provide just the -columns parameter if
+     you wish; radio_group will calculate the correct number of rows for
+     you.
+
+     To include row and column headings in the returned table, you can
+     use the *-rowheader* and *-colheader* parameters.  Both of these
+     accept a pointer to an array of headings to use.  The headings are
+     just decorative.  They don't reorganize the interpetation of the
+     radio buttons -- they're still a single named unit.
+
+When the form is processed, the selected radio button can be retrieved
+using:
+
+     $which_radio_button = $query->param('group_name');
+
+The value returned by radio_group() is actually an array of button
+elements.  You can capture them and use them within tables, lists, or in
+other creative ways:
+
+     @h = $query->radio_group(-name=>'group_name',-values=>\@values);
+     &use_in_creative_way(@h);
+
+
+CREATING A SUBMIT BUTTON
+------------------------
+
+     print $query->submit(-name=>'button_name',
+     			-value=>'value');
+
+     -or-
+
+     print $query->submit('button_name','value');
+
+submit() will create the query submission button.  Every form should
+have one of these.
+
+Parameters:
+@asis{}
+     
+     The first argument (-name) is optional.  You can give the button a
+     name if you have several submission buttons in your form and you want
+     to distinguish between them.  The name will also be used as the
+     user-visible label.  Be aware that a few older browsers don't deal with this correctly and
+     *never* send back a value from a button.
+
+@asis{}
+     
+     The second argument (-value) is also optional.  This gives the
+     button a value that will be passed to your script in the query
+     string.
+
+You can figure out which button was pressed by using different values
+for each one:
+
+     $which_one = $query->param('button_name');
+
+JAVASCRIPTING: radio_group() recognizes the *-onClick* parameter.  See
+checkbox_group() for further details.
+
+
+CREATING A RESET BUTTON
+-----------------------
+
+     print $query->reset
+
+reset() creates the "reset" button.  Note that it restores the form to
+its value from the last time the script was called, NOT necessarily to
+the defaults.
+
+
+CREATING A DEFAULT BUTTON
+-------------------------
+
+     print $query->defaults('button_label')
+
+defaults() creates a button that, when invoked, will cause the form to
+be completely reset to its defaults, wiping out all the changes the user
+ever made.
+
+
+CREATING A HIDDEN FIELD
+-----------------------
+
+     print $query->hidden(-name=>'hidden_name',
+     		     -default=>['value1','value2'...]);
+
+     -or-
+
+     print $query->hidden('hidden_name','value1','value2'...);
+
+hidden() produces a text field that can't be seen by the user.  It is
+useful for passing state variable information from one invocation of the
+script to the next.
+
+Parameters:
+@asis{}
+     
+     The first argument is required and specifies the name of this field
+     (-name).
+
+@asis{}
+     
+     The second argument is also required and specifies its value
+     (-default).  In the named parameter style of calling, you can
+     provide a single value here or a reference to a whole list
+
+Fetch the value of a hidden field this way:
+
+     $hidden_value = $query->param('hidden_name');
+
+Note, that just like all the other form elements, the value of a hidden
+field is "sticky".  If you want to replace a hidden field with some
+other values after the script has been called once you'll have to do it
+manually:
+
+     $query->param('hidden_name','new','values','here');
+
+
+CREATING A CLICKABLE IMAGE BUTTON
+---------------------------------
+
+     print $query->image_button(-name=>'button_name',
+     				-src=>'/source/URL',
+     				-align=>'MIDDLE');      
+
+     -or-
+
+     print $query->image_button('button_name','/source/URL','MIDDLE');
+
+image_button() produces a clickable image.  When it's clicked on the
+position of the click is returned to your script as "button_name.x" and
+"button_name.y", where "button_name" is the name you've assigned to it.
+
+JAVASCRIPTING: image_button() recognizes the *-onClick* parameter.  See
+checkbox_group() for further details.
+
+Parameters:
+@asis{}
+     
+     The first argument (-name) is required and specifies the name of
+     this field.
+
+@asis{}
+     
+     The second argument (-src) is also required and specifies the URL
+
+The third option (-align, optional) is an alignment type, and may be
+TOP, BOTTOM or MIDDLE Fetch the value of the button this way:
+     $x = $query->param('button_name.x');
+     $y = $query->param('button_name.y');
+
+
+CREATING A JAVASCRIPT ACTION BUTTON
+-----------------------------------
+
+     print $query->button(-name=>'button_name',
+     			  -value=>'user visible label',
+     			  -onClick=>"do_something()");
+
+     -or-
+
+     print $query->button('button_name',"do_something()");
+
+button() produces a button that is compatible with Netscape 2.0's
+JavaScript.  When it's pressed the fragment of JavaScript code pointed
+to by the *-onClick* parameter will be executed.  On non-Netscape
+browsers this form element will probably not even display.
+
+
+NETSCAPE COOKIES
+================
+
+Netscape browsers versions 1.1 and higher support a so-called "cookie"
+designed to help maintain state within a browser session.  CGI.pm has
+several methods that support cookies.
+
+A cookie is a name=value pair much like the named parameters in a CGI
+query string.  CGI scripts create one or more cookies and send them to
+the browser in the HTTP header.  The browser maintains a list of cookies
+that belong to a particular Web server, and returns them to the CGI
+script during subsequent interactions.
+
+In addition to the required name=value pair, each cookie has several
+optional attributes:
+
+  1. an expiration time This is a time/date string (in a special GMT
+     format) that indicates when a cookie expires.  The cookie will be
+     saved and returned to your script until this expiration date is
+     reached if the user exits Netscape and restarts it.  If an
+     expiration date isn't specified, the cookie will remain active
+     until the user quits Netscape.
+
+  2. a domain This is a partial or complete domain name for which the
+     cookie is valid.  The browser will return the cookie to any host
+     that matches the partial domain name.  For example, if you specify
+     a domain name of ".capricorn.com", then Netscape will return the
+     cookie to Web servers running on any of the machines
+     "www.capricorn.com", "www2.capricorn.com",
+     "feckless.capricorn.com", etc.  Domain names must contain at least
+     two periods to prevent attempts to match on top level domains like
+     ".edu".  If no domain is specified, then the browser will only
+     return the cookie to servers on the host the cookie originated
+     from.
+
+  3. a path If you provide a cookie path attribute, the browser will
+     check it against your script's URL before returning the cookie.
+     For example, if you specify the path "/cgi-bin", then the cookie
+     will be returned to each of the scripts "/cgi-bin/tally.pl",
+     "/cgi-bin/order.pl", and "/cgi-bin/customer_service/complain.pl",
+     but not to the script "/cgi-private/site_admin.pl".  By default,
+     path is set to "/", which causes the cookie to be sent to any CGI
+     script on your site.
+
+  4. a "secure" flag If the "secure" attribute is set, the cookie will
+     only be sent to your script if the CGI request is occurring on a
+     secure channel, such as SSL.
+
+The interface to Netscape cookies is the *cookie()* method:
+
+     $cookie = $query->cookie(-name=>'sessionID',
+     			     -value=>'xyzzy',
+     			     -expires=>'+1h',
+     			     -path=>'/cgi-bin/database',
+     			     -domain=>'.capricorn.org',
+     			     -secure=>1);
+     print $query->header(-cookie=>$cookie);
+
+*cookie()* creates a new cookie.  Its parameters include:
+
+*-name*
+     The name of the cookie (required).  This can be any string at all.
+     Although Netscape limits its cookie names to non-whitespace
+     alphanumeric characters, CGI.pm removes this restriction by
+     escaping and unescaping cookies behind the scenes.
+
+*-value*
+     The value of the cookie.  This can be any scalar value, array
+     reference, or even associative array reference.  For example, you
+     can store an entire associative array into a cookie this way:
+
+          $cookie=$query->cookie(-name=>'family information',
+          		       -value=>\%childrens_ages);
+
+*-path*
+     The optional partial path for which this cookie will be valid, as
+     described above.
+
+*-domain*
+     The optional partial domain for which this cookie will be valid, as
+     described above.
+
+*-expires*
+     The optional expiration date for this cookie.  The format is as
+     described in the section on the *header()* method:
+
+          "+1h"  one hour from now
+
+*-secure*
+     If set to true, this cookie will only be used within a secure SSL
+     session.
+
+The cookie created by cookie() must be incorporated into the HTTP header
+within the string returned by the header() method:
+
+     print $query->header(-cookie=>$my_cookie);
+
+To create multiple cookies, give header() an array reference:
+
+     $cookie1 = $query->cookie(-name=>'riddle_name',
+     			  -value=>"The Sphynx's Question");
+     $cookie2 = $query->cookie(-name=>'answers',
+     			  -value=>\%answers);
+     print $query->header(-cookie=>[$cookie1,$cookie2]);
+
+To retrieve a cookie, request it by name by calling cookie() method
+without the *-value* parameter:
+
+     use CGI;
+     $query = new CGI;
+     %answers = $query->cookie(-name=>'answers');
+     # $query->cookie('answers') will work too!
+
+The cookie and CGI namespaces are separate.  If you have a parameter
+named 'answers' and a cookie named 'answers', the values retrieved by
+param() and cookie() are independent of each other.  However, it's
+simple to turn a CGI parameter into a cookie, and vice-versa:
+
+     # turn a CGI parameter into a cookie
+     $c=$q->cookie(-name=>'answers',-value=>[$q->param('answers')]);
+     # vice-versa
+     $q->param(-name=>'answers',-value=>[$q->cookie('answers')]);
+
+See the *cookie.cgi* example script for some ideas on how to use cookies
+effectively.
+
+*NOTE:* There appear to be some (undocumented) restrictions on
+Netscape cookies.  In Netscape 2.01, at least, I haven't been able to
+set more than three cookies at a time.  There may also be limits on the
+length of cookies.  If you need to store a lot of information, it's
+probably better to create a unique session ID, store it in a cookie, and
+use the session ID to locate an external file/database saved on the
+server's side of the connection.
+
+
+WORKING WITH NETSCAPE FRAMES
+============================
+
+It's possible for CGI.pm scripts to write into several browser panels
+and windows using Netscape's frame mechanism.  There are three
+techniques for defining new frames programmatically:
+
+  1. Create a <Frameset> document After writing out the HTTP header,
+     instead of creating a standard HTML document using the start_html()
+     call, create a <FRAMESET> document that defines the frames on the
+     page.  Specify your script(s) (with appropriate parameters) as the
+     SRC for each of the frames.
+
+     There is no specific support for creating <FRAMESET> sections in
+     CGI.pm, but the HTML is very simple to write.  See the frame
+     documentation in Netscape's home pages for details
+
+          http://home.netscape.com/assist/net_sites/frames.html
+
+  2. Specify the destination for the document in the HTTP header You may
+     provide a *-target* parameter to the header() method:
+   
+         print $q->header(-target=>'ResultsWindow');
+
+     This will tell Netscape to load the output of your script into the
+     frame named "ResultsWindow".  If a frame of that name doesn't
+     already exist, Netscape will pop up a new window and load your
+     script's document into that.  There are a number of magic names
+     that you can use for targets.  See the frame documents on
+     Netscape's home pages for details.
+
+  3. Specify the destination for the document in the <FORM> tag You can
+     specify the frame to load in the FORM tag itself.  With CGI.pm it
+     looks like this:
+
+          print $q->startform(-target=>'ResultsWindow');
+
+     When your script is reinvoked by the form, its output will be
+     loaded into the frame named "ResultsWindow".  If one doesn't
+     already exist a new window will be created.
+
+The script "frameset.cgi" in the examples directory shows one way to
+create pages in which the fill-out form and the response live in
+side-by-side frames.
+
+
+LIMITED SUPPORT FOR CASCADING STYLE SHEETS
+==========================================
+
+CGI.pm has limited support for HTML3's cascading style sheets (css).
+To incorporate a stylesheet into your document, pass the
+start_html() method a *-style* parameter.  The value of this
+parameter may be a scalar, in which case it is incorporated directly
+into a <STYLE> section, or it may be a hash reference.  In the latter
+case you should provide the hash with one or more of *-src* or
+*-code*.  *-src* points to a URL where an externally-defined
+stylesheet can be found.  *-code* points to a scalar value to be
+incorporated into a <STYLE> section.  Style definitions in *-code*
+override similarly-named ones in *-src*, hence the name "cascading."
+
+To refer to a style within the body of your document, add the
+*-class* parameter to any HTML element:
+
+     print h1({-class=>'Fancy'},'Welcome to the Party');
+
+Or define styles on the fly with the *-style* parameter:
+
+     print h1({-style=>'Color: red;'},'Welcome to Hell');
+
+You may also use the new *span()* element to apply a style to a section
+of text:
+
+     print span({-style=>'Color: red;'},
+     	       h1('Welcome to Hell'),
+     	       "Where did that handbasket get to?"
+     	       );
+
+Note that you must import the ":html3" definitions to have the
+*span()* method available.  Here's a quick and dirty example of using
+CSS's.  See the CSS specification at
+http://www.w3.org/pub/WWW/TR/Wd-css-1.html for more information.
+
+     use CGI qw/:standard :html3/;
+
+     #here's a stylesheet incorporated directly into the page
+     $newStyle=<<END;
+     <!-- 
+     P.Tip {
+     	margin-right: 50pt;
+     	margin-left: 50pt;
+         color: red;
+     }
+     P.Alert {
+     	font-size: 30pt;
+         font-family: sans-serif;
+       color: red;
+     }
+     -->
+     END
+     print header();
+     print start_html( -title=>'CGI with Style',
+     		      -style=>{-src=>'http://www.capricorn.com/style/st1.css',
+     		               -code=>$newStyle}
+     	             );
+     print h1('CGI with Style'),
+           p({-class=>'Tip'},
+     	    "Better read the cascading style sheet spec before playing with this!"),
+           span({-style=>'color: magenta'},
+     	       "Look Mom, no hands!",
+     	       p(),
+     	       "Whooo wee!"
+     	       );
+     print end_html;
+
+
+DEBUGGING
+=========
+
+If you are running the script from the command line or in the perl
+debugger, you can pass the script a list of keywords or parameter=value
+pairs on the command line or from standard input (you don't have to
+worry about tricking your script into reading from environment
+variables).  You can pass keywords like this:
+
+     your_script.pl keyword1 keyword2 keyword3
+
+or this:
+
+     your_script.pl keyword1+keyword2+keyword3
+
+or this:
+
+     your_script.pl name1=value1 name2=value2
+
+or this:
+
+     your_script.pl name1=value1&name2=value2
+
+or even as newline-delimited parameters on standard input.
+
+When debugging, you can use quotes and backslashes to escape characters
+in the familiar shell manner, letting you place spaces and other funny
+characters in your parameter=value pairs:
+
+     your_script.pl "name1='I am a long value'" "name2=two\ words"
+
+
+DUMPING OUT ALL THE NAME/VALUE PAIRS
+------------------------------------
+
+The dump() method produces a string consisting of all the query's
+name/value pairs formatted nicely as a nested list.  This is useful for
+debugging purposes:
+
+     print $query->dump
+
+
+Produces something that looks like:
+
+     <UL>
+     <LI>name1
+     	<UL>
+     	<LI>value1
+     	<LI>value2
+     	</UL>
+     <LI>name2
+     	<UL>
+     	<LI>value1
+     	</UL>
+     </UL>
+
+You can pass a value of 'true' to dump() in order to get it to print the
+results out as plain text, suitable for incorporating into a <PRE>
+section.
+
+As a shortcut, as of version 1.56 you can interpolate the entire CGI
+object into a string and it will be replaced with the a nice HTML dump
+shown above:
+
+     $query=new CGI;
+     print "<H2>Current Values</H2> $query\n";
+
+
+FETCHING ENVIRONMENT VARIABLES
+==============================
+
+Some of the more useful environment variables can be fetched through
+this interface.  The methods are as follows:
+
+accept()
+     Return a list of MIME types that the remote browser accepts. If you
+     give this method a single argument corresponding to a MIME type, as
+     in $query->accept('text/html'), it will return a floating point
+     value corresponding to the browser's preference for this type from
+     0.0 (don't want) to 1.0.  Glob types (e.g. text/*) in the browser's
+     accept list are handled correctly.
+
+raw_cookie()
+     Returns the HTTP_COOKIE variable, an HTTP extension implemented by
+     Netscape browsers version 1.1 and higher.  Cookies have a special
+     format, and this method call just returns the raw form (?cookie
+     dough).  See cookie() for ways of setting and retrieving cooked
+     cookies.
+
+user_agent()
+     Returns the HTTP_USER_AGENT variable.  If you give this method a
+     single argument, it will attempt to pattern match on it, allowing
+     you to do something like $query->user_agent(netscape);
+
+path_info()
+     Returns additional path information from the script URL.
+     E.G. fetching /cgi-bin/your_script/additional/stuff will result in
+     $query->path_info() returning "additional/stuff".
+
+     NOTE: The Microsoft Internet Information Server is broken with
+     respect to additional path information.  If you use the Perl DLL
+     library, the IIS server will attempt to execute the additional path
+     information as a Perl script.  If you use the ordinary file
+     associations mapping, the path information will be present in the
+     environment, but incorrect.  The best thing to do is to avoid using
+     additional path information in CGI scripts destined for use with
+     IIS.
+
+path_translated()
+     As per path_info() but returns the additional path information
+     translated into a physical path, e.g.
+     "/usr/local/etc/httpd/htdocs/additional/stuff".
+
+     The Microsoft IIS is broken with respect to the translated path as
+     well.
+
+remote_host()
+     Returns either the remote host name or IP address.  if the former
+     is unavailable.
+
+script_name() Return the script name as a partial URL, for self-refering scripts.
+referer()
+     Return the URL of the page the browser was viewing prior to
+     fetching your script.  Not available for all browsers.
+
+*auth_type ()*
+     Return the authorization/verification method in use for this
+     script, if any.
+
+*server_name ()*
+     Returns the name of the server, usually the machine's host name.
+
+*virtual_host ()*
+     When using virtual hosts, returns the name of the host that the
+     browser attempted to contact
+
+*server_software ()*
+     Returns the server software and version number.
+
+*remote_user ()*
+     Return the authorization/verification name used for user
+     verification, if this script is protected.
+
+*user_name ()*
+     Attempt to obtain the remote user's name, using a variety of
+     different techniques.  This only works with older browsers such as
+     Mosaic.  Netscape does not reliably report the user name!
+
+request_method()
+     Returns the method used to access your script, usually one of
+     'POST', 'GET' or 'HEAD'.
+
+
+CREATING HTML ELEMENTS
+======================
+
+In addition to its shortcuts for creating form elements, CGI.pm defines
+general HTML shortcut methods as well.  HTML shortcuts are named after a
+single HTML element and return a fragment of HTML text that you can then
+print or manipulate as you like.
+
+This example shows how to use the HTML methods:
+
+     $q = new CGI;
+     print $q->blockquote(
+     		     "Many years ago on the island of",
+     		     $q->a({href=>"http://crete.org/"},"Crete"),
+     		     "there lived a minotaur named",
+     		     $q->strong("Fred."),
+     		    ),
+            $q->hr;
+
+This results in the following HTML code (extra newlines have been added
+for readability):
+
+     <blockquote>
+     Many years ago on the island of
+     <a HREF="http://crete.org/">Crete</a> there lived
+     a minotaur named <strong>Fred.</strong> 
+     </blockquote>
+     <hr>
+
+If you find the syntax for calling the HTML shortcuts awkward, you can
+import them into your namespace and dispense with the object syntax
+completely (see the next section for more details):
+
+     use CGI shortcuts;      # IMPORT HTML SHORTCUTS
+     print blockquote(
+     	     "Many years ago on the island of",
+     	     a({href=>"http://crete.org/"},"Crete"),
+     	     "there lived a minotaur named",
+     	     strong("Fred."),
+     	     ),
+            hr;
+
+
+PROVIDING ARGUMENTS TO HTML SHORTCUTS
+-------------------------------------
+
+The HTML methods will accept zero, one or multiple arguments.  If you
+provide no arguments, you get a single tag:
+
+     print hr;  
+     #  gives "<hr>"
+
+If you provide one or more string arguments, they are concatenated
+together with spaces and placed between opening and closing tags:
+
+     print h1("Chapter","1"); 
+     # gives "<h1>Chapter 1</h1>"
+
+If the first argument is an associative array reference, then the keys
+and values of the associative array become the HTML tag's attributes:
+
+     print a({href=>'fred.html',target=>'_new'},
+     	"Open a new frame");
+     # gives <a href="fred.html",target="_new">Open a new frame</a>
+
+You are free to use CGI.pm-style dashes in front of the attribute names
+if you prefer:
+
+     print img {-src=>'fred.gif',-align=>'LEFT'};
+     # gives <img ALIGN="LEFT" SRC="fred.gif">
+
+
+Generating new HTML tags
+------------------------
+
+Since no mere mortal can keep up with Netscape and Microsoft as they
+battle it out for control of HTML, the code that generates HTML tags is
+general and extensible.  You can create new HTML tags freely just by
+referring to them on the import line:
+
+     use CGI shortcuts,winkin,blinkin,nod;
+
+Now, in addition to the standard CGI shortcuts, you've created HTML tags
+named "winkin", "blinkin" and "nod".  You can use them like this:
+
+     print blinkin {color=>'blue',rate=>'fast'},"Yahoo!";
+     # <blinkin COLOR="blue" RATE="fast">Yahoo!</blinkin>
+
+
+IMPORTING CGI METHOD CALLS INTO YOUR NAME SPACE
+===============================================
+
+As a convenience, you can import most of the CGI method calls directly
+into your name space.  The syntax for doing this is:
+
+     use CGI <list of methods>;
+
+The listed methods will be imported into the current package; you can
+call them directly without creating a CGI object first.  This example
+shows how to import the *param()* and *header()* methods, and then use
+them directly:
+
+     use CGI param,header;
+     print header('text/plain');
+     $zipcode = param('zipcode');
+
+You can import groups of methods by referring to a number of special
+names:
+
+cgi
+     Import all CGI-handling methods, such as *param()*, path_info() and
+     the like.
+
+form
+     Import all fill-out form generating methods, such as *textfield()*.
+
+html2
+     Import all methods that generate HTML 2.0 standard elements.
+
+html3
+     Import all methods that generate HTML 3.0 proposed elements (such
+     as <table>, <super> and <sub>).
+
+netscape
+     Import all methods that generate Netscape-specific HTML extensions.
+
+shortcuts
+     Import all HTML-generating shortcuts (i.e. 'html2' + 'html3' +
+     'netscape')...
+
+standard
+     Import "standard" features, 'html2', 'form' and 'cgi'.
+
+all
+     Import all the available methods.  For the full list, see the
+     CGI.pm code, where the variable %TAGS is defined.
+
+Note that in the interests of execution speed CGI.pm does *not* use the
+standard *Note Exporter: Exporter, syntax for specifying load symbols.
+This may change in the future.
+
+If you import any of the state-maintaining CGI or form-generating
+methods, a default CGI object will be created and initialized
+automatically the first time you use any of the methods that require
+one to be present.  This includes *param()*, *textfield()*,
+*submit()* and the like.  (If you need direct access to the CGI
+object, you can find it in the global variable *$CGI::Q*).  By importing
+CGI.pm methods, you can create visually elegant scripts:
+
+     use CGI standard,html2;
+     print 
+         header,
+         start_html('Simple Script'),
+         h1('Simple Script'),
+         start_form,
+         "What's your name? ",textfield('name'),p,
+         "What's the combination?",
+         checkbox_group(-name=>'words',
+     		      -values=>['eenie','meenie','minie','moe'],
+     		      -defaults=>['eenie','moe']),p,
+         "What's your favorite color?",
+         popup_menu(-name=>'color',
+     		  -values=>['red','green','blue','chartreuse']),p,
+         submit,
+         end_form,
+         hr,"\n";
+
+     if (param) {
+        print 
+     	   "Your name is ",em(param('name')),p,
+     	   "The keywords are: ",em(join(", ",param('words'))),p,
+     	   "Your favorite color is ",em(param('color')),".\n";
+     }
+     print end_html;
+
+
+USING NPH SCRIPTS
+=================
+
+NPH, or "no-parsed-header", scripts bypass the server completely by
+sending the complete HTTP header directly to the browser.  This has
+slight performance benefits, but is of most use for taking advantage of
+HTTP extensions that are not directly supported by your server, such as
+server push and PICS headers.
+
+Servers use a variety of conventions for designating CGI scripts as NPH.
+Many Unix servers look at the beginning of the script's name for the
+prefix "nph-".  The Macintosh WebSTAR server and Microsoft's Internet
+Information Server, in contrast, try to decide whether a program is an
+NPH script by examining the first line of script output.
+
+CGI.pm supports NPH scripts with a special NPH mode.  When in this mode,
+CGI.pm will output the necessary extra header information when the
+header() and redirect() methods are called.
+
+The Microsoft Internet Information Server requires NPH mode.  As of
+version 2.30, CGI.pm will automatically detect when the script is
+running under IIS and put itself into this mode.  You do not need to do
+this manually, although it won't hurt anything if you do.
+
+There are a number of ways to put CGI.pm into NPH mode:
+
+In the use statement Simply add ":nph" to the list of symbols to be imported into your script:
+          use CGI qw(:standard :nph)
+
+By calling the *nph()* method:
+     Call *nph()* with a non-zero parameter at any point after using
+     CGI.pm in your program.
+
+          CGI->nph(1)
+
+By using *-nph* parameters in the *header()* and *redirect()*  statements:
+          print $q->header(-nph=&gt;1);
+
+
+AUTHOR INFORMATION
+==================
+
+Copyright 1995,1996, Lincoln D. Stein.  All rights reserved.  It may be
+used and modified freely, but I do request that this copyright notice
+remain attached to the file.  You may modify this module as you wish,
+but if you redistribute a modified version, please attach a note listing
+the modifications you have made.
+
+Address bug reports and comments to: lstein@genome.wi.mit.edu
+
+
+CREDITS
+=======
+
+Thanks very much to:
+
+Matt Heffron (heffron@falstaff.css.beckman.com)
+James Taylor (james.taylor@srs.gov)
+Scott Anguish <sanguish@digifix.com>
+Mike Jewell (mlj3u@virginia.edu)
+Timothy Shimmin (tes@kbs.citri.edu.au)
+Joergen Haegg (jh@axis.se)
+Laurent Delfosse (delfosse@csgrad1.cs.wvu.edu)
+Richard Resnick (applepi1@aol.com)
+Craig Bishop (csb@barwonwater.vic.gov.au)
+Tony Curtis (tc@vcpc.univie.ac.at)
+Tim Bunce (Tim.Bunce@ig.co.uk)
+Tom Christiansen (tchrist@convex.com)
+Andreas Koenig (k@franz.ww.TU-Berlin.DE)
+Tim MacKenzie (Tim.MacKenzie@fulcrum.com.au)
+Kevin B. Hendricks (kbhend@dogwood.tyler.wm.edu)
+Stephen Dahmen (joyfire@inxpress.net)
+Ed Jordan (ed@fidalgo.net)
+David Alan Pisoni (david@cnation.com)
+...and many many more...
+     for suggestions and bug fixes.
+
+
+A COMPLETE EXAMPLE OF A SIMPLE FORM-BASED SCRIPT
+================================================
+
+     #!/usr/local/bin/perl
+     
+     use CGI;
+ 
+     $query = new CGI;
+
+     print $query->header;
+     print $query->start_html("Example CGI.pm Form");
+     print "<H1> Example CGI.pm Form</H1>\n";
+     &print_prompt($query);
+     &do_work($query);
+     &print_tail;
+     print $query->end_html;
+ 
+     sub print_prompt {
+        my($query) = @_;
+ 
+        print $query->startform;
+        print "<EM>What's your name?</EM><BR>";
+        print $query->textfield('name');
+        print $query->checkbox('Not my real name');
+ 
+        print "<P><EM>Where can you find English Sparrows?</EM><BR>";
+        print $query->checkbox_group(
+     			 -name=>'Sparrow locations',
+     			 -values=>[England,France,Spain,Asia,Hoboken],
+     			 -linebreak=>'yes',
+     			 -defaults=>[England,Asia]);
+ 
+        print "<P><EM>How far can they fly?</EM><BR>",
+     	$query->radio_group(
+     		-name=>'how far',
+     		-values=>['10 ft','1 mile','10 miles','real far'],
+     		-default=>'1 mile');
+ 
+        print "<P><EM>What's your favorite color?</EM>  ";
+        print $query->popup_menu(-name=>'Color',
+     			    -values=>['black','brown','red','yellow'],
+     			    -default=>'red');
+ 
+        print $query->hidden('Reference','Monty Python and the Holy Grail');
+ 
+        print "<P><EM>What have you got there?</EM><BR>";
+        print $query->scrolling_list(
+     		 -name=>'possessions',
+     		 -values=>['A Coconut','A Grail','An Icon',
+     			   'A Sword','A Ticket'],
+     		 -size=>5,
+     		 -multiple=>'true');
+ 
+        print "<P><EM>Any parting comments?</EM><BR>";
+        print $query->textarea(-name=>'Comments',
+     			  -rows=>10,
+     			  -columns=>50);
+ 
+        print "<P>",$query->reset;
+        print $query->submit('Action','Shout');
+        print $query->submit('Action','Scream');
+        print $query->endform;
+        print "<HR>\n";
+     }
+ 
+     sub do_work {
+        my($query) = @_;
+        my(@values,$key);
+
+     print "<H2>Here are the current settings in this form</H2>";
+
+     foreach $key ($query->param) {
+        print "<STRONG>$key</STRONG> -> ";
+        @values = $query->param($key);
+        print join(", ",@values),"<BR>\n";
+     	  }
+     	}
+ 
+     	sub print_tail {
+     print <<END;
+     	<HR>
+     	<ADDRESS>Lincoln D. Stein</ADDRESS><BR>
+     	<A HREF="/">Home Page</A>
+     	END
+     	}
+
+
+BUGS
+====
+
+This module has grown large and monolithic.  Furthermore it's doing many
+things, such as handling URLs, parsing CGI input, writing HTML, etc.,
+that are also done in the LWP modules. It should be discarded in favor
+of the CGI::* modules, but somehow I continue to work on it.
+
+Note that the code is truly contorted in order to avoid spurious
+warnings when programs are run with the -w switch.
+
+
+SEE ALSO
+========
+
+*Note CGI/Carp: CGI/Carp,, *Note URI/URL: URI/URL,, *Note CGI/Request: CGI/Request,, *Note CGI/MiniSvr: CGI/MiniSvr,,
+*Note CGI/Base: CGI/Base,, *Note CGI/Form: CGI/Form,, *Note CGI/Apache: CGI/Apache,, *Note CGI/Switch: CGI/Switch,,
+*Note CGI/Push: CGI/Push,, *Note CGI/Fast: CGI/Fast,
+
+
+
+

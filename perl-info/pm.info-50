@@ -1,0 +1,1874 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: String/BitCount, Next: String/Parity, Prev: String/Approx, Up: Module List
+
+count number of "1" bits in string
+**********************************
+
+
+
+NAME
+====
+
+String::BitCount, BitCount showBitCount - count number of "1" bits in
+string
+
+
+SYNOPSIS
+========
+
+     use String::BitCount;
+
+
+DESCRIPTION
+===========
+
+BitCount LIST
+     Joins the elements of LIST into a single string and returns the the
+     number of bits in this string.
+
+showBitCount LIST
+     Copies the elements of LIST to a new list and converts the new
+     elements to strings of digits showing the number of set bits in the
+     original byte.  In array context returns the new list.  In scalar
+     context joins the elements of the new list into a single string and
+     returns the string.
+
+
+AUTHOR
+======
+
+Winfried Koenig <win@in.rhein-main.de>
+
+
+SEE ALSO
+========
+
+perl(1)
+
+
+
+
+File: pm.info, Node: String/Parity, Next: String/Scanf, Prev: String/BitCount, Up: Module List
+
+Parity (odd/even/mark/space) handling functions
+***********************************************
+
+
+
+NAME
+====
+
+String::Parity, setEvenParity, setOddParity, setSpaceParity,
+setMarkParity, isEvenParity, isOddParity isSpaceParity, isMarkParity,
+EvenBytes, OddBytes, SpaceBytes, MarkBytes, showParity, showMarkSpace -
+Parity (odd/even/mark/space) handling functions
+
+
+SYNOPSIS
+========
+
+     use String::Parity;
+     use String::Parity qw(:DEFAULT /show/);
+
+
+DESCRIPTION
+===========
+
+setEvenParity LIST
+     Copies the elements of LIST to a new list and converts the new
+     elements to strings of bytes with even parity. In array context
+     returns the new list.  In scalar context joins the elements of the
+     new list into a single string and returns the string.
+
+setOddParity LIST
+     Like setEvenParity function, but converts to strings with odd
+     parity.
+
+setSpaceParity LIST
+     Like setEvenParity function, but converts to strings with space
+     (High bit cleared) parity.
+
+setMarkParity LIST
+     Like setEvenParity function, but converts to strings with mark
+     (High bit set) parity.
+
+EvenBytes LIST
+     Returns the number of even parity bytes in the elements of LIST.
+
+OddBytes LIST
+     Returns the number of odd parity bytes in the elements of LIST.
+
+SpaceBytes LIST
+     Returns the number of space parity bytes in the elements of LIST.
+
+MarkBytes LIST
+     Returns the number of mark parity bytes in the elements of LIST.
+
+isEvenParity LIST
+     Returns TRUE if the LIST contains no byte with odd parity, FALSE
+     otherwise.
+
+isOddParity LIST
+     Returns TRUE if the LIST contains no byte with even parity, FALSE
+     otherwise.
+
+isSpaceParity LIST
+     Returns TRUE if the LIST contains no byte with mark parity, FALSE
+     otherwise.
+
+isMarkParity LIST
+     Returns TRUE if the LIST contains no byte with space parity, FALSE
+     otherwise.
+
+showParity LIST
+     Like setEvenParity function, but converts bytes with even parity to
+     'e' and other bytes to 'o'.  The function showParity must be
+     imported by a specialised import list.
+
+showMarkSpace LIST
+     Like setEvenParity function, but converts bytes with space parity
+     to 's' and other bytes to 'm'.  The function showMarkSpace must be
+     imported by a specialised import list.
+
+
+NOTES
+=====
+
+Don't use this module unless you have to communicate with some old
+device or protocol. Please make your application 8 bit clean and use the
+internationally standardised ISO-8859-1 character set.
+
+
+AUTHOR
+======
+
+Winfried Koenig <win@in.rhein-main.de>
+
+
+SEE ALSO
+========
+
+perl(1), Exporter(1)
+
+
+
+
+File: pm.info, Node: String/Scanf, Next: String/ShellQuote, Prev: String/Parity, Up: Module List
+
+emulate the sscanf() of the C stdio library
+*******************************************
+
+
+
+NAME
+====
+
+sscanf - emulate the sscanf() of the C stdio library
+
+
+SYNOPSIS
+========
+
+     use String::Scanf;	# this will import sscanf() into the
+     			# current namespace
+
+     @values = sscanf($scanf_format_string, $scalar_to_scan);
+
+     # the default scan target is the $_
+     @values = sscanf($scanf_format_string);
+
+     # converting scanf formats to regexps (::format_to_re
+     # is never exported to the current namespace)
+
+     $regexp_string = String::Scanf::format_to_re($scanf_format_string);
+
+
+DESCRIPTION
+===========
+
+Perl sscanf() can be used very much like the C stdio sscanf(), for
+detailed sscanf() documentation please refer to your usual documentation
+resources. The supported formats are: `[diuoxefgsc]' and the character
+class `[]'.
+
+*All* of the format must match. If not, an empty list is returned
+and all the values end up empty.
+
+The c format returns an anonymous list (see perlref) containing the
+numeric values of the characters it matched.
+
+The ::format_to_re() function may be helpful if one wants to develop her
+own parsing routines.
+
+
+FEATURES
+========
+
+Embedded underscores are accepted in numbers just like in Perl, even in
+octal/hexadecimal numbers (Perl does not currently support this). Please
+note the word *embedded*, not leading or trailing.
+
+If the `oh' formats are used, the octal/hexadecimal interpretation is
+forced even without the leading `0' or `0x'.
+
+
+LIMITATIONS
+===========
+
+Certain features of the C sscanf() are unsupported:
+
+     * the formats C<[npSC]>
+     * in the C<[efg]> formats the C<INF> and various C<NaN>s
+
+The numeric formats are scanned in as strings, this meaning that numeric
+overflows may occur. For example: `1.2345e67890' will match the `%g'
+format but in most machines Perl cannot handle that large floating point
+numbers and bizarre values may end up in the Perl variable. Similar
+caveats apply for integer-type numbers. Results of such huge numbers (or
+very tiny numbers, say, `1.24345e-67890') are implementation-defined,
+which translates quite often as *garbage*.  NOTE: if you really want
+*Big* numbers please consider using the Math::BigInt and Math::BigFloat,
+these packages come standard with Perl 5, or the `Math::Pari' package,
+available from CPAN.
+
+For Perl <integers> and *floating point numbers* are the same thing.
+Also, the possible `hl' modifiers for the *integers* mean nothing: they
+are accepted but still they do nothing because Perl does not care about
+short/long integer differences.
+
+The character class format is not so rigorously checked for correctness
+that an illegal character class definition could not be sneaked in. For
+example `[z-a,X]' is a `bad' example: perfectly illegal as a character
+class but `String::Scanf' will happily accept it. Beware.
+
+The ::format_to_re() only does the scanf format -> regular expression
+conversion. It ignores tricky things like the c format (see above) and
+the %n$ argument reordering. If you want these, you may as well use the
+full ::sscanf().
+
+
+EXAMPLES
+========
+
+     # business as usual
+
+     ($i, $s, $x) = sscanf('%d %3s %g', ' -5_678     abc 3.14e-99 9');
+
+     # 'skip leading whitespace': $x becomes 42 despite the leading space
+     # 'the illegal character': $y becomes 'ab' despite the '3'
+     # 'c' format: $z becomes [120 100], the numeric values of 'x'
+     # and 'd' (assuming ASCII or ISO Latin 1)
+
+     ($x, $y, $z) = sscanf('%i%3[a-e]%2c', ' 42acxde');
+
+     # reordering the arguments: $a becomes 34, $b becomes 12
+
+     ($a, $b) = sscanf('%2$d %1$d', '12 34');
+
+     # converting scanf formats to regexps
+
+     $re = String::Scanf::format_to_re('%x');
+
+More examples in the test set `t/scanf.t'.
+
+
+INTERNALS
+=========
+
+The Perl `sscanf()' turns the C-`stdio' style `sscanf()' format string
+into a Perl regexp (see perlre) which captures the wanted values into
+submatches and returns the submatches as a list.
+
+Originally written for purposes of debugging but also useful for
+educational purposes:
+
+     String::Scanf::debug(1);	# turn on debugging: shows the regexps
+     			# used and the possible reordering list
+     			# and the character (%c) conversion targets
+     String::Scanf::debug(0);		# turn off debugging
+     print String::Scanf::debug(), "\n";	# the current debug status
+
+
+VERSION
+=======
+
+v1.1, $Id: Scanf.pm,v 1.8 1995/12/27 08:32:28 jhi Exp $
+
+
+AUTHOR
+======
+
+Jarkko Hietaniemi, `Jarkko.Hietaniemi@iki.fi'
+
+
+
+
+File: pm.info, Node: String/ShellQuote, Next: Sybase/Login, Prev: String/Scanf, Up: Module List
+
+quote strings for passing through the shell
+*******************************************
+
+
+
+NAME
+====
+
+String::ShellQuote - quote strings for passing through the shell
+
+
+SYNOPSIS
+========
+
+     $string = shell_quote @list;
+     $string = shell_comment_quote $string;
+
+
+DESCRIPTION
+===========
+
+This module contains some functions which are useful for quoting strings
+which are going to pass through the shell or a shell-like object.
+
+shell_quote [string]...
+     shell_quote quotes strings so they can be passed through the shell.
+     Each string is quoted so that the shell will pass it along as a
+     single argument and without further interpretation.  If no strings
+     are given an empty string is returned.
+
+shell_comment_quote [string]
+     shell_comment_quote quotes the string so that it can safely be
+     included in a shell-style comment (the current algorithm is that a
+     sharp character is placed after any newlines in the string).
+
+     This routine might be changed to accept multiple string arguments
+     in the future.  I haven't done this yet because I'm not sure if the
+     strings should be joined with blanks ($") or nothing ($,).  Cast
+     your vote today!  Be sure to justify your answer.
+
+
+EXAMPLES
+========
+
+     $cmd = 'fuser 2>/dev/null ' . shell_quote @files;
+     @pids = split ' ', `$cmd`;
+
+     print CFG "# Configured by: ",
+     		shell_comment_quote($ENV{LOGNAME}), "\n";
+
+
+AUTHOR
+======
+
+Roderick Schertler <`roderick@argon.org'>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: Sybase/Login, Next: Symbol, Prev: String/ShellQuote, Up: Module List
+
+A highly configurable Login widget for Sybperl and Perl/Tk
+**********************************************************
+
+
+
+NAME
+====
+
+Sybase::Login - A highly configurable Login widget for Sybperl and
+Perl/Tk
+
+
+Change History
+==============
+
+@asis{}
+     
+     *1.0* - Initial Implementation
+
+     *1.1* - Componentized for perl5.0021bh, handlers fixed
+
+     *1.2* - Set up for general distribution, added Version and
+     VERSION.  Changed funky menu generation to Optionmenus.
+
+     *1.3* - Added presentDBMenu and presentSrvMenu options.
+
+     *1.4* - OK, so I had troubles with PAUSE on 1.3
+
+     *Todo:* - Subclass Optionmenu to dynamically set up the Server
+     selections on post (or Buttondown?)
+
+
+DESCRIPTION
+===========
+
+Login is a Widget that presents a dialog box to the user so that the
+user may enter his or her login name and password, as well as select the
+appropriate database and server.
+
+
+USAGE
+=====
+
+One uses Login by creating a new Login widget, adding at least one
+Database via the addDatabase method, configuring via the configure
+method, and then getting a valid login via the getVerification method.
+
+@asis{}
+     
+
+Sample Program
+--------------
+
+@asis{}
+     
+          #!/usr/local/bin/perl -w
+
+          use Tk;
+          use Sybase::DBlib;
+          use Sybase::Login;
+          use strict;
+
+          my($main) = MainWindow->new;
+          my($Login) = $main->Login;
+
+          $Login->addDatabase('DB',	'SYBSRV1','SYB11');
+          $Login->addDatabase('DBBACK',	'SYBSRV1','SYB11');
+
+          $Login->configure(-User => $ENV{USER},
+          		   -ULabel => 'User Name:',
+          		   -Title => 'Please Login');
+
+          my($msg) = $main->Message(-text => 'Ready to go')->pack;
+          $main->Button(-text => 'kick me!',
+          	       -command => sub {
+          		 my($pwd, $usr, $db, $srv, $mDB);
+          		 if ($Login->getVerification(-Force => 1)) {
+          		   $pwd = $Login->cget(-Password);
+          		   $usr = $Login->cget(-User);
+          		   $db =  $Login->cget(-Database);
+          		   $srv = $Login->cget(-Server);
+          		   print "Results good:\n\tUser:\t\t$usr\n";
+          		   print "\tPassword:\t$pwd\n\tDatabase:\t$db\n";
+          		   print "\tServer:\t\t$srv\n";
+          		   print "Verifying Login...\n";
+          		   $mDB = Sybase::DBlib->dblogin("$usr","$pwd", "$srv");
+          		   $mDB->dbuse($db);
+          		   $mDB->dbclose;
+          		   print "Login worked!!!\n";
+          		 } else {
+          		   print "Login cancelled at User request.\n";
+          		 }
+          	       })->pack;
+
+          $main->Button(-text => 'exit',
+          	       -command => sub {$main->destroy;})->pack;
+
+          MainLoop;
+
+          print "And I'm on my way home!\n";
+
+          exit;
+
+@asis{}
+     
+
+Operation
+---------
+
+The user is presented with a dialog box.  The focus is on the username
+entry if no user name has been configured; otherwise, it is on the
+password entry.  If multiple databases have been configured, the user
+may select the appropriate database from the menu button. If multiple
+servers have been configured for the selected database, the user may
+select the appropriate server from the menu button.
+
+When the user has finished entering information, she may press the OK
+button to attempt to login, or the cancel button to abort the process.
+If the user presses the OK button, and the login succeeds, control
+returns to the caller.  If the login fails, an error dialog box is
+displayed, and the user may press retry, or may press cancel, in which
+case control returns to the caller exactly as if the user had pressed
+cancel at the main login screen.
+
+When control returns to the caller, the return value will be 1 if the
+login was successful, or 0 if not.
+
+
+Notes
+-----
+
+A caller may define a message or error handler either before or after
+calling any of the methods of this object. getCurrentVerification will
+restore the handlers extant when invoked.
+
+
+Methods
+=======
+
+@asis{}
+     
+
+getCurrentVerification
+----------------------
+
+*$Login-*>*getCurrentVerification;*
+
+*(No parameters)*
+
+return 1 if the current configuration will result in a valid login, 0
+otherwise.  No GUI is ever displayed.
+
+
+getVerification
+---------------
+
+*$Login-*>*getVerification(-Force =* ?);>
+
+If the current configuration is NOT valid, activate the login
+frame. This will return 1 with a valid configuration, or 0 if the user
+hit cancel.  If the -Force parameter is passed as 't', 'y', or 1, the
+login frame will be activated even if the current configuration is
+valid.
+
+
+addDatabase
+-----------
+
+*$Login-*>*addDatabase(Database, Server List);*
+
+adds a database/server set.  The first parameter is the name of the
+database, the second is a list of Associated Servers.  See the code
+above for examples.
+
+Note that the first server in the list is the default server for that
+database.  Further note that adding a database a second time simply
+alters the servers.
+
+
+clearDatabase
+-------------
+
+*$Login-*>*clearDatabase([Database[, Database,...]]);*
+
+Clears the given Database entries, or all databases if if none are
+specified.
+
+
+Version
+-------
+
+*$Login-*>Version
+
+*(No parameters)*
+
+Returns the current version of Login
+
+
+Configuration Items
+===================
+
+Any of the following configuration items may be set via the configure
+method, or retrieved via the cget method.
+
+@asis{}
+     
+
+-User
+-----
+
+Set or get the username.  The default is blank.
+
+
+-Password
+---------
+
+Set or get the password.  The default is blank.
+
+
+-Title
+------
+
+Set or get the Title of the Login Widget.  The default is 'Database
+Login'
+
+
+-Database
+---------
+
+Set or get the default Database.  The default is blank.  The call will
+silently fail if the database is not configured via the AddDatabase
+method.  If the configured server is not a valid server for the given
+database, the server will be set to the default server for the database.
+
+
+-Server
+-------
+
+Set or get the default Server.  The default is blank.  The call will
+silently fail if the server is not a valid server for the currently
+configured database.
+
+
+-OKText
+-------
+
+Set or get the text for the OK button.  The default is OK.
+
+
+-CancelText
+-----------
+
+Set or get the text for the Cancel button.  The default is Cancel.
+
+
+-ULabel
+-------
+
+Set or get the label for the User name entry.  The default is 'User:'.
+
+
+-PLabel
+-------
+
+Set or get the label for the Password entry.  The default is
+'Password:'.
+
+
+-DLabel
+-------
+
+Set or get the label for the Database Menu Button.  The default is
+'Database:'.
+
+
+-SLabel
+-------
+
+Set or get the label for the Server Menu Button.  The default is
+'Server:'.
+
+
+-Labelfont
+----------
+
+Set or get the font used for the labels.  The default is
+'-Adobe-Courier-Bold-R-Normal--*-120-*'.
+
+
+-EDlgTitle
+----------
+
+Set or get the Title for the Error Dialog. The default is 'Database
+Login Error!'.
+
+
+-EDlgText
+---------
+
+Set or get the text displayed in the Error Dialog.  The default is
+'Unable to login to $db at $srv'.  $db will be interpreted as the
+Database name, $srv will be interpreted as the Server name, $usr will be
+interpreted as the User name, and $pwd will be interpreted as the
+password.
+
+
+-EDlgRetry
+----------
+
+Set or get the text for the Retry button in the Error Dialog. The
+default is 'Retry'.
+
+
+-EDlgCancel
+-----------
+
+Set or get the text for the Cancel button in the Error Dialog. The
+default is 'Cancel'.
+
+
+-presentDBMenu
+--------------
+
+If set False, do not display the database menu.  The database will be as
+configured, or default.  Default is True.
+
+
+-presentSrvMenu
+---------------
+
+If set False, do not display the server menu.  The Server will be as
+configured, or default for the database. Default is True.
+
+
+Author
+======
+
+*Brent B. Powers, B2Pi*
+
+Currently on-site at Merrill Lynch, powers@ml.com
+
+This code may be distributed under the same conditions as perl itself.
+
+
+
+
+File: pm.info, Node: Symbol, Next: Sys/AlarmCall, Prev: Sybase/Login, Up: Module List
+
+manipulate Perl symbols and their names
+***************************************
+
+
+
+NAME
+====
+
+Symbol - manipulate Perl symbols and their names
+
+
+SYNOPSIS
+========
+
+     use Symbol;
+
+     $sym = gensym;
+     open($sym, "filename");
+     $_ = <$sym>;
+     # etc.
+
+     ungensym $sym;      # no effect
+
+     print qualify("x"), "\n";              # "Test::x"
+     print qualify("x", "FOO"), "\n"        # "FOO::x"
+     print qualify("BAR::x"), "\n";         # "BAR::x"
+     print qualify("BAR::x", "FOO"), "\n";  # "BAR::x"
+     print qualify("STDOUT", "FOO"), "\n";  # "main::STDOUT" (global)
+     print qualify(\*x), "\n";              # returns \*x
+     print qualify(\*x, "FOO"), "\n";       # returns \*x
+
+     use strict refs;
+     print { qualify_to_ref $fh } "foo!\n";
+     $ref = qualify_to_ref $name, $pkg;
+
+
+DESCRIPTION
+===========
+
+`Symbol::gensym' creates an anonymous glob and returns a reference to
+it.  Such a glob reference can be used as a file or directory handle.
+
+For backward compatibility with older implementations that didn't
+support anonymous globs, `Symbol::ungensym' is also provided.  But it
+doesn't do anything.
+
+`Symbol::qualify' turns unqualified symbol names into qualified variable
+names (e.g. "myvar" -> "MyPackage::myvar").  If it is given a second
+parameter, `qualify' uses it as the default package; otherwise, it uses
+the package of its caller.  Regardless, global variable names
+(e.g. "STDOUT", "ENV", "SIG") are always qualfied with "main::".
+
+Qualification applies only to symbol names (strings).  References are
+left unchanged under the assumption that they are glob references, which
+are qualified by their nature.
+
+`Symbol::qualify_to_ref' is just like `Symbol::qualify' except that it
+returns a glob ref rather than a symbol name, so you can use the result
+even if `use strict 'refs'' is in effect.
+
+
+
+
+File: pm.info, Node: Sys/AlarmCall, Next: Sys/Hostname, Prev: Symbol, Up: Module List
+
+SYNOPSIS
+========
+
+     use Sys::AlarmCall;
+
+     $result = alarm_call($timeout1,$func1,@args1);
+     @result = alarm_call($timeout2,$func2,@args2);
+
+
+DESCRIPTION
+===========
+
+Sys::AlarmCall provides a straightforward function call to use the alarm
+handler. It also handles the logic which allows nested time out calls if
+timeout calls are run thorugh the alarm_call() functions.
+
+The main advantages of Sys::AlarmCall are that:
+
+1. simple calls, e.g.
+
+     @result = &func(@args); #Normal function call with '&'
+     $result = func(@args);; #Normal function call
+     @result = &$code_reference(@args);
+     @result = $obj->func(@args); #Object method call
+
+become simple calls:
+
+     @result = alarm_call($timeout,'&func',@args);
+     $result = alarm_call($timeout,'func',@args);
+     @result = alarm_call($timeout,$code_reference,@args);
+     @result = alarm_call($timeout,'->func',$obj,@args);
+
+no need to futz around with alarms and handlers and worrying about where
+to intercept the timer or set globals or whatever; and
+
+2. No need to worry if some subroutines within the call also set a
+timeout - all that is handled logically by the Sys::AlarmCall package
+(as long as the subroutines also use the alarm_call function of
+course. But if they don't you're up the same creek anyway).
+
+Sys::AlarmCall exports one function,
+
+alarm_call TIMEOUT,FUNCTION,ARGS
+     Where TIMEOUT is a positive number (a fatal error occurs if TIMEOUT
+     is not at least one);
+
+     FUNCTION is a string giving the function name (and the '&' if
+     wanted, or preceded by '->', e.g. '->func', if using that, in which
+     case the calling object should be the first argument in ARGS); and
+     ARGS is the list of arguments to that function.
+
+     NOTE: As a side effect, normally fatal errors in the FUNCTION call
+     are caught and reported in the return.
+
+     In a scalar context, returns as follows:
+
+     If the FUNCTION produces any sort of error (including fatal 'die's
+     which are trapped), returns the error as a string, prepended by the
+     value given by the variable $Sys::AlarmCall::SCALAR_ERROR (default
+     is 'ERROR ').
+
+     If the FUNCTION times out (i.e. doesn't return before TIMEOUT - 1),
+     returns the value given by the variable $Sys::AlarmCall::TIMEOUT
+     (default is 'TIMEOUT').
+
+     Otherwise, returns the scalar that the FUNCTION returns.
+
+     In an array context, returns as follows:
+
+     If the FUNCTION produces any sort of error (including fatal 'die's
+     which are trapped), returns a two element array, the first element
+     being the value given by the variable $Sys::AlarmCall::ARRAY_ERROR
+     (default is 'ERROR'), and the second element the error string
+     produced.
+
+     If the FUNCTION times out (i.e. doesn't return before TIMEOUT - 1),
+     returns a one element array consisting of the value given by the
+     variable $Sys::AlarmCall::TIMEOUT (default is 'TIMEOUT').
+
+     Otherwise, returns the array that the FUNCTION returns.
+
+     Specific support for the -> construct has been added to alarm_call,
+     so that calling
+
+          alarm_call($timeout,'->func',$obj,@args);
+
+     means that alarm_call will translate this to
+
+          $obj->func(@args);
+
+     Specific support for code references (e.g. $ref = sub {warn
+     "this\n"}) has been added to alarm_call, so that calling
+
+          alarm_call($timeout,$ref,@args);
+
+     means that alarm_call will translate this to
+
+          &{$ref}(@args);
+
+Timers have resolutions of one second, but remember that a timeout value
+of 15 will cause a timeout to occur at some point more than 14 seconds
+in the future. (see alarm() function in perl man page).  Also, nested
+calls decrease the resolution (make the uncertain interval larger) by
+one second per nesting depth. This is because an alarm call returns the
+time left rounded up to the next second.
+
+
+EXAMPLES
+========
+
+EXAMPLE1
+
+     use Sys::AlarmCall;
+     alarm_call(3,'select',undef,undef,undef,10);
+
+makes the select() system call which should just block for ten seconds,
+but times it out after three seconds.
+
+EXAMPLE2
+
+     use Sys::AlarmCall;
+     alarm_call(4,'read',STDIN,$r,5);
+     print $r;
+
+makes the read() system call which would block until some characters are
+ready to be read from STDIN (after a return), and then should try to
+read up to 5 characters.  However, the timeout for 4 seconds means that
+this call will return after 4 seconds if nothing is read by then.
+
+EXAMPLE3
+
+     use Sys::AlarmCall;
+     sub do1 {
+     	print "Hi, this is do1\n";
+     	select(undef,undef,undef,10);
+     	print "Bye from do1\n"
+     }
+     sub do2 {
+     	print "Hi, this is do2\n";
+     	alarm_call(5,'do1');
+     	print "Bye from do2\n"
+     }
+     sub do3 {
+     	print "Hi, this is do3\n";
+     	alarm_call(3,'do2');
+     	print "Bye from do3\n"
+     }
+     sub do4 {
+     	print "Hi, this is do4\n";
+     	alarm_call(8,'do2');
+     	print "Bye from do4\n"
+     }
+
+     foreach $test (('do1','do2','do3','do4')) {
+         print "\n$test\n";
+         $time = time;
+         &$test;
+         print "$test completed after ", 
+     	   time - $time ," seconds.\n";
+     }
+
+Explanation of EXAMPLE3:
+
+Where interrupts occur, you will see the 'Hi' statement without the
+corresponding 'Bye' statement.
+
+The 'do1' is a simple test that select() works correctly, delaying for
+10 seconds. The 'do2' is a simple test of the alarm_call, testing that
+the select() is interrupted after 5 seconds. The third and fourth 'do's
+are tests of nested calls to alarm_call. 'do3' should timeout after
+three seconds, interrupting the call to 'do2' (so we should see no 'bye'
+statement from 'do2'). 'do4' on the other hand, has a timeout of 8
+seconds, so 'do2', which it calls and which is set to timeout and return
+after 5 seconds, will complete, printing out its 'bye' statement.
+
+WARNING - using calls to alarm() in nested calls other than through the
+Sys::AlarmCall module may lead to inconsistencies. Calls to alarm
+BETWEEN calls to alarm_call should be no problem. Any alarms pending
+will be reset after a call to alarm_call to the previous setting minus
+elapsed time (approx.). The alarm handler is also reset to the previous
+one.
+
+BUGS: Some perl core calls (like read, sysread) don't cope when fed
+their args as an array. alarm_call explicitly states up to six arguments
+so that the perl compiler reads these correctly, but any core functions
+which take more than six arguments as minimum is not accepted as valid
+by the compiler even if the correct number of arguments are passed. So
+consequently, if you want to time out on these specifically, you may
+need to wrap them in a subroutine.
+
+
+AUTHOR
+======
+
+Jack Shirazi <js@biu.icnet.uk> Date: 28 July 1995
+
+     Copyright (c) 1995 Jack Shirazi. All rights reserved.
+     This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+
+
+File: pm.info, Node: Sys/Hostname, Next: Sys/OutPut, Prev: Sys/AlarmCall, Up: Module List
+
+Try every conceivable way to get hostname
+*****************************************
+
+
+
+NAME
+====
+
+Sys::Hostname - Try every conceivable way to get hostname
+
+
+SYNOPSIS
+========
+
+     use Sys::Hostname;
+     $host = hostname;
+
+
+DESCRIPTION
+===========
+
+Attempts several methods of getting the system hostname and then caches
+the result.  It tries `syscall(SYS_gethostname)', ``hostname`', ``uname
+-n`', and the file `/com/host'.  If all that fails it croaks.
+
+All nulls, returns, and newlines are removed from the result.
+
+
+AUTHOR
+======
+
+David Sundstrom <`sunds@asictest.sc.ti.com'>
+
+Texas Instruments
+
+
+
+
+File: pm.info, Node: Sys/OutPut, Next: Sys/Syslog, Prev: Sys/Hostname, Up: Module List
+
+Perl module to help make output easier.
+***************************************
+
+
+
+NAME
+====
+
+OutPut.pm -- Perl module to help make output easier.
+
+
+USAGE
+=====
+
+     talk $fmtstr [, @args];
+
+     out  $fmtstr [, @args];
+
+     put  $fmtstr [, @args];
+
+     err  $fmtstr [, @args];
+
+     debug $fmtstr [, @args];
+
+     $Sys::OutPut::quiet = $::quiet;
+
+     $Sys::OutPut::debug = $::debug;
+
+
+DESCRIPTION
+===========
+
+These subroutines will make generating output to `STDOUT' and `STDERR'
+easier.
+
+All of the routines treat the *$fmtstr* argument as a printf format
+string, with *@args* as the format string arguments.
+
+The *talk* routine generates output to `STDERR' only if the variable
+`$Sys::OutPut::quiet' is non-null and non-zero.
+
+The out routine generates output to `STDOUT', with a *newline* appended
+to <$fmtstr>, if it is not already terminated with one.
+
+The put routine generates output to `STDOUT', without any additional
+trailing newline.
+
+The err routine generates output to `STDERR', with a *newline* appended
+if needed.
+
+The debug routine generates output to `STDERR' only if the variable
+`$Sys::OutPut::debug' is non-null and non-zero, which is also returned
+as the result.  This allows for convenient usages such as in the
+following example:
+
+     sub foo {
+     	...
+     	return if debug "Stopping now.";
+     	...
+     	next if debug "Skipping further processing";
+     	...
+     }
+
+If not defined by the user, the `$Sys::OutPut::quiet' and
+`$Sys::OutPut::debug' variables are initialized from their corresponding
+main variables `$::quiet' and `$::debug', respectively, unless they are
+already defined.
+
+
+AUTHOR
+======
+
+Alan K. Stebbens <stebbens@sgi.com>
+
+
+BUGS
+====
+
+
+
+
+File: pm.info, Node: Sys/Syslog, Next: SyslogScan/ByGroup, Prev: Sys/OutPut, Up: Module List
+
+Perl interface to the UNIX syslog(3) calls
+******************************************
+
+
+
+NAME
+====
+
+Sys::Syslog, openlog, closelog, setlogmask, syslog - Perl interface to
+the UNIX syslog(3) calls
+
+
+SYNOPSIS
+========
+
+     use Sys::Syslog;
+
+     openlog $ident, $logopt, $facility;
+     syslog $priority, $format, @args;
+     $oldmask = setlogmask $mask_priority;
+     closelog;
+
+
+DESCRIPTION
+===========
+
+Sys::Syslog is an interface to the UNIX `syslog(3)' program.  Call
+`syslog()' with a string priority and a list of `printf()' args just
+like `syslog(3)'.
+
+Syslog provides the functions:
+
+openlog $ident, $logopt, $facility
+     *$ident* is prepended to every message.
+     *$logopt* contains one or more of the words pid, *ndelay*, *cons*, *nowait*.
+     *$facility* specifies the part of the system
+
+syslog $priority, $format, @args
+     If *$priority* permits, logs *($format, @args)* printed as by
+     `printf(3V)', with the addition that *%m* is replaced with `"$!"'
+     (the latest error message).
+
+setlogmask $mask_priority
+     Sets log mask *$mask_priority* and returns the old mask.
+
+setlogsock $sock_type   Sets the socket type to be used for the next call to `openlog()' or `syslog()'.   A value of 'unix' will connect to the UNIX domain socket returned by `_PATH_LOG' in `syslog.ph'.  A value of 'inet' will connect to an INET socket returned by getservbyname(). Any other value croaks.
+     The default is for the INET socket to be used.
+
+closelog
+     Closes the log file.
+
+Note that openlog now takes three arguments, just like `openlog(3)'.
+
+
+EXAMPLES
+========
+
+     openlog($program, 'cons,pid', 'user');
+     syslog('info', 'this is another test');
+     syslog('mail|warning', 'this is a better test: %d', time);
+     closelog();
+
+     syslog('debug', 'this is the last test');
+
+     setlogsock('unix');
+     openlog("$program $$", 'ndelay', 'user');
+     syslog('notice', 'fooprogram: this is really done');
+
+     setlogsock('inet');
+     $! = 55;
+     syslog('info', 'problem was %m'); # %m == $! in syslog(3)
+
+
+DEPENDENCIES
+============
+
+Sys::Syslog needs `syslog.ph', which can be created with h2ph.
+
+
+SEE ALSO
+========
+
+`syslog(3)' in this node
+
+
+AUTHOR
+======
+
+Tom Christiansen <`tchrist@perl.com'> and Larry Wall <`larry@wall.org'>.
+UNIX domain sockets added by Sean Robinson
+<`robinson_s@sc.maricopa.edu'> with support from Tim Bunce
+<Tim.Bunce@ig.co.uk> and the perl5-porters mailing list.
+
+
+
+
+File: pm.info, Node: SyslogScan/ByGroup, Next: SyslogScan/Delivery, Prev: Sys/Syslog, Up: Module List
+
+Organizes a Summary of mail statistics into Groups of related e-mail users
+**************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::ByGroup -- Organizes a Summary of mail statistics into
+Groups of related e-mail users
+
+
+SYNOPSIS
+========
+
+     # $summary is a SyslogScan::Summary object
+
+     # default is to organize by internet host
+     my $byGroup = new SyslogScan::ByGroup($summary);
+     print $byGroup -> dump();
+
+     # group by whether users use 'jupiter' or 'satellife' as
+     # their machine name, and discard users who use neither
+
+     my $pointerToGroupingRoutine = sub {
+     	my $address = shift;
+
+     return 'jupiter' if $address =~ /jupiter.healthnet.org$/;
+     	return 'satellife' if $address =~ /satellife.healthnet.org$/;
+
+     # ignore all others
+     return undef;
+         }
+
+     my $groupByMachine = new SyslogScan::ByGroup($summary,
+     						 $pointerToGroupingRoutine);
+     print $groupByMachine -> dump();
+
+     # Extract a SyslogScan::Group object
+     my $jupiterGroup = $$groupByMachine{jupiter};
+     print $jupiterGroup -> dump();
+
+     # Extract a SyslogScan::Summary object
+     my $summaryOfJupiter = $jupiterGroup{byAddress};
+     print $summaryOfJupiter -> dump();
+
+     # Create a summary by group, rather than a summary by address
+     my $summaryByMachine = $groupByMachine -> createSummary();
+
+
+DESCRIPTION
+===========
+
+A SyslogScan::ByGroup object is a hash table of SyslogScan::Group
+objects, each indexed by the group name as returned by the sorting
+algorithm fed to 'new'.
+
+A SyslogScan::Group is a hash table with two members: 'byAddress', which
+is a SyslogScan::Summary of each address which is a member of the Group,
+and 'groupUsage', which is a SyslogScan::Usage object containing the
+total usage of the group.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/Summary: SyslogScan/Summary,, *Note SyslogScan/Usage: SyslogScan/Usage,
+
+
+
+File: pm.info, Node: SyslogScan/Delivery, Next: SyslogScan/DeliveryIterator, Prev: SyslogScan/ByGroup, Up: Module List
+
+encapsulates a logged, successful delivery of mail from a sender to a list of recipients.
+*****************************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::Delivery - encapsulates a logged, successful delivery of
+mail from a sender to a list of recipients.
+
+
+SYNOPSIS
+========
+
+see *Note SyslogScan/DeliveryIterator: SyslogScan/DeliveryIterator,
+
+
+DESCRIPTION
+===========
+
+A 'Delivery' object is an indication that mail was successfully
+delivered or forwarded from a sender to a list of recipients.  You can
+extract Delivery objects from a syslog file by using
+*Note SyslogScan/DeliveryIterator: SyslogScan/DeliveryIterator,.
+
+
+Variables
+---------
+
+     my $delivery = $iter -> next();
+
+     #-----------------------------------------
+     #  Sender, ReceiverList, Size, and Date are the most useful
+     #-----------------------------------------
+
+     # e-mail address of sender, may be 'undef' if the sender
+     # could not be determined from the syslog
+     my $sender = $$delivery{Sender};
+
+     # reference to array of e-mail addresses of recipients
+     my $paReceiverList = $$delivery{ReceiverList};
+     my @aReceiverList = @$paReceiverList;
+     print "The recipient(s) of the message was (were) ",
+         join(' ',@aReceiverList), "\n";
+
+     # size of message, may be 'undef' if the size could not be
+     # determined from the syslog
+     my $sizeInBytes = $$delivery{Size};
+
+     # date the message was succesfully delivered or forwarded
+     my $date = $$delivery{Date};
+
+     #-----------------------------------------
+     #    Id and Instance are more advanced features
+     #-----------------------------------------
+
+     # 'id' in syslog, useful for cross-referencing
+     my $id = $$delivery{Id};
+
+     # The first delivery of any message has Instance of 1; the next
+     # deliveries will have Instance > 1, specifically a number equal to
+     # the number of people who the message has previously been delivered
+     # to, plus 1.  This is useful for detecing mass-mailings.
+
+     # Suppose I send a message to 5 people, but only three copies are
+     # delivered right away, the other two are deferred.  The first
+     # Delivery has instance 1; the next delivery of the same message
+     # will have instance 4.
+     my $instance = $$delivery{Instance};
+     my @aReceiverList = @{$$delivery{ReceiverList}};
+     print "This message has so far been delivered to ",
+         $instance + $@aReceiverList - 1, "people so far\n";
+
+
+METHODS
+=======
+
+     # Manually create a new Delivery object.
+     my $delivery = new SyslogScan::Delivery (Date => time(),
+     					 Size => 100,
+     					 From => 'foo@bar.com',
+     					 ReceiverList =>
+     					   [him@baz.edu, her@baz.edu],
+     					 Instance => 1,
+     					 Id => 'manual' . $id++);
+
+     # print out contents, either in summary or in verbose mode
+     print $delivery -> summary();
+     print $delivery -> dump();
+
+     # save/restore delivery to/from file
+     open(OUT,">save.txt");
+     $delivery -> persist(\*OUT);
+     close(OUT);
+     undef($delivery);
+
+     open(IN,"save.txt");
+     $delivery = SyslogScan::Delivery -> restore(\*IN);
+     # $delivery is restored to its original state
+
+
+SUPPORT
+=======
+
+E-mail bugs to rolf@usa.healthnet.org.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+IN NO EVENT SHALL THE AUTHORS BE LIABLE TO ANY PARTY FOR DIRECT,
+INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF
+THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+LIMITED TO, LOST PROFITS) EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/DeliveryIterator: SyslogScan/DeliveryIterator,, *Note SyslogScan/Summary: SyslogScan/Summary,
+
+
+
+File: pm.info, Node: SyslogScan/DeliveryIterator, Next: SyslogScan/SendmailLine, Prev: SyslogScan/Delivery, Up: Module List
+
+scans a syslog file for "deliveries", successful transfers of mail to mailboxes or to other machines.
+*****************************************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::DeliveryIterator -- scans a syslog file for "deliveries",
+successful transfers of mail to mailboxes or to other machines.
+
+
+SYNOPSIS
+========
+
+     use SyslogScan::Delivery;
+     use SyslogScan::DeliveryIterator;
+
+     my $iter = new SyslogScan::DeliveryIterator(syslogList =>
+     						["/var/log/syslog"]);
+
+     my $delivery;
+     while ($delivery = $iter -> next())
+     {
+         print $delivery -> summary();
+     }
+
+
+DESCRIPTION
+===========
+
+A DeliveryIterator goes through your sendmail logging file (which may be
+/var/log/syslog, /var/adm/messages, or something completely different)
+looking for successful deliveries of mail to local user-accounts or
+successful transfers of mail to remote machines.
+
+Here is an excerpt from a sample syslog:
+
+Jun 13 01:50:16 satellife sendmail[29556]: DAA29556:
+from=<shookway@fs1.ho.man.ac.uk>, size=954, class=0, pri=30954,
+nrcpts=1, msgid=<5B013544E0D@fs1.ho.man.ac.uk>, proto=ESMTP,
+relay=curlew.cs.man.ac.uk [130.88.13.7]
+
+Jun 13 01:50:17 satellife sendmail[29558]: DAA29556:
+to=<shoko@time.healthnet.org>, delay=00:00:05, mailer=fidogate,
+stat=Deferred (Remote host is busy)
+
+...
+
+Jun 13 14:55:50 satellife sendmail[29558]: DAA29556:
+to=<shoko@time.healthnet.org>, delay=13:00:05, mailer=fidogate,
+stat=Sent
+
+The delivery is not registered until 14:55:50.  In order to figure out
+the size and sender, the iterator needs to have gone over the 'from'
+entry associated with message DAA29566, otherwise it will return a
+delivery with 'Sender' and 'Size' set to an undefined value (unless you
+specified defaults when constructing your DeliveryIterator.)
+
+
+METHOD 'NEW'
+------------
+
+'new' creates a new iterator.
+
+     my $iter =
+         new SyslogScan::DeliveryIterator(startDate => "06.01.96 18:00:00",
+     					 endDate => "06.02.96 06:00:00",
+     					 syslogList =>
+     					 [/var/log/syslog.090696,
+     					  /var/log/syslog.090796],
+     					 unknownSender => 'antiquity',
+     					 unknownSize => 0,
+     					 defaultYear => 1996);
+
+All of the above parameters are optional.
+
+*startDate* and *endDate* define a span of time; we ignore
+deliveries that fall before *startDate* or after *endDate*.  This allows
+you to generate statistical reports about mail delivered over a given
+span of time.
+
+*syslogList* is a list of files to search through for deliveries.
+The alternative to specifying syslogList is to supply a file-handle to a
+syslog file on each call to the next() method.
+
+*unknownSender* and *unknownSize* are what to specify as the sender
+and the size if we cannot determine from the logs who sent the message
+and how large the message is.
+
+*defaultYear* is the year in which the deliveries are assumed to have
+taken place (this is not specified in the syslog file.)  Default is to
+guess the year that makes the delivery take place close to now.  (For
+example, if 'now' is February 3rd 1996, then by default a delivery made
+on December 14th is assumed to be in 1995, and a delivery made on
+February 4th is assumed to be in 1996.
+
+*defaultYear* is deprecated, set the default year instead
+with *SyslogScan::ParseDate::setDefaultYear*.
+
+
+METHOD 'NEXT'
+-------------
+
+Once an iterator is defined, the next() method will search for the next
+delivery, skipping any deliveries which don't match the time constraints
+of *startDate* and *endDate*.  There are two ways to call next():
+
+     # poll syslogList members
+     $delivery = $iter -> next;
+
+     # poll filehandle
+     open(LOG,"/var/log/syslog");
+     $delivery = $iter -> next(\*LOG);
+
+
+OTHER OPERATIONS
+----------------
+
+The 'appendSyslog' method can add a syslog filename to the list of
+syslog filenames which were specified at construction time as
+'syslogList'.
+
+Setting the global variable *$::gbQuiet* to 1 will suppress some of the
+error messages to STDERR.
+
+
+BUGS
+====
+
+If two messages have the same message ID through a bad coincidence, a
+message is produced with sender of 'duplicate' and size of '0' rather
+than using the unknownSender and unknownSize parameters.
+
+Sender and receiver address are downcased automatically.  It would
+probably be better if this module downcased only the host-name part of
+the address and not the user-name.
+
+Some mailings have a 'ctladdr' field; DeliveryIterator should probably
+try to parse this as a backup clue for figuring out the sender.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/Delivery: SyslogScan/Delivery,, *Note SyslogScan/Summary: SyslogScan/Summary,
+
+
+
+File: pm.info, Node: SyslogScan/SendmailLine, Next: SyslogScan/SendmailLineFrom, Prev: SyslogScan/DeliveryIterator, Up: Module List
+
+Enhances basic SyslogEntry parsing by understanding sendmail to/from message syntax.
+************************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::SendmailLine -- Enhances basic SyslogEntry parsing by
+understanding sendmail to/from message syntax.
+
+
+DESCRIPTION
+===========
+
+Suppose I run a 'new SyslogEntry' command and read in the following
+line:
+
+Jun 13 01:32:26 satellife sendmail[23498]: WAA18677:
+to=bar@foo.org,baz@foo.org, delay=03:50:20, mailer=smtp,
+relay=relay.ulthar.com [128.206.5.3], stat=Sent (May, have (embedded,
+commas))
+
+If I have not loaded in SendmailLine, then 'new SyslogEntry' will return
+an 'UnsupportedEntry' object looking like this:
+
+     month => Jun,
+     day => 13,
+     time => 01:32:26,
+     machine => satellife,
+     executable => sendmail,
+     tag => 23498,
+     content => WAA18677: to=bar@foo.org,baz@foo.org, delay=03:50:20, ...
+
+On the other hand, if I have a 'use SyslogScan::SendmailLine' command
+before my call to 'new SyslogEntry', then I will a 'SendmailLine' object
+with all of the above parameters, plus the following additional
+parameters:
+
+     messageID => WAA18677
+     toList => ( bar@foo.org, baz@foo.org )
+     attrHash => ( to => "bar@foo.org,baz@foo.org",
+     	     delay => "03:50:20",
+     	     mailer => "smtp",
+     	     relay => "relay.ulthar.com [128.206.5.3]",
+     	     stat => "Sent (May, have (embedded, commas))"
+     	     )
+
+Also well-supported is the 'From' line:
+
+Jun 13 01:34:54 satellife sendmail[26035]: BAA26035: from=<bar!baz!foo>,
+size=7000, class=0, pri=37000, nrcpts=1,
+msgid=<199606130634.BAA26035@satellife.healthnet.org>, proto=SMTP,
+relay=uth.bar.com [155.247.14.2]
+
+will produce a SendmailLine object with the additional attributes of
+
+     messageID => BAA26035
+     attrHash => ( from => "<bar!baz!foo>",
+     	     size => "7000",
+     	     class => "0",
+     	     pri => "37000"
+     	     nrcpts => "1",
+     	     msgid => "<199606130634.BAA26035@satellife.healthnet.org>",
+     	     proto => "SMTP",
+     	     relay => "uth.bar.com [155.247.14.2]"
+     	     )
+
+Other types of lines are legal, but are not currently very thorougly
+parsed, and therefore return somewhat minimal SendmailLine objects.
+
+Jun 13 13:05:35 satellife sendmail[19620]: NAA19606: NAA19620: return to
+sender: unknown mailer error 2
+
+will return a SendmailLine object with the usual SyslogEntry attributes,
+plus the single additional attribute of
+
+messageID => NAA19606
+
+while lines like the following produce SendmailLine objects with no
+additional SendmailLine-specific attributes:
+
+Jun 13 03:00:05 satellife sendmail[26611]: alias database
+/var/yp/nis.healthnet.org/mail.aliases rebuilt by root
+
+Note this is a subclass for SyslogScan::SyslogEntry which handles
+certain types of logfile lines.  See the documentation for SyslogEntry
+for further details of how SyslogEntry subclassing works.
+
+Also, see the SyslogScan::SendmailLineFrom and
+SyslogScan::SendmailLineTo modules for examples of returned SendmailLine
+objects.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/SyslogEntry: SyslogScan/SyslogEntry,, *Note SyslogScan/SendmailLineFrom: SyslogScan/SendmailLineFrom,,
+*Note SyslogScan/SendmailLineTo: SyslogScan/SendmailLineTo,
+
+
+
+File: pm.info, Node: SyslogScan/SendmailLineFrom, Next: SyslogScan/SendmailLineTo, Prev: SyslogScan/SendmailLine, Up: Module List
+
+encapsulates a 'From:' line in a syslog file
+********************************************
+
+
+
+NAME
+====
+
+SyslogScan::SendmailLineFrom -- encapsulates a 'From:' line in a syslog
+file
+
+
+DESCRIPTION
+===========
+
+Here is a sample SendmailLineFrom object.
+
+If 'new SyslogScan::SendmailLineEntry' reads in a line like
+
+Jun 13 02:34:54 satellife sendmail[26035]: BAA26035:
+from=<HELP-NET@BAR.TEMPLE.EDU>, size=7000, class=0, pri=37000, nrcpts=1,
+msgid=<199606130634.BAA26035@satellife.healthnet.org>, proto=SMTP,
+relay=vm.temple.edu [155.247.14.2]
+
+then it will return a SyslogScan::SendmailLineFrom object like this:
+
+     # generic SyslogScan::SyslogEntry stuff
+     day => 13,
+     executable => 'sendmail',
+     machine => 'satellife',
+     month => 'Jun',
+     tag => 26035,
+     time => '02:34:54',
+     content => 'BAA26035: from=<HELP-NET@BAR.TEMPLE.EDU>, size=7000, class=0, pri=37000, nrcpts=1, msgid=<199606130634.BAA26035@satellife.healthnet.org>, proto=SMTP, relay=vm.temple.edu [155.247.14.2]',
+
+     # sendMailLineFrom-specific stuff
+     messageID => 'BAA26035',
+     attrHash => {
+     	 'class' => 0,
+              'from' => 'help-net@bar.temple.edu',
+              'msgid' => '<199606130634.BAA26035@satellife.healthnet.org>',
+              'nrcpts' => 1,
+              'pri' => 37000,
+              'proto' => 'SMTP',
+              'relay' => 'vm.temple.edu [155.247.14.2]',
+              'size' => 7000
+     	 }
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/SendmailLine: SyslogScan/SendmailLine,
+
+
+
+File: pm.info, Node: SyslogScan/SendmailLineTo, Next: SyslogScan/SendmailUtil, Prev: SyslogScan/SendmailLineFrom, Up: Module List
+
+encapsulates a 'To:' line in a syslog file
+******************************************
+
+
+
+NAME
+====
+
+SyslogScan::SendmailLineTo -- encapsulates a 'To:' line in a syslog file
+
+
+DESCRIPTION
+===========
+
+Here is a sample SendmailLineTo object.
+
+If 'new SyslogScan::SendmailLineEntry' reads in a line like
+
+Jun 13 01:50:48 satellife sendmail[23498]: WAA18677:
+to=mbe527@time.nums.nwu.edu,jsm341@anima.nums.nwu.edu, delay=03:52:42,
+mailer=smtp, relay=anima.nums.nwu.edu. [165.124.50.10], stat=Sent
+(AA097917369 Message accepted for delivery)
+
+then it will return a SyslogScan::SendmailLineTo object like this:
+
+     # generic SyslogScan::SyslogEntry stuff
+     day => 13,
+     executable => 'sendmail',
+     machine => 'satellife',
+     messageID => 'WAA18677',
+     month => 'Jun',
+     tag => 23498,
+     content => 'WAA18677: to=mbe527@time.nums.nwu.edu,jsm341@anima.nums.nwu.edu, delay=03:52:42, mailer=smtp, relay=anima.nums.nwu.edu. [165.124.50.10], stat=Sent (AA097917369 Message accepted for delivery)',
+
+     # sendMailLineTo-specific stuff
+     messageID => 'WAA18677'
+     toList => (mbe527@time.nums.nwu.edu, jsm341@anima.nums.nwu.edu)
+     attrHash => (
+              'delay' => '03:52:42',
+              'mailer' => 'smtp',
+              'relay' => 'anima.nums.nwu.edu. [165.124.50.10]',
+              'stat' => 'Sent (AA097917369 Message accepted for delivery)',
+              'to' => 'mbe527@time.nums.nwu.edu,jsm341@anima.nums.nwu.edu'
+     	 )
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/SendmailLineTo: SyslogScan/SendmailLineTo,
+
+
+

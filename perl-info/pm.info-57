@@ -1,0 +1,1972 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Tk/Tk/Pane, Next: Tk/Tk/ProgressBar, Prev: Tk/Tk/NumEntry, Up: Module List
+
+A window panner
+***************
+
+
+
+NAME
+====
+
+Tk::Pane - A window panner
+
+
+SYNOPSIS
+========
+
+     use Tk::Pane;
+
+     $pane = $mw->Scrolled(Pane, Name => 'fred',
+     	-scrollbars => 'soe',
+     	-sticky => 'we',
+     	-gridded => 'y'
+     );
+
+     $pane->Frame;
+
+     $pane->pack;
+
+
+DESCRIPTION
+===========
+
+`Tk::Pane' provides creates a widget which allows you to view only part
+of a sub-widget.
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Graham Barr. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/Tk/ProgressBar, Next: Tk/Tk/TFrame, Prev: Tk/Tk/Pane, Up: Module List
+
+A graphical progress bar
+************************
+
+
+
+NAME
+====
+
+Tk::ProgressBar - A graphical progress bar
+
+
+SYNOPSIS
+========
+
+     use Tk::ProgressBar;
+
+     $progress = $parent->ProgressBar(
+     	-width => 200,
+     	-height => 20,
+     	-from => 0,
+     	-to => 100,
+     	-blocks => 10,
+     	-colors => [0, 'green', 50, 'yellow' , 80, 'red'],
+     	-variable => \$percent_done
+     );
+
+
+DESCRIPTION
+===========
+
+`Tk::ProgressBar' provides a widget which will show a graphical
+representation of a value, given maximum and minimum reference values.
+
+
+STANDARD OPTIONS
+================
+
+*-padx -pady -troughcolor -highlightthickness -borderwidth -relief*
+
+
+WIDGET-SPECIFIC OPTIONS
+=======================
+
+-width
+     Specifies the desired narrow dimension of the ProgressBar in screen
+     units (i.e.  any of the forms acceptable to Tk_GetPixels). For
+     vertical ProgressBars this is the ProgressBars width; for
+     horizontal bars this is the ProgressBars height.
+
+-length
+     Specifies the desired long dimension of the ProgressBar in screen
+     units (i.e. any of the forms acceptable to Tk_GetPixels). For
+     vertical ProgressBars this is the ProgressBars height; for
+     horizontal scales it is the ProgressBars width.
+
+-colors
+-blocks
+-resolution
+     A real value specifying the resolution for the scale. If this value
+     is greater than zero then the scale's value will always be rounded
+     to an even multiple of this value, as will tick marks and the
+     endpoints of the scale. If the value is less than zero then no
+     rounding occurs. Defaults to 1 (i.e., the value will be integral).
+
+-anchor
+-variable
+     Specifies the name of a global variable to link to the
+     ProgressBar. Whenever the value of the variable changes, the
+     ProgressBar will upate to reflect this value.
+
+-from
+-to
+-gap
+
+WIDGET METHODS
+==============
+
+$ProgressBar->value(*?value?*)
+     If value is omitted, returns the current value of the
+     ProgressBar. If value is given, the value of the ProgressBar is
+     set.
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Graham Barr. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/Tk/TFrame, Next: Tk/UserGuide, Prev: Tk/Tk/ProgressBar, Up: Module List
+
+A Titled Frame widget
+*********************
+
+
+
+NAME
+====
+
+Tk::TFrame - A Titled Frame widget
+
+
+SYNOPSIS
+========
+
+     use Tk::TFrame;
+
+     $frame1 = $parent->TFrame(
+     	-label => [ -text => 'Title' ]
+     	-borderwidth => 2,
+     	-relief => 'groove'
+     );
+
+     # or simply
+     $frame2 = $parent->TFrame(
+        -label => 'Title'
+     );
+
+     $frame1->pack;
+     $frame2->pack;
+
+
+DESCRIPTION
+===========
+
+`Tk::TFrame' provides a frame but with a title which overlaps the border
+by half of it's height.
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Graham Barr. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/UserGuide, Next: Tk/WaitBox, Prev: Tk/Tk/TFrame, Up: Module List
+
+Writing Tk applications in perl5.
+*********************************
+
+
+
+NAME
+====
+
+perl/Tk - Writing Tk applications in perl5.
+
+
+DESCRIPTION
+===========
+
+This manual page is for beginners.  It assumes you know some perl, and
+have got perl+Tk running.  Please run the 'widget' demo before reading
+this text; it will teach you the various widget types supported by Tk.
+
+
+Some background
+===============
+
+Tk GUI programming is event-driven.  (This may already be familiar to
+you.)  In event-driven programs, the main GUI loop is outside of the
+user program and inside the GUI library.  This loop will watch all
+events of interest, and activate the correct handler procedures to
+handle these events.  Some of these handler procedures may be
+user-supplied; others will be part of the library.
+
+For a programmer, this means that you're not watching what is happening;
+instead, you are requested by the toolkit to perform actions whenever
+necessary.  So, you're not watching for 'raise window / close window /
+redraw window' requests, but you tell the toolkit which routine will
+handle such cases, and the toolkit will call the procedures when
+required.
+
+
+First requirements
+==================
+
+Any perl program that uses Tk needs to include `use Tk'.  A program
+should also use `use strict' and the -w switch to ensure the program is
+working without common errors.
+
+Any Tk application starts by creating the Tk main window.  You then
+create items inside the main window, or create new windows, before
+starting the mainloop.  (You can also create more items and windows
+while you're running.)  The items will be shown on the display after you
+pack them; more info on this later.  Then you do a Tk mainloop; this
+will start the GUI and handle all events.  That's your application.  A
+trivial one-window example is show below:
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk; 
+
+     my $main = new MainWindow;
+     $main->Label(-text => 'Hello, world!')->pack;
+     $main->Button(-text => 'Quit',
+                   -command => sub{exit}
+                   )->pack;
+     MainLoop;
+
+Please run this example.  It shows you two items types also shown in the
+widget demo; it also shows you how items are created and packed.
+Finally, note the typical Tk style using `-option' => value pairs.
+
+
+Item creation
+=============
+
+Tk windows and widgets are hierarchical, i.e. one includes one or more
+others.  You create the first Tk window using `new MainWindow'.
+This returns a window handle, assigned to `$main' in the example above.
+Keep track of the main handle.
+
+You can use any Tk handle to create sub-items within the window or
+widget.  This is done by calling the Tk constructor method on the
+variable.  In the example above, the Label method called from `$main'
+creates a label widget inside the main window.  In the constructor call,
+you can specify various options; you can later add or change options for
+any widget using the `configure' method, which takes the same parameters
+as the constructor.  The one exception to the hierarchical structure is
+the Toplevel constructor, which creates a new outermost window.
+
+After you create any widget, you must render it by calling pack.  (This
+is not entirely true; more info later).  If you do not need to refer to
+the widget after construction and packing, call pack off the constructor
+results, as shown for the label and button in the example above.  Note
+that the result of the compound call is the result of pack, which is not
+a valid Tk handle.
+
+Windows and widgets are deleted by calling destroy on them; this will
+delete and un-draw the widget and all its children, with the exception
+of Toplevel windows.
+
+
+Standard Tk types
+=================
+
+Button
+Radiobutton
+Checkbutton
+Listbox
+Scrollbar
+Entry
+Text
+Canvas
+Frame
+Toplevel
+Scale
+Menu
+Menubutton
+
+Variables and callback routines
+===============================
+
+Most graphical interfaces are used to set up a set of values and
+conditions, and then perform the appropriate action.  The Tk toolkit is
+different from your average text-based prompting or menu driven system
+in that you do not collect settings yourself, and decide on an action
+based on an input code; instead, you leave these values to your toolkit
+and only get them when the action is performed.
+
+So, where a traditional text-based system would look like this: (yes,
+this is obviously dumb code)
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+
+     print "Please type a font name\n";
+     my $font = <>; chop $font;
+     # Validate font
+
+     print "Please type a file name\n";
+     my $filename = <>; chop $filename;
+     # Validate filename
+
+     print "Type <1> to fax, <2> to print\n";
+     my $option = <>; chop $option;
+     if ($option eq 1) {
+         print "Faxing $filename in font $font\n";
+     } elsif ($option eq 2) {
+         print "Now sending $filename to printer in font $font\n";
+     }
+
+The (slightly larger) example below shows how to do this is Tk.  Note
+the use of callbacks.  Note, also, that Tk handles the values, and the
+subroutine uses get to get at the values.  If a user changes his mind
+and wants to change the font again, the application never notices; it's
+all handled by Tk.
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk;
+
+     my $main = new MainWindow;
+     $main->Label(-text => 'Print file')->pack;
+     my $font = $main->Entry(-width => 10);
+     $font->pack;
+     my $filename = $main->Entry(-width => 10);
+     $filename->pack;
+     $main->Button(-text => 'Fax',
+                   -command => sub{do_fax($filename, $font)}
+                   )->pack;
+     $main->Button(-text => 'Print', 
+                   -command => sub{do_print($filename, $font)}
+                   )->pack;
+     MainLoop;
+
+     sub do_fax {
+         my ($file, $font) = @_;
+         my $file_val = $file->get;
+         my $font_val = $font->get;
+         print "Now faxing $file_val in $font_val\n";
+     }
+
+     sub do_print {
+         my ($file, $font) = @_;
+         $file = get $file;
+         $font = get $font;
+         print "Sending file $file to printer in $font\n";
+     }
+
+
+The packer.  Grouping and frames.
+=================================
+
+In the examples above, you must have noticed the pack calls.  This is
+one of the more complicated parts of Tk.  The basic idea is that any
+window or widget should be subject to a Tk widget placement manager; the
+*packer* is the most useful placement manager.
+
+The actions of the packer are rather simple: when applied to a widget,
+the packer positions that widget on the indicated position within the
+remaining space in its parent.  By default, the position is on top; this
+means the next items will be put below.  You can also specify the left,
+right, or bottom positions.  Specify position using *-side => 'right'*.
+
+Additional packing parameters specify the behavior of the widget when
+there is some space left in the frame or when the window size is
+increased.  If widgets should maintain a fixed size, specify nothing;
+this is the default.  For widgets that you want to fill up the current
+horizontal space, specify *-fill => 'x'*, *y*, or *both*; for widgets
+that should grow, specify *-expand => 'yes'*.  These parameters are not
+shown in the example below; see the widget demo.
+
+If you want to group some items within a window that have a different
+packing order than others, you can include them in a Frame.  This is a
+do-nothing window type that is meant for packing (and to play games with
+borders and colors).
+
+The example below shows the use of pack and frames:
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk;
+
+     # Take top, the bottom -> now implicit top is in the middle
+     my $main = new MainWindow;
+     $main->Label(-text => 'At the top (default)')->pack;
+     $main->Label(-text => 'At the bottom')->pack(-side => 'bottom');
+     $main->Label(-text => 'The middle remains')->pack;
+
+     # Since left and right are taken, bottom will not work...
+     my $top1 = $main->Toplevel;
+     $top1->Label(-text => 'Left')->pack(-side => 'left');
+     $top1->Label(-text => 'Right')->pack(-side => 'right');
+     $top1->Label(-text => '?Bottom?')->pack(-side => 'bottom');
+
+     # But when you use frames, things work quite alright
+     my $top2 = $main->Toplevel;
+     my $frame = $top2->Frame;
+     $frame->pack;
+     $frame->Label(-text => 'Left2')->pack(-side => 'left');
+     $frame->Label(-text => 'Right2')->pack(-side => 'right');
+     $top2->Label(-text => 'Bottom2')->pack(-side => 'bottom');
+
+     MainLoop;
+
+
+More than one window
+====================
+
+Most real applications require more than one window.  As you read
+before, you can create more outermost windows by using Toplevel.  Each
+window is independent; exiting a toplevel window does not affect the
+others.  Exiting the main window will end the application.  The example
+below shows a trivial three-window application:
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk;
+
+     my $main = new MainWindow;
+     fill_window($main, 'Main');
+     my $top1 = $main->Toplevel;
+     fill_window($top1, 'First top-level');
+     my $top2 = $main->Toplevel;
+     fill_window($top2, 'Second top-level');
+     MainLoop;
+
+     sub fill_window {
+         my ($window, $header) = @_;
+         $window->Label(-text => $header)->pack;
+         $window->Button(-text => 'close',
+                         -command => sub{destroy $window}
+                         )->pack(-side => 'left');
+         $window->Button(-text => 'exit',
+                         -command => sub{exit}
+                         )->pack(-side => 'right');
+     }
+
+
+More callbacks
+==============
+
+So far, all callback routines shown called a user procedure.  You can
+also have a callback routine call another Tk routine.  This is the way
+that scroll bars are implemented: scroll-bars can call a Tk item or a
+user procedure, whenever their position has changed.  The Tk item that
+has a scrollbar attached calls the scrollbar when its size or offset has
+changed.  In this way, the items are linked.  You can still ask a
+scrollbar's position, or set it by hand - but the defaults will be taken
+care of.
+
+The example below shows a listbox with a scroll bar.  Moving the
+scrollbar moves the listbox.  Scanning a listbox (dragging an item with
+the left mouse button) moves the scrollbar.
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk;
+
+     my $main = new MainWindow;
+     my $box = $main->Listbox(-relief => 'sunken', 
+                              -width => -1, # Shrink to fit
+                              -height => 5,
+                              -setgrid => 'yes');
+     my @items = qw(One Two Three Four Five Six Seven
+                    Eight Nine Ten Eleven Twelve);
+     foreach (@items) {
+        $box->insert('end', $_);
+     }
+     my $scroll = $main->Scrollbar(-command => ['yview', $box]);
+     $box->configure(-yscrollcommand => ['set', $scroll]);
+     $box->pack(-side => 'left', -fill => 'both', -expand => 'yes');
+     $scroll->pack(-side => 'right', -fill => 'y');
+
+     MainLoop;
+
+
+Canvases and tags
+=================
+
+One of the most powerful window types in Tk is the Canvas window.  In a
+canvas window, you can draw simple graphics and include other widgets.
+The canvas area may be larger than the visible window, and may then be
+scrolled.  Any item you draw on the canvas has its own id, and may
+optionally have one or more tags.  You may refer to any item by its id,
+and may refer to any group of items by a common tag; you can move,
+delete, or change groups of items using these tags, and you can bind
+actions to tags.  For a properly designed (often structured) canvas, you
+can specify powerful actions quite simply.
+
+In the example below, actions are bound to circles (single click) and
+blue items (double-click); obviously, this can be extended to any tag or
+group of tags.
+
+     #! /usr/bin/perl5 -w
+
+     use strict;
+     use Tk;
+
+     # Create main window and canvas
+     my $main = new MainWindow;
+     my $canvas = $main->Canvas;
+     $canvas->pack(-expand => 'yes', -fill => 'both');
+
+     # Create various items
+     create_item($canvas, 1, 1, 'circle', 'blue', 'Jane');
+     create_item($canvas, 4, 4, 'circle', 'red', 'Peter');
+     create_item($canvas, 4, 1, 'square', 'blue', 'James');
+     create_item($canvas, 1, 4, 'square', 'red', 'Patricia');
+
+     # Single-clicking with left on a 'circle' item invokes a procedure
+     $canvas->bind('circle', '<1>' => sub {handle_circle($canvas)});
+     # Double-clicking with left on a 'blue' item invokes a procedure
+     $canvas->bind('blue', '<Double-1>' => sub {handle_blue($canvas)});
+     MainLoop;
+
+     # Create an item; use parameters as tags (this is not a default!)
+     sub create_item {
+         my ($can, $x, $y, $form, $color, $name) = @_;
+    
+         my $x2 = $x + 1;
+         my $y2 = $y + 1;
+         my $kind;
+         $kind = 'oval' if ($form eq 'circle');
+         $kind = 'rectangle' if ($form eq 'square');
+         $can->create(($kind, "$x" . 'c', "$y" . 'c',
+                       "$x2" . 'c', "$y2" . 'c'),
+                      -tags => [$form, $color, $name],
+                      -fill => $color);
+     }
+
+     # This gets the real name (not current, blue/red, square/circle)
+     # Note: you'll want to return a list in realistic situations...
+     sub get_name {
+         my ($can) = @_;
+         my $item = $can->find('withtag', 'current');
+         my @taglist = $can->gettags($item);
+         my $name;
+         foreach (@taglist) {
+             next if ($_ eq 'current');
+             next if ($_ eq 'red' or $_ eq 'blue');
+             next if ($_ eq 'square' or $_ eq 'circle');
+             $name = $_;
+             last;
+         }
+         return $name;
+     }
+
+     sub handle_circle {
+         my ($can) = @_;
+         my $name = get_name($can);
+         print "Action on circle $name...\n";
+     }
+
+     sub handle_blue {
+         my ($can) = @_;
+         my $name = get_name($can);
+         print "Action on blue item $name...\n";
+     }
+
+
+
+
+File: pm.info, Node: Tk/WaitBox, Next: Tk/X, Prev: Tk/UserGuide, Up: Module List
+
+An Object Oriented Wait Dialog for Perl/Tk, of the Please Wait variety.
+***********************************************************************
+
+
+
+NAME
+====
+
+Tk::WaitBox - An Object Oriented Wait Dialog for Perl/Tk, of the Please
+Wait variety.
+
+
+DESCRIPTION
+===========
+
+A WaitBox consists of a number of subwidgets:
+
+@asis{}
+     
+
+bitmap
+------
+
+A bitmap (configurable via the *-bitmap* command, the default is an
+hourglass) on the left side of the WaitBox
+
+
+label
+-----
+
+A label (configurable via the *-txt1* command), with text in the upper
+portion of the right hand frame
+
+
+secondary label
+---------------
+
+Another label (configurable via the *-txt2* command, the default is
+'Please Wait'), with text in the lower portion of the right hand frame
+
+
+userframe
+---------
+
+A frame displayed, if required, between the label and the secondary
+label.  For details, see the example code and the Advertised Widget
+section
+
+
+cancel button
+-------------
+
+If a cancelroutine (configured via the *-cancelroutine* command) is
+defined, a frame will be packed below the labels and bitmap, with a
+single button.  The text of the button will be 'Cancel' (configurable
+via the *-canceltext* command), and the button will call the supplied
+subroutine when pressed.
+
+
+SYNOPSIS
+========
+
+Usage Description
+@asis{}
+     
+
+Basic Usage
+-----------
+
+To use, create your WaitDialog objects during initialization, or at
+least before a Show.  When you wish to display the WaitDialog object,
+invoke the 'Show' method on the WaitDialog object; when you wish to
+cease displaying the WaitDialog object, invoke the 'unShow' method on
+the object.
+
+
+Configuration
+-------------
+
+Configuration may be done at creation or via the configure method.
+
+
+Example Code
+------------
+
+@asis{}
+     
+          #!/usr/local/bin/perl -w 
+
+          use Tk;
+          use Tk::WaitBox;
+          use strict;
+
+          my($root) = MainWindow->new;
+          my($utxt) = "Initializing...";
+
+          my($wd) = $root->WaitBox(
+          	-bitmap =>'questhead', # Default would be 'hourglass'
+          	-txt2 => 'tick-tick-tick', #default would be 'Please Wait'
+          	-title => 'Takes forever to get service around here',
+          	-cancelroutine => sub {
+          	    print "\nI'm canceling....\n";
+          	    $wd->unShow;
+          	    $utxt = undef;
+          	});
+          $wd->configure(-txt1 => "Hurry up and Wait, my Drill Sergeant told me");
+          $wd->configure(-foreground => 'blue',-background => 'white');
+
+          ### Do something quite boring with the user frame
+          my($u) = $wd->{SubWidget}(uframe);
+          $u->pack(-expand => 1, -fill => 'both');
+          $u->Label(-textvariable => \$utxt)->pack(-expand => 1, -fill => 'both');
+
+          ## It would definitely be better to do this with a canvas... this is dumb
+          my($base) = $u->Frame(-background =>'gray',
+          		       -relief => 'sunken',
+          		       -borderwidth => 2,
+          		       -height => 20)
+          	 ->pack(-side => 'left', -anchor => 'w',-expand => 1,
+          		-fill => 'both');
+          my($bar) = $base->Frame(-borderwidth => 2,
+          			 -relief => 'raised', -height => 20,
+          			 -width => 0, -background => 'blue')
+          	 ->pack(-fill => 'y', -side => 'left');
+
+          $wd->configure(-canceltext => 'Halt, Cease, Desist'); # default is 'Cancel'
+
+          $wd->Show;
+
+          for (1..15) {
+              sleep(1);
+              $bar->configure(-width => int($_/15*$base->Width));
+              $utxt = 100*$_/15 . "% Complete";
+              $root->update;
+              last if !defined($utxt);
+          }
+
+          $wd->unShow;
+
+
+Advertised Subwidgets
+=====================
+
+uframe
+     uframe is a frame created between the two messages.  It may be used
+     for anything the user has in mind... including exciting cycle
+     wasting displays of sand dropping through an hour glass, Zippy
+     riding either a Gnu or a bronc, et cetera.
+
+     Assuming that the WaitBox is referenced by $w, the uframe may be
+     addressed as $w->subwidget{'uframe'}.  Having gotten the address,
+     you can do anything (I think) you would like with it
+
+
+Author
+======
+
+*Brent B. Powers, Merrill Lynch (B2Pi)*
+ powers@ml.com
+
+This code may be distributed under the same conditions as perl itself.
+
+
+
+
+File: pm.info, Node: Tk/X, Next: Tk/Xrm, Prev: Tk/WaitBox, Up: Module List
+
+Perl extension for Xlib constants.
+**********************************
+
+
+
+NAME
+====
+
+Tk::X - Perl extension for Xlib constants.
+
+
+SYNOPSIS
+========
+
+     use Tk::X;
+
+
+
+DESCRIPTION
+===========
+
+A module generated by h2xs. It exists to export Xlib #define type
+constants for possible use with Tk::Xlib.
+
+
+Exported constants
+==================
+
+     Above
+     AllTemporary
+     AllocAll
+     AllocNone
+     AllowExposures
+     AlreadyGrabbed
+     Always
+     AnyButton
+     AnyKey
+     AnyModifier
+     AnyPropertyType
+     ArcChord
+     ArcPieSlice
+     AsyncBoth
+     AsyncKeyboard
+     AsyncPointer
+     AutoRepeatModeDefault
+     AutoRepeatModeOff
+     AutoRepeatModeOn
+     BadAccess
+     BadAlloc
+     BadAtom
+     BadColor
+     BadCursor
+     BadDrawable
+     BadFont
+     BadGC
+     BadIDChoice
+     BadImplementation
+     BadLength
+     BadMatch
+     BadName
+     BadPixmap
+     BadRequest
+     BadValue
+     BadWindow
+     Below
+     BottomIf
+     Button1
+     Button1Mask
+     Button1MotionMask
+     Button2
+     Button2Mask
+     Button2MotionMask
+     Button3
+     Button3Mask
+     Button3MotionMask
+     Button4
+     Button4Mask
+     Button4MotionMask
+     Button5
+     Button5Mask
+     Button5MotionMask
+     ButtonMotionMask
+     ButtonPress
+     ButtonPressMask
+     ButtonRelease
+     ButtonReleaseMask
+     CWBackPixel
+     CWBackPixmap
+     CWBackingPixel
+     CWBackingPlanes
+     CWBackingStore
+     CWBitGravity
+     CWBorderPixel
+     CWBorderPixmap
+     CWBorderWidth
+     CWColormap
+     CWCursor
+     CWDontPropagate
+     CWEventMask
+     CWHeight
+     CWOverrideRedirect
+     CWSaveUnder
+     CWSibling
+     CWStackMode
+     CWWidth
+     CWWinGravity
+     CWX
+     CWY
+     CapButt
+     CapNotLast
+     CapProjecting
+     CapRound
+     CenterGravity
+     CirculateNotify
+     CirculateRequest
+     ClientMessage
+     ClipByChildren
+     ColormapChangeMask
+     ColormapInstalled
+     ColormapNotify
+     ColormapUninstalled
+     Complex
+     ConfigureNotify
+     ConfigureRequest
+     ControlMapIndex
+     ControlMask
+     Convex
+     CoordModeOrigin
+     CoordModePrevious
+     CopyFromParent
+     CreateNotify
+     CurrentTime
+     CursorShape
+     DefaultBlanking
+     DefaultExposures
+     DestroyAll
+     DestroyNotify
+     DirectColor
+     DisableAccess
+     DisableScreenInterval
+     DisableScreenSaver
+     DoBlue
+     DoGreen
+     DoRed
+     DontAllowExposures
+     DontPreferBlanking
+     EastGravity
+     EnableAccess
+     EnterNotify
+     EnterWindowMask
+     EvenOddRule
+     Expose
+     ExposureMask
+     FamilyChaos
+     FamilyDECnet
+     FamilyInternet
+     FillOpaqueStippled
+     FillSolid
+     FillStippled
+     FillTiled
+     FirstExtensionError
+     FocusChangeMask
+     FocusIn
+     FocusOut
+     FontChange
+     FontLeftToRight
+     FontRightToLeft
+     ForgetGravity
+     GCArcMode
+     GCBackground
+     GCCapStyle
+     GCClipMask
+     GCClipXOrigin
+     GCClipYOrigin
+     GCDashList
+     GCDashOffset
+     GCFillRule
+     GCFillStyle
+     GCFont
+     GCForeground
+     GCFunction
+     GCGraphicsExposures
+     GCJoinStyle
+     GCLastBit
+     GCLineStyle
+     GCLineWidth
+     GCPlaneMask
+     GCStipple
+     GCSubwindowMode
+     GCTile
+     GCTileStipXOrigin
+     GCTileStipYOrigin
+     GXand
+     GXandInverted
+     GXandReverse
+     GXclear
+     GXcopy
+     GXcopyInverted
+     GXequiv
+     GXinvert
+     GXnand
+     GXnoop
+     GXnor
+     GXor
+     GXorInverted
+     GXorReverse
+     GXset
+     GXxor
+     GrabFrozen
+     GrabInvalidTime
+     GrabModeAsync
+     GrabModeSync
+     GrabNotViewable
+     GrabSuccess
+     GraphicsExpose
+     GravityNotify
+     GrayScale
+     HostDelete
+     HostInsert
+     IncludeInferiors
+     InputFocus
+     InputOnly
+     InputOutput
+     IsUnmapped
+     IsUnviewable
+     IsViewable
+     JoinBevel
+     JoinMiter
+     JoinRound
+     KBAutoRepeatMode
+     KBBellDuration
+     KBBellPercent
+     KBBellPitch
+     KBKey
+     KBKeyClickPercent
+     KBLed
+     KBLedMode
+     KeyPress
+     KeyPressMask
+     KeyRelease
+     KeyReleaseMask
+     KeymapNotify
+     KeymapStateMask
+     LASTEvent
+     LSBFirst
+     LastExtensionError
+     LeaveNotify
+     LeaveWindowMask
+     LedModeOff
+     LedModeOn
+     LineDoubleDash
+     LineOnOffDash
+     LineSolid
+     LockMapIndex
+     LockMask
+     LowerHighest
+     MSBFirst
+     MapNotify
+     MapRequest
+     MappingBusy
+     MappingFailed
+     MappingKeyboard
+     MappingModifier
+     MappingNotify
+     MappingPointer
+     MappingSuccess
+     Mod1MapIndex
+     Mod1Mask
+     Mod2MapIndex
+     Mod2Mask
+     Mod3MapIndex
+     Mod3Mask
+     Mod4MapIndex
+     Mod4Mask
+     Mod5MapIndex
+     Mod5Mask
+     MotionNotify
+     NoEventMask
+     NoExpose
+     NoSymbol
+     Nonconvex
+     None
+     NorthEastGravity
+     NorthGravity
+     NorthWestGravity
+     NotUseful
+     NotifyAncestor
+     NotifyDetailNone
+     NotifyGrab
+     NotifyHint
+     NotifyInferior
+     NotifyNonlinear
+     NotifyNonlinearVirtual
+     NotifyNormal
+     NotifyPointer
+     NotifyPointerRoot
+     NotifyUngrab
+     NotifyVirtual
+     NotifyWhileGrabbed
+     Opposite
+     OwnerGrabButtonMask
+     ParentRelative
+     PlaceOnBottom
+     PlaceOnTop
+     PointerMotionHintMask
+     PointerMotionMask
+     PointerRoot
+     PointerWindow
+     PreferBlanking
+     PropModeAppend
+     PropModePrepend
+     PropModeReplace
+     PropertyChangeMask
+     PropertyDelete
+     PropertyNewValue
+     PropertyNotify
+     PseudoColor
+     RaiseLowest
+     ReparentNotify
+     ReplayKeyboard
+     ReplayPointer
+     ResizeRedirectMask
+     ResizeRequest
+     RetainPermanent
+     RetainTemporary
+     RevertToNone
+     RevertToParent
+     RevertToPointerRoot
+     ScreenSaverActive
+     ScreenSaverReset
+     SelectionClear
+     SelectionNotify
+     SelectionRequest
+     SetModeDelete
+     SetModeInsert
+     ShiftMapIndex
+     ShiftMask
+     SouthEastGravity
+     SouthGravity
+     SouthWestGravity
+     StaticColor
+     StaticGravity
+     StaticGray
+     StippleShape
+     StructureNotifyMask
+     SubstructureNotifyMask
+     SubstructureRedirectMask
+     Success
+     SyncBoth
+     SyncKeyboard
+     SyncPointer
+     TileShape
+     TopIf
+     TrueColor
+     UnmapGravity
+     UnmapNotify
+     Unsorted
+     VisibilityChangeMask
+     VisibilityFullyObscured
+     VisibilityNotify
+     VisibilityPartiallyObscured
+     VisibilityUnobscured
+     WestGravity
+     WhenMapped
+     WindingRule
+     XYBitmap
+     XYPixmap
+     X_H
+     X_PROTOCOL
+     X_PROTOCOL_REVISION
+     YSorted
+     YXBanded
+     YXSorted
+     ZPixmap
+
+
+AUTHOR
+======
+
+Nick Ing-Simmons ran h2xs ...
+
+
+SEE ALSO
+========
+
+Tk::Xlib(3).
+
+
+
+
+File: pm.info, Node: Tk/Xrm, Next: Tk/demos/widget_lib/WidgetDemo, Prev: Tk/X, Up: Module List
+
+X Resource/Defaults/Options routines that obey the rules.
+*********************************************************
+
+
+
+NAME
+====
+
+Tk::Xrm - X Resource/Defaults/Options routines that obey the rules.
+
+
+SYNOPSIS
+========
+
+     use Tk;
+     use Tk::Xrm;  
+
+
+DESCRIPTION
+===========
+
+Using this modules causes Tk's Option code to be replaced by versions
+which use routines from <X11/Xresource.h> - i.e. same ones every other X
+toolkit uses.
+
+Result is that "matching" of name/Class with the options database
+follows the same rules as other X toolkits. This makes it more
+predictable, and makes it easier to have a single ~/.Xdefaults file
+which gives sensible results for both Tk and (say) Motif applications.
+
+
+BUGS
+====
+
+Currently `optionAdd('key' =' 'value' [, priority])> ignores optional
+priority completely and just does XrmPutStringResource().  Perhaps it
+should be more subtle and do XrmMergeDatabases() or
+XrmCombineDatabase().
+
+This version is a little slower than Tk's re-invention but there is more
+optimization that can be done.
+
+
+
+
+File: pm.info, Node: Tk/demos/widget_lib/WidgetDemo, Next: Tk/pTk, Prev: Tk/Xrm, Up: Module List
+
+create a standard widget demonstration window.
+**********************************************
+
+
+
+NAME
+====
+
+WidgetDemo() - create a standard widget demonstration window.
+
+
+SYNOPSIS
+========
+
+     use WidgetDemo;
+     my $demo_widget = $MW->WidgetDemo(
+         -name             => $demo,
+         -text             => 'Learn how to write a widget demonstration!',
+         -title            => 'WidgetDemo Demonstration',
+         -iconname         => 'WidgetDemo',
+         -geometry_manager => 'grid',
+         -font             => $FONT,
+     );
+     $TOP = $demo_widget->Top;	# get grid master
+
+
+DESCRIPTION
+===========
+
+This constructor builds a standard widget demonstration window, composed
+of three frames.  The top frame contains descriptive demonstration text.
+The bottom frame contains the "Dismiss" and "See Code" buttons.  The
+middle frame is demonstration container, which came be managed by either
+the pack or grid geometry manager.
+
+The -text attribute is supplied to a Label widget, which is
+left-adjusted with -wraplength set to 4 inches.  If you require
+different specifications then pass an array to -text; the first element
+is the text string and the remaining array elements are standard Label
+widget attributes - WidgetDemo will rearrange things as required..
+
+     -text => ['Hello World!', qw/-wraplength 6i/],
+
+
+METHODS
+=======
+
+
+$demo_widget->Top;
+------------------
+
+Returns the frame container reference for the demonstration.  Treat this
+as the top of your window hierarchy, a "main window".
+
+
+AUTHOR
+======
+
+Stephen O. Lidie <lusol@Lehigh.EDU>
+
+
+HISTORY
+=======
+
+lusol@Lehigh.EDU, LUCC, 97/02/11 lusol@Lehigh.EDU, LUCC, 97/06/07
+
+
+COPYRIGHT
+=========
+
+Copyright (C) 1997 - 1997 Stephen O. Lidie. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/pTk, Next: Tk/widgets, Prev: Tk/demos/widget_lib/WidgetDemo, Up: Module List
+
+how to make your *Tk* source portable to other interpreted languages.
+*********************************************************************
+
+
+
+NAME
+====
+
+Tk2portableTk - how to make your *Tk* source portable to other
+interpreted languages.
+
+
+Author
+======
+
+Ilya Zakharevich <ilya@math.ohio-state.edu> has contributed most of this
+document. Many thanks.
+
+
+DESCRIPTION
+===========
+
+*PortableTk* is an attempt to make *Tk* useful from other
+languages. Currently tk4.0 runs under Perl using this approach. Below,
+*Lang* is the notation for an external language to which *PortableTk*
+glues *Tk* code.
+
+The main problem with using the code developed for *TCL* with different
+languages is the absence of data types: almost anything is `char*'. It
+makes automatic translation hopeless. However, if you `typedef' several
+new symbols to be `char*', you can still use your code in *TCL*, and it
+will make the automatic translation possible.
+
+Another problem with the approach that "everything is a string" is
+impossibility to have a result that says "NotApplicable" without setting
+an error. Thus different *Tk* command return different string values
+that mean "error happened", like `""', `" "' or `"??"'. Other languages
+can be more flexible, so in *portableTk* you should inform the compiler
+that what you want to return means "error" (see `Setting variables' in
+this node).
+
+Currently *PortableTk* uses several different approachs to simplify
+translation: several *TCL* functions that are especially dangerous to
+use are undefined, so you can easily find places that need to be updated
+to use Language-independent functions based on compiler warnings.
+Eventually a way to use these Language-independent functions under
+proper *TCL* will be also provided.  The end of this document provides a
+starting point for such a project.
+
+
+Structure of *pTk*, porting your code
+=====================================
+
+*pTk*, that is a port of *Tk*, is very special with respect to porting
+of other code to *portableTk*. The problem is that currently there is
+very little hope to merge the modifications back into *Tk*, so a special
+strategy is needed to maintain this port. Do not use this strategy to
+port your own code.
+
+*pTk* is produced from *Tk* via a two-step process: first, some
+manual editing (the result is in the subdirectory `mTk'), and second,
+automatic conversion by the `munge' script (written in Perl). Thus the
+subdirectory `pTk/mTk' contains code with minimal possible difference
+from the virgin *Tk* code, so it is easier to merge(1) the differences
+between *Tk* versions into modified code.
+
+It looks like the strategy for a portable code should be exactly
+opposite: starting from *TCL*-based code, apply `munge', and then
+hand-edit the resulting code. Probably it is also possible to target
+your code to *portableTk* from scratch, since this will make it possible
+to run it under a lot of *Lang*uages.
+
+The only reason anyone would like to look into contents of `pTk/mTk'
+directory is to find out which constructs are not supported by
+`munge'. On the other hand, `pTk' directory contains code that is
+conformant to *portableTk*, so you can look there to find example code.
+
+`munge' is the script that converts most common *Tk* constructs to their
+`portableTk' equivalent. For your code to qualify, you should follow
+*Tk* conventions on indentation and names of variables, in particular,
+the array of arguments for the `...CmdProc' should be called `argv'.
+
+For details on what `munge' can do, see `Translation of some TCL
+functions' in this node.
+
+
+*PortableTk* API
+================
+
+
+Checking what you are running under
+-----------------------------------
+
+*PortableTk* provides a symbol `????'. If this symbol is defined,
+your source is compiled with it.
+
+
+New types of configuration options
+----------------------------------
+
+*PortableTk* defines several new types of configuration options:
+
+     TK_CONFIG_CALLBACK
+     TK_CONFIG_LANGARG
+     TK_CONFIG_SCALARVAR
+     TK_CONFIG_HASHVAR
+     TK_CONFIG_ARRAYVAR
+     TK_CONFIG_IMAGE
+
+You should use them instead of TK_CONFIG_STRING whenever
+appropriate. This allows your application to receive a direct
+representation of the corresponding resource instead of the string
+representation, if this is possible under given language.
+
+???? It looks like `TK_CONFIG_IMAGE' and `TK_CONFIG_SCALARVAR' set
+variables of type `char*'.
+
+
+Language data
+-------------
+
+The following data types are defined:
+
+Arg
+     is the main datatype of the language.  This is a type that your C
+     function gets pointers to for arguments when the corresponding
+     *Lang* function is called.  The corresponding config type is
+     `TK_CONFIG_LANGARG'.
+
+     This is also a type that keeps information about contents of *Lang*
+     variable.
+
+`Var'
+     Is a substitute for a `char *' that contains name of variable. In
+     *Lang* it is an object that contains reference to another *Lang*
+     variable.
+
+`LangResultSave'
+     ????
+
+`LangCallback'
+     `LangCallback*' a substitute for a `char *' that contains command
+     to call. The corresponding config type is `TK_CONFIG_CALLBACK'.
+
+`LangFreeProc'
+     It is the type that the `Lang_SplitList' sets. Before you call it,
+     declare
+
+          Args *args;
+          LangFreeProc *freeProc = NULL;
+          ...
+          code = Lang_SplitList(interp, value, 
+          	&argc, &args, &freeProc);
+
+     After you use the split values, call
+
+          if (args != NULL && freeProc) (*freeProc)(argc,args);
+
+     It is not guaranteed that the `args' can survive deletion of value.
+
+
+Conversion
+----------
+
+The following macros and functions are used for conversion between
+strings and the additional types:
+
+     LangCallback * LangMakeCallback(Arg)
+     Arg LangCallbackArg(LangCallback *)
+     char * LangString(Arg)
+
+After you use the result of LangCallbackArg(), you should free it with
+`freeProc' `LANG_DYNAMIC' (it is not guaranteed that any change of Arg
+will not be reflected in <LangCallback>, so you cannot do LangSet...()
+in between, and you should reset it to NULL if you want to do any
+further assignments to this Arg).
+
+The following function returns the Arg that is a reference to `Var':
+
+     Arg LangVarArg(Var)
+
+???? It is very anti-intuitive, I hope the name is changed.
+
+     int LangCmpCallback(LangCallback *a,Arg b)
+
+(currently only a stub), and, at last,
+
+     LangCallback * LangCopyCallback(LangCallback *)
+
+
+Callbacks
+---------
+
+Above we have seen the new datatype `LangCallback' and the corresponding
+*Config option* `TK_CONFIG_CALLBACK'. The following functions are
+provided for manipulation of `LangCallback's:
+
+     void LangFreeCallback(LangCallback *)
+     int LangDoCallback(Tcl_Interp *,LangCallback *,
+     	int result,int argc, char *format,...)
+
+The argument format of `LangDoCallback' should contain a string that is
+suitable for sprintf with optional arguments of `LangDoCallback'.
+result should be false if result of callback is not needed.
+
+     int LangMethodCall(Tcl_Interp *,Arg,char *method,
+     	int result,int argc,...)
+
+????
+
+Conceptually, `LangCallback*' is a substitute for ubiquitous `char *' in
+*TCL*. So you should use `LangFreeCallback' instead of `ckfree' or free
+if appropriate.
+
+
+Setting variables
+-----------------
+
+     void LangFreeArg (Arg, Tcl_FreeProc *freeProc)
+     Arg  LangCopyArg (Arg);
+     void Tcl_AppendArg (Tcl_Interp *interp, Arg)
+     void LangSetString(Arg *, char *s)
+     void LangSetDefault(Arg *, char *s)
+
+These two are equivalent unless s is an empty string. In this case
+`LangSetDefault' behaves like `LangSetString' with `s==NULL', i.e., it
+sets the current value of the *Lang* variable to be false.
+
+     void LangSetInt(Arg *,int)
+     void LangSetDouble(Arg *,double)
+
+The *Lang* functions separate uninitialized and initialized data
+comparing data with NULL. So the declaration for an Arg should look like
+
+     Arg arg = NULL;
+
+if you want to use this `arg' with the above functions. After you are
+done, you should use `LangFreeArg' with `TCL_DYNAMIC' as `freeProc'.
+
+
+Language functions
+------------------
+
+Use
+
+`int  LangNull(Arg)'
+     to check that an object is false;
+
+`int  LangStringMatch(char *string, Arg match)'
+     ????
+
+`void LangExit(int)'
+     to make a proper shutdown;
+
+`int LangEval(Tcl_Interp *interp, char *cmd, int global)'
+     to call *Lang* eval;
+
+`void Lang_SetErrorCode(Tcl_Interp *interp,char *code)'
+`char *Lang_GetErrorCode(Tcl_Interp *interp)'
+`char *Lang_GetErrorInfo(Tcl_Interp *interp)'
+`void LangCloseHandler(Tcl_Interp *interp,Arg arg,FILE *f,Lang_FileCloseProc *proc)'
+     currently stubs only;
+
+`int LangSaveVar(Tcl_Interp *,Arg arg,Var *varPtr,int type)'
+     to save the structure `arg' into *Lang* variable `*varPtr';
+
+`void LangFreeVar(Var var)'
+     to free the result;
+
+`int LangEventCallback(Tcl_Interp *,LangCallback *,XEvent *,KeySym)'
+     ????
+
+`int LangEventHook(int flags)'
+`void LangBadFile(int fd)'
+`int LangCmpConfig(char *spec, char *arg, size_t length)'
+     unsupported????;
+
+`void Tcl_AppendArg (Tcl_Interp *interp, Arg)' Another useful
+construction is
+
+     Arg variable = LangFindVar(interp, Tk_Window tkwin, char *name);
+
+After using the above function, you should call
+
+     LangFreeVar(Var variable);
+
+???? Note discrepancy in types!
+
+If you want to find the value of a variable (of type Arg) given the
+variable name, use `Tcl_GetVar(interp, varName, flags)'. If you are
+interested in the string value of this variable, use
+`LangString(Tcl_GetVar(...))'.
+
+To get a C array of Arg of length n, use
+
+     Arg *args = LangAllocVec(n);
+     ...
+     LangFreeVec(n,args);
+
+You can set the values of the Args using `LangSet...' functions, and get
+string value using `LangString'.
+
+If you want to merge an array of Args into one Arg (that will be an
+array variable), use
+
+     result = Tcl_Merge(listLength, list);
+
+
+Translation of some TCL functions
+---------------------------------
+
+We mark items that can be dealt with by `munge' by *Autoconverted*.
+
+`Tcl_AppendResult'
+     does not take `(char*)NULL', but NULL as
+     delimiter. *Autoconverted*.
+
+`Tcl_CreateCommand', `Tcl_DeleteCommand'
+     `Tk_CreateWidget', `Tk_DeleteWidget', the second argument is the
+     window itself, not the pathname. *Autoconverted*.
+
+`sprintf(interp->result, "%d %d %d %d",...)'
+     `Tcl_IntResults(interp,4,0,...)'. *Autoconverted*.
+
+`interp->result = "1";'
+     `Tcl_SetResult(interp,"1", TCL_STATIC)'. *Autoconverted*.
+
+Reading `interp->result'
+     `Tcl_GetResult(interp)'. *Autoconverted*.
+
+`interp->result = Tk_PathName(textPtr->tkwin);'
+     `Tk_WidgetResult(interp,textPtr->tkwin)'. *Autoconverted*.
+
+Sequence `Tcl_PrintDouble, Tcl_PrintDouble, ..., Tcl_AppendResult'
+     Use a single command
+
+          void Tcl_DoubleResults(Tcl_Interp *interp, int append,
+          	int argc,...);
+
+     append governs whether it is required to clear the result first.
+
+     A similar command for int arguments is `Tcl_IntResults'.
+
+`Tcl_SplitList'
+     Use `Lang_SplitList' (see the description above).
+
+
+Translation back to TCL
+=======================
+
+To use your *portableTk* program with *TCL*, put
+
+     #include "ptcl.h"
+
+*before* inclusion of `tk.h', and link the resulting code with
+`ptclGlue.c'.
+
+These files currently implement the following:
+
+Additional config types:
+          TK_CONFIG_CALLBACK
+          TK_CONFIG_LANGARG
+          TK_CONFIG_SCALARVAR
+          TK_CONFIG_HASHVAR
+          TK_CONFIG_ARRAYVAR
+          TK_CONFIG_IMAGE
+
+Types:
+          Var, Arg, LangCallback, LangFreeProc.
+
+Functions and macros:
+          Lang_SplitList, LangString, LangSetString, LangSetDefault,
+          LangSetInt, LangSetDouble Tcl_ArgResult, LangCallbackArg,
+          LangSaveVar, LangFreeVar,
+          LangFreeSplitProc, LangFreeArg, Tcl_DoubleResults, Tcl_IntResults,
+          LangDoCallback, Tk_WidgetResult, Tcl_CreateCommand,
+          Tcl_DeleteCommand, Tcl_GetResult.
+
+Current implementation contains enough to make it possible to compile
+`mTk/tkText*.[ch]' with the virgin *Tk*.
+
+
+New types of events ????
+------------------------
+
+PortableTk defines following new types of events:
+
+     TK_EVENTTYPE_NONE
+     TK_EVENTTYPE_STRING
+     TK_EVENTTYPE_NUMBER
+     TK_EVENTTYPE_WINDOW
+     TK_EVENTTYPE_ATOM
+     TK_EVENTTYPE_DISPLAY
+     TK_EVENTTYPE_DATA
+
+and a function
+
+     char *	Tk_EventInfo(int letter, 
+     	    Tk_Window tkwin, XEvent *eventPtr, 
+     	    KeySym keySym, int *numPtr, int *isNum, int *type, 
+                int num_size, char *numStorage)
+
+
+Checking for trouble
+====================
+
+If you start with working TCL code, you can start convertion using the
+above hints. Good indication that you are doing is OK is absence of
+sprintf and sscanf in your code (at least in the part that is working
+with interpreter).
+
+
+Additional API
+==============
+
+What is described here is not included into base *portableTk*
+distribution. Currently it is coded in *TCL* and as Perl macros (core is
+coded as functions, so theoretically you can use the same object files
+with different interpreted languages).
+
+
+`ListFactory'
+-------------
+
+Dynamic arrays in *TCL* are used for two different purposes: to
+construct strings, and to construct lists. These two usages will have
+separate interfaces in other languages (since list is a different type
+from a string), so you should use a different interface in your code.
+
+The type for construction of dynamic lists is `ListFactory'. The API
+below is a counterpart of the API for construction of dynamic lists in
+*TCL*:
+
+     void ListFactoryInit(ListFactory *)
+     void ListFactoryFinish(ListFactory *)
+     void ListFactoryFree(ListFactory *)
+     Arg * ListFactoryArg(ListFactory *)
+     void ListFactoryAppend(ListFactory *, Arg *arg)
+     void ListFactoryAppendCopy(ListFactory *, Arg *arg)
+     ListFactory * ListFactoryNewLevel(ListFactory *)
+     ListFactory * ListFactoryEndLevel(ListFactory *)
+     void ListFactoryResult(Tcl_Interp *, ListFactory *)
+
+The difference is that a call to `ListFactoryFinish' should precede the
+actual usage of the value of `ListFactory', and there are two different
+ways to append an Arg to a `ListFactory': ListFactoryAppendCopy()
+guarantees that the value of `arg' is copied to the list, but
+ListFactoryAppend() may append to the list a reference to the current
+value of `arg'. If you are not going to change the value of `arg' after
+appending, the call to ListFactoryAppend may be quicker.
+
+As in *TCL*, the call to ListFactoryFree() does not free the
+`ListFactory', only the objects it references.
+
+The functions ListFactoryNewLevel() and ListFactoryEndLevel() return a
+pointer to a `ListFactory' to fill. The argument of
+ListFactoryEndLevel() cannot be used after a call to this function.
+
+
+DStrings
+--------
+
+Production of strings are still supported in *portableTk*.
+
+
+Accessing Args
+--------------
+
+The following functions for getting a value of an Arg *may* be provided:
+
+     double LangDouble(Arg)
+     int LangInt(Arg)
+     long LangLong(Arg)
+     int LangIsList(Arg arg) 
+
+The function LangIsList() is supported only partially under *TCL*, since
+there is no data types. It checks whether there is a space inside the
+string `arg'.
+
+
+Assigning numbers to Args
+-------------------------
+
+While LangSetDouble() and LangSetInt() are supported ways to assign
+numbers to assign an integer value to a variable, for the sake of
+efficiency under *TCL* it is supposed that the destination of these
+commands was massaged before the call so it contains a long enough
+string to sprintf() the numbers inside it. If you are going to
+immediately use the resulting Arg, the best way to do this is to declare
+a buffer in the beginning of a block by
+
+     dArgBuffer;
+
+and assign this buffer to the Arg by
+
+     void LangSetDefaultBuffer(Arg *)
+
+You can also create the buffer(s) manually and assign them using
+
+     void LangSetBuffer(Arg *, char *)
+
+This is the only choice if you need to assign numeric values to several
+Args simultaneously. The advantage of the first approach is that the
+above declarations can be made nops in different languages.
+
+Note that if you apply `LangSetDefaultBuffer' to an Arg that contains
+some value, you can create a leak if you do not free that Arg
+first. This is a non-problem in real languages, but can be a trouble in
+`TCL', unless you use only the above API.
+
+
+Creating new Args
+-----------------
+
+The API for creating a new Arg is
+
+     void LangNewArg(Arg *, LangFreeProc *)
+
+The API for creating a new Arg is absent. Just initialize Arg to be
+NULL, and apply one of `LangSet...' methods.
+
+After you use this Arg, it should be freed thusly:
+
+`LangFreeArg(arg, freeProc)'.
+
+
+Evaluating a list
+-----------------
+
+Use
+
+     int LangArgEval(Tcl_Interp *, Arg arg)
+
+Here `arg' should be a list to evaluate, in particular, the first
+element should be a `LangCallback' massaged to be an Arg. The arguments
+can be send to the subroutine by reference or by value in different
+languages.
+
+
+Getting result as Arg
+---------------------
+
+Use `Tcl_ArgResult'. It is not guaranteed that result survives this
+operation, so the Arg you get should be the only mean to access the data
+from this moment on. After you use this Arg, you should free it with
+`freeProc' `LANG_DYNAMIC' (you can do LangSet...() in between).
+
+
+
+
+File: pm.info, Node: Tk/widgets, Next: UNIVERSAL, Prev: Tk/pTk, Up: Module List
+
+preload widget classes
+**********************
+
+
+
+NAME
+====
+
+Tk::widgets - preload widget classes
+
+
+SYNOPSIS
+========
+
+     use Tk::widgets qw(Button Label Frame);
+
+
+DESCRIPTION
+===========
+
+Does a 'require Tk::Foo' for each 'Foo' in the list.  May speed startup
+by avoiding AUTOLOADs.
+
+
+
+
+File: pm.info, Node: UNIVERSAL, Next: URI/Escape, Prev: Tk/widgets, Up: Module List
+
+base class for ALL classes (blessed references)
+***********************************************
+
+
+
+NAME
+====
+
+UNIVERSAL - base class for ALL classes (blessed references)
+
+
+SYNOPSIS
+========
+
+     $io = $fd->isa("IO::Handle");
+     $sub = $obj->can('print');
+
+     $yes = UNIVERSAL::isa($ref, "HASH");
+
+
+DESCRIPTION
+===========
+
+UNIVERSAL is the base class which all bless references will inherit
+from, see *Note Perlobj: (perl.info)perlobj,
+
+UNIVERSAL provides the following methods
+
+isa ( TYPE )
+     isa returns *true* if `REF' is blessed into package TYPE or
+     inherits from package TYPE.
+
+     isa can be called as either a static or object method call.
+
+can ( METHOD )
+     can checks if the object has a method called `METHOD'. If it does
+     then a reference to the sub is returned. If it does not then undef
+     is returned.
+
+     can can be called as either a static or object method call.
+
+VERSION ( [ REQUIRE ] )
+     VERSION will return the value of the variable `$VERSION' in the
+     package the object is blessed into. If `REQUIRE' is given then it
+     will do a comparison and die if the package version is not greater
+     than or equal to `REQUIRE'.
+
+     VERSION can be called as either a static or object method call.
+
+The isa and can methods can also be called as subroutines
+
+UNIVERSAL::isa ( VAL, TYPE )
+     isa returns *true* if the first argument is a reference and either
+     of the following statements is true.
+
+     @asis{}
+     
+          `VAL' is a blessed reference and is blessed into package TYPE
+          or inherits from package TYPE
+
+     @asis{}
+     
+          `VAL' is a reference to a TYPE of perl variable (er 'HASH')
+
+UNIVERSAL::can ( VAL, METHOD )
+     If `VAL' is a blessed reference which has a method called `METHOD',
+     can returns a reference to the subroutine.  If `VAL' is not a
+     blessed reference, or if it does not have a method `METHOD', undef
+     is returned.
+
+These subroutines should *not* be imported via `use UNIVERSAL qw(...)'.
+If you want simple local access to them you can do
+
+     *isa = \&UNIVERSAL::isa;
+
+to import isa into your package.
+
+
+
+

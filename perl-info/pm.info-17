@@ -1,0 +1,1722 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Date/Parse, Next: Devel/CallerItem, Prev: Date/Manip, Up: Module List
+
+Parse date strings into time values
+***********************************
+
+
+
+NAME
+====
+
+Date::Parse - Parse date strings into time values
+
+
+SYNOPSIS
+========
+
+     use Date::Parse;
+
+     $time = str2time($date);
+
+     ($ss,$mm,$hh,$day,$month,$year,$zone) = strptime($date);
+
+
+DESCRIPTION
+===========
+
+`Date::Parse' provides two routines for parsing date strings into time
+values.
+
+str2time(DATE [, ZONE])
+     `str2time' parses DATE and returns a unix time value, or undef upon
+     failure.  `ZONE', if given, specifies the timezone to assume when
+     parsing if the date string does not specify a timezome.
+
+strptime(DATE [, ZONE])
+     `strptime' takes the same arguments as str2time but returns an
+     array of values `($ss,$mm,$hh,$day,$month,$year,$zone)'. Elements
+     are only defined if they could be extracted from the date
+     string. The `$zone' element is the timezone offset in seconds from
+     GMT. An empty array is returned upon failure.
+
+
+MULTI-LANGUAGE SUPPORT
+======================
+
+Date::Parse is capable of parsing dates in several languages, these are
+English, French, German and Italian. Changing the language is done via a
+static method call, for example
+
+     Date::Parse->language('German');
+
+will cause Date::Parse to attempt to parse any subsequent dates in
+German.
+
+This is only a first pass, I am considering changing this to be
+
+     $lang = Date::Language->new('German');
+     $lang->str2time("25 Jun 1996 21:09:55 +0100");
+
+I am open to suggestions on this.
+
+
+AUTHOR
+======
+
+Graham Barr <Graham.Barr@tiuk.ti.com>
+
+
+REVISION
+========
+
+$Revision: 2.6 $
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Devel/CallerItem, Next: Devel/CoreStack, Prev: Date/Parse, Up: Module List
+
+An object representing a function call from the stack of function calls.
+************************************************************************
+
+
+
+NAME
+====
+
+Devel::CallerItem - An object representing a function call from the
+stack of function calls.
+
+
+SYNOPSIS
+========
+
+Usage:
+
+     require Devel::CallerItem;
+
+     $call = Devel::CallerItem->from_depth($depth) || return;
+     $passed_arguments_ref = $call->argument_list_ref();
+     $callpack = $call->pack();
+     $callfile = $call->file();
+     $callline = $call->line();
+     $callsub = $call->subroutine();
+     $bool = $call->has_args();
+     $bool = $call->wants_array();
+     ($arg_ref,@caller) = $call->as_array();
+     $call_string = $call->as_string($print_level);
+     $passed_arguments_string = $call->arguments_as_string();
+
+     $printable_arg = Devel::CallerItem->printable_arg($arg,$print_level);
+
+
+DESCRIPTION
+===========
+
+Devel::CallerItem objects hold all the information about a specific
+function call on the stack. The information is basically that obtained
+from caller and @DB::args, packaged into an object. This comes with some
+useful methods to print the object in a nice way.
+
+
+Methods Available:
+------------------
+
+->from_depth(DEPTH)
+     This method is the constructor for the class. DEPTH is a number,
+     corresponding to the stack level as used by caller. The following
+     two calls are equivalent in terms of what gets put into '@caller'
+
+          @caller = caller($DEPTH);
+          ($arg_ref,@caller) = Devel::CallerItem->from_depth($DEPTH)->as_array();
+
+->argument_list_ref()
+     Returns a reference to an array holding the elements actually
+     passed to the function on the stack that makes up the function
+     call.
+
+     If the function was called as '&func;', then this array is not
+     empty, it holds the array that was passed down to the function
+     'func'.
+
+->pack()
+     The package from which the function was called.
+
+->file()
+     The file from which the function was called.
+
+->line()
+     The line from which the function was called.
+
+->subroutine()
+     The fully qualified package name of the function that was called.
+
+->has_args()
+     Boolean indicating whether the function was called with arguments.
+
+->wants_array()
+     Boolean indicating the context in which the function was called.
+
+->as_array()
+     Equivalent to the following:
+
+          ($call->argument_list_ref(),$call->pack(),$call->file(),
+              $call->line(),$call->subroutine(),$call->has_args(),
+              $call->wants_array());
+
+->as_string(PRINT_LEVEL)
+     Returns the object in string format suitable for printing a fully
+     informative message about the function call. Looks like one of the
+     following:
+
+          $ = func(args) called from FILE line LINE;
+          $ = &func called from FILE line LINE;
+          @ = func(args) called from FILE line LINE;
+          @ = &func called from FILE line LINE;
+
+     giving the context (scalar - $, array - @) and whether it was
+     called with arguments or without (&). PRINT_LEVEL determines the
+     level of detail printed about the arguments to the function - see
+     'printable_arg' below.
+
+->arguments_as_string(PRINT_LEVEL)
+     Returns a string representing the arguments held in the
+     argument_list_ref. Equivalent to calling 'printable_arg' for each
+     argument and joining them with commas.
+
+->printable_arg(ARG,PRINT_LEVEL)
+     Renders ARG printable. PRINT_LEVEL affects the detail of what is
+     printed. There are three levels, 0 or 1 or 2. (Currently anything
+     other than these values is treated as a '2', but this is an
+     unsupported feature an is likely to change if any further levels
+     are added - so use 0/1/2 to be safe.)
+
+     Level 0 makes strings printable, but scalars which return refs are
+     just stringified - i.e. an argument which is like [33,{'g' => 55}]
+     would just appear as something like 'ARRAY(0x9882c)'. This is the
+     default.
+
+     At level 1, an argument which is like [33,{'g' => 55}] would be
+     fully expanded to '[33,{'g' => 55}]', but any scalar which is
+     repeated in the arguments is just stringified to something like
+     'ARRAY(0x9882c)'.  i.e. if you had '$a = bless [],A;$b
+     =[$a];$a->[0]=$b;', which is a recursive object, then '$a' would be
+     printed as '[[A=ARRAY(0x83038)]]'.
+
+     Finally, at the highest level, arguments are printed with an
+     associated variable and bless statement if needed - so with '$a'
+     above you would get $a printed as: '($v1 = bless [($v2 = [$v1])],
+     A)'. NOTE that this does not actually rebuild '$a' in perl code -
+     perl parses this as having $v1 empty in internal array - it is only
+     assigned to after the outer anonymous array is built. This
+     nomenclature is used purely to make explicit any recursive or
+     multiply passed arguments - this sort of level of detail is needed
+     on occasion, but there is a clear cost in clarity.
+
+     NOTE that the format of the printed out items that depends on the
+     PRINT_LEVEL is likely to change in future versions when a
+     standardized module for printing variables comes out.
+
+
+EXAMPLE
+=======
+
+The following is a simple example, illustrating the three levels of
+detail available using the print_level settings, and can be executed
+using `perl -x Devel/CallerItem.pm'
+
+#!perl
+    
+
+     require Devel::CallerItem;
+
+     $a="pp";
+     $c = bless [], A;
+     $d = [$c];
+     $c->[0] = $d;
+     sub level0 {
+     	print Devel::CallerItem->from_depth(0)->as_string(0),"\n"
+     }
+     sub level1 {
+     	print Devel::CallerItem->from_depth(0)->as_string(1),"\n"
+     }
+     sub level2 {
+     	print Devel::CallerItem->from_depth(0)->as_string(2),"\n"
+     }
+
+     level0('hi',21,[44,[66,{"q","hi"},\$a],$c]);
+     level1('hi',21,[44,[66,{"q","hi"},\$a],$c]);
+     level2('hi',21,[44,[66,{"q","hi"},\$a],$c]);
+
+__END__
+
+
+AUTHOR
+======
+
+Jack Shirazi (though the difficult bits were taken from sigtrap)
+
+     Copyright (c) 1995 Jack Shirazi. All rights reserved.
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+
+MODIFICATION HISTORY
+====================
+
+Version 1.0, 31st July - JS
+
+
+
+
+File: pm.info, Node: Devel/CoreStack, Next: Devel/DProf, Prev: Devel/CallerItem, Up: Module List
+
+try to generate a stack dump from a core file
+*********************************************
+
+
+
+NAME
+====
+
+Devel::CoreStack - try to generate a stack dump from a core file
+
+
+SYNOPSIS
+========
+
+     perl -MDevel::CoreStack -e 'stack'
+
+     perl -MDevel::CoreStack -e 'stack("../myperl", "./mycore", "debugger")'
+
+
+DESCRIPTION
+===========
+
+This module attempts to generate a stack dump from a core file by
+locating the best available debugger (if any) and running it with the
+appropriate arguments and command script.
+
+
+
+
+File: pm.info, Node: Devel/DProf, Next: Devel/DebugInit, Prev: Devel/CoreStack, Up: Module List
+
+a Perl code profiler
+********************
+
+
+
+NAME
+====
+
+Devel::DProf - a Perl code profiler
+
+
+SYNOPSIS
+========
+
+     perl5 -d:DProf test.pl
+
+
+DESCRIPTION
+===========
+
+The Devel::DProf package is a Perl code profiler.  This will collect
+information on the execution time of a Perl script and of the subs in
+that script.  This information can be used to determine which
+subroutines are using the most time and which subroutines are being
+called most often.  This information can also be used to create an
+execution graph of the script, showing subroutine relationships.
+
+To profile a Perl script run the perl interpreter with the -d debugging
+switch.  The profiler uses the debugging hooks.  So to profile script
+`test.pl' the following command should be used:
+
+     perl5 -d:DProf test.pl
+
+When the script terminates the profiler will dump the profile
+information to a file called `tmon.out'.  A tool like *dprofpp* can be
+used to interpret the information which is in that profile.  The
+following command will print the top 15 subroutines which used the most
+time:
+
+     dprofpp
+
+To print an execution graph of the subroutines in the script use the
+following command:
+
+     dprofpp -T
+
+Consult `dprofpp' in this node for other options.
+
+
+PROFILE FORMAT
+==============
+
+The profile is a text file which looks like this:
+
+     #fOrTyTwO
+     $hz=100;
+     $XS_VERSION='DProf 19970606';
+     # All values are given in HZ
+     $rrun_utime=2; $rrun_stime=0; $rrun_rtime=7
+     PART2
+     + 26 28 566822884 DynaLoader::import
+     - 26 28 566822884 DynaLoader::import
+     + 27 28 566822885 main::bar
+     - 27 28 566822886 main::bar
+     + 27 28 566822886 main::baz
+     + 27 28 566822887 main::bar
+     - 27 28 566822888 main::bar
+     [....]
+
+The first line is the magic number.  The second line is the hertz value,
+or clock ticks, of the machine where the profile was collected.  The
+third line is the name and version identifier of the tool which created
+the profile.  The fourth line is a comment.  The fifth line contains
+three variables holding the user time, system time, and realtime of the
+process while it was being profiled.  The sixth line indicates the
+beginning of the sub entry/exit profile section.
+
+The columns in *PART2* are:
+
+     sub entry(+)/exit(-) mark
+     app's user time at sub entry/exit mark, in ticks
+     app's system time at sub entry/exit mark, in ticks
+     app's realtime at sub entry/exit mark, in ticks
+     fully-qualified sub name, when possible
+
+
+AUTOLOAD
+========
+
+When Devel::DProf finds a call to an `&AUTOLOAD' subroutine it looks at
+the `$AUTOLOAD' variable to find the real name of the sub being called.
+See `"Autoloading"', *Note Perlsub: (perl.info)perlsub,.
+
+
+BUGS
+====
+
+XSUBs, builtin functions, and destructors cannot be measured by
+Devel::DProf.
+
+Mail bug reports and feature requests to the perl5-porters mailing list
+at `<perl5-porters@africa.nicoh.com>'.
+
+
+SEE ALSO
+========
+
+*Note Perl: (perl.info)perl,, `dprofpp' in this node, times(2)
+
+
+
+
+File: pm.info, Node: Devel/DebugInit, Next: Devel/DebugInit/GDB, Prev: Devel/DProf, Up: Module List
+
+Perl extension for creating a debugger initialization files from C header file macros
+*************************************************************************************
+
+
+
+NAME
+====
+
+Devel::DebugInit - Perl extension for creating a debugger initialization
+files from C header file macros
+
+
+SYNOPSIS
+========
+
+     use Devel::DebugInit::GDB;
+     my $gdb = new Devel::DebugInit::GDB 'filename' => "/my/path/to/library.h";
+     $gdb->print("/my/path/to/library/.gdbinit");
+
+
+DESCRIPTION
+===========
+
+This module attempts to give developers an extremely simple and
+automated way of creating debugger initialization files specific for a
+given project. These initialization files contain user-defined functions
+built from header file macro definitions.
+
+By calling new(), the files specified by the 'filenames' parameter is
+parsed by the C preprocessor, and all macros #define'd in the file (and
+if desired, all macros #define'd in all files #include'd in that file),
+will be parsed and expanded. By then calling the print() method, these
+macros can be written out to an output file in the format of
+user-defined functions specific for that debugger.
+
+By automating the process, a new file can be created whenever the code
+of a project changes, and that way there will not be antiquated copies
+lying around to trap the unwary.
+
+
+NOTES
+=====
+
+This module requires the use of one of the debugger specific backend
+modules, such as Devel::DebugInit::GDB, which supply output routines
+which are specific for that debugger. It also requires both the C::Scan
+and Data::Flow modules and will not function without them.
+
+
+WHY CARE?
+=========
+
+Debugger initialization files can contain user-defined functions that
+make doing complicated or repetitive actions easier. Normally, from
+within the debugger a user can evaluate any C function call. But for a
+number of reasons, many projects use C preprocessor macros (#define
+statements) in place of an actual C function call. The use of macros
+instead of function calls is transparent during compilation, but most
+debuggers do not allow access to macros, and so the user must type in
+the code by hand each time s/he wants to use a macro, or must build an
+initialization file by hand. Retyping is tedious, but hand coding the
+initialization file may result in antiquated code when the project
+changes. By automating the process, I hope to alleviate a few headaches
+for developers.
+
+There are two types of macros: macros with arguments, e.g:
+
+     #define min(x,y) ((x) < (y) ? (x) : (y))
+
+and macros without arguments (simple macros), e.g.
+
+     #define PI 3.14
+
+Of the two types, macros with arguments are more useful from within a
+debugger, and so, printing of simple macros is turned off by default
+(but see `INTERNALS' in this node for how to turn them on).
+
+
+INTERNALS
+=========
+
+For the casual user the defaults, and the three lines given in the
+`SYNOPSIS' in this node should be enough. But for the determined user, a
+few details of how things happen under the hood might be useful in
+customizing the output of this module.
+
+
+How Devel::DebugInit Parses Files
+---------------------------------
+
+When new() is called to create an instance of a Devel::DebugInit, the
+following steps occur. The C preprocessor is invoked on the file with
+the 'macros only' flag set (this flag defaults to '-dM' and if this does
+not work on your system, change the value of $C::Scan::MACROS_ONLY and
+let the author know, and he will try and fix it :-). This lists all
+macros #define'd in the file PLUS all macros #define'd in all files
+#include'd by that file (both the system files <types.h> and the user
+files "mystring.h"). This may include many more macros than is desired
+(not everybody really wants '_LINUX_C_LIB_VERSION_MAJOR' as a user
+defined function in their debugger...), so there are 3 mode flags
+defined that allow the user to control which macros are included:
+MACROS_ALL, MACROS_LOCAL, and MACROS_NONE.
+
+
+MACROS_ALL, MACROS_LOCAL, and MACROS_NONE
+-----------------------------------------
+
+These flags can be used to control what macros go into the print tables
+that Devel::DebugInit uses to create the output file. The MACROS_ALL
+flag instructs DebugInit to included all macros of that type in the
+print table. To avoid printing out all of the system level macros that
+can get #include'd you can use the MACROS_LOCAL flag. This indicates
+that only macros actually #define'd in that file should be stored, and
+macros #define'd in other files which are #include'd into the file
+should NOT be stored (they are, however, still made available for
+expansion purposes). The MACROS_LOCAL flag is the default for macros
+with arguments. Finally, the MACROS_NONE flag indicates that no macros
+of that type should be put in the print table. The MACROS_NONE flag is
+the default for the simple macros.
+
+
+Print Tables and Lookup Tables
+------------------------------
+
+Devel::DebugInit has two separate groups of tables that it uses - lookup
+tables for expanding macro definitions and print tables for printing the
+fully expanded macros. The lookup tables always include all macros that
+a given file has access to, but the print tables may have many
+fewer. Because the user-defined functions of some debuggers can be very
+limited, Devel::DebugInit fully expands all macros stored in the print
+tables before writing them to a file. In this way, any macro which
+utilized other macros in its body will have those expanded in place. So
+by the end of the expansion process, all macros will be self defined and
+not rely on any other macro definition. Each macro in the print tables
+is expanded in this manner using the definitions in the lookup
+tables. Using separate lookup tables and print tables allows users to
+print out only those macros they care about while still be able to fully
+expand all macros.
+
+
+METHODS
+=======
+
+
+new()
+-----
+
+Returns a blessed reference to an instance of a Devel::DebugInit
+subclass. Each Devel::DebugInit subclass takes a list of option value
+pairs as optional arguments to new. Currently there are three recognized
+options 'filenames', 'macros_args', and 'macros_no_args'. The
+'filenames' option controls which file is used for creating the
+output. The 'macros_args' option controls what level of printing should
+be done for macros with arguments. The 'macro_no_args' option controls
+printing for simple macros. For example, to make a .gdbinit file useful
+for debugging perl or perl XSUBs try the following:
+
+     $gdb = new Devel::DebugInit::GDB 
+         'filenames' => ["$Config{'archlib'}/CORE/perl.h"], 
+         'macros_args'    => $Devel::DebugInit::MACROS_ALL,
+         'macros_no_args' => $Devel::DebugInit::MACROS_ALL;
+
+     $gdb->print();
+
+When printed, this will create a file that is about 110k in size and
+have about 1750 user-defined functions. So it may be useful to limit it
+in scope somewhat. It is not clear that simple macros are useful from
+within a debugger, so the default value for 'macros_no_args' is
+$Devel::DebugInit::MACROS_NONE, and to avoid printing all system level
+macros, the default for 'macros_args' is
+$Devel::DebugInit::MACROS_LOCAL. NOTE that by using MACROS_LOCAL, you
+will inhibit printing of all macros not #define'd in the file listed,
+both from local header files and system headers alike. To get around
+this multiple files can be included in the array ref for the 'filenames'
+option. Each files macros are added to a common lookup table, but only
+the macros #defined in each file are printed. So could do the following:
+
+     $gdb = new Devel::DebugInit::GDB 
+         'filenames' => ["$Config{'archlib'}/CORE/perl.h",
+     		       "$Config{'archlib'}/CORE/sv.h", 
+     		       "$Config{'archlib'}/CORE/XSUB.h"], 
+         'macros_args'    => $Devel::DebugInit::MACROS_LOCAL,
+         'macros_no_args' => $Devel::DebugInit::MACROS_NONE;
+
+     $gdb->print();
+
+This reduces the output file to only 21k and 250 or so macros.
+
+
+print() =head2 print($filename)
+-------------------------------
+
+This function is overloaded by each of the debugger specific subclasses
+to produce output recognized by that debugger. If $filename is not
+given, it defaults to something reasonable for that debugger. All macros
+in the print table for each macro type (macros with arguments and simple
+macros) will be printed if it passes scrutiny by the `scan()' in this
+node method. See the `INTERNALS' in this node section for more details
+on controlling what macros are stored in the print tables.
+
+
+scan()
+------
+
+The only other method of interest to users of this module is the scan()
+method which is also overloaded by each backend subclass. This method is
+called by print() to ascertain whether or not a given macro should be
+written out to the output file. By default, scan() stops undefined
+macros, blank macros (e.g. macros such as <#define VMS> which are
+usually just conditional compiler flags and of no use in a debugger),
+and macros with names that conflict with built-in debugger
+commands. Users desiring a very fine grained control over the output can
+override the builtin scan() with their own on a per need basis. For
+example:
+
+     package myGDB;
+     use Devel::DebugInit::GDB;
+     @myGDB::ISA = (Devel::DebugInit::GDB);
+
+     sub scan {
+       my ($gdb,$key,$macro) = @_;
+
+       #first give the superclass scan a chance 
+       return 0 unless $gdb->SUPER::scan(@_);
+
+       # dont' print out any macros with a leading '_'
+       return 0 if $macro =~ /^_/;
+
+       # print the rest
+       return 1;
+     }
+
+
+AUTHOR
+======
+
+Jason E. Stewart, jasons@cs.unm.edu
+
+
+SEE ALSO
+========
+
+perl(1), Devel::DebugInit::GDB(3), C::Scan(3), and Data::Flow(3).
+
+
+
+
+File: pm.info, Node: Devel/DebugInit/GDB, Next: Devel/DumpStack, Prev: Devel/DebugInit, Up: Module List
+
+Perl extension for creating .gdbinit file from C header file macros
+*******************************************************************
+
+
+
+NAME
+====
+
+Devel::DebugInit::GDB - Perl extension for creating .gdbinit file from C
+header file macros
+
+
+SYNOPSIS
+========
+
+     use Devel::DebugInit::GDB;
+     use Config;
+     my $g = new Devel::DebugInit::GDB "filename => $Config{'archlib'}/CORE/perl.h";
+
+     $g->print("~/perl5.00403/.gdbinit");
+
+
+DESCRIPTION
+===========
+
+This module is a backend for the GNU debugger, gdb, that is used
+together with the generic Devel::DebugInit front end to produce an
+initialization file for gdb. This module provides the output routines
+that are specific for gdb. See *Note Devel/DebugInit: Devel/DebugInit,
+for more information.
+
+
+METHODS
+=======
+
+
+print() =head2 print($filename)
+-------------------------------
+
+This method prints out the macros to $filename, which defaults to
+"./gdbinit".  It first prints out any macros without arguments (if
+enabled, see `INTERNALS', *Note Devel/DebugInit: Devel/DebugInit, for
+more info), and then it prints any macros with arguments.
+
+
+scan($name,$macro)
+------------------
+
+This is used by the print function to determine if $macro should be
+printed or not. It returns 0 if the macro should NOT be
+printed. Currently, the method rejects undefined macros (this is
+possible if the user specified printing of local macros only), empty
+macros (typical compiler flags like -DDEBUG, or #define linux), macros
+whose names begin with '_', as well as any macro whose name is a
+built-in GDB command.
+
+This function can be overloaded by the user to more rigidly restrict the
+output of print. For example:
+
+     package myGDB;
+     use Devel::DebugInit::GDB;
+     @myGDB::ISA = (Devel::DebugInit::GDB);
+
+     sub scan {
+       my ($gdb,$key,$macro) = @_;
+
+       #first give the superclass scan a chance 
+       return 0 unless $gdb->SUPER::scan(@_);
+
+       # dont' print out any macros beginning with 'rfsf_'
+       return 0 if $macro =~ /^rfsf_/;
+
+       # print the rest
+       return 1;
+     }
+
+
+AUTHOR
+======
+
+Jason E. Stewart, jasons@cs.unm.edu
+
+
+SEE ALSO
+========
+
+perl(1), Devel::DebugInit(3).
+
+
+
+
+File: pm.info, Node: Devel/DumpStack, Next: Devel/Peek, Prev: Devel/DebugInit/GDB, Up: Module List
+
+Access to the current stack of subroutine calls, and dumping the stack in a readable form. See also *Note Sigtrap: sigtrap,.
+****************************************************************************************************************************
+
+
+
+NAME
+====
+
+Devel::DumpStack - Access to the current stack of subroutine calls, and
+dumping the stack in a readable form. See also *Note Sigtrap: sigtrap,.
+
+
+SYNOPSIS
+========
+
+Usage:
+
+     use Devel::DumpStack ...;
+
+     dump_stack($depth,$indent,$print_level); #Prints to STDERR
+     $stack = stack_as_string($depth,$indent,$print_level);
+     $call_string = call_at_depth($depth,$print_level);
+     ($args,$pack,$file,$line,$sub,$has_args,$wantarray) = caller2($depth);
+
+     $printable_arg = printable_arg($arg,$print_level);
+
+     dump_on_die($print_level); #dumps stack to STDERR on a 'die'
+
+
+DESCRIPTION
+===========
+
+Provides functions to access and dump the current stack of subroutine
+calls.
+
+
+Functions Available:
+--------------------
+
+(Note that only 'dump_stack' is exported by default.)
+
+dump_stack(DEPTH, INDENT, PRINT_LEVEL)
+dump_stack(DEPTH, INDENT)
+dump_stack(DEPTH)
+dump_stack()
+     This prints the current functions stack to STDERR.  DEPTH is the
+     depth of the stack to print from - equivalent to the depth in
+     caller(). Note that you can use negative numbers for DEPTH if you
+     want to include the dump_stack call and calls under it on the stack
+     print.
+
+     PRINT_LEVEL is 0, 1 or 2, depending on the level of detail you want
+     printed out for arguments. See *Note Devel/CallerItem:
+     Devel/CallerItem,.
+
+     The lines printed are in one of the appropriate formats:
+
+          $ = func(args) called from FILE line LINE;
+          $ = &func called from FILE line LINE;
+          @ = func(args) called from FILE line LINE;
+          @ = &func called from FILE line LINE;
+
+     giving the context (scalar - $, array - @) and whether it was
+     called with arguments or without (&).
+
+     INDENT is a string which is appended to the beginning of each line
+     printed out.
+
+stack_as_string(DEPTH, INDENT, PRINT_LEVEL)
+stack_as_string(DEPTH, INDENT)
+stack_as_string(DEPTH)
+stack_as_string()
+     Exactly as dump_stack, but instead of printing to STDERR, returns
+     the stack as a string.
+
+dump_on_die(PRINT_LEVEL)
+dump_on_die()
+     Calling this function inserts a handler for any 'die' calls, so
+     that when a 'die' is called, the current stack is first printed to
+     STDERR before exiting the process. You probably don't want to do
+     this if you are die'ing in an eval. PRINT_LEVEL is as above.
+
+printable_arg(ANYTHING, PRINT_LEVEL)
+printable_arg(ANYTHING)
+     Renders its argument printable. PRINT_LEVEL is as above.
+
+caller2(DEPTH)
+caller2()
+     Returns exactly what caller returns, except that the reference to
+     the argument array for the call at that depth is prepended to the
+     array - i.e. the first element of the returned array is a reference
+     to the argument array of the function called at depth DEPTH, and
+     the subsequent elements are the elements returned by caller, in the
+     same order. Returns undef if there is no call at depth DEPTH.
+
+call_at_depth(DEPTH, PRINT_LEVEL)
+call_at_depth(DEPTH)
+call_at_depth()
+     Returns a string in the format as given in dump_stack above, but
+     just for the single function call at the given DEPTH.  PRINT_LEVEL
+     is as above.
+
+
+EXAMPLE
+=======
+
+The following is a simple example, and can be executed using `perl -x
+Devel/DumpStack.pm'
+
+#!perl
+    
+
+     use Devel::DumpStack qw(dump_stack);
+
+     $a='pp';
+     $c = bless [], A;
+     $d = [$c];
+     $c->[0] = $d;
+     sub a { dump_stack(0,'    ',1); print STDERR "\n";}
+     sub c { $scalar_context =  a(@_)}
+     sub b { c([44,[66,{'q','hi'},\$a],$c])}
+
+     @arr_context = &b;
+
+     __END__
+
+
+AUTHOR
+======
+
+Jack Shirazi
+
+     Copyright (c) 1995 Jack Shirazi. All rights reserved.
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+
+MODIFICATION HISTORY
+====================
+
+Version 1.1, 31st July - JS
+
+Extracted out the Devel::CallerItem module, and added various functions
+and print level extensions. NOTE that the module produces a slightly
+different effect from version 1.0 - the DEPTH parameters are now all set
+to work as if the function being called is a replacement for caller -
+this means that the depths in version 1.0 are 1 or 2 different from the
+versions in 1.1. I felt the change was worth it - now all calls with
+DEPTH are consistent.
+
+Base version, 1.0, 24th April - only posted to perl-porters - JS.
+
+
+
+
+File: pm.info, Node: Devel/Peek, Next: Devel/SelfStubber, Prev: Devel/DumpStack, Up: Module List
+
+A data debugging tool for the XS programmer
+*******************************************
+
+
+
+NAME
+====
+
+Devel::Peek - A data debugging tool for the XS programmer
+
+
+SYNOPSIS
+========
+
+     use Devel::Peek;
+     Dump( $a );
+     Dump( $a, 5 );
+     DumpArray( 5, $a, $b, ... );
+     	mstat "Point 5";
+
+
+DESCRIPTION
+===========
+
+Devel::Peek contains functions which allows raw Perl datatypes to be
+manipulated from a Perl script.  This is used by those who do XS
+programming to check that the data they are sending from C to Perl looks
+as they think it should look.  The trick, then, is to know what the raw
+datatype is supposed to look like when it gets to Perl.  This document
+offers some tips and hints to describe good and bad raw data.
+
+It is very possible that this document will fall far short of being
+useful to the casual reader.  The reader is expected to understand the
+material in the first few sections of *Note Perlguts:
+(perl.info)perlguts,.
+
+Devel::Peek supplies a `Dump()' function which can dump a raw Perl
+datatype, and `mstat("marker")' function to report on memory usage (if
+perl is compiled with corresponding option).  The function DeadCode()
+provides statistics on the data "frozen" into inactive `CV'.
+Devel::Peek also supplies `SvREFCNT()', `SvREFCNT_inc()', and
+`SvREFCNT_dec()' which can query, increment, and decrement reference
+counts on SVs.  This document will take a passive, and safe, approach to
+data debugging and for that it will describe only the `Dump()' function.
+
+Function `DumpArray()' allows dumping of multiple values (useful when
+you need to analize returns of functions).
+
+
+EXAMPLES
+========
+
+The following examples don't attempt to show everything as that would be
+a monumental task, and, frankly, we don't want this manpage to be an
+internals document for Perl.  The examples do demonstrate some basics of
+the raw Perl datatypes, and should suffice to get most determined people
+on their way.  There are no guidewires or safety nets, nor blazed
+trails, so be prepared to travel alone from this point and on and, if at
+all possible, don't fall into the quicksand (it's bad for business).
+
+Oh, one final bit of advice: take *Note Perlguts: (perl.info)perlguts,
+with you.  When you return we expect to see it well-thumbed.
+
+
+A simple scalar string
+----------------------
+
+Let's begin by looking a simple scalar which is holding a string.
+
+     use Devel::Peek 'Dump';
+     $a = "hello";
+     Dump $a;
+
+The output:
+
+     SV = PVIV(0xbc288)
+       REFCNT = 1
+       FLAGS = (POK,pPOK)
+       IV = 0
+       PV = 0xb2048 "hello"
+       CUR = 5
+       LEN = 6
+
+This says `$a' is an SV, a scalar.  The scalar is a PVIV, a string.  Its
+reference count is 1.  It has the `POK' flag set, meaning its current PV
+field is valid.  Because POK is set we look at the PV item to see what
+is in the scalar.  If the FLAGS had been IOK we would look at the IV
+item.  CUR indicates the number of characters in the PV.  LEN indicates
+the number of bytes requested for the PV (one more than CUR, in this
+case, because LEN includes an extra byte for the end-of-string marker).
+
+
+A simple scalar number
+----------------------
+
+If the scalar contains a number the raw SV will be leaner.
+
+     use Devel::Peek 'Dump';
+     $a = 42;
+     Dump $a;
+
+The output:
+
+     SV = IV(0xbc818)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 42
+
+This says `$a' is an SV, a scalar.  The scalar is an IV, a number.  Its
+reference count is 1.  It has the `IOK' flag set, meaning it is
+currently being evaluated as a number.  Because IOK is set we look at
+the IV item to see what is in the scalar.
+
+
+A simple scalar with an extra reference
+---------------------------------------
+
+If the scalar from the previous example had an extra reference:
+
+     use Devel::Peek 'Dump';
+     $a = 42;
+     $b = \$a;
+     Dump $a;
+
+The output:
+
+     SV = IV(0xbe860)
+       REFCNT = 2
+       FLAGS = (IOK,pIOK)
+       IV = 42
+
+Notice that this example differs from the previous example only in its
+reference count.  Compare this to the next example, where we dump `$b'
+instead of `$a'.
+
+
+A reference to a simple scalar
+------------------------------
+
+This shows what a reference looks like when it references a simple
+scalar.
+
+     use Devel::Peek 'Dump';
+     $a = 42;
+     $b = \$a;
+     Dump $b;
+
+The output:
+
+     SV = RV(0xf041c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xbab08
+     SV = IV(0xbe860)
+       REFCNT = 2
+       FLAGS = (IOK,pIOK)
+       IV = 42
+
+Starting from the top, this says `$b' is an SV.  The scalar is an RV, a
+reference.  It has the `ROK' flag set, meaning it is a reference.
+Because ROK is set we have an RV item rather than an IV or PV.  Notice
+that Dump follows the reference and shows us what `$b' was referencing.
+We see the same `$a' that we found in the previous example.
+
+Note that the value of `RV' coincides with the numbers we see when we
+stringify $b. The addresses inside RV() and IV() are addresses of `X***'
+structure which holds the current state of an `SV'. This address may
+change during lifetime of an SV.
+
+
+A reference to an array
+-----------------------
+
+This shows what a reference to an array looks like.
+
+     use Devel::Peek 'Dump';
+     $a = [42];
+     Dump $a;
+
+The output:
+
+     SV = RV(0xf041c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xb2850
+     SV = PVAV(0xbd448)
+       REFCNT = 1
+       FLAGS = ()
+       IV = 0
+       NV = 0
+       ARRAY = 0xb2048
+       ALLOC = 0xb2048
+       FILL = 0
+       MAX = 0
+       ARYLEN = 0x0
+       FLAGS = (REAL)
+     Elt No. 0 0xb5658
+     SV = IV(0xbe860)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 42
+
+This says `$a' is an SV and that it is an RV.  That RV points to another
+SV which is a PVAV, an array.  The array has one element, element zero,
+which is another SV. The field `FILL' above indicates the last element
+in the array, similar to `$#$a'.
+
+If `$a' pointed to an array of two elements then we would see the
+following.
+
+     use Devel::Peek 'Dump';
+     $a = [42,24];
+     Dump $a;
+
+The output:
+
+     SV = RV(0xf041c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xb2850
+     SV = PVAV(0xbd448)
+       REFCNT = 1
+       FLAGS = ()
+       IV = 0
+       NV = 0
+       ARRAY = 0xb2048
+       ALLOC = 0xb2048
+       FILL = 0
+       MAX = 0
+       ARYLEN = 0x0
+       FLAGS = (REAL)
+     Elt No. 0  0xb5658
+     SV = IV(0xbe860)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 42
+     Elt No. 1  0xb5680
+     SV = IV(0xbe818)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 24
+
+Note that `Dump' will not report all the elements in the array, only
+several first (depending on how deep it already went into the report
+tree).
+
+
+A reference to a hash
+---------------------
+
+The following shows the raw form of a reference to a hash.
+
+     use Devel::Peek 'Dump';
+     $a = {hello=>42};
+     Dump $a;
+
+The output:
+
+     SV = RV(0xf041c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xb2850
+     SV = PVHV(0xbd448)
+       REFCNT = 1
+       FLAGS = ()
+       IV = 1
+       NV = 0
+       ARRAY = 0xbd748
+       KEYS = 1
+       FILL = 1
+       MAX = 7
+       RITER = -1
+       EITER = 0x0
+     Elt "hello" => 0xbaaf0
+     SV = IV(0xbe860)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 42
+
+This shows `$a' is a reference pointing to an SV.  That SV is a PVHV, a
+hash. Fields RITER and EITER are used by ``each' in this node'.
+
+
+Dumping a large array or hash
+-----------------------------
+
+The `Dump()' function, by default, dumps up to 4 elements from a
+toplevel array or hash.  This number can be increased by supplying a
+second argument to the function.
+
+     use Devel::Peek 'Dump';
+     $a = [10,11,12,13,14];
+     Dump $a;
+
+Notice that `Dump()' prints only elements 10 through 13 in the above
+code.  The following code will print all of the elements.
+
+     use Devel::Peek 'Dump';
+     $a = [10,11,12,13,14];
+     Dump $a, 5;
+
+
+A reference to an SV which holds a C pointer
+--------------------------------------------
+
+This is what you really need to know as an XS programmer, of course.
+When an XSUB returns a pointer to a C structure that pointer is stored
+in an SV and a reference to that SV is placed on the XSUB stack.  So the
+output from an XSUB which uses something like the T_PTROBJ map might
+look something like this:
+
+     SV = RV(0xf381c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xb8ad8
+     SV = PVMG(0xbb3c8)
+       REFCNT = 1
+       FLAGS = (OBJECT,IOK,pIOK)
+       IV = 729160
+       NV = 0
+       PV = 0
+       STASH = 0xc1d10       "CookBookB::Opaque"
+
+This shows that we have an SV which is an RV.  That RV points at another
+SV.  In this case that second SV is a PVMG, a blessed scalar.  Because
+it is blessed it has the OBJECT flag set.  Note that an SV which holds a
+C pointer also has the `IOK' flag set.  The `STASH' is set to the
+package name which this SV was blessed into.
+
+The output from an XSUB which uses something like the T_PTRREF map,
+which doesn't bless the object, might look something like this:
+
+     SV = RV(0xf381c)
+       REFCNT = 1
+       FLAGS = (ROK)
+       RV = 0xb8ad8
+     SV = PVMG(0xbb3c8)
+       REFCNT = 1
+       FLAGS = (IOK,pIOK)
+       IV = 729160
+       NV = 0
+       PV = 0
+
+
+A reference to a subroutine
+---------------------------
+
+Looks like this:
+
+     SV = RV(0x798ec)
+       REFCNT = 1
+       FLAGS = (TEMP,ROK)
+       RV = 0x1d453c
+     SV = PVCV(0x1c768c)
+       REFCNT = 2
+       FLAGS = ()
+       IV = 0
+       NV = 0
+       COMP_STASH = 0x31068  "main"
+       START = 0xb20e0
+       ROOT = 0xbece0
+       XSUB = 0x0
+       XSUBANY = 0
+       GVGV::GV = 0x1d44e8   "MY" :: "top_targets"
+       FILEGV = 0x1fab74     "_<(eval 5)"
+       DEPTH = 0
+       PADLIST = 0x1c9338
+
+This shows that
+
+@asis{}
+     
+     the subroutine is not an XSUB (since `START' and `ROOT' are
+     non-zero, and `XSUB' is zero);
+
+@asis{}
+     
+     that it was compiled in the package `main';
+
+@asis{}
+     
+     under the name `MY::top_targets';
+
+@asis{}
+     
+     inside a 5th eval in the program;
+
+@asis{}
+     
+     it is not currently executed (see `DEPTH');
+
+@asis{}
+     
+     it has no prototype (`PROTOTYPE' field is missing).
+
+
+EXPORTS
+=======
+
+`Peek', `mstats', `DeadCode' by default. Additionally available
+SvREFCNT, SvREFCNT_inc, SvREFCNT_dec.
+
+
+BUGS
+====
+
+Readers have been known to skip important parts of *Note Perlguts:
+(perl.info)perlguts,, causing much frustration for all.
+
+
+SEE ALSO
+========
+
+*Note Perlguts: (perl.info)perlguts,, and *Note Perlguts: (perl.info)perlguts,, again.
+
+
+
+
+File: pm.info, Node: Devel/SelfStubber, Next: Devel/SmallProf, Prev: Devel/Peek, Up: Module List
+
+generate stubs for a SelfLoading module
+***************************************
+
+
+
+NAME
+====
+
+Devel::SelfStubber - generate stubs for a SelfLoading module
+
+
+SYNOPSIS
+========
+
+To generate just the stubs:
+
+     use Devel::SelfStubber;
+     Devel::SelfStubber->stub('MODULENAME','MY_LIB_DIR');
+
+or to generate the whole module with stubs inserted correctly
+
+     use Devel::SelfStubber;
+     $Devel::SelfStubber::JUST_STUBS=0;
+     Devel::SelfStubber->stub('MODULENAME','MY_LIB_DIR');
+
+MODULENAME is the Perl module name, e.g. Devel::SelfStubber, NOT
+'Devel/SelfStubber' or 'Devel/SelfStubber.pm'.
+
+MY_LIB_DIR defaults to '.' if not present.
+
+
+DESCRIPTION
+===========
+
+Devel::SelfStubber prints the stubs you need to put in the module before
+the __DATA__ token (or you can get it to print the entire module with
+stubs correctly placed). The stubs ensure that if a method is called, it
+will get loaded. They are needed specifically for inherited autoloaded
+methods.
+
+This is best explained using the following example:
+
+Assume four classes, A,B,C & D.
+
+A is the root class, B is a subclass of A, C is a subclass of B, and D
+is another subclass of A.
+
+     A
+                            / \
+                           B   D
+                          /
+                         C
+
+If D calls an autoloaded method 'foo' which is defined in class A, then
+the method is loaded into class A, then executed. If C then calls method
+'foo', and that method was reimplemented in class B, but set to be
+autoloaded, then the lookup mechanism never gets to the AUTOLOAD
+mechanism in B because it first finds the method already loaded in A,
+and so erroneously uses that. If the method foo had been stubbed in B,
+then the lookup mechanism would have found the stub, and correctly
+loaded and used the sub from B.
+
+So, for classes and subclasses to have inheritance correctly work with
+autoloading, you need to ensure stubs are loaded.
+
+The SelfLoader can load stubs automatically at module initialization
+with the statement 'SelfLoader->load_stubs()';, but you may wish to
+avoid having the stub loading overhead associated with your
+initialization (though note that the SelfLoader::load_stubs method will
+be called sooner or later - at latest when the first sub is being
+autoloaded). In this case, you can put the sub stubs before the __DATA__
+token. This can be done manually, but this module allows automatic
+generation of the stubs.
+
+By default it just prints the stubs, but you can set the global
+$Devel::SelfStubber::JUST_STUBS to 0 and it will print out the entire
+module with the stubs positioned correctly.
+
+At the very least, this is useful to see what the SelfLoader thinks are
+stubs - in order to ensure future versions of the SelfStubber remain in
+step with the SelfLoader, the SelfStubber actually uses the SelfLoader
+to determine which stubs are needed.
+
+
+
+
+File: pm.info, Node: Devel/SmallProf, Next: Devel/Symdump, Prev: Devel/SelfStubber, Up: Module List
+
+per-line Perl profiler
+**********************
+
+
+
+NAME
+====
+
+Devel::SmallProf - per-line Perl profiler
+
+
+SYNOPSIS
+========
+
+     perl5 -d:SmallProf test.pl
+
+
+DESCRIPTION
+===========
+
+The Devel::SmallProf is a small profiler which I find useful (or at
+least interesting :-) when used in conjuction with Devel::DProf.  It
+collects statistics on the run times of the lines in the various files
+being run.  Those statistics are placed in the file `smallprof.out' in
+one of two formats.  If `$DB::print_lines' is false (the default), it
+prints:
+
+     <num> <time> <file>:<line>
+
+where <num> is the number of times that the line was executed, <time> is
+the amount of time spent executing it and <file> and <line> are the
+filename and line number, respectively.
+
+If, on the other hand, `$DB::print_lines' is true, it print:
+
+     <num> <time> <text>
+
+where <num> and <time> are as above and <text> is the actual text of the
+executed line (read from the file).
+
+Eval lines print <num> and <time> like the others, but also print the
+package, the eval number and, if possible, the text of the line.  This
+is not affected by `$DB::print_lines'.
+
+The package uses the debugging hooks in Perl and thus needs the -d
+switch, so to profile `test.pl', use the command:
+
+     perl5 -d:SmallProf test.pl
+
+Once the script is done, the statistics in `smallprof.out' can be sorted
+to show which lines took the most time.  The output can be sorted to
+find which lines take the longest, either with the sort command:
+
+     sort -nrk 2 smallprof.out | less
+
+or a perl script:
+
+     open(PROF,"smallprof.out");
+     @sorted = sort {(split(/\s+/,$b))[2] <=> 
+                             (split(/\s+/,$a))[2]} <PROF>;
+             close PROF;
+     print join('',@sorted);
+
+
+NOTES
+=====
+
+   * Determining the accuracy or signifiance of the results is left as
+     an exercise for the reader.  I've tried to keep the timings pretty
+     much just to the profiled code, but no guarantees of any kind are
+     made.
+
+   * SmallProf depends on `syscall()' and `gettimeofday()' (see
+     `syscall', *Note Perlfunc: (perl.info)perlfunc,) to do its timings.
+     If your system lacks them SmallProf won't work.
+
+
+BUGS
+====
+
+The handling of evals is better than version 0.1, but still poor.  For
+some reason, the `@{'_<filename'}' array for some evals is empty.  When
+this is true, there isn't a lot that can be done.
+
+Comments, advice and questions are welcome.  If you see inefficent stuff
+in this module and have a better way, please let me know.
+
+
+AUTHOR
+======
+
+Ted Ashton <ashted@southern.edu>
+
+SmallProf was developed from code orignally posted to usenet by Philippe
+Verdret.  I've attempted to contact him but have had no success.
+
+Copyright (c) 1997 Ted Ashton
+
+This module is free software and can be redistributed and/or modified
+under the same terms as Perl itself.
+
+
+SEE ALSO
+========
+
+*Note Devel/DProf: Devel/DProf,, `gettimeofday()' in this node
+
+
+
+
+File: pm.info, Node: Devel/Symdump, Next: Devel/TraceFuncs, Prev: Devel/SmallProf, Up: Module List
+
+dump symbol names or the symbol table
+*************************************
+
+
+
+NAME
+====
+
+Devel::Symdump - dump symbol names or the symbol table
+
+
+SYNOPSIS
+========
+
+     # Constructor
+     require Devel::Symdump;
+     @packs = qw(some_package another_package);
+     $obj = Devel::Symdump->new(@packs);        # no recursion
+     $obj = Devel::Symdump->rnew(@packs);       # with recursion
+	
+     # Methods
+     @array = $obj->packages;
+     @array = $obj->scalars;
+     @array = $obj->arrays;
+     @array = $obj->hashs;
+     @array = $obj->functions;
+     @array = $obj->filehandles;  # deprecated, use ios instead
+     @array = $obj->dirhandles;   # deprecated, use ios instead
+     @array = $obj->ios;
+     @array = $obj->unknowns;
+	
+     $string = $obj->as_string;
+     $string = $obj->as_HTML;
+     $string = $obj1->diff($obj2);
+
+     $string = Devel::Symdump->isa_tree;    # or $obj->isa_tree
+     $string = Devel::Symdump->inh_tree;    # or $obj->inh_tree
+
+     # Methods with autogenerated objects
+     # all of those call new(@packs) internally
+     @array = Devel::Symdump->packages(@packs);
+     @array = Devel::Symdump->scalars(@packs);
+     @array = Devel::Symdump->arrays(@packs);
+     @array = Devel::Symdump->hashes(@packs);
+     @array = Devel::Symdump->functions(@packs);
+     @array = Devel::Symdump->ios(@packs);
+     @array = Devel::Symdump->unknowns(@packs);
+
+
+INCOMPATIBILITY ALERT
+=====================
+
+Perl 5.003 already offered the opportunity to test for the individual
+slots of a GLOB with the *GLOB{XXX} notation. Devel::Symdump version
+2.00 uses this method internally which means that the type of
+undefined values is recognized in general. Previous versions
+couldnE<39>t determine the type of undefined values, so the slot
+*unknowns* was invented. From version 2.00 this slot is still present
+but will usually not contain any elements.
+
+The interface has changed slightly between the perl versions 5.003 and
+5.004. To be precise, from perl5.003_11 the names of the members of a
+GLOB have changed. IO is the internal name for all kinds of input-output
+handles while `FILEHANDLE' and `DIRHANDLE' are deprecated.
+
+`Devel::Symdump' accordingly introduces the new method ios() which
+returns filehandles and directory handles. The old methods filehandles()
+and dirhandles() are still supported for a transitional period.  They
+will probably have to go in future versions.
+
+
+DESCRIPTION
+===========
+
+This little package serves to access the symbol table of perl.
+
+
+`Devel::Symdump->rnew(@packages)'
+---------------------------------
+
+returns a symbol table object for all subtrees below @packages.  Nested
+Modules are analyzed recursively. If no package is given as argument, it
+defaults to `main'. That means to get the whole symbol table, just do a
+`rnew' without arguments.
+
+
+`Devel::Symdump->new(@packages)'
+--------------------------------
+
+does not go into recursion and only analyzes the packages that are given
+as arguments.
+
+The methods packages(), scalars(), arrays(), hashes(), functions(),
+ios(), and unknowns() each return an array of fully qualified symbols of
+the specified type in all packages that are held within a Devel::Symdump
+object, but without the leading `$', `@' or %.  In a scalar context,
+they will return the number of such symbols.  Unknown symbols are
+usually either formats or variables that havenE<39>t yet got a defined
+value.
+
+As_string() and as_HTML() return a simple string/HTML representations of
+the object.
+
+Diff() prints the difference between two Devel::Symdump objects in human
+readable form. The format is similar to the one used by the as_string
+method.
+
+Isa_tree() and inh_tree() both return a simple string representation of
+the current inheritance tree. The difference between the two methods is
+the direction from which the tree is viewed: top-down or bottom-up. As
+IE<39>m sure, many users will have different expectation about what is
+top and what is bottom, IE<39>ll provide an example what happens when
+the Socket module is loaded:
+
+% print Devel::Symdump->inh_tree
+          AutoLoader
+                  DynaLoader
+                          Socket
+          DynaLoader
+                  Socket
+          Exporter
+                  Carp
+                  Config
+                  Socket
+
+     The inh_tree method shows on the left hand side a package name and
+     indented to the right the packages that use the former.
+
+% print Devel::Symdump->isa_tree
+          Carp
+                  Exporter
+          Config
+                  Exporter
+          DynaLoader
+                  AutoLoader
+          Socket
+                  Exporter
+                  DynaLoader
+                          AutoLoader
+
+     The isa_tree method displays from left to right ISA relationships,
+     so Socket IS A DynaLoader and DynaLoader IS A AutoLoader. (At least
+     at the time this manpage was written :-)
+
+You may call both methods, isa_tree() and inh_tree(), with an object. If
+you do that, the object will store the output and retrieve it when you
+call the same method again later. The typical usage would be to use them
+as class methods directly though.
+
+
+SUBCLASSING
+===========
+
+The design of this package is intentionally primitive and allows it to
+be subclassed easily. An example of a (maybe) useful subclass is
+Devel::Symdump::Export, a package which exports all methods of the
+Devel::Symdump package and turns them into functions.
+
+
+AUTHORS
+=======
+
+Andreas Koenig `<koenig@franz.ww.TU-Berlin.DE>' and Tom Christiansen
+`<tchrist@perl.com>'.  Based on the old `dumpvar.pl' by Larry Wall.
+
+
+
+

@@ -1,0 +1,2975 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Net/DNS/Header, Next: Net/DNS/Packet, Prev: Net/DNS, Up: Module List
+
+DNS packet header class
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::Header - DNS packet header class
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::Header;'
+
+
+DESCRIPTION
+===========
+
+A `Net::DNS::Header' object represents the header portion of a DNS
+packet.
+
+
+METHODS
+=======
+
+
+new
+---
+
+     $header = new Net::DNS::Header;
+     $header = new Net::DNS::Header(\$data);
+
+Without an argument, new creates a header object appropriate for making
+a DNS query.
+
+If new is passed a reference to a scalar containing DNS packet data, it
+creates a header object from that data.
+
+Returns undef if unable to create a header object (e.g., if the data is
+incomplete).
+
+
+print
+-----
+
+     $header->print;
+
+Dumps the header data to the standard output.
+
+
+string
+------
+
+     print $header->string;
+
+Returns a string representation of the header object.
+
+
+id
+--
+
+     print "query id = ", $header->id, "\n";
+     $header->id(1234);
+
+Gets or sets the query identification number.
+
+
+qr
+--
+
+     print "query response flag = ", $header->qr, "\n";
+     $header->qr(0);
+
+Gets or sets the query response flag.
+
+
+opcode
+------
+
+     print "query opcode = ", $header->opcode, "\n";
+     $header->opcode("UPDATE");
+
+Gets or sets the query opcode (the purpose of the query).
+
+
+aa
+--
+
+     print "answer is ", $header->aa ? "" : "non-", "authoritative\n";
+     $header->aa(0);
+
+Gets or sets the authoritative answer flag.
+
+
+tc
+--
+
+     print "packet is ", $header->tc ? "" : "not ", "truncated\n";
+     $header->tc(0);
+
+Gets or sets the truncated packet flag.
+
+
+rd
+--
+
+     print "recursion was ", $header->rd ? "" : "not ", "desired\n";
+     $header->rd(0);
+
+Gets or sets the recursion desired flag.
+
+
+ra
+--
+
+     print "recursion is ", $header->ra ? "" : "not ", "available\n";
+     $header->ra(0);
+
+Gets or sets the recursion available flag.
+
+
+rcode
+-----
+
+     print "query response code = ", $header->rcode, "\n";
+     $header->rcode("SERVFAIL");
+
+Gets or sets the query response code (the status of the query).
+
+
+qdcount, zocount
+----------------
+
+     print "# of question records: ", $header->qdcount, "\n";
+     $header->qdcount(2);
+
+Gets or sets the number of records in the question section of the
+packet.  In dynamic update packets, this field is known as `zocount' and
+refers to the number of RRs in the zone section.
+
+
+ancount, prcount
+----------------
+
+     print "# of answer records: ", $header->ancount, "\n";
+     $header->ancount(5);
+
+Gets or sets the number of records in the answer section of the packet.
+In dynamic update packets, this field is known as `prcount' and refers
+to the number of RRs in the prerequisite section.
+
+
+nscount, upcount
+----------------
+
+     print "# of authority records: ", $header->nscount, "\n";
+     $header->nscount(2);
+
+Gets or sets the number of records in the authority section of the
+packet.  In dynamic update packets, this field is known as `upcount' and
+refers to the number of RRs in the update section.
+
+
+arcount, adcount
+----------------
+
+     print "# of additional records: ", $header->arcount, "\n";
+     $header->arcount(3);
+
+Gets or sets the number of records in the additional section of the
+packet.  In dynamic update packets, this field is known as `adcount'.
+
+
+data
+----
+
+     $hdata = $header->data;
+
+Returns the header data in binary format, appropriate for use in a DNS
+query packet.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Update: Net/DNS/Update,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 4.1.1
+
+
+
+
+File: pm.info, Node: Net/DNS/Packet, Next: Net/DNS/Question, Prev: Net/DNS/Header, Up: Module List
+
+DNS packet object class
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::Packet - DNS packet object class
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::Packet;'
+
+
+DESCRIPTION
+===========
+
+A `Net::DNS::Packet' object represents a DNS packet.
+
+
+METHODS
+=======
+
+
+new
+---
+
+     $packet = new Net::DNS::Packet(\$data);
+     $packet = new Net::DNS::Packet(\$data, 1);  # set debugging
+
+     $packet = new Net::DNS::Packet("foo.com");
+     $packet = new Net::DNS::Packet("foo.com", "MX", "IN");
+
+     ($packet, $err) = new Net::DNS::Packet(\$data);
+
+If passed a reference to a scalar containing DNS packet data, new
+creates a packet object from that data.  A second argument can be passed
+to turn on debugging output for packet parsing.
+
+If passed a domain, type, and class, new creates a packet object
+appropriate for making a DNS query for the requested information.  The
+type and class can be omitted; they default to A and IN.
+
+If called in array context, returns a packet object and an error string.
+The error string will only be defined if the packet object is undefined
+(i.e., couldn't be created).
+
+Returns undef if unable to create a packet object (e.g., if the packet
+data is truncated).
+
+
+data
+----
+
+     $data = $packet->data;
+
+Returns the packet data in binary format, suitable for sending to a
+nameserver.
+
+
+header
+------
+
+     $header = $packet->header;
+
+Returns a `Net::DNS::Header' object representing the header section of
+the packet.
+
+
+question, zone
+--------------
+
+     @question = $packet->question;
+
+Returns a list of `Net::DNS::Question' objects representing the question
+section of the packet.
+
+In dynamic update packets, this section is known as `zone' and specifies
+the zone to be updated.
+
+
+answer, pre, prerequisite
+-------------------------
+
+     @answer = $packet->answer;
+
+Returns a list of `Net::DNS::RR' objects representing the answer section
+of the packet.
+
+In dynamic update packets, this section is known as `pre' or
+`prerequisite' and specifies the RRs or RRsets which must or must not
+preexist.
+
+
+authority, update
+-----------------
+
+     @authority = $packet->authority;
+
+Returns a list of `Net::DNS::RR' objects representing the authority
+section of the packet.
+
+In dynamic update packets, this section is known as update and specifies
+the RRs or RRsets to be added or delted.
+
+
+additional
+----------
+
+     @additional = $packet->additional;
+
+Returns a list of `Net::DNS::RR' objects representing the additional
+section of the packet.
+
+
+print
+-----
+
+     $packet->print;
+
+Prints the packet data on the standard output in an ASCII format similar
+to that used in DNS zone files.
+
+
+string
+------
+
+     print $packet->string;
+
+Returns a string representation of the packet.
+
+
+answerfrom
+----------
+
+     print "packet received from ", $packet->answerfrom, "\n";
+
+Returns the IP address from which we received this packet.  User-created
+packets will return undef for this method.
+
+
+answersize
+----------
+
+     print "packet size: ", $packet->answersize, " bytes\n";
+
+Returns the size of the packet in bytes as it was received from a
+nameserver.  User-created packets will return undef for this method (use
+`length $packet'->data instead).
+
+
+push
+----
+
+     $packet->push("pre", $rr);
+     $packet->push("update", $rr);
+     $packet->push("additional", $rr);
+
+     $packet->push("update", $rr1, $rr2, $rr3);
+     $packet->push("update", @rr);
+
+Adds RRs to the specified section of the packet.
+
+
+dn_comp
+-------
+
+     $compname = $packet->dn_comp("foo.bar.com", $offset);
+
+Returns a domain name compressed for a particular packet object, to be
+stored beginning at the given offset within the packet data.  The name
+will be added to a running list of compressed domain names for future
+use.
+
+
+dn_expand
+---------
+
+     use Net::DNS::Packet qw(dn_expand);
+     ($name, $nextoffset) = dn_expand(\$data, $offset);
+
+     ($name, $nextoffset) = Net::DNS::Packet::dn_expand(\$data, $offset);
+
+Expands the domain name stored at a particular location in a DNS packet.
+The first argument is a reference to a scalar containing the packet
+data.  The second argument is the offset within the packet where the
+(possibly compressed) domain name is stored.
+
+Returns the domain name and the offset of the next location in the
+packet.
+
+Returns *(undef, undef)* if the domain name couldn't be expanded.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Update: Net/DNS/Update,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 4.1, RFC 2136 Section 2
+
+
+
+
+File: pm.info, Node: Net/DNS/Question, Next: Net/DNS/RR, Prev: Net/DNS/Packet, Up: Module List
+
+DNS question class
+******************
+
+
+
+NAME
+====
+
+Net::DNS::Question - DNS question class
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::Question'
+
+
+DESCRIPTION
+===========
+
+A `Net::DNS::Question' object represents a record in the question
+section of a DNS packet.
+
+
+METHODS
+=======
+
+
+new
+---
+
+     $question = new Net::DNS::Question("foo.com", "MX", "IN");
+
+Creates a question object from the domain, type, and class passed as
+arguments.
+
+
+qname, zname
+------------
+
+     print "qname = ", $question->qname, "\n";
+     print "zname = ", $question->zname, "\n";
+
+Returns the domain name.  In dynamic update packets, this field is known
+as `zname' and refers to the zone name.
+
+
+qtype, ztype
+------------
+
+     print "qtype = ", $question->qtype, "\n";
+     print "ztype = ", $question->ztype, "\n";
+
+Returns the record type.  In dymamic update packets, this field is known
+as `ztype' and refers to the zone type (must be SOA).
+
+
+qclass, zclass
+--------------
+
+     print "qclass = ", $question->qclass, "\n";
+     print "zclass = ", $question->zclass, "\n";
+
+Returns the record class.  In dynamic update packets, this field is
+known as `zclass' and refers to the zone's class.
+
+
+print
+-----
+
+     $question->print;
+
+Prints the question record on the standard output.
+
+
+string
+------
+
+     print $qr->string, "\n";
+
+Returns a string representation of the question record.
+
+
+data
+----
+
+     $qdata = $question->data($packet, $offset);
+
+Returns the question record in binary format suitable for inclusion in a
+DNS packet.
+
+Arguments are a `Net::DNS::Packet' object and the offset within that
+packet's data where the `Net::DNS::Question' record is to be stored.
+This information is necessary for using compressed domain names.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Update: Net/DNS/Update,, *Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 4.1.2
+
+
+
+
+File: pm.info, Node: Net/DNS/RR, Next: Net/DNS/RR/A, Prev: Net/DNS/Question, Up: Module List
+
+DNS Resource Record class
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR - DNS Resource Record class
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR'
+
+
+DESCRIPTION
+===========
+
+`Net::DNS::RR' is the base class for DNS Resource Record (RR) objects.
+See also the manual pages for each RR type.
+
+
+METHODS
+=======
+
+*WARNING!!!*  Don't assume the RR objects you receive from a query
+are of a particular type -- always check an object's type before calling
+any of its methods.  If you call an unknown method, you'll get a nasty
+warning message and `Net::DNS::RR' will return undef to the caller.
+
+
+new (from string)
+-----------------
+
+     $a = new Net::DNS::RR("foo.bar.com. 86400 A 10.1.2.3");
+     $mx = new Net::DNS::RR("bar.com. 7200 MX 10 mailhost.bar.com.");
+     $cname = new Net::DNS::RR("www.bar.com 300 IN CNAME www1.bar.com");
+     $txt = new Net::DNS::RR("baz.bar.com 3600 HS TXT 'text record'");
+
+Returns a `Net::DNS::RR' object of the appropriate type and initialized
+from the string passed by the user.  The format of the string is that
+used in zone files, and is compatible with the string returned by
+`Net::DNS::RR'->string.
+
+The name and RR type are required; all other information is optional.
+If omitted, the TTL defaults to 0 and the RR class defaults to IN.
+Omitting the optional fields is useful for creating the empty RDATA
+sections required for certain dynamic update operations.  See the
+`Net::DNS::Update' manual page for additional examples.
+
+All names must be fully qualified.  The trailing dot (.) is optional.
+
+
+new (from hash)
+---------------
+
+     $rr = new Net::DNS::RR(
+     	Name    => "foo.bar.com",
+     	TTL     => 86400,
+     	Class   => "IN",
+         Type    => "A",
+     	Address => "10.1.2.3",
+     );
+
+     $rr = new Net::DNS::RR(
+     	Name    => "foo.bar.com",
+         Type    => "A",
+     );
+
+Returns an RR object of the appropriate type, or a `Net::DNS::RR' object
+if the type isn't implemented.  See the manual pages for each RR type to
+see what fields the type requires.
+
+The Name and Type fields are required; all others are optional.  If
+omitted, `TTL' defaults to 0 and Class defaults to IN.  Omitting the
+optional fields is useful for creating the empty RDATA sections required
+for certain dynamic update operations.
+
+The fields are case-insensitive, but starting each with uppercase is
+recommended.
+
+
+print
+-----
+
+     $rr->print;
+
+Prints the record to the standard output.  Calls the string method to
+get the RR's string representation.
+
+
+string
+------
+
+     print $rr->string, "\n";
+
+Returns a string representation of the RR.  Calls the rdatastr method to
+get the RR-specific data.
+
+
+rdatastr
+--------
+
+     $s = $rr->rdatastr;
+
+Returns a string containing RR-specific data.  Subclasses will need to
+implement this method.
+
+
+name
+----
+
+     $name = $rr->name;
+
+Returns the record's domain name.
+
+
+type
+----
+
+     $type = $rr->type;
+
+Returns the record's type.
+
+
+class
+-----
+
+     $class = $rr->class;
+
+Returns the record's class.
+
+
+ttl
+---
+
+     $ttl = $rr->ttl;
+
+Returns the record's time-to-live (TTL).
+
+
+rdlength
+--------
+
+     $rdlength = $rr->rdlength;
+
+Returns the length of the record's data section.
+
+
+rdata
+-----
+
+     $rdata = $rr->rdata
+
+Returns the record's data section as binary data.
+
+
+BUGS
+====
+
+This version of `Net::DNS::RR' does little sanity checking on
+user-created RR objects.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Update: Net/DNS/Update,, *Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,,
+RFC 1035 Section 4.1.3
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/A, Next: Net/DNS/RR/AAAA, Prev: Net/DNS/RR, Up: Module List
+
+DNS A resource record
+*********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::A - DNS A resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Address (A) resource records.
+
+
+METHODS
+=======
+
+
+address
+-------
+
+     print "address = ", $rr->address, "\n";
+
+Returns the RR's address field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.4.1
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/AAAA, Next: Net/DNS/RR/AFSDB, Prev: Net/DNS/RR/A, Up: Module List
+
+DNS AAAA resource record
+************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::AAAA - DNS AAAA resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS IPv6 Address (AAAA) resource records.
+
+
+METHODS
+=======
+
+
+address
+-------
+
+     print "address = ", $rr->address, "\n";
+
+Returns the RR's address field.
+
+
+BUGS
+====
+
+The string method returns only the preferred method of address
+representation ("x:x:x:x:x:x:x:x", as documented in RFC 1884, Section
+2.2, Para 1).
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1886 Section 2, RFC 1884 Sections 2.2 & 2.4.4
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/AFSDB, Next: Net/DNS/RR/CNAME, Prev: Net/DNS/RR/AAAA, Up: Module List
+
+DNS AFSDB resource record
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::AFSDB - DNS AFSDB resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS AFS Data Base (AFSDB) resource records.
+
+
+METHODS
+=======
+
+
+subtype
+-------
+
+     print "subtype = ", $rr->subtype, "\n";
+
+Returns the RR's subtype field.  Use of the subtype field is documented
+in RFC 1183.
+
+
+hostname
+--------
+
+     print "hostname = ", $rr->hostname, "\n";
+
+Returns the RR's hostname field.  See RFC 1183.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1183 Section 1
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/CNAME, Next: Net/DNS/RR/EID, Prev: Net/DNS/RR/AFSDB, Up: Module List
+
+DNS CNAME resource record
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::CNAME - DNS CNAME resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Canonical Name (CNAME) resource records.
+
+
+METHODS
+=======
+
+
+cname
+-----
+
+     print "cname = ", $rr->cname, "\n";
+
+Returns the RR's canonical name.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.1
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/EID, Next: Net/DNS/RR/HINFO, Prev: Net/DNS/RR/CNAME, Up: Module List
+
+DNS EID resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::EID - DNS EID resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Endpoint Identifier (EID) resource records.
+
+
+METHODS
+=======
+
+
+rdlength
+--------
+
+     print "rdlength = ", $rr->rdlength, "\n";
+
+Returns the length of the record's data section.
+
+
+rdata
+-----
+
+     $rdata = $rr->rdata;
+
+Returns the record's data section as binary data.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+draft-ietf-nimrod-dns-*xx*.txt
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/HINFO, Next: Net/DNS/RR/ISDN, Prev: Net/DNS/RR/EID, Up: Module List
+
+DNS HINFO resource record
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::HINFO - DNS HINFO resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Host Information (HINFO) resource records.
+
+
+METHODS
+=======
+
+
+cpu
+---
+
+     print "cpu = ", $rr->cpu, "\n";
+
+Returns the CPU type for this RR.
+
+
+os
+--
+
+     print "os = ", $rr->os, "\n";
+
+Returns the operating system type for this RR.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.2
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/ISDN, Next: Net/DNS/RR/LOC, Prev: Net/DNS/RR/HINFO, Up: Module List
+
+DNS ISDN resource record
+************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::ISDN - DNS ISDN resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS ISDN resource records.
+
+
+METHODS
+=======
+
+
+address
+-------
+
+     print "address = ", $rr->address, "\n";
+
+Returns the RR's address field.
+
+
+sa
+--
+
+     print "subaddress = ", $rr->sa, "\n";
+
+Returns the RR's subaddress field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1183 Section 3.2
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/LOC, Next: Net/DNS/RR/MB, Prev: Net/DNS/RR/ISDN, Up: Module List
+
+DNS LOC resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::LOC - DNS LOC resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Location (LOC) resource records.  See RFC 1876 for
+details.
+
+
+METHODS
+=======
+
+
+version
+-------
+
+     print "version = ", $rr->version, "\n";
+
+Returns the version number of the representation; programs should always
+check this.  `Net::DNS' currently supports only version 0.
+
+
+size
+----
+
+     print "size = ", $rr->size, "\n";
+
+Returns the diameter of a sphere enclosing the described entity, in
+centimeters.
+
+
+horiz_pre
+---------
+
+     print "horiz_pre = ", $rr->horiz_pre, "\n";
+
+Returns the horizontal precision of the data, in centimeters.
+
+
+vert_pre
+--------
+
+     print "vert_pre = ", $rr->vert_pre, "\n";
+
+Returns the vertical precision of the data, in centimeters.
+
+
+latitude
+--------
+
+     print "latitude = ", $rr->latitude, "\n";
+
+Returns the latitude of the center of the sphere described by the size
+method, in thousandths of a second of arc.  2**31 represents the
+equator; numbers above that are north latitude.
+
+
+longitude
+---------
+
+     print "longitude = ", $rr->longitude, "\n";
+
+Returns the longitude of the center of the sphere described by the size
+method, in thousandths of a second of arc.  2**31 represents the prime
+meridian; numbers above that are east longitude.
+
+
+latlon
+------
+
+     ($lat, $lon) = $rr->latlon;
+     system("xearth", "-pos", "fixed $lat $lon");
+
+Returns the latitude and longitude as floating-point degrees.  Positive
+numbers represent north latitude or east longitude; negative numbers
+represent south latitude or west longitude.
+
+
+altitude
+--------
+
+     print "altitude = ", $rr->altitude, "\n";
+
+Returns the altitude of the center of the sphere described by the size
+method, in centimeters, from a base of 100,000m below the WGS 84
+reference spheroid used by GPS.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+Some of the code and documentation is based on RFC 1876 and on code
+contributed by Christopher Davis.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1876
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/MB, Next: Net/DNS/RR/MG, Prev: Net/DNS/RR/LOC, Up: Module List
+
+DNS MB resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::MB - DNS MB resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Mailbox (MB) resource records.
+
+
+METHODS
+=======
+
+
+madname
+-------
+
+     print "madname = ", $rr->madname, "\n";
+
+Returns the domain name of the host which has the specified mailbox.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.3
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/MG, Next: Net/DNS/RR/MINFO, Prev: Net/DNS/RR/MB, Up: Module List
+
+DNS MG resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::MG - DNS MG resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Mail Group (MG) resource records.
+
+
+METHODS
+=======
+
+
+mgmname
+-------
+
+     print "mgmname = ", $rr->mgmname, "\n";
+
+Returns the RR's mailbox field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.6
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/MINFO, Next: Net/DNS/RR/MR, Prev: Net/DNS/RR/MG, Up: Module List
+
+DNS MINFO resource record
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::MINFO - DNS MINFO resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Mailbox Information (MINFO) resource records.
+
+
+METHODS
+=======
+
+
+rmailbx
+-------
+
+     print "rmailbx = ", $rr->rmailbx, "\n";
+
+Returns the RR's responsible mailbox field.  See RFC 1035.
+
+
+emailbx
+-------
+
+     print "emailbx = ", $rr->emailbx, "\n";
+
+Returns the RR's error mailbox field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.7
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/MR, Next: Net/DNS/RR/MX, Prev: Net/DNS/RR/MINFO, Up: Module List
+
+DNS MR resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::MR - DNS MR resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Mail Rename (MR) resource records.
+
+
+METHODS
+=======
+
+
+newname
+-------
+
+     print "newname = ", $rr->newname, "\n";
+
+Returns the RR's new name field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.8
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/MX, Next: Net/DNS/RR/NAPTR, Prev: Net/DNS/RR/MR, Up: Module List
+
+DNS MX resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::MX - DNS MX resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Mail Exchanger (MX) resource records.
+
+
+METHODS
+=======
+
+
+preference
+----------
+
+     print "preference = ", $rr->preference, "\n";
+
+Returns the preference for this mail exchange.
+
+
+exchange
+--------
+
+     print "exchange = ", $rr->exchange, "\n";
+
+Returns name of this mail exchange.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.9
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/NAPTR, Next: Net/DNS/RR/NIMLOC, Prev: Net/DNS/RR/MX, Up: Module List
+
+DNS NAPTR resource record
+*************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::NAPTR - DNS NAPTR resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Naming Authority Pointer (NAPTR) resource records.
+
+
+METHODS
+=======
+
+
+order
+-----
+
+     print "order = ", $rr->order, "\n";
+
+Returns the order field.
+
+
+preference
+----------
+
+     print "preference = ", $rr->preference, "\n";
+
+Returns the preference field.
+
+
+flags
+-----
+
+     print "flags = ", $rr->flags, "\n";
+
+Returns the flags field.
+
+
+service
+-------
+
+     print "service = ", $rr->service, "\n";
+
+Returns the service field.
+
+
+regexp
+------
+
+     print "regexp = ", $rr->regexp, "\n";
+
+Returns the regexp field.
+
+
+replacement
+-----------
+
+     print "replacement = ", $rr->replacement, "\n";
+
+Returns the replacement field.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+*Net::DNS::RR::NAPTR* is based on code contributed by Ryan Moats.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+draft-ietf-urn-naptr-*xx*.txt
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/NIMLOC, Next: Net/DNS/RR/NS, Prev: Net/DNS/RR/NAPTR, Up: Module List
+
+DNS NIMLOC resource record
+**************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::NIMLOC - DNS NIMLOC resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Nimrod Locator (NIMLOC) resource records.
+
+
+METHODS
+=======
+
+
+rdlength
+--------
+
+     print "rdlength = ", $rr->rdlength, "\n";
+
+Returns the length of the record's data section.
+
+
+rdata
+-----
+
+     $rdata = $rr->rdata;
+
+Returns the record's data section as binary data.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+draft-ietf-nimrod-dns-*xx*.txt
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/NS, Next: Net/DNS/RR/NSAP, Prev: Net/DNS/RR/NIMLOC, Up: Module List
+
+DNS NS resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::NS - DNS NS resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Name Server (NS) resource records.
+
+
+METHODS
+=======
+
+
+nsdname
+-------
+
+     print "nsdname = ", $rr->nsdname, "\n";
+
+Returns the domain name of the nameserver.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.11
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/NSAP, Next: Net/DNS/RR/NULL, Prev: Net/DNS/RR/NS, Up: Module List
+
+DNS NSAP resource record
+************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::NSAP - DNS NSAP resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Network Service Access Point (NSAP) resource records.
+
+
+METHODS
+=======
+
+
+idp
+---
+
+     print "idp = ", $rr->idp, "\n";
+
+Returns the RR's initial domain part (the AFI and IDI fields).
+
+
+dsp
+---
+
+     print "dsp = ", $rr->dsp, "\n";
+
+Returns the RR's domain specific part (the DFI, AA, Rsvd, RD, Area, ID,
+and SEL fields).
+
+
+afi
+---
+
+     print "afi = ", $rr->afi, "\n";
+
+Returns the RR's authority and format identifier.  `Net::DNS' currently
+supports only AFI 47 (GOSIP Version 2).
+
+
+idi
+---
+
+     print "idi = ", $rr->idi, "\n";
+
+Returns the RR's initial domain identifier.
+
+
+dfi
+---
+
+     print "dfi = ", $rr->dfi, "\n";
+
+Returns the RR's DSP format identifier.
+
+
+aa
+--
+
+     print "aa = ", $rr->aa, "\n";
+
+Returns the RR's administrative authority.
+
+
+rsvd
+----
+
+     print "rsvd = ", $rr->rsvd, "\n";
+
+Returns the RR's reserved field.
+
+
+rd
+--
+
+     print "rd = ", $rr->rd, "\n";
+
+Returns the RR's routing domain identifier.
+
+
+area
+----
+
+     print "area = ", $rr->area, "\n";
+
+Returns the RR's area identifier.
+
+
+id
+--
+
+     print "id = ", $rr->id, "\n";
+
+Returns the RR's system identifier.
+
+
+sel
+---
+
+     print "sel = ", $rr->sel, "\n";
+
+Returns the RR's NSAP selector.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1706.
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/NULL, Next: Net/DNS/RR/PTR, Prev: Net/DNS/RR/NSAP, Up: Module List
+
+DNS NULL resource record
+************************
+
+
+
+NAME
+====
+
+Net::DNS::RR::NULL - DNS NULL resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Null (NULL) resource records.
+
+
+METHODS
+=======
+
+
+rdlength
+--------
+
+     print "rdlength = ", $rr->rdlength, "\n";
+
+Returns the length of the record's data section.
+
+
+rdata
+-----
+
+     $rdata = $rr->rdata;
+
+Returns the record's data section as binary data.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.10
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/PTR, Next: Net/DNS/RR/PX, Prev: Net/DNS/RR/NULL, Up: Module List
+
+DNS PTR resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::PTR - DNS PTR resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Pointer (PTR) resource records.
+
+
+METHODS
+=======
+
+
+ptrdname
+--------
+
+     print "ptrdname = ", $rr->ptrdname, "\n";
+
+Returns the domain name associated with this record.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.12
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/PX, Next: Net/DNS/RR/RP, Prev: Net/DNS/RR/PTR, Up: Module List
+
+DNS PX resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::PX - DNS PX resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS X.400 Mail Mapping Information (PX) resource records.
+
+
+METHODS
+=======
+
+
+preference
+----------
+
+     print "preference = ", $rr->preference, "\n";
+
+Returns the preference given to this RR.
+
+
+map822
+------
+
+     print "map822 = ", $rr->map822, "\n";
+
+Returns the RFC822 part of the RFC1327 mapping information.
+
+
+mapx400
+-------
+
+     print "mapx400 = ", $rr->mapx400, "\n";
+
+Returns the X.400 part of the RFC1327 mapping information.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1664 Section 4, RFC 1327
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/RP, Next: Net/DNS/RR/RT, Prev: Net/DNS/RR/PX, Up: Module List
+
+DNS RP resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::RP - DNS RP resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Responsible Person (RP) resource records.
+
+
+METHODS
+=======
+
+
+mbox
+----
+
+     print "mbox = ", $rr->mbox, "\n";
+
+Returns a domain name that specifies the mailbox for the responsible
+person.
+
+
+txtdname
+--------
+
+     print "txtdname = ", $rr->txtdname, "\n";
+
+Returns a domain name that specifies a TXT record containing further
+information about the responsible person.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1183 Section 2.2
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/RT, Next: Net/DNS/RR/SOA, Prev: Net/DNS/RR/RP, Up: Module List
+
+DNS RT resource record
+**********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::RT - DNS RT resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Route Through (RT) resource records.
+
+
+METHODS
+=======
+
+
+preference
+----------
+
+     print "preference = ", $rr->preference, "\n";
+
+Returns the preference for this route.
+
+
+intermediate
+------------
+
+     print "intermediate = ", $rr->intermediate, "\n";
+
+Returns the domain name of the intermediate host.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1183 Section 3.3
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/SOA, Next: Net/DNS/RR/SRV, Prev: Net/DNS/RR/RT, Up: Module List
+
+DNS SOA resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::SOA - DNS SOA resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Start of Authority (SOA) resource records.
+
+
+METHODS
+=======
+
+
+mname
+-----
+
+     print "mname = ", $rr->mname, "\n";
+
+Returns the domain name of the original or primary nameserver for this
+zone.
+
+
+rname
+-----
+
+     print "rname = ", $rr->rname, "\n";
+
+Returns a domain name that specifies the mailbox for the person
+responsible for this zone.
+
+
+serial
+------
+
+     print "serial = ", $rr->serial, "\n";
+
+Returns the zone's serial number.
+
+
+refresh
+-------
+
+     print "refresh = ", $rr->refresh, "\n";
+
+Returns the zone's refresh interval.
+
+
+retry
+-----
+
+     print "retry = ", $rr->retry, "\n";
+
+Returns the zone's retry interval.
+
+
+expire
+------
+
+     print "expire = ", $rr->expire, "\n";
+
+Returns the zone's expire interval.
+
+
+minimum
+-------
+
+     print "minimum = ", $rr->minimum, "\n";
+
+Returns the minimum (default) TTL for records in this zone.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.13
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/SRV, Next: Net/DNS/RR/TXT, Prev: Net/DNS/RR/SOA, Up: Module List
+
+DNS SRV resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::SRV - DNS SRV resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Service (SRV) resource records.
+
+
+METHODS
+=======
+
+
+priority
+--------
+
+     print "priority = ", $rr->priority, "\n";
+
+Returns the priority for this target host.
+
+
+weight
+------
+
+     print "weight = ", $rr->weight, "\n";
+
+Returns the weight for this target host.
+
+
+port
+----
+
+     print "port = ", $rr->port, "\n";
+
+Returns the port on this target host for the service.
+
+
+target
+------
+
+     print "target = ", $rr->target, "\n";
+
+Returns the target host.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 2052
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/TXT, Next: Net/DNS/RR/X25, Prev: Net/DNS/RR/SRV, Up: Module List
+
+DNS TXT resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::TXT - DNS TXT resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS Text (TXT) resource records.
+
+
+METHODS
+=======
+
+
+txtdata
+-------
+
+     print "txtdata = ", $rr->txtdata, "\n";
+
+Returns the descriptive text.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1035 Section 3.3.14
+
+
+
+
+File: pm.info, Node: Net/DNS/RR/X25, Next: Net/DNS/Resolver, Prev: Net/DNS/RR/TXT, Up: Module List
+
+DNS X25 resource record
+***********************
+
+
+
+NAME
+====
+
+Net::DNS::RR::X25 - DNS X25 resource record
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::RR';
+
+
+DESCRIPTION
+===========
+
+Class for DNS X25 resource records.
+
+
+METHODS
+=======
+
+
+psdn
+----
+
+     print "psdn = ", $rr->psdn, "\n";
+
+Returns the PSDN address.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+RFC 1183 Section 3.1
+
+
+
+
+File: pm.info, Node: Net/DNS/Resolver, Next: Net/DNS/Update, Prev: Net/DNS/RR/X25, Up: Module List
+
+DNS resolver class
+******************
+
+
+
+NAME
+====
+
+Net::DNS::Resolver - DNS resolver class
+
+
+SYNOPSIS
+========
+
+`use Net::DNS::Resolver;'
+
+
+DESCRIPTION
+===========
+
+Instances of the `Net::DNS::Resolver' class represent resolver objects.
+A program can have multiple resolver objects, each maintaining its own
+state information such as the nameservers to be queried, whether
+recursion is desired, etc.
+
+Resolver configuration is read from the following files, in the order
+indicated:
+
+     /etc/resolv.conf
+     $HOME/.resolv.conf
+     ./.resolv.conf
+
+The following keywords are recognized in resolver configuration files:
+
+domain
+     The default domain.
+
+search
+     A space-separated list of domains to put in the search list.
+
+nameserver
+     A space-separated list of nameservers to query.
+
+Files except for `/etc/resolv.conf' must be owned by the effective
+userid running the program or they won't be read.  In addition, several
+environment variables can also contain configuration information; see `'
+in this node.
+
+
+METHODS
+=======
+
+
+new
+---
+
+     $res = new Net::DNS::Resolver;
+
+Creates a new DNS resolver object.
+
+
+print
+-----
+
+     $res->print;
+
+Prints the resolver state on the standard output.
+
+
+string
+------
+
+     print $res->string;
+
+Returns a string representation of the resolver state.
+
+
+searchlist
+----------
+
+     @searchlist = $res->searchlist;
+     $res->searchlist("foo.com", "bar.com", "baz.org");
+
+Gets or sets the resolver search list.
+
+
+nameservers
+-----------
+
+     @nameservers = $res->nameservers;
+     $res->nameservers("192.168.1.1", "192.168.2.2", "192.168.3.3");
+
+Gets or sets the nameservers to be queried.
+
+
+port
+----
+
+     print "sending queries to port ", $res->port, "\n";
+     $res->port(9732);
+
+Gets or sets the port to which we send queries.  This can be useful for
+testing a nameserver running on a non-standard port.  The default is
+port 53.
+
+
+search
+------
+
+     $packet = $res->search("mailhost");
+     $packet = $res->search("mailhost.foo.com");
+     $packet = $res->search("192.168.1.1");
+     $packet = $res->search("foo.com", "MX");
+     $packet = $res->search("user.passwd.foo.com", "TXT", "HS");
+
+Performs a DNS query for the given name, applying the searchlist if
+appropriate.  The search algorithm is as follows:
+
+  1. If the name contains at least one dot, try it as is.
+
+  2. If the name doesn't end in a dot then append each item in the
+     search list to the name.  This is only done if dnsrch is true.
+
+  3. If the name doesn't contain any dots, try it as is.
+
+The record type and class can be omitted; they default to A and IN.  If
+the name looks like an IP address (4 dot-separated numbers), then an
+appropriate PTR query will be performed.
+
+Returns a `Net::DNS::Packet' object, or undef if no answers were found.
+
+
+query
+-----
+
+     $packet = $res->query("mailhost");
+     $packet = $res->query("mailhost.foo.com");
+     $packet = $res->query("192.168.1.1");
+     $packet = $res->query("foo.com", "MX");
+     $packet = $res->query("user.passwd.foo.com", "TXT", "HS");
+
+Performs a DNS query for the given name; the search list is not applied.
+If the name doesn't contain any dots and defnames is true then the
+default domain will be appended.
+
+The record type and class can be omitted; they default to A and IN.  If
+the name looks like an IP address (4 dot-separated numbers), then an
+appropriate PTR query will be performed.
+
+Returns a `Net::DNS::Packet' object, or undef if no answers were found.
+
+
+send
+----
+
+     $packet = $res->send($packet_object);
+     $packet = $res->send("mailhost.foo.com");
+     $packet = $res->send("foo.com", "MX");
+     $packet = $res->send("user.passwd.foo.com", "TXT", "HS");
+
+Performs a DNS query for the given name.  Neither the searchlist nor the
+default domain will be appended.
+
+The argument list can be either a `Net::DNS::Packet' object or a list of
+strings.  The record type and class can be omitted; they default to A
+and IN.  If the name looks like an IP address (4 dot-separated numbers),
+then an appropriate PTR query will be performed.
+
+Returns a `Net::DNS::Packet' object whether there were any answers or
+not.  Use `$packet'->header->`ancount' or `$packet'->`answer' to find
+out if there were any records in the answer section.  Returns undef if
+there was an error.
+
+
+bgsend
+------
+
+     $socket = $res->bgsend($packet_object);
+     $socket = $res->bgsend("mailhost.foo.com");
+     $socket = $res->bgsend("foo.com", "MX");
+     $socket = $res->bgsend("user.passwd.foo.com", "TXT", "HS");
+
+Performs a background DNS query for the given name, i.e., sends a query
+packet to the first nameserver listed in `$res'->nameservers and returns
+immediately without waiting for a response.  The program can then
+perform other tasks while waiting for a response from the nameserver.
+
+The argument list can be either a `Net::DNS::Packet' object or a list of
+strings.  The record type and class can be omitted; they default to A
+and IN.  If the name looks like an IP address (4 dot-separated numbers),
+then an appropriate PTR query will be performed.
+
+Returns an IO::Socket object.  The program must determine when the
+socket is ready for reading and call `$res'->bgread to get the response
+packet.  You can use `$res'->bgisready to find out if the socket is
+ready, or you can use vec and the socket's fileno method to add the
+socket's file descriptor to a bitmask for select.
+
+
+bgread
+------
+
+     $packet = $res->bgread($socket);
+
+Reads the answer from a background query (see `' in this node).  The
+argument is an IO::Socket object returned by bgsend.
+
+Returns a `Net::DNS::Packet' object or undef on error.
+
+
+bgisready
+---------
+
+     $socket = $res->bgsend("foo.bar.com");
+     until ($res->bgisready($socket)) {
+     	# do some other processing
+     }
+     $packet = $res->bgread($socket);
+
+Determines whether a socket is ready for reading.  The argument is an
+IO::Socket object returned by `$res'->bgsend.
+
+Returns true if the socket is ready, false if not.
+
+
+axfr
+----
+
+     @zone = $res->axfr("foo.com");
+     @zone = $res->axfr("passwd.foo.com", "HS");
+
+Performs a zone transfer from the first nameserver listed in
+nameservers.  The record class can be omitted; it defaults to IN.
+
+Returns a list of `Net::DNS::RR' objects, or undef if the zone transfer
+failed.
+
+The redundant SOA record that terminates the zone transfer is not
+returned to the caller.
+
+
+retrans
+-------
+
+     print "retrans interval", $res->retrans, "\n";
+     $res->retrans(3);
+
+Get or set the retransmission interval.  The default is 5.
+
+
+retry
+-----
+
+     print "number of tries: ", $res->retry, "\n";
+     $res->retry(2);
+
+Get or set the number of times to try the query.  The default is 4.
+
+
+recurse
+-------
+
+     print "recursion flag: ", $res->recurse, "\n";
+     $res->recurse(0);
+
+Get or set the recursion flag.  If this is true, nameservers will be
+requested to perform a recursive query.  The default is true.
+
+
+defnames
+--------
+
+     print "defnames flag: ", $res->defnames, "\n";
+     $res->defnames(0);
+
+Get or set the defnames flag.  If this is true, calls to query will
+append the default domain to names that contain no dots.  The default is
+true.
+
+
+dnsrch
+------
+
+     print "dnsrch flag: ", $res->dnsrch, "\n";
+     $res->dnsrch(0);
+
+Get or set the dnsrch flag.  If this is true, calls to search will apply
+the search list.  The default is true.
+
+
+debug
+-----
+
+     print "debug flag: ", $res->debug, "\n";
+     $res->debug(1);
+
+Get or set the debug flag.  If set, calls to search, query, and send
+will print debugging information on the standard output.  The default is
+false.
+
+
+usevc (not yet implemented)
+---------------------------
+
+     print "usevc flag: ", $res->usevc, "\n";
+     $res->usevc(1);
+
+Get or set the usevc flag.  If true, then queries will be performed
+using virtual circuits (TCP) instead of datagrams (UDP).  The default is
+false.
+
+
+igntc (not yet implemented)
+---------------------------
+
+     print "igntc flag: ", $res->igntc, "\n";
+     $res->igntc(1);
+
+Get or set the igntc flag.  If true, truncated packets will be ignored.
+If false, truncated packets will cause the query to be retried using
+TCP.  The default is false.
+
+
+errorstring
+-----------
+
+     print "query status: ", $res->errorstring, "\n";
+
+Returns a string containing the status of the most recent query.
+
+
+answerfrom
+----------
+
+     print "last answer was from: ", $res->answerfrom, "\n";
+
+Returns the IP address from which we received the last answer in
+response to a query.
+
+
+answersize
+----------
+
+     print "size of last answer: ", $res->answersize, "\n";
+
+Returns the size in bytes of the last answer we received in response to
+a query.
+
+
+ENVIRONMENT
+===========
+
+The following environment variables can also be used to configure the
+resolver:
+
+
+RES_NAMESERVERS
+---------------
+
+     # Bourne Shell
+     RES_NAMESERVERS="192.168.1.1 192.168.2.2 192.168.3.3"
+     export RES_NAMESERVERS
+
+     # C Shell
+     setenv RES_NAMESERVERS "192.168.1.1 192.168.2.2 192.168.3.3"
+
+A space-separated list of nameservers to query.
+
+
+RES_SEARCHLIST
+--------------
+
+     # Bourne Shell
+     RES_SEARCHLIST="foo.com bar.com baz.org"
+     export RES_SEARCHLIST
+
+     # C Shell
+     setenv RES_SEARCHLIST "foo.com bar.com baz.org"
+
+A space-separated list of domains to put in the search list.
+
+
+LOCALDOMAIN
+-----------
+
+     # Bourne Shell
+     LOCALDOMAIN=foo.com
+     export LOCALDOMAIN
+
+     # C Shell
+     setenv LOCALDOMAIN foo.com
+
+The default domain.
+
+
+RES_OPTIONS
+-----------
+
+     # Bourne Shell
+     RES_OPTIONS="retrans:3 retry:2 debug"
+     export RES_OPTIONS
+
+     # C Shell
+     setenv RES_OPTIONS "retrans:3 retry:2 debug"
+
+A space-separated list of resolver options to set.  Options that take
+values are specified as option:value.
+
+
+BUGS
+====
+
+TCP queries are not yet implemented.
+
+Error reporting needs to be improved.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, *Note Net/DNS: Net/DNS,, *Note Net/DNS/Packet: Net/DNS/Packet,, *Note Net/DNS/Update: Net/DNS/Update,,
+*Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,,
+`resolver(5)' in this node, RFC 1035, RFC 1034 Section 4.3.5
+
+
+
+

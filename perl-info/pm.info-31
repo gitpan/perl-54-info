@@ -1,0 +1,2096 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: MIME/Field/ConTraEnc, Next: MIME/Field/ContDisp, Prev: MIME/Entity, Up: Module List
+
+a "Content-transfer-encoding" field
+***********************************
+
+
+
+NAME
+====
+
+MIME::Field::ConTraEnc - a "Content-transfer-encoding" field
+
+
+DESCRIPTION
+===========
+
+A subclass of Mail::Field.
+
+*Don't use this class directly... its name may change in the future!*
+Instead, ask Mail::Field for new instances based on the field name!
+
+
+SYNOPSIS
+========
+
+     use Mail::Field;
+     use MIME::Head;
+
+     # Create an instance from some text:
+     $field = Mail::Field->new('Content-transfer-encoding', '7bit');
+
+     # Get the encoding.
+     #    Possible values: 'binary', '7bit', '8bit', 'quoted-printable', 
+     #    'base64' and '' (unspecified).  Note that there can't be a 
+     #    single default for this, since it depends on the content type!
+     $encoding = $field->encoding;
+
+
+
+
+File: pm.info, Node: MIME/Field/ContDisp, Next: MIME/Field/ContType, Prev: MIME/Field/ConTraEnc, Up: Module List
+
+a "Content-disposition" field
+*****************************
+
+
+
+NAME
+====
+
+MIME::Field::ContDisp - a "Content-disposition" field
+
+
+DESCRIPTION
+===========
+
+A subclass of Mail::Field.
+
+*Don't use this class directly... its name may change in the future!*
+Instead, ask Mail::Field for new instances based on the field name!
+
+
+SYNOPSIS
+========
+
+     use Mail::Field;
+     use MIME::Head;
+
+     # Create an instance from some text:
+     $field = Mail::Field->new('Content-disposition', $text);
+
+     # Inline or attachment?
+     $type = $field->type;    
+
+     # Recommended filename?
+     $filename = $field->filename;
+
+
+
+
+File: pm.info, Node: MIME/Field/ContType, Next: MIME/Field/ParamVal, Prev: MIME/Field/ContDisp, Up: Module List
+
+a "Content-type" field
+**********************
+
+
+
+NAME
+====
+
+MIME::Field::ContType - a "Content-type" field
+
+
+DESCRIPTION
+===========
+
+A subclass of Mail::Field.
+
+*Don't use this class directly... its name may change in the future!*
+Instead, ask Mail::Field for new instances based on the field name!
+
+
+SYNOPSIS
+========
+
+     use Mail::Field;
+     use MIME::Head;
+
+     # Create an instance from some text:
+     $field = Mail::Field->new('Content-type', 
+                               'text/HTML; charset="US-ASCII"');
+
+     # Get the MIME type, like 'text/plain' or 'x-foobar'.
+     # Returns 'text/plain' as default, as per RFC-1521:
+     my ($type, $subtype) = split('/', $field->type);
+
+     # Get generic information:
+     print $field->name;
+
+     # Get information related to "message" type:
+     if ($type eq 'message') {
+     	print $field->id;
+     	print $field->number;
+     	print $field->total;
+     }
+
+     # Get information related to "multipart" type:
+     if ($type eq 'multipart') {
+     	print $field->boundary;            # the basic value, fixed up
+     	print $field->multipart_boundary;  # empty if not a multipart message!
+     }
+
+     # Get information related to "text" type:
+     if ($type eq 'text') {
+     	print $field->charset;      # returns 'us-ascii' as default
+     }     
+
+
+NOTES
+=====
+
+Since nearly all (if not all) parameters must have non-empty values to
+be considered valid, we just return the empty string to signify missing
+fields.  If you need to get the *real* underlying value, use the
+inherited `param()' method (which returns undef if the parameter is
+missing).
+
+
+PUBLIC INTERFACE
+================
+
+boundary
+     Return the boundary field.  The boundary is returned exactly as
+     given in the `Content-type:' field; that is, the leading
+     double-hyphen (`--') is *not* prepended.
+
+     (Well, *almost* exactly... from RFC-1521:
+
+          (If a boundary appears to end with white space, the white space 
+          must be presumed to have been added by a gateway, and must be deleted.)  
+
+     so we oblige and remove any trailing spaces.)
+
+     Returns the empty string if there is no boundary, or if the
+     boundary is illegal (e.g., if it is empty after all trailing
+     whitespace has been removed).
+
+multipart_boundary
+     Like `boundary()', except that this will also return the empty
+     string if the message is not a multipart message.  In other words,
+     there's an automatic sanity check.
+
+type
+     Try real hard to determine the content type (e.g., `"text/plain"',
+     `"image/gif"', `"x-weird-type"', which is returned in
+     all-lowercase.
+
+     A happy thing: the following code will work just as you would want,
+     even if there's no subtype (as in `"x-weird-type"')... in such a
+     case, the $subtype would simply be the empty string:
+
+          ($type, $subtype) = split('/', $head->mime_type);
+
+     If the content-type information is missing, it defaults to
+     `"text/plain"', as per RFC-1521:
+
+          Default RFC-822 messages are typed by this protocol as plain text in
+          the US-ASCII character set, which can be explicitly specified as
+          "Content-type: text/plain; charset=us-ascii".  If no Content-Type is
+          specified, this default is assumed.  
+
+     If *just* the subtype is missing (a syntax error unless the type
+     begins with `"x-"', but we'll tolerate it, since some brain-dead
+     mailers actually do this), then it simply is not reported; e.g.,
+     `"Content-type: TEXT"' is returned simply as "text".
+
+     If the content type is present but can't be parsed at all (yow!),
+     the empty string is returned.
+
+
+
+
+File: pm.info, Node: MIME/Field/ParamVal, Next: MIME/Head, Prev: MIME/Field/ContType, Up: Module List
+
+subclass of Mail::Field, for structured MIME fields
+***************************************************
+
+
+
+NAME
+====
+
+MIME::Field::ParamVal - subclass of Mail::Field, for structured MIME
+fields
+
+
+DESCRIPTION
+===========
+
+This is an abstract superclass of most MIME fields.  It handles fields
+with a general syntax like this:
+
+     Content-Type: Message/Partial;
+         number=2; total=3;
+         id="oc=jpbe0M2Yt4s@thumper.bellcore.com"
+
+Comments are supported *between* items, like this:
+
+     Content-Type: Message/Partial; (a comment)
+         number=2  (another comment) ; (yet another comment) total=3;
+         id="oc=jpbe0M2Yt4s@thumper.bellcore.com"
+
+
+PUBLIC INTERFACE
+================
+
+set [\%PARAMHASH | KEY=>VAL,...,KEY=>VAL]
+     Set this field.  The paramhash should contain parameter names in
+     *all lowercase*, with the special `"_"' parameter name signifying
+     the "default" (unnamed) parameter for the field:
+
+          # Set up to be...
+          #
+          #     Content-type: Message/Partial; number=2; total=3; id="ocj=pbe0M2"
+          #
+          $conttype->set('_'       => 'Message/Partial',
+          		  'number'  => 2,
+          		  'total'   => 3,
+          		  'id'      => "ocj=pbe0M2");
+
+     Note that a single argument is taken to be a *reference* to a
+     paramhash, while multiple args are taken to be the elements of the
+     paramhash themselves.
+
+     Supplying undef for a hashref, or an empty set of values,
+     effectively clears the object.
+
+     The self object is returned.
+
+parse_params STRING
+     *Class/instance utility method.*
+     Extract parameter info from a structured field, and return it as a
+     hash reference.  For example, here is a field with parameters:
+
+          Content-Type: Message/Partial;
+              number=2; total=3;
+              id="oc=jpbe0M2Yt4s@thumper.bellcore.com"
+
+     Here is how you'd extract them:
+
+          $params = $class->parse_params('content-type');
+          if ($$params{'_'} eq 'message/partial') {
+              $number = $$params{'number'};
+              $total  = $$params{'total'};
+              $id     = $$params{'id'};
+          }
+
+     Like field names, parameter names are coerced to lowercase.  The
+     special '_' parameter means the default parameter for the field.
+
+     *NOTE:* This has been provided as a public method to support backwards
+     compatibility, but you probably shouldn't use it.
+
+parse STRING
+     Parse the string into the instance.  Any previous information is
+     wiped.
+
+     The self object is returned.
+
+param PARAMNAME,[VALUE]
+     Return the given parameter, or undef if it isn't there.  With
+     argument, set the parameter to that VALUE.  The PARAMNAME is
+     case-insensitive.  A "_" refers to the "default" parameter.
+
+stringify
+     Convert the field to a string, and return it.
+
+tag
+     Return the tag for this field.  Abstract!
+
+
+
+
+File: pm.info, Node: MIME/Head, Next: MIME/IO, Prev: MIME/Field/ParamVal, Up: Module List
+
+MIME message header (a subclass of Mail::Header)
+************************************************
+
+
+
+NAME
+====
+
+MIME::Head - MIME message header (a subclass of Mail::Header)
+
+
+SYNOPSIS
+========
+
+Start off by requiring or using this package:
+
+     require MIME::Head;
+
+You can create a MIME::Head object in a number of ways:
+
+     # Create a new, empty header, and populate it manually:    
+     $head = MIME::Head->new;
+     $head->set('content-type', 'text/plain; charset=US-ASCII');
+     $head->set('content-length', $len);
+
+     # Create a new header by parsing in the STDIN stream:
+     $head = MIME::Head->read(\*STDIN);
+
+     # Create a new header by parsing in a file:
+     $head = MIME::Head->from_file("/tmp/test.hdr");
+
+     # Create a new header by running a program:
+     $head = MIME::Head->from_file("cat a.hdr b.hdr |");
+
+To get rid of all internal newlines in all fields (called *unfolding*):
+
+     # Get rid of all internal newlines:
+     $head->unfold();
+
+To RFC-1522-decode any Q- or B-encoded-text in the header fields:
+
+     $head->decode();
+
+To test whether a given field exists (consider using the inherited count
+method instead, though: exists has been deprecated, but will continue to
+work even if your MailTools is old):
+
+     # Was a "Subject:" given?
+     if ($head->exists('subject')) {
+         # yes, it does!
+     }
+
+To *get the contents of a field,* either a *specific* occurence
+(defaults to the first occurence in a scalar context) or all occurences
+(in an array context):
+
+     # Is this a reply?
+     $reply = 1 if ($head->get('Subject') =~ /^Re: /);
+
+     # Get receipt information:
+     print "Last received from: ", $head->get('Received', 0), "\n";
+     @all_received = $head->get('Received');
+
+To *get the first occurence* of a field as a string, regardless of
+context:
+
+     # Print the subject, or the empty string if none:
+     print "Subject: ", $head->get('Subject',0), "\n";
+
+To *get all occurences* of a field as an array, regardless of context:
+
+     # Too many hops?  Count 'em and see!
+     if (int($head->get_all('Received')) > 5) { ...
+
+To *set a field* to a given string:
+
+     # Declare this to be an HTML header:
+     $head->replace('Content-type', 'text/html');
+
+To get certain commonly-used *MIME information*:
+
+     # The content type (e.g., "text/html"):
+     $mime_type     = $head->mime_type;
+
+     # The content transfer encoding (e.g., "quoted-printable"):
+     $mime_encoding = $head->mime_encoding;
+
+     # The recommended filename (e.g., "choosy-moms-choose.gif"):
+     $file_name     = $head->recommended_filename;
+
+     # The boundary text, for multipart messages:
+     $boundary      = $head->multipart_boundary;
+
+
+DESCRIPTION
+===========
+
+A class for parsing in and manipulating RFC-822 message headers, with
+some methods geared towards standard (and not so standard) MIME fields
+as specified in RFC-1521, *Multipurpose Internet Mail Extensions*.
+
+
+PUBLIC INTERFACE
+================
+
+
+Creation, input, and output
+---------------------------
+
+new [ARG],[OPTIONS]
+     *Class method, inherited.*
+     Creates a new header object.  Arguments are the same as those in
+     the superclass.
+
+from_file EXPR,OPTIONS
+     *Class or instance method*.
+     For convenience, you can use this to parse a header object in from
+     EXPR, which may actually be any expression that can be sent to
+     open() so as to return a readable filehandle.  The "file" will be
+     opened, read, and then closed:
+
+          # Create a new header by parsing in a file:
+          my $head = MIME::Head->from_file("/tmp/test.hdr");
+
+     Since this method can function as either a class constructor *or*
+     an instance initializer, the above is exactly equivalent to:
+
+          # Create a new header by parsing in a file:
+          my $head = MIME::Head->new->from_file("/tmp/test.hdr");
+
+     On success, the object will be returned; on failure, the undefined
+     value.
+
+     The OPTIONS are the same as in new(), and are passed into new() if
+     this is invoked as a class method.
+
+     *NOTE:* This is really just a convenience front-end onto `read()',
+     provided mostly for backwards-compatibility with MIME-parser 1.0.
+
+read FILEHANDLE
+     *Instance (or class) method.* 
+     This initiallizes a header object by reading it in from a
+     FILEHANDLE, until the terminating blank line is encountered.  A
+     syntax error or end-of-stream will also halt processing.
+
+     Supply this routine with a reference to a filehandle glob; e.g.,
+     `\*STDIN':
+
+          # Create a new header by parsing in STDIN:
+          $head->read(\*STDIN);
+
+     On success, the self object will be returned; on failure, a false
+     value.
+
+     *Note:* in the MIME world, it is perfectly legal for a header to be
+     empty, consisting of nothing but the terminating blank line.  Thus,
+     we can't just use the formula that "no tags equals error".
+
+     Warning: as of the time of this writing, Mail::Header::read did not
+     flag either syntax errors or unexpected end-of-file conditions (an
+     EOF before the terminating blank line).  MIME::ParserBase takes
+     this into account.
+
+
+Getting/setting fields
+----------------------
+
+The following are methods related to retrieving and modifying the header
+fields.  Some are inherited from Mail::Header, but I've kept the
+documentation around for convenience.
+
+add TAG,TEXT,[INDEX]
+     *Instance method, inherited.*
+     Add a new occurence of the field named TAG, given by TEXT:
+
+          # Add the trace information:    
+          $head->add('Received', 'from eryq.pr.mcs.net by gonzo.net with smtp');
+
+     Normally, the new occurence will be *appended* to the existing
+     occurences.  However, if the optional INDEX argument is 0, then the
+     new occurence will be *prepended*.  If you want to be *explicit*
+     about appending, specify an INDEX of -1.
+
+     *NOTE:* use of "BEFORE" (for index 0) or "AFTER" (for index -1)
+     is still allowed, but deprecated.
+
+     WARNING: this method always adds new occurences; it doesn't
+     overwrite any existing occurences... so if you just want to
+     *change* the value of a field (creating it if necessary), then you
+     probably *don't* want to use this method: consider using `set()'
+     instead.
+
+decode
+     *Instance method.*
+     Go through all the header fields, looking for RFC-1522-style "Q"
+     (quoted-printable, sort of) or "B" (base64) encoding, and decode
+     them in-place.  Fellow Americans, you probably don't know what the
+     hell I'm talking about.  Europeans, Russians, et al, you probably
+     do.  `:-)'.
+
+     For example, here's a valid header you might get:
+
+          From: =?US-ASCII?Q?Keith_Moore?= <moore@cs.utk.edu>
+          To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+          CC: =?ISO-8859-1?Q?Andr=E9_?= Pirard <PIRARD@vm1.ulg.ac.be>
+          Subject: =?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?=
+           =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=
+           =?US-ASCII?Q?.._cool!?=
+
+     That basically decodes to (sorry, I can only approximate the Latin
+     characters with 7 bit sequences /o and 'e):
+
+          From: Keith Moore <moore@cs.utk.edu>
+          To: Keld J/orn Simonsen <keld@dkuug.dk>
+          CC: Andr'e  Pirard <PIRARD@vm1.ulg.ac.be>
+          Subject: If you can read this you understand the example... cool!
+
+     *NOTE:* currently, the decodings are done without regard to the
+     character set: thus, the Q-encoding `=F8' is simply translated to
+     the octet (hexadecimal `F8'), period.  Perhaps this is a bad idea;
+     I honestly don't know.  Certainly, a mail reader intended for
+     humans should use the raw (undecoded) header.  But a mail robot?
+     Anyway, I'll gladly take guidance from anyone who has a clear idea
+     of what should happen.
+
+     *WARNING:* the CRLF+SPACE separator that splits up long encoded words 
+     into shorter sequences (see the Subject: example above) gets lost
+     when the field is unfolded, and so decoding after unfolding causes
+     a spurious space to be left in the field.  
+     *THEREFORE: if you're going to decode, do so BEFORE unfolding!*
+
+     This method returns the self object.
+
+     *Thanks to Kent Boortz for providing the idea, and the baseline 
+     RFC-1522-decoding code!*
+
+delete TAG,[INDEX]
+     *Instance method, inherited.*
+     Delete all occurences of the field named TAG.
+
+          # Remove all the MIME information:
+          $head->delete('MIME-Version');
+          $head->delete('Content-type');
+          $head->delete('Content-transfer-encoding');
+          $head->delete('Content-disposition');
+
+exists TAG
+     *Instance method, inherited, DEPRECATED.*
+     Returns whether a given field exists:
+
+          # Was a "Subject:" given?
+          if ($head->exists('subject')) {
+              # yes, it does!
+          }
+
+     The TAG is treated in a case-insensitive manner.  This method
+     returns some false value if the field doesn't exist, and some true
+     value if it does.
+
+     *DEPRECATED* by Mail::Header v.1.06.  If you have a recent copy of
+     Mail::Header, you should use count() instead, which returns
+     equivalent boolean values.  MIME::Head::exists uses count() if it's
+     available, but exists() is currently kept without warning for
+     backwards-compatibility (since we don't want to demand that you
+     have count()).
+
+get TAG,[INDEX]
+     *Instance method, inherited.*  
+     Get the contents of field TAG.
+
+     If a *numeric INDEX* is given, returns the occurence at that index,
+     or undef if not present:
+
+          # Print the first 'Received:' entry (explicitly):
+          print "Most recent: ", $head->get('received',0), "\n";
+   
+          # Print the last 'Received:' entry:
+          print "Least recent: ", $head->get('received', -1), "\n"; 
+
+     If *no INDEX* is given, but invoked in a scalar context, then INDEX
+     simply defaults to 0:
+
+          # Get the first 'Received:' entry (implicitly):
+          my $most_recent = $head->get('received');
+
+     If *no INDEX* is given, and invoked in an array context, then all
+     occurences of the field are returned:
+
+          # Get all 'Received:' entries:
+          my @all_received = $head->get('received');
+
+     *WARNING:* *This has changed since MIME-parser 1.x.  
+     You should now use the two-argument form if you want the old
+     behavior, or else tweak the module to emulate version 1.0.*
+
+get_all FIELD
+     *Instance method.*
+     Returns the list of all occurences of the field, or the empty list
+     if the field is not present:
+
+          # How did it get here?
+          @history = $head->get_all('Received');
+
+     *NOTE:* I had originally experimented with having `get()' return all 
+     occurences when invoked in an array context... but that causes a
+     lot of accidents when you get careless and do stuff like this:
+
+          print "\u$field: ", $head->get($field), "\n";
+
+     It also made the intuitive behaviour unclear if the INDEX argument
+     was given in an array context.  So I opted for an explicit approach
+     to asking for all occurences.
+
+original_text
+     *Instance method.*
+     Recover the original text that was read() in to create this object:
+
+          print "PARSED FROM:\n", $head->original_text;    
+
+     *WARNING:* does no such thing now.  Just returns a reasonable
+     approximation of that text.  Think of it as nothing more than a
+     poorly-named `as_string()' method, which outputs the header fields
+     in the order received.  Provided for backwards-compatibility only.
+
+     This method depends on Mail::Header::header returning the
+     information in the proper order.
+
+print [FILEHANDLE]
+     *Instance method, inherited.*
+     Print the header out to the given filehandle.
+
+set TAG,TEXT
+     *Instance method.*
+     Set the field named TAG to [the single occurence given by the TEXT:
+
+          # Set the MIME type:
+          $head->set('content-type', 'text/html');
+
+          The TAG is treated in a case-insensitive manner.
+
+     *DEPRECATED.*  Use replace() instead.
+
+unfold [FIELD]
+     *Instance method, inherited.*
+     Unfold the text of all occurences of the given FIELD.  If the FIELD
+     is omitted, all fields are unfolded.
+
+     "Unfolding" is the act of removing all newlines.
+
+          $head->unfold;
+
+     Returns the "self" object.
+
+
+MIME-specific methods
+---------------------
+
+All of the following methods extract information from the following
+fields:
+
+     Content-type
+     Content-transfer-encoding
+     Content-disposition
+
+Be aware that they do not just return the raw contents of those fields,
+and in some cases they will fill in sensible (I hope) default values.
+Use `get()' if you need to grab and process the raw field text.
+
+*NOTE:* some of these methods are provided both as a convenience and
+for backwards-compatibility only, while others (like
+recommended_filename()) *really do have to be in MIME::Head to work
+properly,* since they look for their value in more than one field.
+However, if you know that a value is restricted to a single field, you
+should really use the Mail::Field interface to get it.
+
+mime_encoding
+     *Instance method.*
+     Try *real hard* to determine the content transfer encoding (e.g.,
+     `"base64"', `"binary"'), which is returned in all-lowercase.
+
+     If no encoding could be found, the default of `"7bit"' is returned.
+     I quote from RFC-1521 section 5:
+
+          This is the default value -- that is, "Content-Transfer-Encoding: 7BIT" 
+          is assumed if the Content-Transfer-Encoding header field is not present.
+
+mime_type
+     *Instance method.*
+     Try `real hard' to determine the content type (e.g.,
+     `"text/plain"', `"image/gif"', `"x-weird-type"', which is returned
+     in all-lowercase.
+
+     If no content type could be found, the default of `"text/plain"' is
+     returned.  I quote from RFC-1521 section 7.1:
+
+          The default Content-Type for Internet mail is 
+          "text/plain; charset=us-ascii".
+
+multipart_boundary
+     *Instance method.*
+     If this is a header for a multipart message, return the
+     "encapsulation boundary" used to separate the parts.  The boundary
+     is returned exactly as given in the `Content-type:' field; that is,
+     the leading double-hyphen (`--') is *not* prepended.
+
+     (Well, *almost* exactly... from RFC-1521:
+
+          (If a boundary appears to end with white space, the white space 
+          must be presumed to have been added by a gateway, and must be deleted.)  
+
+     so we oblige and remove any trailing spaces.)
+
+     Returns undef (*not* the empty string) if either the message is not
+     multipart, if there is no specified boundary, or if the boundary is
+     illegal (e.g., if it is empty after all trailing whitespace has
+     been removed).
+
+recommended_filename
+     *Instance method.*
+     Return the recommended external filename.  This is used when
+     extracting the data from the MIME stream.
+
+     Returns undef if no filename could be suggested.
+
+
+Compatibility tweaks
+--------------------
+
+
+NOTES
+=====
+
+
+Design issues
+-------------
+
+Why have separate objects for the entity, head, and body?
+     See the documentation for the MIME-parser distribution for the
+     rationale behind this decision.
+
+Why assume that MIME headers are email headers?
+     I quote from Achim Bohnet, who gave feedback on v.1.9 (I think he's
+     using the word header where I would use *field*; e.g., to refer to
+     "Subject:", "Content-type:", etc.):
+
+          There is also IMHO no requirement [for] MIME::Heads to look 
+          like [email] headers; so to speak, the MIME::Head [simply stores] 
+          the attributes of a complex object, e.g.:
+
+          new MIME::Head type => "text/plain",
+                         charset => ...,
+                         disposition => ..., ... ;
+
+     I agree in principle, but (alas and dammit) RFC-1521 says
+     otherwise.  RFC-1521 [MIME] headers are a syntactic subset of
+     RFC-822 [email] headers.  Perhaps a better name for these modules
+     would be RFC1521:: instead of MIME::, but we're a little beyond
+     that stage now.
+
+     In my mind's eye, I see an abstract class, call it MIME::Attrs,
+     which does what Achim suggests... so you could say:
+
+          my $attrs = new MIME::Attrs type => "text/plain",
+          				 charset => ...,
+                                      disposition => ..., ... ;
+
+     We could even make it a superclass of MIME::Head: that way,
+     MIME::Head would have to implement its interface, and allow itself
+     to be initiallized from a MIME::Attrs object.
+
+     However, when you read RFC-1521, you begin to see how much MIME
+     information is organized by its presence in particular fields.  I
+     imagine that we'd begin to mirror the structure of RFC-1521 fields
+     and subfields to such a degree that this might not give us a
+     tremendous gain over just having MIME::Head.
+
+Why all this "occurence" and "index" jazz?  Isn't every field unique?
+     Aaaaaaaaaahh....no.
+
+     (This question is generic to all Mail::Header subclasses, but I'll
+     field it here...)
+
+     Looking at a typical mail message header, it is sooooooo tempting
+     to just store the fields as a hash of strings, one string per hash
+     entry.  Unfortunately, there's the little matter of the `Received:'
+     field, which (unlike `From:', `To:', etc.) will often have multiple
+     occurences; e.g.:
+
+          Received: from gsfc.nasa.gov by eryq.pr.mcs.net  with smtp
+              (Linux Smail3.1.28.1 #5) id m0tStZ7-0007X4C; Thu, 21 Dec 95 16:34 CST
+          Received: from rhine.gsfc.nasa.gov by gsfc.nasa.gov (5.65/Ultrix3.0-C)
+              id AA13596; Thu, 21 Dec 95 17:20:38 -0500
+          Received: (from eryq@localhost) by rhine.gsfc.nasa.gov (8.6.12/8.6.12) 
+              id RAA28069; Thu, 21 Dec 1995 17:27:54 -0500
+          Date: Thu, 21 Dec 1995 17:27:54 -0500
+          From: Eryq <eryq@rhine.gsfc.nasa.gov>
+          Message-Id: <199512212227.RAA28069@rhine.gsfc.nasa.gov>
+          To: eryq@eryq.pr.mcs.net
+          Subject: Stuff and things
+
+     The `Received:' field is used for tracing message routes, and
+     although it's not generally used for anything other than human
+     debugging, I didn't want to inconvenience anyone who actually
+     wanted to get at that information.
+
+     I *also* didn't want to make this a special case; after all, who
+     knows what other fields could have multiple occurences in the
+     future?  So, clearly, multiple entries had to somehow be stored
+     multiple times... and the different occurences had to be
+     retrievable.
+
+
+WARNINGS
+========
+
+
+NEWS FLASH!
+-----------
+
+Rejoice!  As of MIME-parser 2.0, this is a subclass of Mail::Header, as
+the Maker of All Things intended.  It will continue to exist, both for
+backwards-compatibility with MIME-parser 1.0, and to allow me to tinker
+with MIME-specific methods.
+
+If you are upgrading from the MIME-parser 1.0 package, and you used 
+this module directly, you may notice some warnings about deprecated 
+constructs in your code... all your stuff should (hopefully) 
+still work... you'll just see a lot of warnings.  
+*However, you should read the *COMPATIBILITY TWEAKS* and
+WARNINGS sections before installing it!*
+
+I have also changed terminology to match with the new MailTools
+distribution.  Thus, the name of a field ("Subject", "From", "To", etc.)
+is now called a *"tag"* instead of a "field".
+
+However, I have retained all the documentation where appropriate, even
+when inheriting from the Mail::Header module.  Hopefully, you won't need
+to flip back and forth between man pages to use this module.
+
+
+UPGRADING FROM 1.x to 2.x
+-------------------------
+
+Altered methods/usage
+     There are things you must beware of if you are either a MIME-parser
+     1.x user or a Mail::Header user:
+
+     Modified get() behavior
+          In the old system, always `get()' returned a single value, and
+          `get_all()' returned multiple values: array vs. scalar context
+          was not used.
+
+          Since Mail::Header does stuff differently, we have to obey our
+          superclass or we might break some of its complex methods that
+          use `get()' (like `Mail::Header::combine()', which expects
+          `get()' to return all fields in an array context).
+          Unfortunately, this will break some of *your* old code.
+
+          *For now,* you can tell the system to emulate the MIME-parser 
+          version 1 behavior.
+
+          *For future compatibility,* you should, as soon as possible, modify
+          your code to use the two-arg form of get if you want a single
+          value, with the second arg being 0.  This does what the old
+          `get()' method did:
+
+               print "Subject: ",  $head->get('subject',0), "\n";
+
+Deprecated methods/usage
+     The following are deprecated as of MIME-parser v.2.0.  In many
+     cases, they are redundant with Mail::Header subroutines of
+     different names:
+
+     add
+          Use numeric index 0 for 'BEFORE' and -1 for 'AFTER'.
+
+     add_text
+          If you really need this, use the inherited `replace()' method
+          instead.  The current implementation is now somewhat
+          inefficient.
+
+     copy
+          Use the inherited `dup()' method instead.
+
+     fields
+          Use the inherited `tags()' method instead.  *Beware:* that
+          method does not automatically downcase its output for you: you
+          will have to do that yourself.
+
+     params
+          Use the new MIME::Field interface classes (subclasses of
+          Mail::Field) to access portions of a structured MIME field.
+
+     set
+          Use the inherited `replace()' method instead.
+
+     tweak_FROM_parsing
+          Use the inherited `mail_from()' method instead.
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+The more-comprehensive filename extraction is courtesy of Lee
+E. Brotzman, Advanced Data Solutions.
+
+
+VERSION
+=======
+
+$Revision: 3.202 $ $Date: 1997/01/22 05:00:29 $
+
+
+
+
+File: pm.info, Node: MIME/IO, Next: MIME/Latin1, Prev: MIME/Head, Up: Module List
+
+a small package for turning things into IO handles
+**************************************************
+
+
+
+NAME
+====
+
+MIME::IO - a small package for turning things into IO handles
+
+
+DESCRIPTION
+===========
+
+As of MIME-tools 2.0, input and output routines cannot just assume that
+they are dealing with filehandles.  In an effort to come up with a nice,
+OO way of encapsulating input/output streams, I decided to use a minimal
+subset of Graham Barr's IO::Handle interface (which is itself derived
+from the FileHandle interface).
+
+Therefore, all that MIME::Body, MIME::Decoder, and the other classes
+require (and, thus, all that they can assume) is that they are
+manipulating an object which responds to the following small,
+well-defined set of messages:
+
+close
+     *Instance method.*
+     This should close the input/output stream.
+
+getline
+     *Instance method.*
+     This should get a single line from the input stream, and return it
+     (or undef on end of file).  The returned line should end with the
+     newline (unless, of course, this is the last line of a file which
+     is not terminated by a newline).
+
+getlines
+     *Instance method.*
+     This should get the entire input stream as an array of lines, which
+     each line is terminated by the `"\n"' (except, maybe, the last
+     one).
+
+print ARGS...
+     *Instance method.*
+     This should output the ARGS to the stream.
+
+read BUFFER,NBYTES
+     *Instance method.*
+     This should get NBYTES from the input stream, placing them in
+     BUFFER.  It should return the number of bytes actually read, undef
+     on error, and 0 on end of file.
+
+By popular demand, I have also added the following to the built-in
+classes, but I do not use them anywhere in the parsing/generating code
+so it's safe for you to omit them from your class:
+
+seek POS,WHENCE
+     *Instance method, FOR READ-OPENED STREAMS ONLY.*
+     Seek to the given POSition in the stream.  The WHENCE has the same
+     meaning as in the Perl built-in `seek()'.
+
+tell
+     *Instance method, FOR READ-OPENED STREAMS ONLY.*
+     Tell the given position in the stream.
+
+*Thanks to Achim Bohnet for suggesting this more-generic I/O model.*
+*Thanks to Jason L Tibbitts III for suggesting the seek/tell interface.*
+
+
+BUILT-IN SUBCLASSES
+===================
+
+
+MIME::IO::Handle
+----------------
+
+DESCRIPTION
+     An I/O interface object wrapped around a raw filehandle.  If you
+     hand this class' `wrap()' constructor an argument, it is expected
+     to be one of the following:
+
+        * *A raw scalar filehandle name,* like `"STDOUT"' or `"Class::HANDLE"'.
+          In this case, the filehandle name is wrapped in a MIME::IO
+          object, which is returned.
+
+        * *A raw filehandle glob,* like `\*STDOUT'.
+          In this case, the filehandle glob is wrapped in a MIME::IO
+          object, which is returned.
+
+        * *A blessed FileHandle object.*
+          In this case, the FileHandle is wrapped in a MIME::IO object
+          if and only if your FileHandle class does not support the
+          `read()' method.
+
+        * *Any other kind of blessed object,* which is assumed to be already
+          conformant to the I/O object interface.  In this case, you
+          just get back that object.
+
+     Like this:
+
+          my $IO = wrap MIME::IO::Handle \*STDOUT;
+
+     *All this class does* is to provide a simple means for the MIME::
+     classes to wrap raw filehandles inside a class which responds to
+     the above messages (by passing the messages on to the actual
+     filehandle in the form of the standard function calls).
+
+     The bottom line: what you get back is an object which is guaranteed
+     to support the methods defined above.
+
+     This interface is used by many of the MIME-tool classes, for
+     backwards compatibility with earlier versions of MIME-parser: if
+     you supply a raw filehandle where an INSTREAM or OUTSTREAM is
+     expected, most MIME packages will automatically wrap that raw
+     filehandle in a MIME::IO object, which fits the I/O handle
+     criteria.
+
+NOTES
+     Clearly, when wrapping a raw external filehandle (like \*STDOUT), I
+     didn't want to close the file descriptor when this object is
+     destructed... since the user might not appreciate that.  Hence,
+     there's no DESTROY method in this class.
+
+     When wrapping a FileHandle object, however, I believe that Perl
+     will invoke the FileHandle::DESTROY when the last reference goes
+     away, so in that case, the filehandle is closed if the wrapped
+     FileHandle really was the last reference to it.
+
+
+MIME::IO::Scalar
+----------------
+
+DESCRIPTION
+     An I/O interface object wrapped around a scalar.  This is to
+     implement things that look like filehandles, but which keep all of
+     their data in-core.
+
+     Use it like this:
+
+          $IO = new MIME::IO::Scalar \$scalar;
+          $IO->print("Some data\n");
+          $IO->print("Some more data\n");
+          $IO->close;    # ...$scalar now holds "Some data\nSome more data\n"
+
+
+NOTES
+=====
+
+I know, I know: three-level-nesting of packages is evil when those
+packages are not "private".  Sure, I could have made this two modules,
+`MIME::IOHandle' and `MIME::IOScalar'...  but it just seemed more
+sensible to mimic the IO:: hierarchy, one level down (under MIME::).
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+
+VERSION
+=======
+
+$Revision: 3.201 $ $Date: 1997/01/19 00:52:58 $
+
+
+
+
+File: pm.info, Node: MIME/Latin1, Next: MIME/Lite, Prev: MIME/IO, Up: Module List
+
+translate ISO-8859-1 into 7-bit approximations
+**********************************************
+
+
+
+NAME
+====
+
+MIME::Latin1 - translate ISO-8859-1 into 7-bit approximations
+
+
+SYNOPSIS
+========
+
+     use MIME::Latin1 qw(latin1_to_ascii);
+
+     $dirty = "Fran\347ois";
+     print latin1_to_ascii($dirty);      # prints out "Fran\c,ois"
+
+
+DESCRIPTION
+===========
+
+This is a small package used by the `"7bit"' encoder/decoder for
+handling the case where a user wants to 7bit-encode a document that
+contains 8-bit (presumably Latin-1) characters.  It provides a mapping
+whereby every 8 bit character is mapped to a unique sequence of two
+7-bit characters that approximates the appearance or pronunciation of
+the Latin-1 character.  For example:
+
+     This...                   maps to...
+     --------------------------------------------------
+     A c with a cedilla        c,
+     A C with a cedilla        C,
+     An "AE" ligature          AE
+     An "ae" ligature          ae
+     Yen sign                  Y-
+
+I call each of these 7-bit 2-character encodings *mnemonic encodings*,
+since they (hopefully) are visually reminiscent of the 8-bit characters
+they are meant to represent.
+
+
+PUBLIC INTERFACE
+================
+
+latin1_to_ascii STRING,[OPTS]
+     *Function.*
+     Map the Latin-1 characters in the string to sequences of the form:
+
+          \xy
+
+     Where `xy' is a two-character sequence that visually approximates
+     the Latin-1 character.  For example:
+
+          c cedilla      => \c,
+          n tilde        => \n~
+          AE ligature    => \AE
+          small o slash  => \o/
+
+     The sequences are taken almost exactly from the Sun character
+     composition sequences for generating these characters.  The
+     translation may be further tweaked by the (optional) OPTS string:
+
+     READABLE
+          *Currently the default.*  
+          Only 8-bit characters are affected, and their output is of the
+          form `\xy':
+
+               \<<Fran\c,ois M\u"ller\>>   c:\usr\games
+
+     NOSLASH
+          Exactly like READABLE, except the leading `"\"' is not
+          inserted, making the output more compact:
+
+               <<Franc,ois Mu"ller>>       c:\usr\games
+
+     ENCODE
+          Not only is the leading `"\"' output, but any other occurences
+          of `"\"' are escaped as well by turning them into `"\\"'.
+          Unlike the other options, this produces output which may
+          easily be parsed and turned back into the original 8-bit
+          characters, so in a way it is its own full-fledged encoding...
+          and given that `"\"' is a rare-enough character, not much
+          uglier that the normal output:
+
+               \<<Fran\c,ois M\u"ller\>>   c:\\usr\\games
+
+          You may use ascii_to_latin1 to decode this.
+
+     *Note:* as of 3.12, the options string must, if defined,
+     be one of the above options.  Composite options like
+     "ENCODE|NOSLASH" will no longer be supported (most will be
+     self-contradictory anyway).
+
+ascii_to_latin1 STRING
+     *Function.*
+     Map the Latin-1 escapes in the string (sequences of the form `\xy')
+     back into actual 8-bit characters.
+
+          # Assume $enc holds the actual text...    \<<Fran\c,ois \\ M\u"ller\>>
+          print ascii_to_latin1($enc);
+
+     Unrecognized sequences are turned into '?' characters.
+
+     *Note:* *you must have specified the "ENCODE" option when encoding 
+     in order to decode!*
+
+
+NOTES
+=====
+
+Hex encoding
+     Characters in the octal range \200-\237 (hexadecimal \x80-\x9F)
+     currently do not have mnemonic Latin-1 equivalents, and therefore
+     are represented by the hex sequences "80" through "9F", where the
+     second hex digit is *upcased.* That is:
+
+          80  81  82  83  84  85  86  87  88  89  8A  8B  8C  8D  8E  8F
+          90  91  92  93  94  95  96  97  98  99  9A  9B  9C  9D  9E  9F
+
+     To allow this scheme to work properly for all 8-bit-on characters, 
+     the general rule is: 
+     *the first hex digit is DOWNcased, and the second hex digit is UPcased.*
+     Hence, these are all decodable sequences:
+
+          a0  a1  a2  a3  a4  a5  a6  a7  a8  a9  aA  aB  aC  aD  aE  aF   
+
+     This "downcase-upcase" style is so we don't conflict with
+     mnemonically-encoded ligatures like "ae" and "AE", the latter of
+     which could reasonably have been represented as "Ae".
+
+     Note that we must never have a mnemonic encoding that could be
+     mistaken for a hex sequence from "80" to "fF", since the ambiguity
+     would make it impossible to decode.  (However, "12", "34", "Ff",
+     etc. are perfectly fine.)
+
+     *Thanks to Rolf Nelson for reporting the "gap" in the encoding.*
+
+Other restrictions
+     *The first character of a 2-character encoding can not be a
+     "\"*.  This is because "\\" represents an encoded "\": to allow
+     "\\x" would introduce an ambiguity for the decoder.
+
+Going backwards
+     Since the mappings may fluctuate over time as I get more input,
+     anyone writing a translator would be well-advised to use
+     ascii_to_latin1() to perform the reverse mapping.  I will strive
+     for backwards-compatibility in that code.
+
+Got a problem?
+     If you have better suggestions for some of the character
+     representations, please contact me.
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+
+VERSION
+=======
+
+$Revision: 3.202 $ $Date: 1997/01/19 02:34:03 $
+
+
+
+
+File: pm.info, Node: MIME/Lite, Next: MIME/Parser, Prev: MIME/Latin1, Up: Module List
+
+low-calorie MIME generator
+**************************
+
+
+
+NAME
+====
+
+MIME::Lite - low-calorie MIME generator
+
+**WARNING:* This is Alpha code.  I have not yet fully tested it, and I can't
+guarantee that the interface won't change in the next few releases in a
+non-backwards-compatible manner.  It is being provided to the community
+for suggestions and in the hopes that it will be useful.*
+
+
+SYNOPSIS
+========
+
+     use MIME::Lite;
+   
+     Create a single-part message:
+
+     # Create a new single-part message, to send a GIF file:
+     $msg = new MIME::Lite 
+                 From     =>'me@myhost.com',
+                 To       =>'you@yourhost.com',
+                 Cc       =>'some@other.com, some@more.com',
+                 Subject  =>'Helloooooo, nurse!',
+                 Type     =>'image/gif',
+                 Encoding =>'base64',
+                 Path     =>'hellonurse.gif';
+
+
+Create a multipart message (i.e., one with attachments):
+
+     # Create a new multipart message:
+     $msg = new MIME::Lite 
+                 From    =>'me@myhost.com',
+                 To      =>'you@yourhost.com',
+                 Cc      =>'some@other.com, some@more.com',
+                 Subject =>'A message with 2 parts...',
+                 Type    =>'multipart/mixed';
+
+     # Add parts (each "attach" has same arguments as "new"):
+     attach $msg 
+                 Type     =>'TEXT',   
+                 Data     =>"Here's the GIF file you wanted";  
+     attach $msg 
+                 Type     =>'image/gif',
+                 Path     =>'aaa000123.gif',
+                 Filename =>'logo.gif';
+
+Output a message:
+
+     # As a string...
+     $str = $msg->as_string;
+
+     # To a filehandle (say, a "sendmail" stream)...
+     $msg->print(\*SENDMAIL);
+
+
+DESCRIPTION
+===========
+
+In the never-ending quest for great taste with fewer calories, we
+proudly present: *MIME::Lite*.
+
+MIME::Lite is intended as a simple, standalone module for generating
+(not parsing!) MIME messages... specifically, it allows you to output a
+simple, decent single- or multi-part message with text or binary
+attachments.  It does not require that you have the Mail:: or MIME::
+modules installed.
+
+You can specify each message part as either the literal data itself (in
+a scalar or array), or as a string which can be given to open() to get a
+readable filehandle (e.g., "<filename" or "somecommand|").
+
+You don't need to worry about encoding your message data: this module
+will do that for you.  It handles the 5 standard MIME encodings.
+
+If you need more sophisticated behavior, please get the MIME-tools
+package instead.  I will be more likely to add stuff to that toolkit
+over this one.
+
+
+MORE EXAMPLES
+=============
+
+Create a multipart message exactly as above, but using the "attach to
+singlepart" hack:
+
+     # Create a new multipart message:
+     $msg = new MIME::Lite 
+                 From    =>'me@myhost.com',
+                 To      =>'you@yourhost.com',
+                 Cc      =>'some@other.com, some@more.com',
+                 Subject =>'A message with 2 parts...',
+                 Type    =>'TEXT',
+                 Data    =>"Here's the GIF file you wanted";  
+
+     # Attach a part:
+     attach $msg 
+                 Type     =>'image/gif',
+                 Path     =>'aaa000123.gif',
+                 Filename =>'logo.gif';
+
+
+Output a message to a filehandle:
+ 
+    # Write it to a filehandle:
+    $msg->print(\*STDOUT);
+     
+    # Write just the header:
+    $msg->print_header(\*STDOUT);
+     
+    # Write just the encoded body:
+    $msg->print_body(\*STDOUT);
+
+Get a message as a string:
+
+     # Get entire message as a string:
+     $str = $msg->as_string;
+ 
+     # Get just the header:
+     $str = $msg->header_as_string;
+ 
+     # Get just the encoded body:
+     $str = $msg->body_as_string;
+
+# Send a message (Unix systems only!):
+
+     # Send it!
+     $msg->send;
+
+
+PUBLIC INTERFACE
+================
+
+
+Construction
+------------
+
+new [PARAMHASH]
+     *Class method, constructor.*
+     Create a new message object.
+
+     If any arguments are given, they are passed into `build()';
+     otherwise, just the empty object is created.
+
+attach [OBJECT|PARAMHASH]
+     *Instance method.*
+     Add a new part to this message, and return the new part.
+
+     You can attach a MIME::Lite OBJECT, or have it create one by
+     specifying a PARAMHASH that will be automatically given to new().
+
+     One of the possibly-quite-useful hacks thrown into this is the
+     "attach-to-singlepart" hack: if you attempt to attach a part (let's
+     call it "part 1") to a message that *isn't* a multipart message
+     (the "self" object in this case), the following happens:
+
+        * A new part (call it "part 0") is made.
+
+        * The MIME attributes and data (but *not* the other headers) are
+          cut from the "self" message, and pasted into "part 0".
+
+        * The "self" is turned into a "multipart/mixed" message.
+
+        * The new "part 0" is added to the "self", and *then* "part 1"
+          is added.
+
+     One of the nice side-effects is that you can create a text message
+     and then add zero or more attachments to it, much in the same way
+     that a user agent like Netscape allows you to do.
+
+build [PARAMHASH]
+     *Class/instance method, initiallizer.*
+     Create (or initiallize) a MIME message object.  PARAMHASH can
+     contain the following keys:
+
+     (fieldname)
+          Any field you want placed in the message header, taken from
+          the standard list of header fields (you don't need to worry
+          about case):
+
+               Bcc           Encrypted     Received      Sender         
+               Cc            From          References    Subject 
+               Comments	  Keywords      Reply-To      To 
+               Content-*	  Message-ID    Resent-*      X-*
+               Date          MIME-Version  Return-Path   
+                             Organization
+
+          To give experienced users some veto power, these fields will be set 
+          *after* the ones I set... so be careful: *don't set any MIME fields*
+          (like `Content-type') unless you know what you're doing!
+
+          To specify a fieldname that's *not* in the above list, even
+          one that's identical to an option below, just give it with a
+          trailing `":"', like `"My-field:"'.  When in doubt, that
+          *always* signals a mail field (and it sort of looks like one
+          too).
+
+     Data
+          *Alternative to "Path".*
+          The actual message data.  This may be a scalar or a ref to an
+          array of strings; if the latter, the message consists of a
+          simple concatenation of all the strings in the array.
+
+     Disposition
+          *Optional.*
+          The content disposition, `"inline"' or `"attachment"'.  The
+          default is `"inline"'.
+
+     Encoding
+          *Optional.*
+          The content transfer encoding that should be used to encode your data.  
+          The default is `"binary"', which means "no encoding": this is generally
+          *not* suitable for sending anything but ASCII text files with short
+          lines, so consider using one of the following values instead:
+
+               Use encoding:     If your message contains:
+               ------------------------------------------------------------
+               7bit              Only 7-bit text, all lines <1000 characters
+               8bit              8-bit text, all lines <1000 characters
+               quoted-printable  8-bit text or long lines (MUCH more reliable than "8bit")
+               base64            Largely binary data: a GIF, a tar file, etc.
+
+          Be sure to pick an appropriate encoding.  In the case of
+          "7bit"/"8bit", long lines are automatically chopped to legal
+          length; in the case of "7bit", all 8-bit characters are
+          automatically converted to ugly QP-like `"=XX"' sequences.
+          There's a `"A MIME PRIMER"' in this node in this document with
+          more info.
+
+     Filename
+          *Optional.*
+          The name of the attachment.  You can use this to supply a
+          filename if the one in the Path is inadequate, or if you're
+          using the Data argument.
+
+     Length
+          *Optional.*
+          Set the content length explicitly.  Normally, this header is
+          automatically computed, but only under certain circumstances
+          (see `"Limitations"' in this node).
+
+     Path
+          *Alternative to "Data".*
+          Path to a file containing the data... actually, it can be any
+          open()able expression.  If it looks like a path, the last
+          element will automatically be treated as the filename.
+          Ignored if "Data" is present.  See "ReadNow" also.
+
+     ReadNow
+          *Optional, for use with "Path".*
+          If true, will open the path and slurp the contents into core
+          now.  This is useful if the Path points to a command and you
+          don't want to run the command over and over if outputting the
+          message several times.  *Fatal exception* raised if the open
+          fails.
+
+     Top
+          *Optional.*
+          If defined, indicates whether or not this is a "top-level"
+          MIME message.  The parts of a multipart message are *not*
+          top-level.  Default is true.
+
+     Type
+          *Optional.*
+          The MIME content type, or one of these special values
+          (case-sensitive):
+
+               "TEXT"   means "text/plain"
+               "BINARY" means "application/octet-stream"
+
+          The default is `"TEXT"'.
+
+     A picture being worth 1000 words (which is of course 2000 bytes, so
+     it's probably more of an "icon" than a "picture", but I
+     digress...), here are some examples:
+
+          $msg = build MIME::Lite 
+                     From     => 'yelling@inter.com',
+                     To       => 'stocking@fish.net',
+                     Subject  => "Hi there!",
+                     Type     => 'TEXT',
+                     Encoding => '7bit',
+                     Data     => "Just a quick note to say hi!";
+ 
+          $msg = build MIME::Lite 
+                     From     => 'dorothy@emerald-city.oz',
+                     To       => 'gesundheit@edu.edu.edu',
+                     Subject  => "A gif for U"
+                     Type     => 'image/gif',
+                     Path     => "/home/httpd/logo.gif";
+ 
+          $msg = build MIME::Lite 
+                     From     => 'laughing@all.of.us',
+                     To       => 'scarlett@fiddle.dee.de',
+                     Subject  => "A gzipp'ed tar file",
+                     Type     => 'x-gzip',
+                     Path     => "gzip < /usr/inc/somefile.tar |",
+                     ReadNow  => 1,
+                     Filename => "somefile.tgz";
+
+     To show you what's really going on, that last example could also
+     have been written:
+
+          $msg = new MIME::Lite;
+
+          $msg->build(Type     => 'x-gzip',
+                      Path     => "gzip < /usr/inc/somefile.tar |",
+                      ReadNow  => 1,
+                      Filename => "somefile.tgz");
+
+          $msg->add(From    => "laughing@all.of.us");
+          $msg->add(To      => "scarlett@fiddle.dee.de");
+          $msg->add(Subject => "A gzipp'ed tar file");  
+
+
+Setting/getting headers and attributes
+--------------------------------------
+
+add TAG,VALUE
+     Add field TAG with the given VALUE to the end of the header.  The
+     TAG will be converted to all-lowercase, and the VALUE will be made
+     "safe" (returns will be given a trailing space).
+
+     *Beware:* any MIME fields you "add" will override any MIME
+     attributes I have when it comes time to output those fields.
+     Normally, you will use this method to add *non-MIME* fields:
+
+          $msg->add("Subject" => "Hi there!");
+
+     Giving VALUE an arrayref will cause all those values to be added:
+
+          $msg->add("Received" => ["here", "there", "everywhere"]
+
+     *Note:* add() is probably going to be more efficient than `replace()',
+     so you're better off using it for most applications.
+
+     *Note:* the name comes from Mail::Header.
+
+attr ATTR,[VALUE]
+     Set MIME attribute ATTR to the string VALUE.  ATTR is converted to
+     all-lowercase.  This method is normally used to set/get MIME
+     attributes:
+
+          $msg->attr("content-type"         => "text/html");
+          $msg->attr("content-type.charset" => "US-ASCII");
+          $msg->attr("content-type.name"    => "homepage.html");
+
+     This would cause the final output to look something like this:
+
+          Content-type: text/html; charset=US-ASCII; name="homepage.html"
+
+     Note that the special empty sub-field tag indicates the anonymous
+     first sub-field.
+
+     Giving VALUE as undefined will cause the contents of the named
+     subfield to be deleted.
+
+     Supplying no VALUE argument just returns the attribute's value:
+
+          $type = $msg->attr("content-type");        # returns "text/html"
+          $name = $msg->attr("content-type.name");   # returns "homepage.html"
+
+delete TAG
+     Delete field TAG with the given VALUE to the end of the header.
+     The TAG will be converted to all-lowercase.
+
+          $msg->delete("Subject");
+
+     *Note:* the name comes from Mail::Header.
+
+fields
+     Return the full header for the object, as a ref to an array of
+     `[TAG, VALUE]' pairs.
+
+     Any fields that the user has explicitly set will override the
+     corresponding MIME fields that we would generate.  So: *don't* say:
+
+          $msg->set("Content-type" => "text/html; charset=US-ASCII");
+
+     unless you *mean it*!
+
+     *Note:* I called this "fields" because the header() method of
+     Mail::Header returns something different, but similar enough to be
+     confusing.
+
+filename [FILENAME]
+     Set the filename which this data will be reported as.  This
+     actually sets both "standard" attributes.
+
+     With no argument, returns the filename as dictated by the
+     content-disposition.
+
+get_length
+     Recompute the content length for the message *if the process is
+     trivial*, setting the "content-length" attribute as a side-effect:
+
+          $msg->get_length;
+
+     Returns the length, or undefined if not set.
+
+     *Note:* the content length can be difficult to compute, since it 
+     involves assembling the entire encoded body and taking the length
+     of it (which, in the case of multipart messages, means freezing all
+     the sub-parts, etc.).
+
+     This method only sets the content length to a defined value if the
+     message is a singlepart with `"binary"' encoding, and the body is
+     available either in-core or as a simple file.  Otherwise, the
+     content length is set to the undefined value.
+
+     Since content-length is not a standard MIME field anyway (that's
+     right, kids: it's not in the MIME RFCs, it's an HTTP thing), this
+     seems pretty fair.
+
+replace TAG,VALUE
+     Delete all occurences of fields named TAG, and add a new field with
+     the given VALUE.  TAG is converted to all-lowercase.
+
+     *Beware:* any MIME fields you "replace" will override any MIME
+     attributes I have when it comes time to output those fields.
+     Normally, you will use this method to set *non-MIME* fields:
+
+          $msg->replace("Subject" => "Hi there!");
+
+     Giving VALUE as undefined will simply cause the contents of the
+     named field to be deleted.  Giving VALUE as an arrayref will cause
+     all the values in the array to be added.
+
+     *Note:* the name comes from Mail::Header.
+
+
+Setting/getting message data
+----------------------------
+
+binmode [OVERRIDE]
+     With no argument, returns whether or not it thinks that the data
+     (as given by the "Path" argument of `build()') should be read using
+     binmode() (for example, when `read_now()' is invoked).
+
+     The default behavior is that any content type other than `text/*'
+     or `message/*' is binmode'd; this should in general work fine.
+
+     With a defined argument, this method sets an explicit "override"
+     value.  An undefined argument unsets the override.  The new current
+     value is returned.
+
+data [DATA]
+     Get/set the literal DATA of the message.  The DATA may be either a
+     scalar, or a reference to an array of scalars (which will simply be
+     joined).
+
+     Warning: setting the data causes the "content-length" attribute to
+     be recomputed (possibly to nothing).
+
+path [PATH]
+     Get/set the PATH to the message data.
+
+     Warning: setting the path recomputes any existing "content-length"
+     field, and re-sets the "filename" (to the last element of the path
+     if it looks like a simple path, and to nothing if not).
+
+read_now [PATH]
+     Force the path to be read into core immediately.  With optional
+     argument, sets the path() first; otherwise, the current path (such
+     as given during a `build()') will be used.
+
+     Note that the in-core data will always be used if available.
+
+     Be aware that everything is slurped into a giant scalar: you may
+     not want to use this if sending tar files!  The benefit of *not*
+     reading in the data is that very large files can be handled by this
+     module if left on disk until the message is output via `print()' or
+     `print_body()'.
+
+sign PARAMHASH
+     Sign the message.  This forces the message to be read into core,
+     after which the signature is appended to it.
+
+     Data
+          As in `build()': the literal signature data.  Can be either a
+          scalar or a ref to an array of scalars.
+
+     Path
+          As in `build()': the path to the file.
+
+     If no arguments are given, the default is:
+
+          Path => "$ENV{HOME}/.signature"
+
+     The content-length is recomputed.
+
+
+Output
+------
+
+print [OUTHANDLE]
+     *Instance method.* 
+     Print the message to the given output handle, or to the
+     currently-selected filehandle if none was given.
+
+     All OUTHANDLE has to be is a filehandle (possibly a glob ref), or
+     any object that responds to a print() message.
+
+print_body [OUTHANDLE]
+     *Instance method.* 
+     Print the body of the message to the given output handle, or to the
+     currently-selected filehandle if none was given.
+
+     All OUTHANDLE has to be is a filehandle (possibly a glob ref), or
+     any object that responds to a print() message.
+
+     *Fatal exception* raised if unable to open any of the input files,
+     or if a part contains no data, or if an unsupported encoding is
+     encountered.
+
+print_header [OUTHANDLE]
+     *Instance method.* 
+     Print the header of the message to the given output handle, or to
+     the currently-selected filehandle if none was given.
+
+     All OUTHANDLE has to be is a filehandle (possibly a glob ref), or
+     any object that responds to a print() message.
+
+as_string
+     *Instance method.* 
+     Return the entire message as a string, with a header and an encoded
+     body.
+
+body_as_string
+     *Instance method.* 
+     Return the encoded body as a string.
+
+     *Note:* actually prepares the body by "printing" to a scalar.
+     Proof that you can hand the `print*()' methods any blessed object
+     that responds to a `print()' message.
+
+header_as_string
+     *Instance method.* 
+     Return the header as a string.
+
+
+Sending
+-------
+
+send
+     *Instance method.*  
+     Sends the message.
+
+     Right now, this is done by piping it into the "sendmail" command as
+     given by `sendmail()'.  It probably will only work on Unix systems.
+
+     Returns false if sendmail *seems* to have failed, true otherwise.
+     *Fatal exception* raised if the open fails.
+
+sendmail COMMAND...
+     *Class method.*  Set up the "sendmail" command used by
+     `send()'.  You may supply it as either a single string, or an array
+     of path-to-command-plus-arguments:
+
+          sendmail MIME::Lite "/usr/lib/sendmail", "-t", "-oi", "-oem";
+
+     What you see above is the default.
+
+
+Miscellaneous
+-------------
+
+quiet ONOFF
+     *Class method.*  
+     Suppress/unsuppress all warnings coming from this module.
+
+          quiet MIME::Lite 1;       # I know what I'm doing
+
+     I recommend that you include that comment as well.  And while you
+     type it, say it out loud: if it doesn't feel right, then maybe you
+     should reconsider the whole line.  `;-)'
+
+
+NOTES
+=====
+
+
+Limitations
+-----------
+
+This is "lite", after all...
+
+   * There's no parsing.  Get MIME-tools if you need to parse MIME
+     messages.
+
+   * MIME::Lite messages are currently *not* interchangeable with either
+     Mail::Internet or MIME::Entity objects.  This is a completely
+     separate module.
+
+   * A content-length field is only inserted if the encoding is binary,
+     the message is a singlepart, and all the document data is available
+     at `build()' time by virtue of residing in a simple path, or
+     in-core.  Since content-length is not a standard MIME field anyway
+     (that's right, kids: it's not in the MIME RFCs, it's an HTTP
+     thing), this seems pretty fair.
+
+   * MIME::Lite alone cannot help you lose weight.  You must supplement
+     your use of MIME::Lite with a healthy diet and exercise.
+
+
+Cheap and easy mailing
+----------------------
+
+I thought putting in a sendmail invocation wasn't too bad an idea, since
+a lot of Perlers are on UNIX systems.  The default arguments to sendmail
+(which you can change) are:
+
+     -t      Scan message for To:, Cc:, Bcc:, etc.
+         
+     -oi     Do NOT treat a single "." on a line as a message terminator.
+             As in, "-oi vey, it truncated my message... why?!"
+           
+     -oem    On error, mail back the message (I assume to the
+             appropriate address, given in the header).
+             When mail returns, circle is complete.  Jai guru deva -oem.
+
+
+Under the hood
+--------------
+
+This class treats a MIME header in the most abstract sense, as being a
+collection of high-level attributes.  The actual RFC-822-style header
+fields are not constructed until it's time to actually print the darn
+thing.
+
+
+WARNINGS
+========
+
+*Important:* the MIME attributes are stored and manipulated separately 
+from the message header fields; when it comes time to print the header
+out, *any explicitly-given header fields override the ones that would be
+created from the MIME attributes.* That means that this:
+
+     ### DANGER ### DANGER ### DANGER ### DANGER ### DANGER ###
+     $msg->add("Content-type", "text/html; charset=US-ASCII");
+
+will set the exact `"Content-type"' field in the header I write, 
+*regardless of what the actual MIME attributes are.*
+
+*This feature is for experienced users only,* as an escape hatch in
+case the code that normally formats MIME header fields isn't doing what
+you need.  And, like any escape hatch, it's got an alarm on it:
+MIME::Lite will warn you if you attempt to `set()' or `replace()' any
+MIME header field.  Use attr() instead.
+
+
+A MIME PRIMER
+=============
+
+
+Content types
+-------------
+
+The "Type" parameter of `build()' is a *content type*.  This is the
+actual type of data you are sending.  Generally this is a string of the
+form `"majortype/minortype"'.
+
+Here are the major MIME types.  A more-comprehensive listing may be
+found in RFC-2046.
+
+application
+     Data which does not fit in any of the other categories,
+     particularly data to be processed by some type of application
+     program.  `application/octet-stream', `application/gzip',
+     `application/postscript'...
+
+audio
+     Audio data.  `audio/basic'...
+
+image
+     Graphics data.  `image/gif', `image/jpeg'...
+
+message
+     A message, usually another mail or MIME message.
+     `message/rfc822'...
+
+multipart
+     A message containing other messages.  `multipart/mixed',
+     `multipart/alternative'...
+
+text
+     Textual data, meant for humans to read.  `text/plain',
+     `text/html'...
+
+video
+     Video or video+audio data.  `video/mpeg'...
+
+
+Content transfer encodings
+--------------------------
+
+The "Encoding" parameter of `build()'.  This is how the message body is
+packaged up for safe transit.
+
+Here are the 5 major MIME encodings.  A more-comprehensive listing may
+be found in RFC-2045.
+
+7bit
+     Basically, no *real* encoding is done.  However, this label
+     guarantees that no 8-bit characters are present, and that lines do
+     not exceed 1000 characters in length.
+
+8bit
+     Basically, no *real* encoding is done.  The message might contain
+     8-bit characters, but this encoding guarantees that lines do not
+     exceed 1000 characters in length.
+
+binary
+     No encoding is done at all.  Message might contain 8-bit
+     characters, and lines might be longer than 1000 characters long.
+
+     The most liberal, and the least likely to get through mail
+     gateways.  Use sparingly, or (better yet) not at all.
+
+base64
+     Like "uuencode", but very well-defined.  This is how you should
+     send essentially binary information (tar files, GIFs, JPEGs, etc.).
+
+quoted-printable
+     Useful for encoding messages which are textual in nature, yet which
+     contain non-ASCII characters (e.g., Latin-1, Latin-2, or any other
+     8-bit alphabet).
+
+
+CHANGE LOG
+==========
+
+*Current version:*
+$Id: Lite.pm,v 1.121 1997/04/08 14:55:06 eryq Exp $
+
+Version 1.121
+     Filename attribute is now no longer ignored by build().
+     *Thanks to Ian Smith for finding and patching this bug.*
+
+Version 1.120
+     Efficiency hack to speed up MIME::Lite::IO_Scalar.  *Thanks to
+     David Aspinwall for the patch.*
+
+Version 1.116
+     Small bug in our private copy of encode_base64() was patched.
+     *Thanks to Andreas Koenig for pointing this out.*
+
+     New, prettier way of specifying mail message headers in `build()'.
+
+     New quiet method to turn off warnings.
+
+     Changed "stringify" methods to more-standard "as_string" methods.
+
+Version 1.112
+     Added `read_now()', and `binmode()' method for our non-Unix-using brethren: 
+     file data is now read using binmode() if appropriate.
+     *Thanks to Xiangzhou Wang for pointing out this bug.*
+
+Version 1.110
+     Fixed bug in opening the data filehandle.
+
+Version 1.102
+     Initial release.
+
+Version 1.101
+     Baseline code.
+
+
+TERMS AND CONDITIONS
+====================
+
+Copyright (c) 1997 by Eryq.  All rights reserved.  This program is free
+software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
+
+This software comes with NO WARRANTY of any kind.  See the COPYING file
+in the distribution for details.
+
+
+NUTRITIONAL INFORMATION
+=======================
+
+For some reason, the US FDA says that this is now required by law on any
+products that bear the name "Lite"...
+
+     Serving size:             1 module
+     Servings per container:   1
+     Calories:                 0
+     Fat:                      0g
+       Saturated Fat:          0g
+
+     Warning: for consumption by hardware only!  May produce 
+     indigestion in humans if taken internally.
+
+
+AUTHOR
+======
+
+Eryq, (who really should be wrapping holiday presents instead).
+`eryq@enteract.com' / `http://enteract.com/~eryq'.
+
+Created: 11 December 1996.  Ho ho ho.
+
+
+
+

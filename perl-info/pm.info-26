@@ -1,0 +1,1984 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: HTTP/Message, Next: HTTP/Negotiate, Prev: HTTP/Headers, Up: Module List
+
+Class encapsulating HTTP messages
+*********************************
+
+
+
+NAME
+====
+
+HTTP::Message - Class encapsulating HTTP messages
+
+
+SYNOPSIS
+========
+
+     package HTTP::Request;  # or HTTP::Response
+     require HTTP::Message;
+     @ISA=qw(HTTP::Message);
+
+
+DESCRIPTION
+===========
+
+A `HTTP::Message' object contains some headers and a content (body).
+The class is abstract, i.e. it only used as a base class for
+HTTP::Request and `HTTP::Response' and should never instantiated as
+itself.
+
+
+METHODS
+=======
+
+
+$mess = new HTTP::Message;
+--------------------------
+
+This is the object constructor.  It should only be called internally by
+this library.  External code should construct HTTP::Request or
+`HTTP::Response' objects.
+
+
+$mess->clone()
+--------------
+
+Returns a copy of the object.
+
+
+$mess->protocol([$proto])
+-------------------------
+
+Sets the HTTP protocol used for the message.  The protocol() is a string
+like "HTTP/1.0" or "HTTP/1.1".
+
+
+$mess->content([$content])
+--------------------------
+
+The content() method sets the content if an argument is given.  If no
+argument is given the content is not touched.  In either case the
+previous content is returned.
+
+
+$mess->add_content($data)
+-------------------------
+
+The add_content() methods appends more data to the end of the previous
+content.
+
+
+$mess->content_ref
+------------------
+
+The content_ref() method will return a reference to content string.  It
+can be more efficient to access the content this way if the content is
+huge, and it can be used for direct manipulation of the content, for
+instance:
+
+     ${$res->content_ref} =~ s/\bfoo\b/bar/g;
+
+
+HEADER METHODS
+==============
+
+All unknown `HTTP::Message' methods are delegated to the `HTTP::Headers'
+object that is part of every message.  This allows convenient access to
+these methods.  Refer to *Note HTTP/Headers: HTTP/Headers, for details
+of these methods:
+
+     $mess->header($field => $val);
+     $mess->scan(&doit);
+     $mess->push_header($field => $val);
+     $mess->remove_header($field);
+
+     $mess->date;
+     $mess->expires;
+     $mess->if_modified_since;
+     $mess->last_modified;
+     $mess->content_type;
+     $mess->content_encoding;
+     $mess->content_length;
+     $mess->title;
+     $mess->user_agent;
+     $mess->server;
+     $mess->from;
+     $mess->referer;
+     $mess->www_authenticate;
+     $mess->authorization;
+     $mess->authorization_basic;
+
+
+$mess->headers_as_string([$endl])
+---------------------------------
+
+Call the HTTP::Headers->as_string() method for the headers in the
+message.
+
+
+
+
+File: pm.info, Node: HTTP/Negotiate, Next: HTTP/Request, Prev: HTTP/Message, Up: Module List
+
+choose a variant of a document to serve (HTTP content negotiation)
+******************************************************************
+
+
+
+NAME
+====
+
+choose - choose a variant of a document to serve (HTTP content
+negotiation)
+
+
+SYNOPSIS
+========
+
+     use HTTP::Negotiate;
+
+     #  ID       QS     Content-Type   Encoding Char-Set        Lang   Size
+     $variants =
+      [['var1',  1.000, 'text/html',   undef,   'iso-8859-1',   'en',   3000],
+       ['var2',  0.950, 'text/plain',  'gzip',  'us-ascii',     'no',    400],
+       ['var3',  0.3,   'image/gif',   undef,   undef,          undef, 43555],
+      ];
+
+     @prefered = choose($variants, $request_headers);
+     $the_one  = choose($variants);
+
+
+DESCRIPTION
+===========
+
+This module provide a complete implementation of the HTTP content
+negotiation algorithm specified in `draft-ietf-http-v11-spec-00.ps'
+chapter 12.  Content negotiation allows for the selection of a preferred
+content representation based upon attributes of the negotiable variants
+and the value of the various Accept* header fields in the request.
+
+The variants are ordered by preference by calling the function choose().
+
+The first parameter is a description of the variants that we can choose
+among.  The variants are described by a reference to an array.  Each
+element in this array is an array with the values [$id, $qs,
+$content_type, $content_encoding, $charset, $content_language,
+$content_length].  The meaning of these values are described below. The
+$content_encoding and $content_language can be either a single scalar
+value or an array reference if there are several values.
+
+The second optional parameter is a reference to the request headers.
+This is used to look for "Accept*" headers.  You can pass a reference to
+either a HTTP::Request or a HTTP::Headers object.  If this parameter is
+missing, then the accept specification is initialized from the CGI
+environment variables HTTP_ACCEPT, HTTP_ACCEPT_CHARSET,
+HTTP_ACCEPT_ENCODING and HTTP_ACCEPT_LANGUAGE.
+
+In array context, choose() returns a list of variant
+identifier/calculated quality pairs.  The values are sorted by quality,
+highest quality first.  If the calculated quality is the same for two
+variants, then they are sorted by size (smallest first). *E.g.*:
+
+     (['var1' => 1], ['var2', 0.3], ['var3' => 0]);
+
+Note that also zero quality variants are included in the return list
+even if these should never be served to the client.
+
+In scalar context, it returns the identifier of the variant with the
+highest score or undef if none have non-zero quality.
+
+If the $HTTP::Negotiate::DEBUG variable is set to TRUE, then a lot of
+noise is generated on STDOUT during evaluation of choose().
+
+
+VARIANTS
+========
+
+A variant is described by a list of the following values.  If the
+attribute does not make sense or is unknown for a variant, then use
+undef instead.
+
+identifier
+     This is just some string that you use as a name for the variant.
+     The identifier of the preferred variant is returned by choose().
+
+qs
+     This is a number between 0.000 and 1.000 that describes the "source
+     quality".  This is what `draft-ietf-http-v11-spec-00.ps' says about
+     this value:
+
+     Source quality is measured by the content provider as representing the
+     amount of degradation from the original source.  For example, a
+     picture in JPEG form would have a lower qs when translated to the XBM
+     format, and much lower qs when translated to an ASCII-art
+     representation.  Note, however, that this is a function of the source
+     - an original piece of ASCII-art may degrade in quality if it is
+     captured in JPEG form.  The qs values should be assigned to each
+     variant by the content provider; if no qs value has been assigned,
+     the default is generally "qs=1".
+
+content-type
+     This is the media type of the variant.  The media type does not
+     include a charset attribute, but might contain other parameters.
+     Examples are:
+
+          text/html
+          text/html;version=2.0
+          text/plain
+          image/gif
+          image/jpg
+
+content-encoding
+     This is one or more content encodings that has been applied to the
+     variant.  The content encoding is generally used as a modifier to
+     the content media type.  The most common content encodings are:
+
+          gzip
+          compress
+
+content-charset
+     This is the character set used when the variant contains textual
+     content.  The charset value should generally be undef or one of
+     these:
+
+          us-ascii
+          iso-8859-1 ... iso-8859-9
+          iso-2022-jp
+          iso-2022-jp-2
+          iso-2022-kr
+          unicode-1-1
+          unicode-1-1-utf-7
+          unicode-1-1-utf-8
+
+content-language
+     This describes one or more languages that are used in the variant.
+     Language is described like this in
+     `draft-ietf-http-v11-spec-00.ps': A language is in this context a
+     natural language spoken, written, or otherwise conveyed by human
+     beings for communication of information to other human beings.
+     Computer languages are explicitly excluded.
+
+     The language tags are the same as those defined by RFC-1766.
+     Examples are:
+
+          no               Norwegian
+          en               International English
+          en-US            US English
+          en-cockney
+
+content-length
+     This is the number of bytes used to represent the content.
+
+
+ACCEPT HEADERS
+==============
+
+The following Accept* headers can be used for describing content
+preferences in a request (This description is an edited extract from
+`draft-ietf-http-v11-spec-00.ps'):
+
+Accept
+     This header can be used to indicate a list of media ranges which
+     are acceptable as a reponse to the request.  The "*" character is
+     used to group media types into ranges, with "*/*" indicating all
+     media types and "type/*" indicating all subtypes of that type.
+
+     The parameter q is used to indicate the quality factor, which
+     represents the user's preference for that range of media types.
+     The parameter mbx gives the maximum acceptable size of the response
+     content. The default values are: q=1 and mbx=infinity. If no Accept
+     header is present, then the client accepts all media types with
+     q=1.
+
+     For example:
+
+          Accept: audio/*;q=0.2;mbx=200000, audio/basic
+
+     would mean: "I prefer audio/basic (of any size), but send me any
+     audio type if it is the best available after an 80% mark-down in
+     quality and its size is less than 200000 bytes"
+
+Accept-Charset
+     Used to indicate what character sets are acceptable for the
+     response.  The "us-ascii" character set is assumed to be acceptable
+     for all user agents.  If no Accept-Charset field is given, the
+     default is that any charset is acceptable.  Example:
+
+          Accept-Charset: iso-8859-1, unicode-1-1
+
+Accept-Encoding
+     Restricts the Content-Encoding values which are acceptable in the
+     response.  If no Accept-Encoding field is present, the server may
+     assume that the client will accept any content encoding.  An empty
+     Accept-Encoding means that no content encoding is acceptable.
+     Example:
+
+          Accept-Encoding: compress, gzip
+
+Accept-Language
+     This field is similar to Accept, but restrict the set of natural
+     languages that are preferred as a response.  Each language may be
+     given an associated quality value which represents an estimate of
+     the user's comprehension of that language.  For example:
+
+          Accept-Language: no, en-gb;q=0.8, de;q=0.55
+
+     would mean: "I prefer Norwegian, but will accept British English
+     (with 80% comprehension) or German (with 55% comprehension).
+
+
+COPYRIGHT
+=========
+
+Copyright 1996, Gisle Aas.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: HTTP/Request, Next: HTTP/Request/Common, Prev: HTTP/Negotiate, Up: Module List
+
+Class encapsulating HTTP Requests
+*********************************
+
+
+
+NAME
+====
+
+HTTP::Request - Class encapsulating HTTP Requests
+
+
+SYNOPSIS
+========
+
+     require HTTP::Request;
+     $request = new HTTP::Request 'GET', 'http://www.oslonett.no/';
+
+
+DESCRIPTION
+===========
+
+HTTP::Request is a class encapsulating HTTP style requests, consisting
+of a request line, a MIME header, and optional content. Note that the
+LWP library also uses this HTTP style requests for non-HTTP protocols.
+
+Instances of this class are usually passed to the `request()' method of
+an `LWP::UserAgent' object:
+
+     $ua = new LWP::UserAgent;
+     $request = new HTTP::Request 'http://www.oslonett.no/';
+     $response = $ua->request($request);
+
+
+METHODS
+=======
+
+HTTP::Request is a subclass of `HTTP::Message' and therefore inherits
+its methods.  The inherited methods are header(), push_header(),
+remove_header(), headers_as_string() and content().  See *Note
+HTTP/Message: HTTP/Message, for details.
+
+
+$r = new HTTP::Request $method, $url, [$header, [$content]]
+-----------------------------------------------------------
+
+Constructs a new HTTP::Request object describing a request on the object
+`$url' using method `$method'.  The `$url' argument can be either a
+string, or a reference to a URI::URL object.  The $header argument
+should be a reference to a HTTP::Headers object.
+
+     $request = new HTTP::Request 'GET', 'http://www.oslonett.no/';
+
+
+$r->method([$val])
+------------------
+
+
+$r->url([$val])
+---------------
+
+These methods provide public access to the member variables containing
+respectively the method of the request and the URL object of the
+request.
+
+If an argument is given the member variable is given that as its new
+value. If no argument is given the value is not touched. In either case
+the previous value is returned.
+
+The url() method accept both a reference to a URI::URL object and a
+string as its argument.  If a string is given, then it should be
+parseable as an absolute URL.
+
+
+$r->as_string()
+---------------
+
+Method returning a textual representation of the request.  Mainly useful
+for debugging purposes. It takes no arguments.
+
+
+
+
+File: pm.info, Node: HTTP/Request/Common, Next: HTTP/Response, Prev: HTTP/Request, Up: Module List
+
+Construct common HTTP::Request objects
+**************************************
+
+
+
+NAME
+====
+
+HTTP::Request::Common - Construct common HTTP::Request objects
+
+
+SYNOPSIS
+========
+
+     use HTTP::Request::Common;
+     $ua = LWP::UserAgent->new;
+     $ua->request(GET 'http://www.sn.no/');
+     $ua->request(POST 'http://somewhere/foo', [foo => bar, bar => foo]);
+
+
+DESCRIPTION
+===========
+
+This module provide functions that return newly created HTTP::Request
+objects.  These functions are usually more convenient than the standard
+HTTP::Request constructor for these common requests.  The following
+functions are provided.
+
+GET $url, [Header => Value,...]
+     The GET() function returns a HTTP::Request object initialized with
+     the GET method and the specified URL.  Without additional arguments
+     it is exactly equivalent to the following call
+
+          HTTP::Request->new(GET => $url)
+
+     but is less clutter.  It also reads better when used together with
+     the LWP::UserAgent->request() method:
+
+          my $ua = new LWP::UserAgent;
+          my $res = $ua->request(GET 'http://www.sn.no')
+          if ($res->is_success) { ...
+
+     You can also initialize the header values in the request by
+     specifying some key/value pairs as optional arguments.  For
+     instance:
+
+          $ua->request(GET 'http://www.sn.no',
+          	           If_Match => 'foo',
+                           From     => 'gisle@aas.no',
+                      );
+
+     A header key called 'Content' is special and when seen the value
+     will initialize the content part of the request instead of setting
+     a header.
+
+HEAD $url, [Header => Value,...]
+     Like GET() but the method in the request is HEAD.
+
+PUT $url, [Header => Value,...]
+     Like GET() but the method in the request is PUT.
+
+POST $url, [$form_ref], [Header => Value,...]
+     This works mostly like GET() with POST as method, but this function
+     also takes a second optional array reference parameter ($form_ref).
+     This argument can be used to pass key/value pairs for the form
+     content.  By default we will initialize a request using the
+     `application/x-www-form-urlencoded' content type.  This means that
+     you can emulate a HTML <form> POSTing like this:
+
+          POST 'http://www.perl.org/survey.cgi',
+               [ name  => 'Gisle',
+                 email => 'gisle@aas.no',
+                 gender => 'm',
+                 born   => '1964',
+                 trust  => '3%',
+          	];
+
+     This will create a HTTP::Request object that looks like this:
+
+          POST http://www.perl.org/survey.cgi
+          Content-Length: 61
+          Content-Type: application/x-www-form-urlencoded
+
+          name=Gisle&email=gisle%40aas.no&gender=m&born=1964&trust=3%25
+
+     The POST method also supports the `multipart/form-data' content
+     used for *Form-based File Upload* as specified in RFC 1867.  You
+     trigger this content format by specifying a content type of
+     `'form-data''.  If one of the values in the $form_ref is an array
+     reference, then it is treated as a file part specification with the
+     following values:
+
+          [ $file, $filename, Header => Value... ]
+
+     The first value in the array ($file) is the name of a file to open.
+     This file will be read an its content placed in the request.  The
+     routine will croak if the file can't be opened.  Use an undef as
+     $file value if you want to specify the content directly.  The
+     $filename is the filename to report in the request.  If this value
+     is undefined, then the basename of the $file will be used.  You can
+     specify an empty string as $filename if you don't want any filename
+     in the request.
+
+     Sending my `~/.profile' to the survey used as example above can be
+     achieved by this:
+
+          POST 'http://www.perl.org/survey.cgi',
+               Content_Type => 'form-data',
+               Content      => [ name  => 'Gisle Aas',
+                                 email => 'gisle@aas.no',
+                                 gender => 'm',
+                                 born   => '1964',
+                                 init   => ["$ENV{HOME}/.profile"],
+                               ]
+
+     This will create a HTTP::Request object that almost looks this (the
+     boundary and the content of your `~/.profile' is likely to be
+     different):
+
+          POST http://www.perl.org/survey.cgi
+          Content-Length: 388
+          Content-Type: multipart/form-data; boundary="6G+f"
+
+          --6G+f
+          Content-Disposition: form-data; name="name"
+
+          Gisle Aas
+          --6G+f
+          Content-Disposition: form-data; name="email"
+
+          gisle@aas.no
+          --6G+f
+          Content-Disposition: form-data; name="gender"
+
+          m
+          --6G+f
+          Content-Disposition: form-data; name="born"
+
+          1964
+          --6G+f
+          Content-Disposition: form-data; name="init"; filename=".profile"
+          Content-Type: text/plain
+
+          PATH=/local/perl/bin:$PATH
+          export PATH
+
+          --6G+f--
+
+
+SEE ALSO
+========
+
+*Note HTTP/Request: HTTP/Request,, *Note LWP/UserAgent: LWP/UserAgent,
+
+
+COPYRIGHT
+=========
+
+Copyright 1997, Gisle Aas
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: HTTP/Response, Next: HTTP/Status, Prev: HTTP/Request/Common, Up: Module List
+
+Class encapsulating HTTP Responses
+**********************************
+
+
+
+NAME
+====
+
+HTTP::Response - Class encapsulating HTTP Responses
+
+
+SYNOPSIS
+========
+
+     require HTTP::Response;
+
+
+DESCRIPTION
+===========
+
+The `HTTP::Response' class encapsulate HTTP style responses.  A response
+consist of a response line, some headers, and a (potential empty)
+content. Note that the LWP library will use HTTP style responses also
+for non-HTTP protocol schemes.
+
+Instances of this class are usually created and returned by the
+`request()' method of an `LWP::UserAgent' object:
+
+     ...
+     $response = $ua->request($request)
+     if ($response->is_success) {
+         print $response->content;
+     } else {
+         print $response->error_as_HTML;
+     }
+
+
+METHODS
+=======
+
+`HTTP::Response' is a subclass of `HTTP::Message' and therefore
+inherits its methods.  The inherited methods are header(),
+push_header(), remove_header(), headers_as_string(), and content().
+The header convenience methods are also available.  See
+*Note HTTP/Message: HTTP/Message, for details.
+
+
+$r = new HTTP::Response ($rc, [$msg, [$header, [$content]]])
+------------------------------------------------------------
+
+Constructs a new `HTTP::Response' object describing a response with
+response code `$rc' and optional message $msg.
+
+
+$r->code([$code])
+-----------------
+
+
+$r->message([$message])
+-----------------------
+
+
+$r->request([$request])
+-----------------------
+
+
+$r->previous([$previousResponse])
+---------------------------------
+
+These methods provide public access to the member variables.  The first
+two containing respectively the response code and the message of the
+response.
+
+The request attribute is a reference the request that gave this
+response.  It does not have to be the same request as passed to the
+$ua->request() method, because there might have been redirects and
+authorization retries in between.
+
+The previous attribute is used to link together chains of responses.
+You get chains of responses if the first response is redirect or
+unauthorized.
+
+
+$r->base
+--------
+
+Returns the base URL for this response.  The return value will be a
+reference to a URI::URL object.
+
+The base URL is obtained from one the following sources (in priority
+order):
+
+  1. Embedded in the document content, for instance <BASE HREF="..."> in
+     HTML documents.
+
+  2. A "Content-Base:" or a "Content-Location:" header in the response.
+
+     For backwards compatability with older HTTP implementations we will
+     also look for the "Base:" header.
+
+  3. The URL used to request this response. This might not be the
+     original URL that was passed to $ua->request() method, because we
+     might have received some redirect responses first.
+
+When the LWP protocol modules produce the HTTP::Response object, then
+any base URL embedded in the document (step 1) will already have
+initialized the "Content-Base:" header. This means that this method only
+perform the last 2 steps (the content is not always available either).
+
+
+$r->as_string()
+---------------
+
+Method returning a textual representation of the request.  Mainly useful
+for debugging purposes. It takes no arguments.
+
+
+$r->is_info
+-----------
+
+
+$r->is_success
+--------------
+
+
+$r->is_redirect
+---------------
+
+
+$r->is_error
+------------
+
+These methods indicate if the response was informational, sucessful, a
+redirection, or an error.
+
+
+$r->error_as_HTML()
+-------------------
+
+Return a string containing a complete HTML document indicating what
+error occurred.  This method should only be called when $r->is_error is
+TRUE.
+
+
+$r->current_age
+---------------
+
+This function will calculate the "current age" of the response as
+specified by <draft-ietf-http-v11-spec-07> section 13.2.3.  The age of a
+response is the time since it was sent by the origin server.  The
+returned value is a number representing the age in seconds.
+
+
+$r->freshness_lifetime
+----------------------
+
+This function will calculate the "freshness lifetime" of the response as
+specified by <draft-ietf-http-v11-spec-07> section 13.2.4.  The
+"freshness lifetime" is the length of time between the generation of a
+response and its expiration time.  The returned value is a number
+representing the freshness lifetime in seconds.
+
+If the response does not contain an "Expires" or a "Cache-Control"
+header, then this function will apply some simple heuristic based on
+'Last-Modified' to determine a suitable lifetime.
+
+
+$r->is_fresh
+------------
+
+Returns TRUE if the response is fresh, based on the values of
+freshness_lifetime() and current_age().  If the response is not longer
+fresh, then it has to be refetched or revalidated by the origin server.
+
+
+$r->fresh_until
+---------------
+
+Returns the time when this entiy is no longer fresh.
+
+
+
+
+File: pm.info, Node: HTTP/Status, Next: HTTPD/Authen, Prev: HTTP/Response, Up: Module List
+
+HTTP Status code processing
+***************************
+
+
+
+NAME
+====
+
+HTTP::Status - HTTP Status code processing
+
+
+SYNOPSIS
+========
+
+     use HTTP::Status;
+
+     if ($rc != RC_OK) {
+         print status_message($rc), "\n";
+     }
+
+     if (is_success($rc)) { ... }
+     if (is_error($rc)) { ... }
+     if (is_redirect($rc)) { ... }
+
+
+DESCRIPTION
+===========
+
+HTTP::Status is a library of routines for defining and classification of
+HTTP status codes for libwww-perl.  Status codes are used to encode the
+overall outcome of a HTTP response message.  Codes correspond to those
+defined in RFC 2068.
+
+
+CONSTANTS
+=========
+
+The following constant functions can be used as mnemonic status code
+names:
+
+     RC_CONTINUE				(100)
+     RC_SWITCHING_PROTOCOLS		(101)
+
+     RC_OK				(200)
+     RC_CREATED				(201)
+     RC_ACCEPTED				(202)
+     RC_NON_AUTHORITATIVE_INFORMATION	(203)
+     RC_NO_CONTENT			(204)
+     RC_RESET_CONTENT			(205)
+     RC_PARTIAL_CONTENT			(206)
+
+     RC_MULTIPLE_CHOICES			(300)
+     RC_MOVED_PERMANENTLY			(301)
+     RC_MOVED_TEMPORARILY			(302)
+     RC_SEE_OTHER				(303)
+     RC_NOT_MODIFIED			(304)
+     RC_USE_PROXY				(305)
+
+     RC_BAD_REQUEST			(400)
+     RC_UNAUTHORIZED			(401)
+     RC_PAYMENT_REQUIRED			(402)
+     RC_FORBIDDEN				(403)
+     RC_NOT_FOUND				(404)
+     RC_METHOD_NOT_ALLOWED		(405)
+     RC_NOT_ACCEPTABLE			(406)
+     RC_PROXY_AUTHENTICATION_REQUIRED	(407)
+     RC_REQUEST_TIMEOUT			(408)
+     RC_CONFLICT				(409)
+     RC_GONE				(410)
+     RC_LENGTH_REQUIRED			(411)
+     RC_PRECONDITION_FAILED		(412)
+     RC_REQUEST_ENTITY_TOO_LARGE		(413)
+     RC_REQUEST_URI_TOO_LARGE		(414)
+     RC_UNSUPPORTED_MEDIA_TYPE		(415)
+
+     RC_INTERNAL_SERVER_ERROR		(500)
+     RC_NOT_IMPLEMENTED			(501)
+     RC_BAD_GATEWAY			(502)
+     RC_SERVICE_UNAVAILABLE		(503)
+     RC_GATEWAY_TIMEOUT			(504)
+     RC_HTTP_VERSION_NOT_SUPPORTED	(505)
+
+
+FUNCTIONS
+=========
+
+The following additional functions are provided.  Most of them are
+exported by default.
+
+status_message($code)
+     The status_message() function will translate status codes to human
+     readable strings. The string is the same as found in the constant
+     names above.
+
+is_info($code)
+     Return TRUE if `$code' is an Informational status code.
+
+is_success($code)
+     Return TRUE if `$code' is a *Successful* status code.
+
+is_redirect($code)
+     Return TRUE if `$code' is a *Redirection* status code.
+
+is_error($code)
+     Return TRUE if `$code' is an Error status code.  The function
+     return TRUE for both client error or a server error status codes.
+
+is_client_error($code)
+     Return TRUE if `$code' is an *Client Error* status code.  This
+     function is *not* exported by default.
+
+is_server_error($code)
+     Return TRUE if `$code' is an *Server Error* status code.  This
+     function is *not* exported by default.
+
+
+
+
+File: pm.info, Node: HTTPD/Authen, Next: HTTPD/GroupAdmin, Prev: HTTP/Status, Up: Module List
+
+HTTP server authentication class
+********************************
+
+
+
+NAME
+====
+
+HTTPD::Authen - HTTP server authentication class
+
+
+SYNOPSIS
+========
+
+     use HTTPD::Authen ();
+
+
+DESCRIPTION
+===========
+
+This module provides methods for authenticating a user.  It uses
+HTTPD::UserAdmin to lookup passwords in a database.  Subclasses provide
+methods specific to the authentication mechanism.
+
+Currently, under HTTP/1.0 the only supported authentication mechanism is
+Basic Authentication.  NCSA Mosaic and NCSA HTTPd understand the
+proposed Message Digest Authentication, which should make it into the
+HTTP spec someday.  This module supports both.
+
+
+METHODS
+=======
+
+
+new ()
+------
+
+Since HTTPD::Authen uses HTTPD::UserAdmin for database lookups it needs
+many of the same attributes.  Or, if the first argument passed to the
+new() object constructor is a reference to an HTTPD::UserAdmin, the
+attributes are inherited.
+
+The following attributes are recognized from HTTPD::UserAdmin:
+
+*DBType*, *DB*, Server, Path, *DBMF*, *Encrypt* 
+
+And if you wish to query an SQL server: Host, User, *Auth*, Driver,
+*UserTable*, *NameField*, *PasswordField*
+
+The same defaults are assumed for these attributes, as in
+HTTPD::UserAdmin.  See *HTTPD::UserAdmin* for details.
+
+     $authen = new HTTPD::Authen (DB => "www-users");
+
+     =head2 basic()
+
+Short-cut to return an HTTPD::Authen::Basic object.
+
+     $basic = $authen->basic;
+
+
+digest()
+--------
+
+Short-cut to return an HTTPD::Authen::Digest object.
+
+     $digest = $authen->digest;
+
+
+type($authorization_header_value)
+---------------------------------
+
+This method will guess the authorization scheme based on the
+'Authorization' header value, and return an object bless into that
+scheme's class.
+
+By using this method, it is simple to authenticate a user without even
+knowing what scheme is being used:
+
+     $authtype = HTTPD::Authen->type($authinfo);
+     @info = $authtype->parse($authinfo)
+     if( $authtype->check(@info) ) {
+         #response 200 OK, etc.
+     }
+
+
+SUBCLASSES
+==========
+
+HTTPD::Authen::Basic methods
+
+new([$hashref])
+---------------
+
+$hashref should be an HTTPD::Authen object, it must be present when
+looking up users.  Optionally, you can pass the attribute USER with the
+value of an HTTPD::UserAdmin object.
+
+Normally, this method is not called directly, but rather by
+HTTPD::Authen->basic method.
+
+
+parse ($authorization_header_value)
+-----------------------------------
+
+This method expects the value of the HTTP 'Authorization' header of type
+Basic.  This should look something like:
+
+     'Basic ZG91Z206anN0NG1l'  
+
+This string will be parsed and decoded, returning the username and
+password.  Note that the *MIME::Base64* module is required for decoding.
+
+     ($username,$password) = HTTPD::Authen::Basic->parse($authinfo)
+
+     #or, assuming $authen is an HTTPD::Authen object
+     ($username,$password) = $authen->basic->parse($authinfo)
+
+     #or check the info at the same time
+     $OK = $authen->check($authen->basic->parse($authinfo))
+
+
+check($username,$password)
+--------------------------
+
+This method expects a username and *clear text* password as arguments.
+Returns true if the username was found, and passwords match, otherwise
+returns false.
+
+     if($authen->check("JoeUser", "his_clear_text_password")) {
+     	print "Well, the passwords match at least\n";
+     }
+     else {
+     	print "Password mismatch! Intruder alert! Intruder alert!\n";
+     }
+
+HTTPD::Authen::Digest methods
+     NOTE: The *MD5* module is required to use these methods.
+
+
+new([$hashref])
+---------------
+
+$hashref should be an HTTPD::Authen object.  Normally, this method is
+not called directly, but rather by HTTPD::Authen->digest method.
+
+
+parse ($authorization_header_value)
+-----------------------------------
+
+This method expects the value of the HTTP 'Authorization' header of type
+Basic.  This should look something like:
+
+     Digest username="JoeUser", realm="SomePlace", nonce="826407380", uri="/test/blah.html", response="0306f29f88690fb9203451556c376ae9", opaque="5e09061a062a271c8fcc686c5be90c2a"
+
+This method returns a hash ref containing all Name = Value pairs from
+the header.
+
+     $mda = HTTPD::Authen::Digest->parse($authinfo);
+
+     #or, assuming $authen is an HTTPD::Authen object
+     $mda = $authen->digest->parse($authinfo)
+
+     #or check the info at the same time
+     $OK = $authen->check($authen->digest->parse($authinfo))
+
+
+check ($hashref[, $request [, $seconds [, $client_ip ]]])
+---------------------------------------------------------
+
+This method expects a hashref of Name Value pairs normally found in the
+'Authorization' header.  With this argument alone, the method will
+return true without checking nonce or the opaque string if the client
+'response' checksum matches ours.
+
+If $request is present, it must be a hashref or an HTTP::Request method.
+From here, we fetch the request uri and request method.  Otherwise, we
+default to the value of 'uri' present in $hashref, and 'GET' for the
+method.
+
+If $seconds is present, the value of 'nonce' will be checked, returning
+false if it is stale.
+
+If $client_ip is present, the value of the 'opaque' string will be
+checked, returning false if the string is not valid.
+
+This implementation is based on the Digest Access Authentication
+internet-draft http://hopf.math.nwu.edu/digestauth/draft.rfc and NCSA's
+implementation http://hoohoo.ncsa.uiuc.edu/docs/howto/md5_auth.html
+
+
+SEE ALSO
+========
+
+HTTPD::UserAdmin, MD5, HTTP::Request, MIME::Base64
+
+
+AUTHOR
+======
+
+Doug MacEachern <dougm@osf.org>
+
+Copyright (c) 1996, Doug MacEachern, OSF Research Institute
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: HTTPD/GroupAdmin, Next: HTTPD/UserAdmin, Prev: HTTPD/Authen, Up: Module List
+
+Management of HTTP server group databases
+*****************************************
+
+
+
+NAME
+====
+
+HTTPD::GroupAdmin - Management of HTTP server group databases
+
+
+SYNOPSIS
+========
+
+     use HTTPD::GroupAdmin ();
+
+
+DESCRIPTION
+===========
+
+This software is meant to provide a generic interface that hides the
+inconsistencies across HTTP server implementations of user and group
+databases.
+
+
+METHODS
+=======
+
+new ()
+     Here's where we find out what's different about your server.
+
+     Some examples:
+
+          @DBM = (DBType => 'DBM',
+          	    DB     => '.htgroup',
+          	    Server => 'apache');
+
+          $group = new HTTPD::GroupAdmin @DBM;
+
+     This creates an object who's database is a DBM file named
+     '.htgroup', in a format that the Apache server understands.
+
+          @Text = (DBType => 'Text',
+          	     DB     => '.htgroup',
+          	     Server => 'ncsa');
+
+          $group = new HTTPD::GroupAdmin @Text;
+
+     This creates an object who's database is a plain text file named
+     '.htgroup', in a format that the NCSA server understands.
+
+     Note: Support is not yet availible for SQL servers
+
+     Full list of constructor attributes:
+
+     Note: Attribute names are case-insensitive
+
+     Name - Group name
+
+     *DBType*  - The type of database, one of 'DBM', 'Text', or 'SQL' (Default is 'DBM')
+
+     *DB*      - The database name (Default is '.htpasswd' for DBM & Text databases)
+
+     Server - HTTP server name (Default is the generic class, that works
+     with NCSA, Apache and possibly others)
+
+     Note: run 'perl t/support.t matrix' to see what support is
+     currently availible
+
+     Path - Relative DB files are resolved to this value (Default is
+     '.')
+
+     Locking - Boolean, Lock Text and DBM files (Default is true)
+
+     Debug - Boolean, Turn on debug mode
+
+     Specific to DBM files:
+
+     *DBMF*    - The DBM file implementation to use (Default is 'NDBM')
+
+     Flags   - The read, write and create flags.  
+     There are four modes:
+     *rwc* - the default, open for reading, writing and creating.
+     *rw* - open for reading and writing.
+     r - open for reading only.  w - open for writing only.
+
+     *Mode*    - The file creation mode, defaults to '0644'
+
+     From here on out, things should look the same for everyone.
+
+add($username[,$groupname])
+     Add user $username to group $groupname, or whatever the 'Name'
+     attribute is set to.
+
+     Fails if $username exists in the database
+
+          if($group->add('dougm', 'www-group')) {
+          	print "Welcome!\n";
+          }
+
+delete($username[,$groupname])
+     Delete user $username from group $groupname, or whatever the 'Name'
+     attribute is set to.
+
+          if($group->delete('dougm')) {
+          	print "He's gone from the group\n";
+          }
+
+exists($groupname, [$username])
+     True if $groupname is found in the database
+
+          if($group->exists('web-heads')) {
+          	die "oh no!";
+          }
+          if($group->exists($groupname, $username) {
+          	#$username is a member of $groupname
+          }
+
+list([$groupname])
+     Returns a list of group names, or users in a group if '$name' is
+     present.
+
+     @groups = $group->list;
+
+     @users = $group->list('web-heads');
+
+user()
+     Short cut for creating an HTTPD::UserAdmin object.  All applicable
+     attributes are inherited, but can be overridden.
+
+          $user = $group->user();
+
+     (See HTTPD::UserAdmin)
+
+convert(@Attributes)
+     Convert a database.
+
+          #not yet
+
+remove($groupname)
+     Remove group $groupname from the database
+
+name($groupname)
+     Change the value of 'Name' attribute.
+
+          $group->name('bew-ediw-dlrow');
+
+debug($boolean)
+     Turn debugging on or off
+
+lock([$timeout]) =item unlock()
+     These methods give you control of the locking mechanism.
+
+          $group = new HTTPD::GroupAdmin (Locking => 0); #turn off auto-locking
+          $group->lock; #lock the object's database
+          $group->add($username,$passwd); #write while database is locked
+          $group->unlock; release the lock
+
+db($dbname);
+     Select a different database.
+
+          $olddb = $group->db($newdb);
+          print "Now we're reading and writing '$newdb', done with '$olddb'n\";
+
+flags([$flags])
+     Get or set read, write, create flags.
+
+commit
+     Commit changes to disk (for Text files).
+
+
+SEE ALSO
+========
+
+HTTPD::UserAdmin(3)
+
+
+AUTHOR
+======
+
+Doug MacEachern <dougm@osf.org>
+
+Copyright (c) 1996, 1997 Doug MacEachern
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: HTTPD/UserAdmin, Next: I18N/Collate, Prev: HTTPD/GroupAdmin, Up: Module List
+
+Management of HTTP server user databases
+****************************************
+
+
+
+NAME
+====
+
+HTTPD::UserAdmin - Management of HTTP server user databases
+
+
+SYNOPSIS
+========
+
+     use HTTPD::UserAdmin ();
+
+
+DESCRIPTION
+===========
+
+This software is meant to provide a generic interface that hides the
+inconsistencies across HTTP server implementations of user and group
+databases.
+
+
+METHODS
+=======
+
+new ()
+     Here's where we find out what's different about your server.
+
+     Some examples:
+
+          @DBM = (DBType => 'DBM',
+          	    DB     => '.htpasswd',
+          	    Server => 'apache');
+
+          $user = new HTTPD::UserAdmin @DBM;
+
+     This creates an object who's database is a DBM file named
+     '.htpasswd', in a format that the Apache server understands.
+
+          @Text = (DBType => 'Text',
+          	     DB     => '.htpasswd',
+          	     Server => 'ncsa');
+
+          $user = new HTTPD::UserAdmin @Text;
+
+     This creates an object who's database is a plain text file named
+     '.htpasswd', in a format that the NCSA server understands.
+
+          @SQL =  (DBType =>    "SQL",          
+          	     Host =>      "",             #server hostname 
+          	     DB =>        "www",          #database name
+          	     User =>      "", 	  	  #database login name	    
+          	     Auth =>      "",             #database login password
+          	     Driver =>    "mSQL",         #driver for DBI
+          	     Server =>    "apache",       #HTTP server type, not required
+          	     UserTable => "www-users",    #table with field names below
+          	     NameField => "user",         #field for the name
+          	     PasswordField => "password", #field for the password
+          	     );
+
+          $user = new HTTPD::UserAdmin @SQL;
+
+     This creates an object who's mSQL database is named 'www', with a
+     schema that the Apache server (extention) understands.
+
+     Full list of constructor attributes:
+
+     Note: Attribute names are case-insensitive
+
+     *DBType*  - The type of database, one of 'DBM', 'Text', or 'SQL' (Default is 'DBM')
+
+     *DB*      - The database name (Default is '.htpasswd' for DBM & Text databases)
+
+     Server - HTTP server name (Default is the generic class, that works
+     with NCSA, Apache and possibly others)
+
+     Note: run 'perl t/support.t matrix' to see what support is
+     currently availible
+
+     *Encrypt* - One of 'crypt' or 'MD5', defaults to 'crypt'
+
+     Locking - Boolean, Lock Text and DBM files (Default is true)
+
+     Path - Relative DB files are resolved to this value (Default is
+     '.')
+
+     Debug - Boolean, Turn on debug mode
+
+     Flags   - The read, write and create flags.  
+     There are four modes:
+     *rwc* - the default, open for reading, writing and creating.
+     *rw* - open for reading and writing.
+     r - open for reading only.  w - open for writing only.
+
+     Specific to DBM files:
+
+     *DBMF*    - The DBM file implementation to use (Default is 'NDBM')
+
+     *Mode*    - The file creation mode, defaults to '0644'
+
+     Specific to DBI: We talk to an SQL server via Tim Bunce's DBI
+     switch, for more info see:
+     http://www.hermetica.com/technologia/DBI/
+
+     Host - Server hostname
+
+     User - Database login name
+
+     *Auth*      - Database login password
+
+     Driver - Driver for DBI (Default is 'mSQL')
+
+     *UserTable* - Table with field names below
+
+     *NameField* - Field for the name  (Default is 'user')
+
+     *PasswordField* - Field for the password  (Default is 'password')
+
+     From here on out, things should look the same for everyone.
+
+add($username,$password[,$noenc,@fields])
+     Add a user.
+
+     If $noenc is true, the password is not encrypted, useful for
+     copying/converting, or if you just prefer to store passwords in
+     plain text.
+
+     Fails if $username exists in the database
+
+          if($user->add('dougm', 'secret')) {
+          	print "You have the power!\n";
+          }
+
+     You may need to pass additional fields, such as the user's real
+     name.  This depends on your server of course.
+
+          $user->add('JoeUser', 'try2guess', '', 'Joseph A. User');
+
+delete($username)
+     Delete a user
+
+          if($user->delete('dougm')) {
+          	print "He's gone\n";
+          }
+
+exists($username)
+     True if $username is found in the database
+
+          if($user->exists('dougm')) {
+          	die "oh no!";
+          }
+
+password()
+     Returns the encrypted password for a user
+
+          $passwd = $user->password("dougm");
+
+     Useful for copying users to another database.
+
+list()
+     Returns a list of usernames in the current database
+
+          @users = $user->list
+
+update($username,$password)
+     Update $username with a new $password
+
+          if($user->update('dougm', 'idunno')) {
+          	print "Updated\n";
+          }
+
+group()
+     Short cut for creating an HTTPD::GroupAdmin object.  All applicable
+     attributes are inherited, but can be overridden.
+
+          $group = $user->group(NAME => 'www-group');
+
+     (See HTTPD::GroupAdmin)
+
+convert(@Attributes)
+     Convert a database.
+
+          $dbmuser = $user->convert(@Apache);
+
+lock([$timeout]) =item unlock()
+     These methods give you control of the locking mechanism.
+
+          $user = new HTTPD::UserAdmin (Locking => 0); #turn off auto-locking
+          $user->lock; #lock the object's database
+          $user->add($username,$passwd); #write while file is locked
+          $user->unlock; release the lock
+
+db($dbname);
+     Select a different database.
+
+          $olddb = $user->db($newdb);
+          print "Now we're reading and writing '$newdb', done with '$olddb'n\";
+
+flags([$flags])
+     Get or set read, write, create flags.
+
+commit
+     Commit changes to disk (for Text files).
+
+
+Message Digest User Databases
+=============================
+
+Currently, you can store user info in a format for servers who support
+Message Digest Authentication.  Here's an example:
+
+     $user = new HTTPD::UserAdmin (DB => '.htdigest', Encrypt => 'MD5');
+
+     ($username,$realm,$password) = ('JoeUser', 'SomePlace', '14me');
+
+     #The checksum contains more info that just a password
+     $user->add($username, "$username:$realm:$password");
+     $user->update($username, "$username:$realm:newone");
+
+     $info = $user->password($username);
+     ($realm, $checksum) = split(":", $info);
+
+     $user->delete($username);                                
+
+See <URL:http://hoohoo.ncsa.uiuc.edu/docs/howto/md5_auth.html> for
+NCSA's implementation.
+
+So, it's a little more work, but don't worry, a nicer interface is on
+the way.
+
+
+SEE ALSO
+========
+
+HTTPD::GroupAdmin(3), HTTPD::Authen(3)
+
+
+AUTHOR
+======
+
+Doug MacEachern <dougm@osf.org>
+
+Copyright (c) 1996, Doug MacEachern
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: I18N/Collate, Next: IO, Prev: HTTPD/UserAdmin, Up: Module List
+
+compare 8-bit scalar data according to the current locale
+*********************************************************
+
+
+
+NAME
+====
+
+I18N::Collate - compare 8-bit scalar data according to the current
+locale
+
+     ***
+
+     WARNING: starting from the Perl version 5.003_06
+     the I18N::Collate interface for comparing 8-bit scalar data
+     according to the current locale
+
+     HAS BEEN DEPRECATED
+
+     That is, please do not use it anymore for any new applications
+     and please migrate the old applications away from it because its
+     functionality was integrated into the Perl core language in the
+     release 5.003_06.
+
+     See the perllocale manual page for further information.
+
+     ***
+
+
+SYNOPSIS
+========
+
+     use I18N::Collate;
+     setlocale(LC_COLLATE, 'locale-of-your-choice'); 
+     $s1 = new I18N::Collate "scalar_data_1";
+     $s2 = new I18N::Collate "scalar_data_2";
+
+
+DESCRIPTION
+===========
+
+This module provides you with objects that will collate according to
+your national character set, provided that the POSIX setlocale()
+function is supported on your system.
+
+You can compare $s1 and $s2 above with
+
+     $s1 le $s2
+
+to extract the data itself, you'll need a dereference: $$s1
+
+This module uses POSIX::setlocale(). The basic collation conversion is
+done by strxfrm() which terminates at NUL characters being a decent C
+routine.  collate_xfrm() handles embedded NUL characters gracefully.
+
+The available locales depend on your operating system; try whether
+`locale -a' shows them or man pages for "locale" or "nlsinfo" or the
+direct approach `ls /usr/lib/nls/loc' or `ls /usr/lib/nls' or `ls
+/usr/lib/locale'.  Not all the locales that your vendor supports are
+necessarily installed: please consult your operating system's
+documentation and possibly your local system administration.  The locale
+names are probably something like `xx_XX.(ISO)?8859-N' or
+`xx_XX.(ISO)?8859N', for example `fr_CH.ISO8859-1' is the Swiss (CH)
+variant of French (fr), ISO Latin (8859) 1 (-1) which is the Western
+European character set.
+
+
+
+
+File: pm.info, Node: IO, Next: IO/File, Prev: I18N/Collate, Up: Module List
+
+load various IO modules
+***********************
+
+
+
+NAME
+====
+
+IO - load various IO modules
+
+
+SYNOPSIS
+========
+
+     use IO;
+
+
+DESCRIPTION
+===========
+
+IO provides a simple mechanism to load all of the IO modules at one go.
+Currently this includes:
+
+     IO::Handle
+     IO::Seekable
+     IO::File
+     IO::Pipe
+     IO::Socket
+
+For more information on any of these modules, please see its respective
+documentation.
+
+
+
+
+File: pm.info, Node: IO/File, Next: IO/Handle, Prev: IO, Up: Module List
+
+supply object methods for filehandles
+*************************************
+
+
+
+NAME
+====
+
+IO::File - supply object methods for filehandles
+
+
+SYNOPSIS
+========
+
+     use IO::File;
+
+     $fh = new IO::File;
+     if ($fh->open("< file")) {
+         print <$fh>;
+         $fh->close;
+     }
+
+     $fh = new IO::File "> file";
+     if (defined $fh) {
+         print $fh "bar\n";
+         $fh->close;
+     }
+
+     $fh = new IO::File "file", "r";
+     if (defined $fh) {
+         print <$fh>;
+         undef $fh;       # automatically closes the file
+     }
+
+     $fh = new IO::File "file", O_WRONLY|O_APPEND;
+     if (defined $fh) {
+         print $fh "corge\n";
+
+     $pos = $fh->getpos;
+     $fh->setpos($pos);
+
+     undef $fh;       # automatically closes the file
+         }
+
+     autoflush STDOUT 1;
+
+
+DESCRIPTION
+===========
+
+IO::File inherits from IO::Handle and IO::Seekable. It extends these
+classes with methods that are specific to file handles.
+
+
+CONSTRUCTOR
+===========
+
+new ([ ARGS ] )
+     Creates a IO::File.  If it receives any parameters, they are passed
+     to the method open; if the open fails, the object is destroyed.
+     Otherwise, it is returned to the caller.
+
+new_tmpfile
+     Creates an IO::File opened for read/write on a newly created
+     temporary file.  On systems where this is possible, the temporary
+     file is anonymous (i.e. it is unlinked after creation, but held
+     open).  If the temporary file cannot be created or opened, the
+     IO::File object is destroyed.  Otherwise, it is returned to the
+     caller.
+
+
+METHODS
+=======
+
+open( FILENAME [,MODE [,PERMS]] )
+     open accepts one, two or three parameters.  With one parameter, it
+     is just a front end for the built-in open function.  With two
+     parameters, the first parameter is a filename that may include
+     whitespace or other special characters, and the second parameter is
+     the open mode, optionally followed by a file permission value.
+
+     If `IO::File::open' receives a Perl mode string (">", "+<", etc.)
+     or a POSIX fopen() mode string ("w", "r+", etc.), it uses the basic
+     Perl open operator.
+
+     If `IO::File::open' is given a numeric mode, it passes that mode
+     and the optional permissions value to the Perl sysopen operator.
+     For convenience, `IO::File::import' tries to import the O_XXX
+     constants from the Fcntl module.  If dynamic loading is not
+     available, this may fail, but the rest of IO::File will still work.
+
+
+SEE ALSO
+========
+
+*Note Perlfunc: (perl.info)perlfunc,, 
+`"I', *Note Perlop: (perl.info)perlop,, `"I', *Note IO/Handle:
+IO/Handle, `"I', *Note IO/Seekable: IO/Seekable,
+
+
+HISTORY
+=======
+
+Derived from FileHandle.pm by Graham Barr <`bodg@tiuk.ti.com'>.
+
+
+
+
+File: pm.info, Node: IO/Handle, Next: IO/Pipe, Prev: IO/File, Up: Module List
+
+supply object methods for I/O handles
+*************************************
+
+
+
+NAME
+====
+
+IO::Handle - supply object methods for I/O handles
+
+
+SYNOPSIS
+========
+
+     use IO::Handle;
+
+     $fh = new IO::Handle;
+     if ($fh->fdopen(fileno(STDIN),"r")) {
+         print $fh->getline;
+         $fh->close;
+     }
+
+     $fh = new IO::Handle;
+     if ($fh->fdopen(fileno(STDOUT),"w")) {
+         $fh->print("Some text\n");
+     }
+
+     use IO::Handle '_IOLBF';
+     $fh->setvbuf($buffer_var, _IOLBF, 1024);
+
+     undef $fh;       # automatically closes the file if it's open
+
+     autoflush STDOUT 1;
+
+
+DESCRIPTION
+===========
+
+IO::Handle is the base class for all other IO handle classes. It is not
+intended that objects of IO::Handle would be created directly, but
+instead IO::Handle is inherited from by several other classes in the IO
+hierarchy.
+
+If you are reading this documentation, looking for a replacement for the
+FileHandle package, then I suggest you read the documentation for
+IO::File
+
+A IO::Handle object is a reference to a symbol (see the Symbol package)
+
+
+CONSTRUCTOR
+===========
+
+new ()
+     Creates a new IO::Handle object.
+
+new_from_fd ( FD, MODE )
+     Creates a IO::Handle like new does.  It requires two parameters,
+     which are passed to the method fdopen; if the fdopen fails, the
+     object is destroyed. Otherwise, it is returned to the caller.
+
+
+METHODS
+=======
+
+See *Note Perlfunc: (perl.info)perlfunc, for complete descriptions of
+each of the following supported IO::Handle methods, which are just front
+ends for the corresponding built-in functions:
+
+     close
+     fileno
+     getc
+     eof
+     read
+     truncate
+     stat
+     print
+     printf
+     sysread
+     syswrite
+
+See *Note Perlvar: (perl.info)perlvar, for complete descriptions of each
+of the following supported IO::Handle methods:
+
+     autoflush
+     output_field_separator
+     output_record_separator
+     input_record_separator
+     input_line_number
+     format_page_number
+     format_lines_per_page
+     format_lines_left
+     format_name
+     format_top_name
+     format_line_break_characters
+     format_formfeed
+     format_write
+
+Furthermore, for doing normal I/O you might need these:
+
+$fh->fdopen ( FD, MODE )
+     fdopen is like an ordinary open except that its first parameter is
+     not a filename but rather a file handle name, a IO::Handle object,
+     or a file descriptor number.
+
+$fh->opened
+     Returns true if the object is currently a valid file descriptor.
+
+$fh->getline
+     This works like <$fh> described in `"I', *Note Perlop:
+     (perl.info)perlop, except that it's more readable and can be safely
+     called in an array context but still returns just one line.
+
+$fh->getlines
+     This works like <$fh> when called in an array context to read all
+     the remaining lines in a file, except that it's more readable.  It
+     will also croak() if accidentally called in a scalar context.
+
+$fh->ungetc ( ORD )
+     Pushes a character with the given ordinal value back onto the given
+     handle's input stream.
+
+$fh->write ( BUF, LEN [, OFFSET }\] )
+     This write is like write found in C, that is it is the opposite of
+     read. The wrapper for the perl write function is called
+     `format_write'.
+
+$fh->flush
+     Flush the given handle's buffer.
+
+$fh->error
+     Returns a true value if the given handle has experienced any errors
+     since it was opened or since the last call to clearerr.
+
+$fh->clearerr
+     Clear the given handle's error indicator.
+
+If the C functions setbuf() and/or setvbuf() are available, then
+`IO::Handle::setbuf' and `IO::Handle::setvbuf' set the buffering policy
+for an IO::Handle.  The calling sequences for the Perl functions are the
+same as their C counterparts--including the constants `_IOFBF',
+`_IOLBF', and `_IONBF' for setvbuf()--except that the buffer parameter
+specifies a scalar variable to use as a buffer.  WARNING: A variable
+used as a buffer by `setbuf' or `setvbuf' must not be modified in any
+way until the IO::Handle is closed or `setbuf' or `setvbuf' is called
+again, or memory corruption may result!  Note that you need to import
+the constants `_IOFBF', `_IOLBF', and `_IONBF' explicitly.
+
+Lastly, there is a special method for working under -T and setuid/gid
+scripts:
+
+$fh->untaint
+     Marks the object as taint-clean, and as such data read from it will
+     also be considered taint-clean. Note that this is a very trusting
+     action to take, and appropriate consideration for the data source
+     and potential vulnerability should be kept in mind.
+
+
+NOTE
+====
+
+A IO::Handle object is a GLOB reference. Some modules that inherit from
+IO::Handle may want to keep object related variables in the hash table
+part of the GLOB. In an attempt to prevent modules trampling on each
+other I propose the that any such module should prefix its variables
+with its own name separated by _'s. For example the IO::Socket module
+keeps a timeout variable in 'io_socket_timeout'.
+
+
+SEE ALSO
+========
+
+*Note Perlfunc: (perl.info)perlfunc,, 
+`"I', *Note Perlop: (perl.info)perlop,, `"I', *Note IO/File: IO/File,
+
+
+BUGS
+====
+
+Due to backwards compatibility, all filehandles resemble objects of
+class IO::Handle, or actually classes derived from that class.  They
+actually aren't.  Which means you can't derive your own class from
+IO::Handle and inherit those methods.
+
+
+HISTORY
+=======
+
+Derived from FileHandle.pm by Graham Barr <`bodg@tiuk.ti.com'>
+
+
+
+

@@ -1,0 +1,2012 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Term/Query, Next: Term/ReadKey, Prev: Term/Gnuplot, Up: Module List
+
+Table-driven query routine.
+***************************
+
+
+
+NAME
+====
+
+*Term::Query* - Table-driven query routine.
+
+
+SYNOPSIS
+========
+
+`use *Term::Query*'
+     `qw( query query_table query_table_set_defaults query_table_process
+     );'
+
+`$result = query $*prompt*, $flags, [ $*optional_args* ];'
+
+`$ok = query_table \@array;'
+
+`query_table_set_defaults \@array;'
+
+`$ok = query_table_process \@array, \&flagsub, \&querysub;'
+
+
+DESCRIPTION
+===========
+
+
+query
+-----
+
+The query subroutine fulfills the need for a generalized
+question-response subroutine, with programmatic defaulting, validation,
+condition and error checking.
+
+Given *$prompt* and *$flags*, and possibly additional arguments,
+depending upon the characters in *$flags*, query issues a prompt to
+STDOUT and solicits input from STDIN.  The input is validated against a
+set of test criteria as configured by the characters in *$flags*; if any
+of the tests fail, an error message is noted, and the query is
+reattempted.
+
+When STDIN is not a tty (not interactive), prompts are not issued, and
+errors cause a return rather than attempting to obtain more input.  This
+non-interactive behaviour can be disabled by setting the variable
+`$Foce_Interactive' as below:
+
+     $Term::Query::Force_Interactive = 1;
+
+When `$Force_Interactive' is a non-null, non-zero value, query will
+issue prompts, error messages, and ask for additional input even when
+the input is not interactive.
+
+
+query_table
+-----------
+
+The query_table subroutine performs multiple queries, by invoking query,
+setting associated variables with the results of each query.  Prompts,
+flags, and other arguments for each query are given in an array, called
+a *query table*, which is passed to the query_table subroutine by
+reference.
+
+
+query_table_set_defaults
+------------------------
+
+The query_table_set_defaults subroutine causes any variables named in
+the given *query table* array to be assigned their corresponding default
+values, if any.  This is a non-interactive subroutine.
+
+
+query_table_process
+-------------------
+
+A general interface to processing a *query table* is available with the
+query_table_process subroutine.  It accepts a *query table* array,
+and two subroutine references, a *&flagsub* and a *&querysub*.  The
+*&flagsub* is invoked on each each *flag* character given in the
+*$flags* argument of the *query table* (see below).  The *&querysub*
+is invoked for each query in the *query table*.
+
+The query_table and query_table_set_defaults subroutines both use
+query_table_process to perform their functions.
+
+
+Query Table
+-----------
+
+The format of the *query table* array passed to query_table,
+query_table_set_defaults, and query_table_process subroutines is:
+
+     @array = ( $prompt1, $flags1, [ $arglist1, ... ],
+                $prompt2, $flags2, [ $arglist2, ... ],
+     	    ...
+     	    $promptN, $flagsN, [ $arglistN, ... ] );
+
+In English, there are three items per query: a *prompt* string, a flags
+string, and an array of arguments.  Note that the syntax used above uses
+`[ ... ]' to denote a Perl 5 anonymous array, not an optional set of
+arguments.  Of course, if there are no arguments for a particular query,
+the corresponding anonymous array can be the null string or zero.
+
+The query table design is such that a query table can be created with a
+set of variables, their defaults, value constraints, and help strings,
+and it can be used to both initialize the variables' values and to
+interactively set their new values.  The query_table_set_defaults
+subroutine performs the former, while query_table does the latter.
+
+
+Flag Characters
+---------------
+
+With typical usage, given *$prompt* and *$flags*, query prints
+*$prompt* and then waits for input from the user.  The handling of the
+response depends upon the flag characters given in the *$flags* string.
+
+The flag characters indicate the type of input, how to process it,
+acceptable values, etc.  Some flags simply indicate the type or
+processing of the input, and do not require additional arguments.  Other
+flags require that subsequent arguments to the query subroutine be
+given.  The arguments must be given in the same order as their
+corresponding flag characters.
+
+The ordering of the flags in the *$flags* argument is important -- it
+determines the ordering of the tests.  For example, if both the a and m
+flags are given as `"am"', then this indicates that an *after*
+subroutine call should be performed first, followed by a regular
+expression *match* test.
+
+All tests are applied in the order given in the *$flags* until a
+particular test fails.  When a test fails, an error message is generated
+and the input is reattempted, except in the case of the I flag.
+
+
+Flag Characters Without Arguments
+---------------------------------
+
+i
+     The input must be an integer.
+
+n
+     The input must be a number, real or integer.
+
+Y
+     The input is a `"yes"' or "no", with a default answer of `"yes"'.
+
+N
+     The input is a `"yes"' or "no", with a default answer of "no".
+
+r
+     Some input is *required*; an empty response will be refused.  This
+     option is only meaningful when there is no default input (see the d
+     flag character below).
+
+s
+     Strip and squeeze the input.  Leading and trailing blanks are
+     eliminated, and embedded whitespace is "squeezed" to single blank
+     characters.  This flag is implied by the k and K flags.
+
+H
+     Do not treat input of *?* as a request for help.  This disables
+     automatic help, unless implemented with the *after* (a flag)
+     subroutine.
+
+
+Flag Characters With Arguments
+------------------------------
+
+The following flag characters indicate the presence of an argument to
+query.  The arguments must occur in the same order as their
+corresponding flag characters.  For example, if both the V and h flags
+are given as `"Vh"', then the first argument must be the variable name,
+and the next the help string, in that order.
+
+a *\&after*
+     The next argument is the *after* subroutine, to be invoked after
+     the input has been solicited.  This feature provides for an "open
+     ended" input validation, completely at the control of the user of
+     the Query module.  The *after* subroutine is invoked in this
+     manner:
+
+          &$after( \$input );
+
+     If the *after* sub returns an undef, then query processing stops
+     with an immediate undef return value.
+
+     If the *after* sub returns a null or zero value, then the input is
+     rejected and resolicted.  No error messages are displayed except
+     the "Please try again." message.
+
+     Since the *after* sub has the reference to the *$input* variable,
+     it is free to change the value of input indirectly; ie:
+
+          $$input = $some_new_value;
+
+b *\&before*
+     The next argument is the *before* subroutine, to be invoked before
+     any input is attempted.  If the *before* sub returns a non-null,
+     non-zero value, the current query will be attempted.  If a null or
+     zero value is returned, the current query will be abandoned, with a
+     null return.
+
+     This feature, used in a *query table*, allows for selective queries
+     to be programmed by using *before* subs on the optional queries.
+     For example, using the following anonymous sub as the b flag
+     argument:
+
+          sub { $> == 0; }
+
+     will cause the corresponding query to only be issued for the root
+     user.
+
+     The ordering of the b flag in the *$flags* argument is unimportant,
+     since, by definition, this test is always performed before
+     attempting any input.
+
+d *$default*
+     The next argument is the default input.  This string is used
+     instead of an empty response from the user.  The default value can
+     be a scalar value, a reference to a scalar value, or a reference to
+     a subroutine, which will be invoked for its result only if a
+     default value is needed (no input is given).
+
+h *$help_string*
+     The next argument is the *help string*, which is printed in
+     response to an input of "*?*".  In order to enter a *?* as actual
+     text, it must be prefixed with a backslash: "\".
+
+k *\@array*
+     The next argument is a reference to an array of allowable keywords.
+     The input is matched against the array elements in a
+     case-insensitive manner, with unambiguous abbreviations allowed.
+     This flag implies the s flag.
+
+     The matching can be made case-sensitive by setting the following
+     variable prior to the invocation of query:
+
+          $Query::Case_sensitive = 1;
+
+     By default, this variable is null.
+
+K *\@array*
+     The next argument is a reference to an array of disallowed keywords
+     In this case, for the input to be unacceptable, it must match
+     exactly, case-insensitive, one of the array elements.  This flag
+     implies the s flag.
+
+     The k option is useful for soliciting new, unique keywords to a
+     growing list.  Adding new fields to a database, for example.
+
+     The matching can be made case-sensitive by setting the
+     `$Query::Case_sensitive' variable (see above).
+
+l *$maxlen*
+     The next argument specifies the maximum length of the input.
+
+m *$regular_expression*
+     The next argument specifies a regular expression pattern against
+     which the input will be matched.
+
+I *$reference*
+     The next argument is the input: either a simple scalar value, or a
+     *reference* to a value, such as a SCALAR variable reference (eg:
+     `\$somevar'), or a CODE reference (eg: `sub {..}').  In any case,
+     the resulting value is used as input instead of reading from STDIN.
+
+     If the input returned by the reference does not match other
+     constraints, additional input is not attempted.  An error message
+     is noted, and an undef return is taken.
+
+     This option is handy for applications which have already acquired
+     the input, and wish to use the validation features of query.
+
+     It is also useful to embed a query definition in a *query table*
+     which does not actually perform a query, but instead does a
+     variable assignment dynamically, using the I reference value.
+
+J *$reference*
+     The next argument is the input *reference*, as with the I flag,
+     except that if the input fails any of the constraints, additional input
+     is solicited from the input.  In other words, the J flag sets a
+     *one-time* only input reference.  Think of it as *jumping* into the
+     query loop with an initial input.
+
+V *variable_name_or_ref*
+     The next argument is the variable name or reference to receive the
+     validated input as its value.  This option, and its corresponding
+     variable name, would normally be present on all entries used with
+     query_table in order to retain to the values resulting from each
+     query.
+
+     The value can either be a string representing the variable name, or
+     a reference to a variable, eg: `\$some_var'.
+
+
+Details
+-------
+
+The query processing proceeds basically in the same order as defined by
+the flags argument, with some exceptions.  For example, the *before*
+subroutine is always performed prior to input.
+
+There are implicit precedences in the ordering of some of the *flag*
+tests.  Generally, flags have their corresponding tests performed in the
+same order as the given flags.  Some flag tests, however, require that
+other flags' tests be performed beforehand in order to be effective.
+For example, when given the k flag and an s flag, stripping the input
+would only be effective if the strip were done on the input before
+testing the input against the keyword table.  In other words, the s flag
+has precedence over the k flag.  If the user supplies the flags string
+as `"ks"', the effective ordering would still be `"sk"'.
+
+The table below indicates the precedences of the flag tests:
+
+     Given Flag       Flags With Higher Precedence
+     ==========       ================================
+     i (int)          s (strip), d (default), h (help)
+     k (key)          s (strip), d (default), h (help)
+     K (nonkey)       s (strip), d (default), h (help)
+     l (maxlen)                  d (default), h (help)
+     m (match)                   d (default), h (help)
+     n (numeric)      s (strip), d (default), h (help)
+     N (no)           s (strip), d (default), h (help)
+     r (required)                d (default), h (help)
+     s (strip)                   d (default), h (help)
+     Y (yes)          s (strip), d (default), h (help)
+
+Except for the implied precedence indicated in the table above, the
+ordering of the flag tests proceeds in the same order as given in the
+flags argument.
+
+Excepting the precedences above, query processing proceeds generally as
+described below.
+
+   * If the b flag was given, the "before" subroutine is invoked as a
+     "pre-input" test.  If the sub returns a 0, empty string, or undef,
+     the query is abandoned.  Otherwise, processing continues.
+
+   * If the I or J flags were given, then input is obtained, without
+     prompting, from the associated reference.  If the reference type is
+     CODE, then it is invoked and the resulting return value is used as
+     the input.  Otherwise the reference is evaluated in a scalar
+     context and used as the input.  The J flag test is only done once,
+     on the first entry into the input loop.
+
+   * In the absence either the I or J flags, query will issue the given
+     prompt and obtain input from STDIN.  If an EOF occurs, an undef
+     value will result.
+
+   * The input is examined for "null" input (that is, the empty string),
+     and processing quits in this case.  Since most input is obtained
+     from STDIN, a null input indicates an end-of-file (EOF).  If the
+     input is not null, a terminating newline is removed, and the input
+     testing continues.  At this point, an empty input string does not
+     indicate an EOF.
+
+   * If the s, k, or K flags were given, the input is trimmed of leading
+     and trailing blanks, and all whitespace is "squeezed" to single
+     blanks.
+
+   * If the input is an empty response, and there is a default input (d
+     flag), use it instead.
+
+   * Unless the H flag is given, if the input is the character "*?*"
+     with nothing else, then print some helpful information.  If the
+     user had supplied a *help string*, it is printed, otherwise the
+     message:
+
+     You are being asked "*$prompt*"
+
+     is displayed.  Also, some information about the expected response,
+     according to any given flag characters, is displayed.  Finally, the
+     user is returned to the prompt, and given another opportunity to
+     enter a response.
+
+   * If input is *required* (indicated by the r flag), and if the input
+     is empty, produce an error message, and query again.
+
+   * If there was a a flag, the corresponding *after* subroutine is
+     invoked with the input reference as its argument.  If the
+     subroutine returns a non-null, non-zero value, the input succeeds,
+     otherwise it fails.  It is up to the *after* subroutine to display
+     any appropriate error messages.
+
+   * If the query was flagged Y or N, match the input against the
+     pattern:
+
+          /^(y(es?)?|no?)$/i
+
+     If the match fails, print an error message, and query again.  When
+     the match succeeds, replace the input with the complete word
+     `"yes"' or "no";
+
+   * If an integer response is required (i flagged), check for integer
+     input.  If not, print an error, and query again.  A successful
+     integer input is returned.
+
+   * If a numeric response is required (n flagged), check for proper
+     numeric input (either integer or real format).  Errors produce a
+     warning, and another query.
+
+   * If the query was given a *keyword* table (flagged with k), the
+     input is matched against the allowable keyword list.  If an exact
+     match is found, the keyword is returned as the input.  Failing an
+     exact match, an abbreviation search is performed against the
+     keywords.  If a single match is found, it is returned as the input.
+     If no match is found, an error message is produced, and the user is
+     returned to the query to try again.  Otherwise, the input was
+     ambiguous, an error noted showing the matches, and the user is
+     queried again.
+
+     The matching is case-insensitive or not, according to the value of
+     the variable `$Query::Case_sensitive', which is nil, by default.
+     The variable may be set by the user to change the matching from
+     case-insensitive to case-sensitive.
+
+   * If the query was given an unacceptable keyword list (flagged with
+     K), the input is compared against the unacceptable keywords.  If it
+     matches any keywords exactly, an error is noted, and the query is
+     performed again.
+
+     The matching is case-insensitive by default.  Set the variable
+     `$Query::Case_sensitive' to a non-null, non-zero value to make the
+     keyword matching case-sensitive.
+
+   * If the query was m flagged with a Perl regular expression pattern,
+     then the input is matched against the pattern.  Failures are noted
+     with an error message, and the query reattempted.
+
+   * If the query was l flagged with a maximum input length, the length
+     of the input is checked against the maximum.  A length violation is
+     noted with an error message and the user is queried again.
+
+   * If the query has a variable defined with the V flag, the variable
+     is assigned the input string.  This is always done last, after and
+     only if all tests are successful.
+
+     If the variable is a string name and not qualified with a package
+     name (ie: `$foo::variable'), then the variable is qualified at the
+     level outside of the Query.pm module.
+
+   * Finally, having passed whatever conditions were flagged, the input
+     is returned to the user.
+
+
+EXAMPLE
+=======
+
+The following are typical usage samples:
+
+   * To perform a simple "yes" or "no" query, with "no" as the default
+     answer:
+
+          $ans = &query("Do you wish to quit? (yn)",'N');
+
+   * An equivalent alternative is:
+
+          query "Do you wish to quit? (yn)", 'NV', \$ans;
+
+   * To perform the same query, with some supplied helpful information:
+
+          $ans = &query("Do you wish to quit? (yn)",'Nh',<<'EOF');
+          You are being asked if you wish to quit.  If you answer "yes",
+          then all changes will be lost.  An answer of "no", will allow
+          you to return to continue making changes.
+          EOF
+
+   * To solicit an integer input:
+
+          $mode = &query("Please enter the file mode:",'idh','644',<<'EOF');
+          Please enter the 3 digit numeric file mode; if you are unsure
+          of how the file mode is used, please see the man page for "chmod".
+          EOF
+
+   * To solicit one of several keywords:
+
+          @keys = split(' ','SGI DEC IBM Sun HP Apple');
+          $vendor = &query('Please enter a vendor:','rkd',\@keys,'SGI');
+
+   * To solicit a new, unique keyword to be used as a database field
+     name, with a regexp pattern to check it against:
+
+          @fields = split(' ','Index Vendor Title'); # existing fields
+          $newfield = &query('New field name:','rKm',\@fields,'^\w+$');
+
+
+ENVIRONMENT
+===========
+
+COLUMNS
+     This variable is used to control the width of output when listing
+     the keyword arrays.  If not defined, 80 is used by default.
+
+
+DEPENDENCIES
+============
+
+Carp.pm
+     Used to produce usage error messages.
+
+Array::PrintCols::print_cols
+     Used to produce displays of the keyword arrays.
+
+
+FILES
+=====
+
+None.
+
+
+AUTHOR
+======
+
+Copyright (C) 1995 Alan K. Stebbens <aks@hub.ucsb.edu>
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+DIAGNOSTICS
+===========
+
+Input is required.
+     Issued when an empty response is given, and there is no default
+     input.
+
+Please answer with 'yes' or 'no', or enter '?' for help.
+     Issued for Y or N flagged queries, and the input is not
+     reconizeable.
+
+Please enter an integer number.
+     Printed when non-integer input is given for i flagged queries.
+
+Please enter a number, real or integer.
+     Printed when non-numeric input is given for n flagged queries.
+
+The input '*$input*' is ambiguous; it matches the following:
+     Issued in response to k flagged queries with input which matches
+     more than one of the allowed keywords.
+
+The input '*$input*' fails to match any of the allowed keywords:
+     Printed when input to a k flagged query does not match any of the
+     keywords.
+
+The input '%s' matches a disallowed keyword '%s'.
+     Printed when the input matches one of the unacceptable keywords
+     given on a K flagged query.
+
+'%s' fails to match '%s'
+     This results from input failing to match the regular expression
+     given on a m flagged query.
+
+Input is %d characters too long; cannot exceed %d characters.
+     The length of the input exceeded the maximum length given with the
+     l flag argument.
+
+Please try again, or enter '?' for help.
+query: The k flag needs an array reference.
+     The next argument in the argument list to query wasn't an array
+     reference.
+
+query: The K flag needs an array reference.
+     The next argument in the argumentlist to query wasn't an array
+     reference.
+
+
+BUGS
+====
+
+
+
+
+File: pm.info, Node: Term/ReadKey, Next: Term/ReadLine, Prev: Term/Query, Up: Module List
+
+A perl module for simple terminal control
+*****************************************
+
+
+
+NAME
+====
+
+Term::ReadKey - A perl module for simple terminal control
+
+
+DESCRIPTION
+===========
+
+Term::ReadKey is a compiled perl module dedicated to providing simple
+control over terminal driver modes (cbreak, raw, cooked, etc.,) support
+for non-blocking reads, if the architecture allows, and some generalized
+handy functions for working with terminals. One of the main goals is to
+have the functions as portable as possible, so you can just plug in "use
+Term::ReadKey" on any architecture and have a good likelyhood of it
+working.
+
+ReadMode MODE [, Filehandle]
+     Takes an integer argument, which can currently be one of the
+     following values:
+
+          0    Restore original settings.
+          1    Change to cooked mode.
+          2	 Change to cooked mode with echo off. 
+                (Good for passwords)
+          3    Change to cbreak mode.
+          4    Change to raw mode.
+          5    Change to ultra-raw mode. 
+                (LF to CR/LF translation turned off) 
+      
+          Or, you may use the synonyms:
+
+          restore
+          normal
+          noecho
+          cbreak
+          raw
+          ultra-raw
+
+     These functions are automatically applied to the STDIN handle if no
+     other handle is supplied. Modes 0 and 5 have some special
+     properties worth mentioning: not only will mode 0 restore original
+     settings, but it cause the next ReadMode call to save a new set of
+     default settings. Mode 5 is similar to mode 4, except no CR/LF
+     translation is performed, and if possible, parity will be disabled
+     (only if not being used by the terminal, however.)
+
+     If you are executing another program that may be changing the
+     terminal mode, you will either want to say
+
+          ReadMode 1
+          system('someprogram');
+          ReadMode 1;
+
+          which resets the settings after the program has run, or:
+
+          $somemode=1;
+          ReadMode 0;
+          system('someprogram');
+          ReadMode 1;
+
+          which records any changes the program may have made, before resetting the
+          mode.
+
+ReadKey MODE [, Filehandle]
+     Takes an integer argument, which can currently be one of the
+     following values:
+
+          0    Perform a normal read using getc
+          -1   Perform a non-blocked read
+          >0	 Perform a timed read
+
+     (If the filehandle is not supplied, it will default to STDIN.) If
+     there is nothing waiting in the buffer during a non-blocked read,
+     then undef will be returned. Note that if the OS does not provide
+     any known mechanism for non-blocking reads, then a `ReadKey -1' can
+     die with a fatal error. This will hopefully not be common.
+
+     If MODE is greater then zero, then ReadKey will use it as a timeout
+     value in seconds (fractional seconds are allowed), and won't return
+     undef until that time expires. (Note, again, that some OS's may not
+     support this timeout behaviour.) If MODE is less then zero, then
+     this is treated as a timeout of zero, and thus will return
+     immediately if no character is waiting. A MODE of zero, however,
+     will act like a normal getc.
+
+ReadLine MODE [, Filehandle]
+     Takes an integer argument, which can currently be one of the
+     following values:
+
+          0    Perform a normal read using scalar(<FileHandle>)
+          -1   Perform a non-blocked read
+          >0	 Perform a timed read
+
+     If there is nothing waiting in the buffer during a non-blocked
+     read, then undef will be returned. Note that if the OS does not
+     provide any known mechanism for non-blocking reads, then a
+     `ReadLine 1' can die with a fatal error. This will hopefully not be
+     common. Note that a non-blocking test is only performed for the
+     first character in the line, not the entire line.  This call will
+     probably *not* do what you assume, especially with ReadMode's
+     higher then 1. For example, pressing Space and then Backspace would
+     appear to leave you where you started, but any timeouts would now
+     be suspended.
+
+GetTerminalSize [Filehandle]
+     Returns either an empty array if this operation is unsupported, or
+     a four element array containing: the width of the terminal in
+     characters, the height of the terminal in character, the width in
+     pixels, and the height in pixels.
+
+SetTerminalSize WIDTH,HEIGHT,XPIX,YPIX [, Filehandle]
+     Return -1 on failure, 0 otherwise. Note that this terminal size is only for
+     *informative* value, and changing the size via this mechanism will *not*
+     change the size of the screen. For example, XTerm uses a call like
+     this when it resizes the screen. If any of the new measurements
+     vary from the old, the OS will probably send a SIGWINCH signal to
+     anything reading that tty or pty.
+
+GetSpeeds [, Filehandle]
+     Returns either an empty array if the operation is unsupported, or a
+     two value array containing the terminal in and out speeds, in
+     *decimal*. E.g, an in speed of 9600 baud and an out speed of 4800
+     baud would be returned as (9600,4800). Note that currently the in
+     and out speeds will always be identical in some OS's.
+
+GetControlChars [, Filehandle]
+     Returns an array containing key/value pairs suitable for a
+     hash. The pairs consist of a key, the name of the control
+     character/signal, and the value of that character, as a single
+     character.
+
+     Each key will be an entry from the following list:
+
+          DISCARD
+          DSUSPEND
+          EOF
+          EOL
+          EOL2
+          ERASE
+          ERASEWORD
+          INTERRUPT
+          KILL
+          MIN
+          QUIT
+          QUOTENEXT
+          REPRINT
+          START
+          STATUS
+          STOP
+          SUSPEND
+          SWITCH
+          TIME
+
+     Thus, the following will always return the current interrupt
+     character, regardless of platform.
+
+          %keys = GetControlChars;
+          $int = $keys{INTERRUPT};
+
+SetControlChars [, Filehandle]
+     Takes an array containing key/value pairs, as a hash will
+     produce. The pairs should consist of a key that is the name of a
+     legal control character/signal, and the value should be either a
+     single character, or a number in the range 0-255. SetControlChars
+     will die with a runtime error if an invalid character name is
+     passed or there is an error changing the settings. The list of
+     valid names is easily available via
+
+          %cchars = GetControlChars();
+          @cnames = keys %cchars;
+
+
+
+
+File: pm.info, Node: Term/ReadLine, Next: Term/Screen, Prev: Term/ReadKey, Up: Module List
+
+Perl interface to various readline packages. If no real package is found, substitutes stubs instead of basic functions.
+***********************************************************************************************************************
+
+
+
+NAME
+====
+
+Term::ReadLine - Perl interface to various readline packages. If no real
+package is found, substitutes stubs instead of basic functions.
+
+
+SYNOPSIS
+========
+
+     use Term::ReadLine;
+     $term = new Term::ReadLine 'Simple Perl calc';
+     $prompt = "Enter your arithmetic expression: ";
+     $OUT = $term->OUT || STDOUT;
+     while ( defined ($_ = $term->readline($prompt)) ) {
+       $res = eval($_), "\n";
+       warn $@ if $@;
+       print $OUT $res, "\n" unless $@;
+       $term->addhistory($_) if /\S/;
+     }
+
+
+DESCRIPTION
+===========
+
+This package is just a front end to some other packages. At the moment
+this description is written, the only such package is Term-ReadLine,
+available on CPAN near you. The real target of this stub package is to
+set up a common interface to whatever Readline emerges with time.
+
+
+Minimal set of supported functions
+==================================
+
+All the supported functions should be called as methods, i.e., either as
+
+     $term = new Term::ReadLine 'name';
+
+or as
+
+     $term->addhistory('row');
+
+where $term is a return value of Term::ReadLine->Init.
+
+ReadLine
+     returns the actual package that executes the commands. Among
+     possible values are `Term::ReadLine::Gnu', `Term::ReadLine::Perl',
+     `Term::ReadLine::Stub Exporter'.
+
+new
+     returns the handle for subsequent calls to following
+     functions. Argument is the name of the application. Optionally can
+     be followed by two arguments for IN and `OUT' filehandles. These
+     arguments should be globs.
+
+readline
+     gets an input line, *possibly* with actual readline
+     support. Trailing newline is removed. Returns undef on `EOF'.
+
+`addhistory'
+     adds the line to the history of input, from where it can be used if
+     the actual readline is present.
+
+IN, $`OUT'
+     return the filehandles for input and output or undef if readline
+     input and output cannot be used for Perl.
+
+`MinLine'
+     If argument is specified, it is an advice on minimal size of line
+     to be included into history.  undef means do not include anything
+     into history. Returns the old value.
+
+`findConsole'
+     returns an array with two strings that give most appropriate names
+     for files for input and output using conventions `"<$in"',
+     `">out"'.
+
+Attribs
+     returns a reference to a hash which describes internal
+     configuration of the package. Names of keys in this hash conform to
+     standard conventions with the leading `rl_' stripped.
+
+`Features'
+     Returns a reference to a hash with keys being features present in
+     current implementation. Several optional features are used in the
+     minimal interface: `appname' should be present if the first
+     argument to new is recognized, and `minline' should be present if
+     `MinLine' method is not dummy.  `autohistory' should be present if
+     lines are put into history automatically (maybe subject to
+     `MinLine'), and `addhistory' if `addhistory' method is not dummy.
+
+     If `Features' method reports a feature `attribs' as present, the
+     method Attribs is not dummy.
+
+
+Additional supported functions
+==============================
+
+Actually Term::ReadLine can use some other package, that will support
+reacher set of commands.
+
+All these commands are callable via method interface and have names
+which conform to standard conventions with the leading `rl_' stripped.
+
+The stub package included with the perl distribution allows some
+additional methods:
+
+`tkRunning'
+     makes Tk event loop run when waiting for user input (i.e., during
+     readline method).
+
+`ornaments'
+     makes the command line stand out by using termcap data.  The argument
+     to `ornaments' should be 0, 1, or a string of a form
+     `"aa,bb,cc,dd"'.  Four components of this string should be names of
+     *terminal capacities*, first two will be issued to make the prompt
+     standout, last two to make the input line standout.
+
+`newTTY'
+     takes two arguments which are input filehandle and output
+     filehandle.  Switches to use these filehandles.
+
+One can check whether the currently loaded ReadLine package supports
+these methods by checking for corresponding `Features'.
+
+
+EXPORTS
+=======
+
+None
+
+
+ENVIRONMENT
+===========
+
+The variable `PERL_RL' governs which ReadLine clone is loaded. If the
+value is false, a dummy interface is used. If the value is true, it
+should be tail of the name of the package to use, such as Perl or `Gnu'.
+
+If the variable is not set, the best available package is loaded.
+
+
+
+
+File: pm.info, Node: Term/Screen, Next: Term/Size, Prev: Term/ReadLine, Up: Module List
+
+Term::Screen
+************
+
+
+
+NAME
+====
+
+Term::Screen
+
+
+SYNOPSIS
+========
+
+A Simple all perl Term::Cap based screen positioning module
+
+     require Term::Screen;
+
+     $scr = new Term::Screen;
+     unless ($scr) { die " Something's wrong \n"; }
+     $scr->clrscr();
+     $scr->at(5,3);
+     $scr->puts("this is some stuff");
+     $scr->at(10,10)->bold()->puts("hi!")->normal();
+        # you can concatenate many calls (not getch)
+     $c = $scr->getch();      # doesn't need Enter key 
+     ...
+     if ($scr->key_pressed()) { print "ha you hit a key!"; }
+
+
+DESCRIPTION
+===========
+
+Term::Screen is a very simple screen positioning module that should work
+wherever Term::Cap does. It is set up for Unix using stty's but these
+dependences are isolated by evals in the new constructor. Thus you may
+create a child module implementing Screen with MS-DOS, ioctl, or other
+means to get raw and unblocked input. This is not a replacement for
+Curses -- it has no memory.  This was written so that it could be easily
+changed to fit nasty systems, and to be available first thing.
+
+The input functions getch, key_pressed, echo, and noecho are implemented
+so as to work under a fairly standard Unix system. They use 'stty' to
+set raw and no echo modes and turn on auto flush. All of these are
+'eval'ed so that this class can be inherited for new definitions easily.
+
+Term::Screen was designed to be "required", then used with object syntax
+as shown above. One quirk (which the author was used to so he didn't
+care) is that for function key translation, no delay is set. So for many
+terminals to get an esc character, you have to hit another char after
+it, generally another esc.
+
+You may access the screen size and actual compiled termcap entries in
+$scr->{ROWS}, COLS, TERM respectively, and $scr->{IN} is the input
+buffer, but you should never update these items yourself directly, just
+use the provided object methods.
+
+
+PUBLIC INTERFACE
+================
+
+Term::Screen has a very minimal set of of fixed character terminal
+position and character reading commands:
+
+new()      	
+     Initialize the screen. Does not clear the screen, but does home the
+     cursor.
+
+resize(r,c)
+     Tell screen the new number of rows & cols physically you can skip
+     the r & c and get new checked vals from stty or termcap.
+     Term::Screen does not handle resize signals internally, but you can
+     do it by checking and updating screen size using this function.
+
+What follows are capabilities that are assumed to be in termcap. They
+are for all the terminals I've used.
+
+at(row,col)
+     Moves cursor to (row,col) where (0,0) is upper left corner, - if
+     the spot is illegal does whatever 'cm' in termcap does, since that
+     is what it uses.
+
+normal()
+     Turn off any highlightling (bold, reverse)
+
+bold()
+     The md value from termcap - turn on bold usually
+
+reverse()
+     The mr value from termcap - turn on reverse text often. these last
+     two default to whatever is available.
+
+clrscr()   	
+     Clear the screen and home cursor
+
+clreol()
+     Clear to the end of the line - cursor doesn't move
+
+clreos()
+     Clear to end of screen - right and down, cursor doesn't move.
+
+il()	
+     Insert blank line before line cursor is on, moving lower lines
+     down.
+
+dl()
+     Delete line cursor is on, moving lower lines up.
+
+The following are useful, but not always there, so an exists method
+tells you.
+
+exists_ic()
+     Insert character option is available.
+
+exists_dc()
+     Delete char option exists and is available.
+
+ic()
+     Insert character at current position move rest to the right
+ 
+     =item dc()
+
+     Delete character at current position moving rest to the left.
+
+The following are the I/O functions. They provide standard useful single
+character reading values. getch returns either a single char or the name
+of a function key when a key is pressed. The only exception is when you
+hit a character that is the start of a function key sequence.  In this
+case getch keeps waiting for the next char to see if it is fn key.
+Generally this is the escape key, and why you need to hit esc twice.  To
+get a stright char, just use the regular 'gets' perl function. You will
+need to echo it yourself if you want.
+
+puts(str)
+     Prints $s and returns the screen object. Used to do things like
+     `$scr-'at(10,0)->puts("Hi!")->at(0,0);>. You can just use print if
+     you want.
+
+getch()
+     Returns just a char in raw mode. Function keys are returned as
+     their capability names, e.g. the up key would return "ku".  See the
+     `get_fn_keys' function for what a lot of the names are. This will
+     wait for next char if in a possible fn key string, so you would
+     need to type 'esc' 'esc' most likely to get out of getch, since
+     'esc' is usually the leading char for function keys. You can use
+     perl's getc, to go 'underneath' getch if you want. See the table in
+     Screen::get_fn_keys() for more information.
+
+def_key('name','input string')
+     Lets you define your own function key sequence.  'name' is what
+     will be returned by getch.  'input string' is what the fn key sends
+     literally.  This will override any prev definitions of the input.
+     A whole bunch of defaults are defined for xterms rxvt's, etc. in
+     the get_fn_keys function.
+
+key_pressed([sec])
+     Returns true if there is a character waiting.  You can pass an
+     option time in seconds to wait.
+
+flush_input()
+     Clears input buffer and removes any incoming chars.
+
+stuff_input(str)
+     Lets you stuff chars into the input buffer to be read like
+     keystrokes.  This is only the `getch' method buffer, the underlying
+     getc stuff is not touched.
+
+echo()
+     Tells getch to echo the input to the screen. (the default.)
+
+noecho()
+     Tells getch NOT to echo input to the screen.
+
+
+AUTHOR
+======
+
+Term/Screen.pm by Mark Kaehny (kaehny@execpc.com)
+
+
+SEE ALSO
+========
+
+Term::Cap, termcap, curses, stty, select
+
+
+
+
+File: pm.info, Node: Term/Size, Next: Test/Harness, Prev: Term/Screen, Up: Module List
+
+Perl extension for retrieving terminal size
+*******************************************
+
+
+
+NAME
+====
+
+Term::Size - Perl extension for retrieving terminal size
+
+
+SYNOPSIS
+========
+
+     use Term::Size;
+
+     ($columns, $rows) = Term::Size::chars *STDOUT{IO};
+     ($x, $y) = Term::Size::pixels;
+
+
+DESCRIPTION
+===========
+
+*Term::Size* is a Perl module which provides a straightforward way to
+retrieve the terminal size.
+
+Both functions take an optional filehandle argument, which defaults to
+`*STDIN{IO}'.  They both return a list of two values, which are the
+current width and height, respectively, of the terminal associated with
+the specified filehandle.
+
+`Term::Size::chars' returns the size in units of characters, whereas
+`Term::Size::pixels' uses units of pixels.
+
+In a scalar context, both functions return the first element of the
+list, that is, the terminal width.
+
+The functions may be imported.
+
+If you need to pass a filehandle to either of the `Term::Size'
+functions, beware that the `*STDOUT{IO}' syntax is only supported in
+Perl 5.004 and later.  If you have an earlier version of Perl, or are
+interested in backwards compatibility, use `*STDOUT' instead.
+
+
+EXAMPLES
+========
+
+1. Refuse to run in a too narrow window.
+
+     use Term::Size;
+
+     die "Need 80 column screen" if Term::Size::chars *STDOUT{IO} < 80;
+
+2. Track window size changes.
+
+     use Term::Size 'chars';
+
+     my $changed = 1;
+
+     while (1) {
+             local $SIG{'WINCH'} = sub { $changed = 1 };
+
+     if ($changed) {
+             ($cols, $rows) = chars;
+             # Redraw, or whatever.
+             $changed = 0;
+     }
+         }
+
+
+RETURN VALUES
+=============
+
+Both functions return undef if there is an error.
+
+If the terminal size information is not available, the functions will
+normally return `(0, 0)', but this depends on your system.  On character
+only terminals, `pixels' will normally return `(0, 0)'.
+
+
+BUGS
+====
+
+It only works on Unix systems.
+
+
+AUTHOR
+======
+
+Tim Goodwin, <tim@uunet.pipex.com>, 1997-04-23.
+
+
+
+
+File: pm.info, Node: Test/Harness, Next: Text/Abbrev, Prev: Term/Size, Up: Module List
+
+run perl standard test scripts with statistics
+**********************************************
+
+
+
+NAME
+====
+
+Test::Harness - run perl standard test scripts with statistics
+
+
+SYNOPSIS
+========
+
+use Test::Harness;
+
+runtests(@tests);
+
+
+DESCRIPTION
+===========
+
+Perl test scripts print to standard output `"ok N"' for each single
+test, where N is an increasing sequence of integers. The first line
+output by a standard test script is `"1..M"' with `M' being the number
+of tests that should be run within the test
+script. Test::Harness::runtests(@tests) runs all the testscripts named
+as arguments and checks standard output for the expected `"ok N"'
+strings.
+
+After all tests have been performed, runtests() prints some performance
+statistics that are computed by the Benchmark module.
+
+
+The test script output
+----------------------
+
+Any output from the testscript to standard error is ignored and
+bypassed, thus will be seen by the user. Lines written to standard
+output containing `/^(not\s+)?ok\b/' are interpreted as feedback for
+runtests().  All other lines are discarded.
+
+It is tolerated if the test numbers after ok are omitted. In this case
+Test::Harness maintains temporarily its own counter until the script
+supplies test numbers again. So the following test script
+
+     print <<END;
+     1..6
+     not ok
+     ok
+     not ok
+     ok
+     ok
+     END
+
+will generate
+
+     FAILED tests 1, 3, 6
+     Failed 3/6 tests, 50.00% okay
+
+The global variable $Test::Harness::verbose is exportable and can be
+used to let runtests() display the standard output of the script without
+altering the behavior otherwise.
+
+
+EXPORT
+======
+
+`&runtests' is exported by Test::Harness per default.
+
+
+DIAGNOSTICS
+===========
+
+`All tests successful.\nFiles=%d,  Tests=%d, %s'
+     If all tests are successful some statistics about the performance
+     are printed.
+
+`FAILED tests %s\n\tFailed %d/%d tests, %.2f%% okay.'
+     For any single script that has failing subtests statistics like the
+     above are printed.
+
+`Test returned status %d (wstat %d)'
+     Scripts that return a non-zero exit status, both `$? >> 8' and $?
+     are printed in a message similar to the above.
+
+`Failed 1 test, %.2f%% okay. %s'
+`Failed %d/%d tests, %.2f%% okay. %s'
+     If not all tests were successful, the script dies with one of the
+     above messages.
+
+
+SEE ALSO
+========
+
+See *Note Benchmark: Benchmark, for the underlying timing routines.
+
+
+AUTHORS
+=======
+
+Either Tim Bunce or Andreas Koenig, we don't know. What we know for sure
+is, that it was inspired by Larry Wall's TEST script that came with perl
+distributions for ages. Numerous anonymous contributors exist. Current
+maintainer is Andreas Koenig.
+
+
+BUGS
+====
+
+Test::Harness uses $^X to determine the perl binary to run the tests
+with. Test scripts running via the shebang (#!) line may not be portable
+because $^X is not consistent for shebang scripts across platforms. This
+is no problem when Test::Harness is run with an absolute path to the
+perl binary or when $^X can be found in the path.
+
+
+
+
+File: pm.info, Node: Text/Abbrev, Next: Text/Bib, Prev: Test/Harness, Up: Module List
+
+create an abbreviation table from a list
+****************************************
+
+
+
+NAME
+====
+
+abbrev - create an abbreviation table from a list
+
+
+SYNOPSIS
+========
+
+     use Text::Abbrev;
+     abbrev $hashref, LIST
+
+
+DESCRIPTION
+===========
+
+Stores all unambiguous truncations of each element of LIST as keys key
+in the associative array referenced to by `$hashref'.  The values are
+the original list elements.
+
+
+EXAMPLE
+=======
+
+     $hashref = abbrev qw(list edit send abort gripe);
+
+     %hash = abbrev qw(list edit send abort gripe);
+
+     abbrev $hashref, qw(list edit send abort gripe);
+
+     abbrev(*hash, qw(list edit send abort gripe));
+
+
+
+
+File: pm.info, Node: Text/Bib, Next: Text/CSV, Prev: Text/Abbrev, Up: Module List
+
+parse Unix `.bib' files
+***********************
+
+
+
+NAME
+====
+
+Text::Bib -- parse Unix `.bib' files
+
+
+DESCRIPTION
+===========
+
+This module provides routines for parsing in the contents of
+bibliographic databases (usually found lurking on Unix-like operating
+systems): these are simple text files which contain one or more
+bibliography records.  Each record describes a single paper, book, or
+article.  Users of nroff/troff often employ such databases whenm
+typesetting papers.
+
+Even if you don't use *roff, this simple, easily-parsed parameter-value
+format is still useful for recording/exchanging bibliographic
+information.  With the Bib:: module, you can easily post-process `.bib'
+files: search them, convert them into LaTeX, whatever.
+
+*IMPORTANT NOTE FOR OLD Bib:: USERS*:
+After conversations with the High-Muckity-Mucks of the CPAN, this module
+has been renamed from *Bib::* to the more appropriate *Text::Bib.*
+
+
+Bibliographic databases
+-----------------------
+
+(From the GNU manpage, `grefer(1)':)
+
+The bibliographic database is a text file consisting of records
+separated by one or more blank lines.  Within each record fields start
+with a % at the beginning of a line.  Each field has a one character
+name that immediately follows the %.  It is best to use only upper and
+lower case letters for the names of fields. The name of the field should
+be followed by exactly one space, and then by the contents of the field.
+Empty fields are ignored.  The conventional meaning of each field is as
+follows:
+
+A
+     The name of an author. If the name contains a title such as Jr. at
+     the end, it should be separated from the last name by a comma.
+     There can be multiple occurrences of the A field.  The order is
+     significant.  It is a good idea always to supply an A field or a Q
+     field.
+
+B
+     For an article that is part of a book, the title of the book
+
+C
+     The place (city) of publication.
+
+D
+     The date of publication.  The year should be specified in full.  If
+     the month is specified, the name rather than the number of the
+     month should be used, but only the first three letters are
+     required.  It is a good idea always to supply a D field; if the
+     date is unknown, a value such as "in press" or "unknown" can be
+     used.
+
+E
+     For an article that is part of a book, the name of an editor of the
+     book.  Where the work has editors and no authors, the names of the
+     editors should be given as A fields and , (ed) or , (eds) should be
+     appended to the last author.
+
+G
+     US Government ordering number.
+
+I
+     The publisher (issuer).
+
+J
+     For an article in a journal, the name of the journal.
+
+K
+     Keywords to be used for searching.
+
+L
+     Label.
+
+     *NOTE:* Uniquely identifies the entry.  For example, "Able94".
+
+N
+     Journal issue number.
+
+O
+     Other information.  This is usually printed at the end of the
+     reference.
+
+P
+     Page number.  A range of pages can be specified as m-n.
+
+Q
+     The name of the author, if the author is not a person.  This will
+     only be used if there are no A fields.  There can only be one Q
+     field.
+
+     *NOTE:* Thanks to Mike Zimmerman for clarifying this for me:
+     it means a "corporate" author: when the "author" is listed as an
+     organization such as the UN, or RAND Corporation, or whatever.
+     I've changed the access/storage/etc. methods to "corpAuthor" to
+     access it, but "android" will still work for now.
+
+R
+     Technical report number.
+
+S
+     Series name.
+
+T
+     Title.  For an article in a book or journal, this should be the
+     title of the article.
+
+V
+     Volume number of the journal or book.
+
+X
+     Annotation.
+
+     *NOTE:* Basically, a brief abstract or description.
+
+For all fields except A and E, if there is more than one occurrence of a
+particular field in a record, only the last such field will be used.
+
+If accent strings are used, they should follow the character to be
+accented.  This means that the AM macro must be used with the -ms
+macros.  Accent strings should not be quoted: use one \ rather than two.
+
+
+An example
+----------
+
+Here's a possible `.bib' file with three entries:
+
+     %T Cyberiad
+     %A Stanislaw Lem
+     %K robot fable 
+     %I Harcourt/Brace/Jovanovich
+
+     %T Invisible Cities
+     %A Italo Calvino
+     %K city fable philosophy
+     %X In this surreal series of fables, Marco Polo tells an
+        aged Kublai Khan of the many cities he has visited in 
+        his lifetime.  
+
+     %T Angels and Visitations
+     %A Neil Gaiman               
+
+
+For more information
+--------------------
+
+See refer(1) or grefer(1) for a description of `.bib' files.
+
+
+USAGE
+=====
+
+
+Parsing .bib files
+------------------
+
+To parse a `.bib' file, just do this:
+
+     require Text::Bib;
+
+     my $bib;			       
+     while ($bib = Text::Bib->read($anyOldFileHandle)) {
+     	# ...do stuff with $bib...
+     }
+     defined($bib) || die("error parsing input");
+
+You will nearly always use the `read()' constructor to create new
+instances, and nearly always as shown above.  Notice that `read()'
+returns the following:
+
+     The new object, on success.
+     The value '0', on expected end-of-file.
+     The undefined value, on error.
+
+Since `read()' returns "true" if and only if a new object could be read,
+and it returns two distinct "false" values otherwise, it's very easy to
+iterate through a `.bib' stream and to know why the iteration stopped.
+
+By default, the parser accepts any one-character field name that is a
+printable character (no whitespace).  Formally, this is:
+
+     [\041-\176]
+
+Use of characters outside this range is a syntax error.  You may define
+a narrower range using the GoodFields parser-option: however, this will
+slow down your parser, so you may want to consider whether or not you
+really need it.
+
+
+Using Bib objects
+-----------------
+
+For every one of the standard fields in a `.bib' record, the Bib::
+module has designated a high-level attribute name:
+
+     A	- author
+     B	- book
+     C	- city
+     D	- date
+     E	- editor
+     G	- govtNo
+     I	- publisher
+     J	- journal
+     K	- keywordList
+     L	- label
+     N	- number
+     O	- otherInfo
+     P	- page
+     Q	- android
+     R	- reportNo
+     S	- series
+     T	- title
+     V	- volume
+     X	- abstract
+
+Then, for each high-level attribute name attr, Text::Bib:: defines three
+methods:
+
+attr()
+     All access methods of this form (e.g., `date()', `title()'), return
+     a single scalar value for that particular attribute, or undef if
+     there is no such value.  For example:
+
+          $date = $bib->date();
+
+     If the Bib object has more than one value defined for attr, the
+     last value that was read in is used.
+
+attrs()
+     All access methods of this form (e.g., `dates()', `titles()'),
+     return the array of all values of that attribute, as follows:
+
+          If invoked in an array context, an array of values is returned, or the empty array if there are no values for that particular attribute.
+          If invoked in an scalar context, a B<reference to> an array of values is returned, or undef if there are no values for that particular attribute.  
+
+     For example:
+
+          # Get and print the first author in the list:
+          (@authors = $bib->authors()) || die("no authors");
+          print "first author = $authors[0]\n";
+
+          # Virtually the same thing, but more efficient if many authors:
+          ($authorsRef = $bib->authors()) || die("no authors");
+          print "first author = $authorsRef->[0]\n";
+
+          =item setAttrs()
+
+     All methods of this form (e.g., `setAuthors()', `setEditors()') set
+     the array of all values of that attribute.  Supply the list of
+     values as the arguments; for example:
+
+          $bib->setAuthors('C. Clausticus', 'H. Hydronimous', 'F. Fwitch');
+
+If you are writing a subclass, you can use the `makeMethods()' class
+method to add new fields, or override the interpretation of existing
+ones:
+
+     package MyBibSubclass;
+     @ISA = qw(Text::Bib);
+
+     # In our files, %Y holds the year, which is *really* the date:
+     MyBibSubclass->makeMethods('Y', 'date');
+
+     # Also in our files, %u fields hold the URLs of any on-line copies:
+     MyBibSubclass->makeMethods('u', 'url');    
+
+     ...
+     while ($bib = MyBibSubclass->read($FH)) {
+     	$date   = $bib->date();     # return date, from %Y
+     	@urls   = $bib->urls();     # return array of URLs, from %u
+     	$anyUrl = $bib->url();      # return the last URL encountered
+         ...
+     }
+
+
+Printing Bib objects
+--------------------
+
+The normal way to output Bib objects in `.bib' format is to use the
+method:
+
+     $bib->output($filehandle);
+
+The filehandle may be omitted; in such a case, currently-selected
+filehandle is used.  The fields are output with %L first (if it exists),
+and then the remaining fields in alphabetical order.  The following
+"safety measures" are taken:
+
+     Lines longer than 77 characters are wrapped at the first whitespace character before that length.
+     Any occurences of '%' immediately after a newline are preceded by a single space.
+
+These safety measures are slightly time-consuming, and are silly if you
+are merely outputting a Bib object which you have read in verbatim
+(i.e., using the default parset-options) from a valid `.bib' file.
+Thus, we define a faster method, without the seatbelts:
+
+     $bib->dump($filehandle);
+
+Warning: this method does no fixup on the values at all: they are output
+as-is.  That means if you used parser-options which destroyed any of the
+formatting whitespace (e.g., `Newline=TOSPACE' with
+`LeadWhite=KILLALL'), there is a risk that the output object will be an
+invalid Bib record.
+
+*Note:* users of 1.8 and previous releases will notice that the
+`print()' method is now undefined by default: it is deprecated in favor
+of the perfectly-equivalent `output()' method.  If you absolutely cannot
+change your method calls just yet, simply change your "require" line:
+
+     require Text::Bib;
+     Text::Bib->DEFINE_PRINT_METHOD;
+
+That will define the deprecated Text::Bib::print() as being equivalent
+to Text::Bib::output().
+
+
+THE GORY DETAILS
+================
+
+
+Instance variables, and their encapsulation
+-------------------------------------------
+
+Each `.bib' object has instance variables corresponding to the actual
+field names: for example, the `.bib' record:
+
+     %T The Non-Linear Existence of Menger-Sierpinski Dragons 
+     %A S. Trurl
+     %A L. Klapaucius
+     %A C. Cybr
+     %E Abbarat Hyperion
+     %C 
+     %K dragon nonlinear Menger Sierpinski irrational hat-rack
+     %X Of the many varieties of non-existent dragons, perhaps the
+     most fascinating one to not exist is the Menger-Sierpinski Dragon, 
+     a.k.a. the Fractal Dragon.  This paper discusses how these "fragons"
+     are, in fact, irrationally-dimensional (e.g., pi-dimensional) curves,
+     and concludes with the proof that a nonexistent dragon which nonexists 
+     in such an impossible manner must logically exist in conventional
+     space -- surprisingly, as a hat-rack.
+     %D 1996
+
+Would, when parsed, result in a Bib object with the following instance
+variables:
+
+     $self->{T} = ["The Non-Linear ... Dragons"];
+     $self->{A} = ["S. Trurl",
+     		  "L. Klapaucius",
+     		  "C. Cybr"];
+     $self->{C} = [""];
+     $self->{E} = ["Abbarat Hyperion"];
+     $self->{K} = ["dragon nonlinear Menger Sierpinski irrational hat-rack"];
+     $self->{D} = ["1996"];
+
+Notice that, for maximum flexibility and consistency (but at the cost of
+some space and access-efficiency), the semantics of `.bib' records do
+not come into play at this time: since everything resides in an array,
+you can have as many %K, %D, etc. records as you like, and given them
+entirely different semantics.  For example, the Library Of Boring Stuff
+That Everyone Reads (LOBSTER) uses the unused %Y as a "year" field.  The
+parser accomodates this case by politely not choking on LOBSTER
+bibliographies.
+
+The `.bib' semantics come into play in the storage/access
+methods... which, of course, you can override in subclasses.  So, while
+the default date-access looks something like this:
+
+     sub date {
+     	my $self = shift;
+     	defined($self->{D}) ? $self->{D}[-1] : undef;
+     }
+
+The LOBSTER would create a subclass LobsterBib::, and override the
+date() method to be:
+
+     sub date {
+     	my $self = shift;
+     	defined($self->{Y}) ? $self->{Y}[-1] : undef;
+     }
+
+Furthermore, since this is identical in format to a "standard"
+scalar-access method, the LOBSTER could just place in `LobsterBib.pm'
+the line:
+
+     LobsterBib->makeMethods('Y', 'date');
+
+And voila, the appropriate methods will be defined.
+
+
+Parser options
+--------------
+
+Before you parse a Bib object, you can set certain parser options to
+adjust for the peculiarities in a particular `.bib'-flavored file.
+    
+Since we're trying to steer clear of package-level state information, we
+pass the parser options right into the `read()' call, as the optional
+second argument:
+
+     my $opts = Text::Bib->makeOpts(LeadWhite  => KEEP, 
+                                    GoodFields => '[AEFZ]');
+
+     while ($bib = Text::Bib->read($fh, $opts)) {
+         # ...do stuff...
+     }
+
+The options are as follows:
+
+GoodFields
+     By default, the parser accepts any (one-character) field name that
+     is a printable character (no whitespace).  Formally, this is:
+
+          [\041-\176]
+
+     However, when compiling parser options, you can supply your own
+     regular expression for validating (one-character) field names.
+     (*note:* you must supply the square brackets; they are there to
+     remind you that you should give a well-formed single-character
+     expression).  One standard expression is provided for you:
+
+          $Text::Bib::GroffFields  = '[A-EGI-LN-TVX]';  # legal groff fields
+
+     Illegal fields which are encounterd during parsing result in a
+     syntax error.
+
+     *NOTE:* You really shouldn't use this unless you absolutely need to.
+     The added regular expression test slows down the parser.
+
+LeadWhite
+     In many `.bib' files, continuation lines (the 2nd, 3rd, etc. lines
+     of a field) are written with leading whitespace, like this:
+
+          %T Incontrovertible Proof that Pi Equals Three
+             (for Large Values of Three)
+          %A S. Trurl
+          %X The author shows how anyone can use various common household 
+             objects to obtain successively less-accurate estimations of 
+             pi, until finally arriving at a desired integer approximation,
+             which nearly always is three.                 
+
+     This leading whitespace serves two purposes:
+
+          It makes it impossible to mistake a continuation line for a field, since % can no longer be the first character.
+          It makes the .bib entries easier to read.
+
+     The LeadWhite option controls what is done with this whitespace:
+
+          KEEP	- default; the whitespace is untouched
+          KILLONE	- exactly one character of leading whitespace is removed
+          KILLALL	- all leading whitespace is removed
+
+     See the section below on "using the parser options" for hints and
+     warnings.
+
+Newline
+     The Newline option controls what is done with the newlines that
+     separate adjacent lines in the same field:
+
+          KEEP	- default; the newlines are kept in the field value
+          TOSPACE     - convert each newline to a single space
+          KILL	- the newlines are removed
+
+     See the section below on "using the parser options" for hints and
+     warnings.
+
+Default values will be used for any options which are left unspecified.
+
+
+Using the parser options
+------------------------
+
+The default values for Newline and LeadWhite will preserve the input
+text exactly.
+
+The `Newline=TOSPACE' option, when used in conjunction with the
+`LeadWhite=KILLALL' option, effectively "word-wraps" the text of each
+field into a single line.
+
+*Be careful!* If you use the `Newline=KILL' option with
+either the `LeadWhite=KILLONE' or the `LeadWhite=KILLALL' option, you
+could end up eliminating all whitespace that separates the word at the
+end of one line from the word at the beginning of the next line.
+
+
+Why parser options work the way they do
+---------------------------------------
+
+Since you generally will parse an entire file with the same parser
+options, it's silly to have to determine the options used (and fill-in
+the defaults for unspecified options) on every call to `read()'.  So
+instead, if you want to provide parser options, you specify them in a
+call to `makeOpts()': this method will "compile" your options for
+fastest-possible usage, and then return a parser-options "object" to you
+which you can plug into `read()'.
+
+
+DIAGNOSTICS
+===========
+
+If a Text::Bib:: method returns an error value (usually undef), you can
+get the last error by using any of these forms:
+
+     # If you happen to be using Bib objects:
+     Text::Bib->lastError();
+
+     # If you happen to be using MyBibSubclass objects:
+     MyBibSubclass->lastError();
+
+     # If you happen to have an instance on hand:
+     $bibobject->lastError();
+
+It doesn't matter which form you use: they're all equivalent.  All
+return a string representation of the last error, which will look like
+this:
+
+     "syntax: unexpected end of file"
+
+The error message will always be of the form `"category: description"',
+where the currently-legal categories include...
+
+     ok       not really an error: e.g., expected end-of-file
+     syntax   syntax error in parsing
+
+*NOTE:* This error string is for diagnostics only: you shouldn't depend
+on it for flow-control.
+
+
+PERFORMANCE
+===========
+
+Tolerable... barely.  Even with a lot of hacking to speed things up, it
+parses a typical 500 KB `.bib' file (of 1600 records) in 13 seconds of
+user time on my 66 MHz/32 MB RAM/I486 box running Linux 1.1.18.  So,
+figure about 125 records/sec, or about 40 KB/sec.
+
+By contrast, a C program which does the same work is about 8 times as
+fast.  But of course, the C code is 8 times as large, and 8 times as
+ugly.  :-)
+
+Since the parsing doesn't really "need" regular expressions, I'm willing
+to bet that a variation of the parser which uses dynamically-loaded C
+functions would be a little faster.  Perhaps such an alternate
+parser-method would be a parser-option, available for people who've
+compiled their Perl5 to support dynamic-loading.  But, for now, we go
+with a more-portable approach.
+
+Bottom line: I'd recommend using this module to *process* `.bib' files,
+but if you're looking for query tool... well... maybe we need someone to
+implement a `readInfo()' substitute in C, which this module could load.
+
+
+NOTE TO SERIOUS BIB-FILE USERS
+==============================
+
+I actually do not use `.bib' files for *roffing... I used them as a
+quick-and-dirty database for WebLib, and that's where this code comes
+from.  If you're a serious user of `.bib' files, and this module doesn't
+do what you need it to, please contact me: I'll add the functionality
+in.
+
+
+BUGS
+====
+
+Compiles a lot of storage/access methods that the user may not need
+(e.g., authors(), setAuthors(), etc.).  In the future, the creation of
+these methods should be done on-demand, by a custom AUTOLOAD routine.
+
+To speed up the access/storage methods calls, the full methods are
+created and loaded (as opposed to having one-line "stubs" which call
+some generic "back-end" function).  The access/storage methods are
+pretty small, but still... this means that all the more Perl code must
+be eval'ed and loaded, and it may or may not have been a good design
+choice.
+
+If any of the auto-compiled storage/access methods are invoked
+improperly, the error messages are *very* cryptic, since the "filename"
+mentioned is "eval".
+
+Some combinations of parser-options are silly.
+
+
+VERSION
+=======
+
+$Id: Bib.pm,v 1.18 1995/12/21 19:26:41 eryq Exp $
+
+
+AUTHOR
+======
+
+Copyright (C) 1995 by Eryq.  The author may be reached at
+
+     eryq@rhine.gsfc.nasa.gov
+
+
+NO WARRANTY
+===========
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+For a copy of the GNU General Public License, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+
+

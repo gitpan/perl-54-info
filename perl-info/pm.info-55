@@ -1,0 +1,2097 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Time/Timezone, Next: Time/Zone, Prev: Time/Period, Up: Module List
+
+miscellaneous timezone manipulations routines
+*********************************************
+
+
+
+NAME
+====
+
+Time::Timezone -- miscellaneous timezone manipulations routines
+
+
+SYNOPSIS
+========
+
+     use Time::Timezone;
+     print tz2zone();
+     print tz2zone($ENV{'TZ'});
+     print tz2zone($ENV{'TZ'}, time());
+     print tz2zone($ENV{'TZ'}, undef, $isdst);
+     $offset = tz_local_offset();
+     $offset = tz_offset($TZ);
+
+
+DESCRIPTION
+===========
+
+This is a collection of miscellaneous timezone manipulation routines.
+
+`tz2zone()' parses the TZ environment variable and returns a timezone
+string suitable for inclusion in `date' in this node-like output.  It
+opionally takes a timezone string, a time, and a is-dst flag.
+
+`tz_local_offset()' determins the offset from GMT time in seconds.  It
+only does the calculation once.
+
+`tz_offset()' determines the offset from GMT in seconds of a specified
+timezone.
+
+`tz_name()' determines the name of the timezone based on its offset
+
+
+AUTHORS
+=======
+
+Graham Barr <bodg@tiuk.ti.com> David Muir Sharnoff <muir@idiom.com> Paul
+Foley <paul@ascent.com>
+
+
+
+File: pm.info, Node: Time/Zone, Next: Time/gmtime, Prev: Time/Timezone, Up: Module List
+
+miscellaneous timezone manipulations routines
+*********************************************
+
+
+
+NAME
+====
+
+Time::Zone -- miscellaneous timezone manipulations routines
+
+
+SYNOPSIS
+========
+
+     use Time::Zone;
+     print tz2zone();
+     print tz2zone($ENV{'TZ'});
+     print tz2zone($ENV{'TZ'}, time());
+     print tz2zone($ENV{'TZ'}, undef, $isdst);
+     $offset = tz_local_offset();
+     $offset = tz_offset($TZ);
+
+
+DESCRIPTION
+===========
+
+This is a collection of miscellaneous timezone manipulation routines.
+
+`tz2zone()' parses the TZ environment variable and returns a timezone
+string suitable for inclusion in `date' in this node-like output.  It
+opionally takes a timezone string, a time, and a is-dst flag.
+
+`tz_local_offset()' determins the offset from GMT time in seconds.  It
+only does the calculation once.
+
+`tz_offset()' determines the offset from GMT in seconds of a specified
+timezone.
+
+`tz_name()' determines the name of the timezone based on its offset
+
+
+AUTHORS
+=======
+
+Graham Barr <bodg@tiuk.ti.com> David Muir Sharnoff <muir@idiom.com> Paul
+Foley <paul@ascent.com>
+
+
+
+
+File: pm.info, Node: Time/gmtime, Next: Time/localtime, Prev: Time/Zone, Up: Module List
+
+by-name interface to Perl's built-in gmtime() function
+******************************************************
+
+
+
+NAME
+====
+
+Time::gmtime - by-name interface to Perl's built-in gmtime() function
+
+
+SYNOPSIS
+========
+
+     use Time::gmtime;
+     $gm = gmtime();
+     printf "The day in Greenwich is %s\n", 
+        (qw(Sun Mon Tue Wed Thu Fri Sat Sun))[ gm->wday() ];
+
+     use Time::gmtime w(:FIELDS;
+     printf "The day in Greenwich is %s\n", 
+        (qw(Sun Mon Tue Wed Thu Fri Sat Sun))[ gm_wday() ];
+
+     $now = gmctime();
+
+     use Time::gmtime;
+     use File::stat;
+     $date_string = gmctime(stat($file)->mtime);
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core gmtime() function,
+replacing it with a version that returns "Time::tm" objects.  This
+object has methods that return the similarly named structure field name
+from the C's tm structure from `time.h'; namely sec, min, hour, mday,
+mon, year, wday, yday, and isdst.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `tm_' in front their method names.
+Thus, `$tm_obj->mday()' corresponds to $tm_mday if you import the
+fields.
+
+The gmctime() funtion provides a way of getting at the scalar sense of
+the original CORE::gmtime() function.
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Time/localtime, Next: Time/tm, Prev: Time/gmtime, Up: Module List
+
+by-name interface to Perl's built-in localtime() function
+*********************************************************
+
+
+
+NAME
+====
+
+Time::localtime - by-name interface to Perl's built-in localtime()
+function
+
+
+SYNOPSIS
+========
+
+     use Time::localtime;
+     printf "Year is %d\n", localtime->year() + 1900;
+
+     $now = ctime();
+
+     use Time::localtime;
+     use File::stat;
+     $date_string = ctime(stat($file)->mtime);
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core localtime() function,
+replacing it with a version that returns "Time::tm" objects.  This
+object has methods that return the similarly named structure field name
+from the C's tm structure from `time.h'; namely sec, min, hour, mday,
+mon, year, wday, yday, and isdst.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `tm_' in front their method names.
+Thus, `$tm_obj->mday()' corresponds to $tm_mday if you import the
+fields.
+
+The ctime() funtion provides a way of getting at the scalar sense of the
+original CORE::localtime() function.
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Time/tm, Next: Tk/Adjuster, Prev: Time/localtime, Up: Module List
+
+internal object used by Time::gmtime and Time::localtime
+********************************************************
+
+
+
+NAME
+====
+
+Time::tm - internal object used by Time::gmtime and Time::localtime
+
+
+SYNOPSIS
+========
+
+Don't use this module directly.
+
+
+DESCRIPTION
+===========
+
+This module is used internally as a base class by Time::localtime And
+Time::gmtime functions.  It creates a Time::tm struct object which is
+addressable just like's C's tm structure from `time.h'; namely with sec,
+min, hour, mday, mon, year, wday, yday, and isdst.
+
+This class is an internal interface only.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Tk/Adjuster, Next: Tk/After, Prev: Time/tm, Up: Module List
+
+Allow size of packed widgets to be adjusted by user
+***************************************************
+
+
+
+NAME
+====
+
+Tk::Adjuster, packAdjust - Allow size of packed widgets to be adjusted
+by user
+
+
+SYNOPSIS
+========
+
+     use Tk;
+     use Tk::Adjuster;
+
+     $widget->packAdjust([pack options]);
+
+
+DESCRIPTION
+===========
+
+`packAdjust' calls pack on the widget and then creates an instance of
+Tk::Adjuster and packs that "after" the widget. Tk::Adjust is a Frame
+containing a "line" and a blob.
+
+Dragging either with Mouse Button-1 results in a line being dragged to
+indicate new size. Releasing Button submits GeometryRequests on behalf
+of the widget which will cause the packer to change widget's size.
+
+If Drag is done with Shift button down, then GeometryRequests are made
+in "real time" so that text-flow effects can be seen, but as a lot more
+work is done behaviour may be sluggish.
+
+If widget is packed with -side => left or -side => right then width is
+adjusted. If packed -side => top or -side => bottom then height is
+adjusted.
+
+`packPropagate' is turned off for the master window to prevent
+adjustment changing overall window size. Similarly `packPropagate' is
+turned off for the managed widget if it has things packed inside
+it. This is so that the GeometryRequests that Tk::Adjuster are not
+overriden by pack.
+
+
+NOTES
+=====
+
+The 'line' which is used to feedback position is in fact a 'Menu' widget
+set to an unorthodox shape, and with a black background.
+
+
+BUGS
+====
+
+If the size of adjustable widget is increased to the limit there is no
+longer room for the Tk::Ajuster widget. As a work-round it forcibly
+makes room for itself if it is unmapped. However the "grab" it held will
+have been lost and button-motion events may be sent to other widgets
+which are not expecting them, which can result in error messages.
+
+
+
+
+File: pm.info, Node: Tk/After, Next: Tk/Axis, Prev: Tk/Adjuster, Up: Module List
+
+support class for Tk::Widget::after
+***********************************
+
+
+
+NAME
+====
+
+Tk::After - support class for Tk::Widget::after
+
+
+SYNOPSIS
+========
+
+     $id = $widget->after(time,callback);
+     $id = $widget->afterIdle(callback);
+     $widget->afterCancel($id);
+
+     $id = $widget->repeat(period,callback);
+
+Internally this class is used to implement above.
+
+     $id = Tk::After->new($widget,$time,'method',callback);
+     $id->cancel;
+
+
+DESCRIPTION
+===========
+
+This class is a wrapper used by Tk::Widget::after to auto-cancel after
+calls when a widget is destroyed.
+
+*callback* is a normal perl/Tk callback. Method is either *'once'* 
+or *'repeat'*
+
+This is first attempt at the code and interface is likely to change.  So
+for the time being at least use $widget->after(...) interface.
+
+
+
+
+File: pm.info, Node: Tk/Axis, Next: Tk/Balloon, Prev: Tk/After, Up: Module List
+
+Canvas with Axes
+****************
+
+
+
+NAME
+====
+
+Axis - Canvas with Axes
+
+
+SYNOPSIS
+========
+
+     $mw = MainWindow->new;                                           
+     $t = $mw->Axis(-xmax => 10, -ymax => 10);                        
+     $t->create('line',$t->plx(2),$t->ply(3.1),$t->plx(4),$t->ply(4));
+
+
+DESCRIPTION
+===========
+
+This is an improved version of the axis widget. Changes with respect to
+the previous version are :
+
+   * the 'pack' has been moved out the widget. One has to do his own
+     packing
+
+   * it is now possible to work in the coordinates of the axis. The
+     following piece of code draws a line between the points (2 , 3.1)
+     (4 , 4).
+
+
+AUTHOR
+======
+
+     Kris Boulez		(Kris.Boulez@rug.ac.be)
+     Biomolecular NMR unit	<http://bionmr1.rug.ac.be/~kris>
+     University of Ghent, Belgium
+
+
+
+
+File: pm.info, Node: Tk/Balloon, Next: Tk/BrowseEntry, Prev: Tk/Axis, Up: Module List
+
+pop up help balloons.
+*********************
+
+
+
+NAME
+====
+
+Tk::Balloon - pop up help balloons.
+
+
+SYNOPSIS
+========
+
+     use Tk::Balloon;
+     ...
+     $b = $top->Balloon(-statusbar => $status_bar_widget);
+     $b->attach($widget,
+     	       -balloonmsg => "Balloon help message",
+     	       -statusmsg => "Status bar message");
+
+
+DESCRIPTION
+===========
+
+*Balloon* provides the framework to create and attach help
+balloons to various widgets so that when the mouse pauses over the
+widget for more than a specified amount of time, a help balloon is
+poppped up.
+
+*Balloon* accepts all the options that the Frame widget
+accepts. In addition, the following options are also recognized.
+
+*-initwait*
+     Specifies the amount of time to wait without activity before
+     popping up a help balloon. Specified in milliseconds. Defaults to
+     350 milliseconds. This applies only to the popped up balloon.  The
+     status bar message is shown instantly.
+
+*-state*
+     Can be one of *balloon*, status, *both* or *none* indicating that
+     the help balloon, status bar help, both or none respectively should
+     be activated when the mouse pauses over the client widget.
+
+*-statusbar*
+     Specifies the widget used to display the status message. This
+     widget should accept the *-text* option and is typically a Label.
+
+
+METHODS
+=======
+
+The *Balloon* widget supports only two non-standard methods:
+
+*attach(*widget, *options**)* Attaches the widget indicated by widget to the help system. The options can be:
+     *-statusmsg*
+          The argument is the message to be shown on the status bar when the
+          mouse passes over this client. If this is not specified, but
+          *-msg* is specified then the message displayed on the status bar
+          is the same as the argument for *-msg*.
+
+     *-balloonmsg*
+          The argument is the message to be displayed in the balloon that
+          will be popped up when the mouse pauses over the client. As with
+          *-statusmsg* if this is not specified, then it takes its value
+          from the *-msg* specification as any. If neither *-balloonmsg*
+          nor *-msg* are specified, then an empty balloon will be popped
+          up... this is silly, but there it is.
+
+     *-msg*
+          The catch-all for *-statusmsg* and *-balloonmsg*. This is a
+          convenient way of specifying the same message to be displayed
+          in both the balloon and the status bar for the client.
+
+*detach(*widget*)*
+     Detaches the specified widget widget from the help system.
+
+
+AUTHOR
+======
+
+*Rajappa Iyer* rsi@earthling.net
+
+This code and documentation is derived from Balloon.tcl from the Tix4.0
+distribution by Ioi Lam. This code may be redistributed under the same
+terms as Perl.
+
+
+
+
+File: pm.info, Node: Tk/BrowseEntry, Next: Tk/CmdLine, Prev: Tk/Balloon, Up: Module List
+
+entry widget with popup choices.
+********************************
+
+
+
+NAME
+====
+
+Tk::BrowseEntry - entry widget with popup choices.
+
+
+SYNOPSIS
+========
+
+     use Tk::BrowseEntry;
+
+     $b = $frame->BrowseEntry(-label => "Label", -variable => \$var);
+     $b->insert("end", "opt1");
+     $b->insert("end", "opt2");
+     $b->insert("end", "opt3");
+     ...
+     $b->pack;
+
+
+DESCRIPTION
+===========
+
+BrowseEntry is a poor man's ComboBox. It may be considered an enhanced
+version of LabEntry which provides a button to popup the choices of the
+possible values that the Entry may take. BrowseEntry supports all the
+options LabEntry supports except *-textvariable*. This is replaced by
+*-variable*. Other options that BrowseEntry supports.
+
+*-listwidth*
+     Specifies the width of the popup listbox.
+
+*-variable*
+     Specifies the variable in which the entered value is to be stored.
+
+*-browsecmd*
+     Specifies a function to call when a selection is made in the popped
+     up listbox. It is passed the widget and the text of the entry
+     selected. This function is called after the entry variable has been
+     assigned the value.
+
+*-listcmd*
+     Specifies the function to call when the button next to the entry is
+     pressed to popup the choices in the listbox. This is called before
+     popping up the listbox, so can be used to populate the entries in
+     the listbox.
+
+
+METHODS
+=======
+
+*insert(*index, string*)*
+     Inserts the text of string at the specified index. This string then
+     becomes available as one of the choices.
+
+delete(*index1*, *index2**)*
+     Deletes items from *index1* to *index2*.
+
+
+BUGS
+====
+
+BrowseEntry should really provide more of the ComboBox options.
+
+
+AUTHOR
+======
+
+*Rajappa Iyer* rsi@earthling.net
+
+This code was inspired by ComboBox.tcl in Tix4.0 by Ioi Lam and bears
+more than a passing resemblance to ComboBox code. This may be
+distributed under the same conditions as Perl.
+
+
+
+File: pm.info, Node: Tk/CmdLine, Next: Tk/ColorEditor, Prev: Tk/BrowseEntry, Up: Module List
+
+Process standard X11 command line options
+*****************************************
+
+
+
+NAME
+====
+
+Tk::CmdLine - Process standard X11 command line options
+
+
+SYNOPSIS
+========
+
+use Tk::CmdLine;
+
+
+DESCRIPTION
+===========
+
+The X11R5 man page for X11 says :
+
+"Most X programs attempt to use the same names for command line options
+and arguments.  All applications written with the X Toolkit Intrinsics
+automatically accept the following options: ..."
+
+This module implemements these command line options for perl/Tk
+applications.
+
+The options which are processed are :
+
+-display display
+     This option specifies the name of the X server to use.
+
+-geometry geometry
+     This option specifies the initial size and location of the *first*
+     MainWindow.
+
+-bg color, -background color
+     Either option specifies the color to use for the window background.
+
+-bd color, -bordercolor color
+     Either option specifies the color to use for the window border.
+
+-bw number, -borderwidth number
+     Either option specifies the width in pixels of the window border.
+
+-fg color, -foreground color
+     Either option specifies the color to use for text or graphics.
+
+-fn font, -font font
+     Either option specifies the font to use for display- ing text.
+
+-iconic
+     This option indicates that the user would prefer that the
+     application's windows initially not be visible as if the windows
+     had be immediately iconi- fied by the user.  Window managers may
+     choose not to honor the application's request.
+
+-name
+     This option specifies the name under which resources for the
+     application should be found.  This option is useful in shell
+     aliases to distinguish between invo- cations of an application,
+     without resorting to creating links to alter the executable file
+     name.
+
+-rv, -reverse
+     Either option indicates that the program should simulate reverse
+     video if possible, often by swap- ping the foreground and
+     background colors.  Not all programs honor this or implement it
+     correctly.  It is usually only used on monochrome displays.
+
+     *Tk::CmdLine Ignores this option.*
+
++rv
+     This option indicates that the program should not simulate reverse
+     video. This is used to override any defaults since reverse video
+     doesn't always work properly.
+
+     *Tk::CmdLine Ignores this option.*
+
+-selectionTimeout
+     This option specifies the timeout in milliseconds within which two
+     communicating applications must respond to one another for a
+     selection request.
+
+     *Tk::CmdLine Ignores this option.*
+
+-synchronous
+     This option indicates that requests to the X server should be sent
+     synchronously, instead of asynchro- nously.  Since Xlib normally
+     buffers requests to the server, errors do not necessarily get
+     reported immediately after they occur.  This option turns off the
+     buffering so that the application can be debugged.  It should never
+     be used with a working program.
+
+-title string
+     This option specifies the title to be used for this window.  This
+     information is sometimes used by a window manager to provide some
+     sort of header iden- tifying the window.
+
+-xnllanguage language[_territory][.codeset]
+     This option specifies the language, territory, and codeset for use
+     in resolving resource and other filenames.
+
+     *Tk::CmdLine Ignores this option.*
+
+-xrm resourcestring
+     This option specifies a resource name and value to override any
+     defaults.  It is also very useful for setting resources that don't
+     have explicit command line arguments.
+
+     The *resourcestring* is of the form `name:value', that is (the
+     first) ':' is the used to determine which part is name and which
+     part is value.  The name/value pair is entered into the options
+     database with `optionAdd' (for each MainWindow configd), with
+     "interactive" priority.
+
+
+
+
+File: pm.info, Node: Tk/ColorEditor, Next: Tk/Derived, Prev: Tk/CmdLine, Up: Module List
+
+a general purpose Tk widget Color Editor (based on tcolor.tcl from the Tcl/Tk distribution).
+********************************************************************************************
+
+
+
+NAME
+====
+
+ColorEditor - a general purpose Tk widget Color Editor (based on
+tcolor.tcl from the Tcl/Tk distribution).
+
+
+SYNOPSIS
+========
+
+     use Tk::ColorEditor;
+
+     $cref = $mw->ColorEditor(-title => $title, -cursor => @cursor);
+
+     $cref->Show;
+
+
+DESCRIPTION
+===========
+
+ColorEditor is implemented as an object with various methods, described
+below.  First, create your ColorEditor object during program
+initialization (one should be sufficient), and then configure it by
+specifying a list of Tk widgets to colorize. When it's time to use the
+editor, invoke the Show() method.
+
+ColorEditor allows some customization: you may alter the color attribute
+menu by adding and/or deleting menu items and/or separators, turn the
+status window on or off, alter the configurator's list of color widgets,
+or even supply your own custom color configurator callback.
+
+  1. Call the constructor to create the editor object, which in turn
+     returns a blessed reference to the new object:
+
+          use Tk::ColorEditor;
+
+          $cref = $mw->ColorEditor(
+              -title  => $title,
+              -cursor => @cursor,
+          );
+
+          mw     - a window reference, usually the result of a MainWindow->new
+                   call.  As the default root of a widget tree, $mw and all
+                   descendant widgets at object-creation-time are configured
+                   by the default color configurator procedure.  (You probably
+                   want to change this though or you might end up colorizing
+                   ColorEditor!)
+          title  - Toplevel title, default = ' '.
+          cursor - a valid Tk '-cursor' specification (default is 
+                   'top_left_arrow').  This cursor is used over all ColorEditor
+                   "hot spots".
+
+  2. Invoke the configure() method to change editor characteristics:
+
+          $cref->configure(-option => value, ..., -option-n => value-n);
+
+             options:
+               -command             : a callback to a  `set_colors' replacement.
+               -widgets             : a reference to a list of widget references
+                                      for the color configurator.
+               -display_status      : TRUE IFF display the ColorEditor status
+                                      window when applying colors.
+               -add_menu_item       : 'SEP', or a color attribute menu item.
+               -delete_menu_item    : 'SEP', a color attribute menu item, or color
+                                      attribute menu ordinal.
+
+          For example:
+
+          $cref->configure(-delete_menu_item   => 3,
+              -delete_menu_item   => 'disabledforeground',
+              -add_menu_item      => 'SEP',
+              -add_menu_item      => 'New color attribute',
+              -widgets            => [$ce, $qu, $f2b2],
+              -widgets            => [$f2->Descendants],
+              -command            => [\&my_special_configurator, some, args ]
+          );
+
+  3. Invoke the Show() method on the editor object, say, by a button or
+     menu press:
+
+          $cref->Show;
+
+  4. The cget(-widgets) method returns a reference to a list of widgets
+     that are colorized by the configurator.  Typically, you add new
+     widgets to this list and then use it in a subsequent configure()
+     call to expand your color list.
+
+          $cref->configure(
+              -widgets => [
+                  @{$Filesystem_ref->cget(-widgets)}, @{$cref->cget(-widgets)},
+              ]
+          );
+
+  5. The delete_widgets() method expects a reference to a list of
+     widgets which are then removed from the current color list.
+
+          $cref->delete_widgets($OBJTABLE{$objname}->{'-widgets'})
+
+
+AUTHORS
+=======
+
+Stephen O. Lidie, Lehigh University Computing Center.  95/03/05
+lusol@Lehigh.EDU
+
+Many thanks to Guy Decoux (decoux@moulon.inra.fr) for doing the initial
+translation of tcolor.tcl to TkPerl, from which this code has been
+derived.
+
+
+
+
+File: pm.info, Node: Tk/Derived, Next: Tk/Dial, Prev: Tk/ColorEditor, Up: Module List
+
+Base class for widgets derived from others
+******************************************
+
+
+
+NAME
+====
+
+Tk::Derived - Base class for widgets derived from others
+
+
+SYNOPSIS
+========
+
+     package Tk::Whatever;
+     require Tk::Something; 
+     require Tk::Derived;
+     @ISA = qw(Tk::Derived Tk::Something);
+
+     sub Populate
+     {
+      my ($cw,$args) = @_;
+      ...
+      $cw->SUPER::Populate($args);
+      $cw->ConfigSpecs(...);
+      ...
+     }
+
+
+DESCRIPTION
+===========
+
+Tk::Derived is used with perl5's multiple inheritance to override some
+methods normally inherited from Tk::Widget.
+
+Tk::Derived should precede any Tk widgets in the class's @ISA.
+
+Tk::Derived's main purpose is to apply wrappers to `configure' and
+`cget' methods of widgets to allow the derived widget to add to or
+modify behaviour of the configure options supported by the base widget.
+
+The derived class should normally override the `Populate' method
+provided by Tk::Derived and call `ConfigSpecs' to declare configure
+options.
+
+The public methods provided by Tk::Derived are as follows:
+
+->ConfigSpecs(-key => [*kind*, name, Class, I<default], ...)
+
+
+
+File: pm.info, Node: Tk/Dial, Next: Tk/DialogBox, Prev: Tk/Derived, Up: Module List
+
+an alternative to the scale widget
+**********************************
+
+
+
+NAME
+====
+
+Dial - an alternative to the scale widget
+
+
+SYNOPSIS
+========
+
+     use Tk::Dial;
+
+     $dial = $top->Dial(-margin =>  20,
+     		    -radius =>  48,
+     		    -min    =>	 0,
+     		    -max    => 100,
+     		    -value  =>   0,
+     		    -format => '%d');
+
+     margin - blank space to leave around dial
+     radius - radius of dial
+     min, max - range of possible values
+     value  - current value
+     format - printf-style format for displaying format
+
+Values shown above are defaults.
+
+
+DESCRIPTION
+===========
+
+A dial looks like a speedometer: a 3/4 circle with a needle indicating
+the current value.  Below the graphical dial is an entry that displays
+the current value, and which can be used to enter a value by hand.
+
+The needle is moved by pressing button 1 in the canvas and dragging. The
+needle will follow the mouse, even if the mouse leaves the canvas, which
+allows for high precision. Alternatively, the user can enter a value in
+the entry space and press Return to set the value; the needle will be
+set accordingly.
+
+
+TO DO
+=====
+
+     Configure
+     Tick marks
+     Step size
+
+
+AUTHORS
+=======
+
+Roy Johnson, rjohnson@shell.com
+
+Based on a similar widget in XV, a program by John Bradley,
+bradley@cis.upenn.edu
+
+
+HISTORY    August 1995: Released for critique by pTk mailing list
+=================================================================
+
+
+
+
+File: pm.info, Node: Tk/DialogBox, Next: Tk/DragDrop/Common, Prev: Tk/Dial, Up: Module List
+
+create and manipulate a dialog screen.
+**************************************
+
+
+
+NAME
+====
+
+Tk::DialogBox - create and manipulate a dialog screen.
+
+
+SYNOPSIS
+========
+
+     use Tk::DialogBox
+     ...
+     $d = $top->DialogBox(-title => "Title", -buttons => ["OK", "Cancel"]);
+     $w = $d->add(Widget, args);
+     ...
+     $button = $d->Show;
+
+
+DESCRIPTION
+===========
+
+*DialogBox* is very similar to *Dialog* except that it allows
+any widget in the top frame. *DialogBox* creates two
+frames---"top" and "bottom". The bottom frame shows all the
+specified buttons, lined up from left to right. The top frame acts
+as a container for all other widgets that can be added with the
+*add()* method. The non-standard options recognized by
+*DialogBox* are as follows:
+
+*-title*
+     Specify the title of the dialog box. If this is not set, then the
+     name of the program is used.
+
+*-buttons*
+     The buttons to display in the bottom frame. This is a reference to
+     an array of strings containing the text to put on each
+     button. There is no default value for this. If you do not specify
+     any buttons, no buttons will be displayed.
+
+*-default_button*
+     Specifies the default button that is considered invoked when user
+     presses <Return> on the dialog box. This button is highlighted. If
+     no default button is specified, then the first element of the array
+     whose reference is passed to the *-buttons* option is used as the
+     default.
+
+
+METHODS
+=======
+
+*DialogBox* supports only two methods as of now:
+
+add(widget, *options**)*
+     Add the widget indicated by widget. *Widget* can be the name of any
+     Tk widget (standard or contributed). *Options* are the options that
+     the widget accepts. The widget is advertized as a subwidget of
+     *DialogBox*.
+
+*Show(**grab**)*
+     Display the dialog box, until user invokes one of the buttons in
+     the bottom frame. If the grab type is specified in *grab*, then
+     Show uses that grab; otherwise it uses a local grab. Returns the
+     name of the button invoked.
+
+
+BUGS
+====
+
+There is no way of removing a widget once it has been added to the top
+frame.
+
+There is no control over the appearance of the buttons in the bottom
+frame nor is there any way to control the placement of the two frames
+with respect to each other e.g. widgets to the left, buttons to the
+right instead of widgets on the top and buttons on the bottom always.
+
+
+AUTHOR
+======
+
+*Rajappa Iyer* rsi@earthling.net
+
+This code is distributed under the same terms as Perl.
+
+
+
+
+File: pm.info, Node: Tk/DragDrop/Common, Next: Tk/DragDrop/SunConst, Prev: Tk/DialogBox, Up: Module List
+
+private class used by Drag&Drop
+*******************************
+
+
+
+NAME
+====
+
+Tk::DragDrop::Common - private class used by Drag&Drop
+
+
+DESCRIPTION
+===========
+
+This class provides methods to automate the the loading and declaring of
+Drop and Site 'types'.
+
+
+
+
+File: pm.info, Node: Tk/DragDrop/SunConst, Next: Tk/FileDialog, Prev: Tk/DragDrop/Common, Up: Module List
+
+Constants for Sun's Drag&Drop protocol
+**************************************
+
+
+
+NAME
+====
+
+Tk::DragDrop::SunConst - Constants for Sun's Drag&Drop protocol
+
+
+DESCRIPTION
+===========
+
+This module defines symbolic name subs for the numeric constants that
+make up Sun's Drag&Drop protocol. They are in this module with Exporter
+as they are shared between the two halves (Dropper and Receiver) of the
+protocol.
+
+
+
+File: pm.info, Node: Tk/FileDialog, Next: Tk/FileSelect, Prev: Tk/DragDrop/SunConst, Up: Module List
+
+A highly configurable File Dialog widget for Perl/Tk.
+*****************************************************
+
+
+
+NAME
+====
+
+Tk::FileDialog - A highly configurable File Dialog widget for Perl/Tk.
+
+
+DESCRIPTION
+===========
+
+The widget is composed of a number of sub-widgets, namely, a listbox for
+files and (optionally) directories, an entry for filename, an (optional)
+entry for pathname, an entry for a filter pattern, a 'ShowAll' checkbox
+(for enabling display of .* files and directories), and three buttons,
+namely OK, Rescan, and Cancel.  Note that the labels for all subwidgets
+(including the text for the buttons and Checkbox) are configurable for
+foreign language support.
+
+
+SYNOPSIS
+========
+
+
+Usage Description
+-----------------
+
+To use FileDialog, simply create your FileDialog objects during
+initialization (or at least before a Show).  When you wish to display
+the FileDialog, invoke the 'Show' method on the FileDialog object; The
+method will return either a file name, a path name, or undef.  undef is
+returned only if the user pressed the Cancel button.
+
+
+Example Code
+------------
+
+The following code creates a FileDialog and calls it.  Note that
+perl5.002gamma is required.
+
+@asis{}
+     
+          #!/usr/local/bin/perl -w
+
+          use Tk;
+          use Tk::FileDialog;
+          use strict;
+
+          my($main) = MainWindow->new;
+          my($Horiz) = 1;
+          my($fname);
+
+          my($LoadDialog) = $main->FileDialog(-Title =>'This is my title',
+          				    -Create => 0);
+
+          $LoadDialog->configure(-FPat => '*pl',
+          		       -ShowAll => 'NO');
+
+          $main->Entry(-textvariable => \$fname)
+          	->pack(-expand => 1,
+          	       -fill => 'x');
+
+          $main->Button(-text => 'Kick me!',
+          	      -command => sub {
+          		  $fname = $LoadDialog->Show(-Horiz => $Horiz);
+          		  if (!defined($fname)) {
+          		      $fname = "Fine,Cancel, but no Chdir anymore!!!";
+          		      $LoadDialog->configure(-Chdir =>'NO');
+          		  }
+          	      })
+          	->pack(-expand => 1,
+          	       -fill => 'x');
+
+          $main->Checkbutton(-text => 'Horizontal',
+          		   -variable => \$Horiz)
+          	->pack(-expand => 1,
+          	       -fill => 'x');
+
+          $main->Button(-text => 'Exit',
+          	      -command => sub {
+          		  $main->destroy;
+          	      })
+          	->pack(-expand => 1,
+          	       -fill => 'x');
+
+          MainLoop;
+
+          print "Exit Stage right!\n";
+
+          exit;
+
+
+METHODS
+=======
+
+@asis{}
+     
+     The following non-standard method may be used with a FileDialog
+     object
+
+@asis{}
+     
+
+Show
+----
+
+Displays the file dialog box for the user to operate.  Additional
+configuration items may be passed in at Show-time In other words, this
+code snippet:
+
+     $fd->Show(-Title => 'Ooooh, Preeeeeety!');
+
+is the same as this code snippet:
+
+     $fd->configure(-Title => 'Ooooh, Preeeeeety!');
+     $fd->Show;
+
+
+CONFIGURATION
+=============
+
+Any of the following configuration items may be set via the configure
+(or Show) method, or retrieved via the cget method.
+
+
+Flags
+-----
+
+Flags may be configured with either 1,'true', or 'yes' for 1, or 0,
+'false', or 'no' for 0. Any portion of 'true', 'yes', 'false', or 'no'
+may be used, and case does not matter.
+
+@asis{}
+     
+
+-Chdir
+------
+
+@asis{}
+     
+     Enable the user to change directories. The default is 1. If
+     disabled, the directory list box will not be shown.
+
+
+-Create
+-------
+
+@asis{}
+     
+     Enable the user to specify a file that does not exist. If not
+     enabled, and the user specifies a non-existent file, a dialog box
+     will be shown informing the user of the error (This Dialog Box is
+     configurable via the EDlg* switches, below).
+
+     default: 1
+
+
+-ShowAll
+--------
+
+@asis{}
+     
+     Determines whether hidden files (.*) are displayed in the File and
+     Directory Listboxes.  The default is 0. The Show All Checkbox
+     reflects the setting of this switch.
+
+
+-DisableShowAll
+---------------
+
+@asis{}
+     
+     Disables the ability of the user to change the status of the
+     ShowAll flag. The default is 0 (the user is by default allowed to
+     change the status).
+
+
+-Grab
+-----
+
+@asis{}
+     
+     Enables the File Dialog to do an application Grab when
+     displayed. The default is 1.
+
+
+-Horiz
+------
+
+@asis{}
+     
+     True sets the File List box to be to the right of the Directory
+     List Box. If 0, the File List box will be below the Directory List
+     box. The default is 1.
+
+
+-SelDir
+-------
+
+@asis{}
+     
+     If True, enables selection of a directory rather than a file, and
+     disables the actions of the File List Box. The default is 0.
+
+
+Special
+-------
+
+@asis{}
+     
+
+-FPat
+-----
+
+@asis{}
+     
+     Sets the default file selection pattern. The default is '*'. Only
+     files matching this pattern will be displayed in the File List Box.
+
+
+-Geometry
+---------
+
+@asis{}
+     
+     Sets the geometry of the File Dialog. Setting the size is a
+     dangerous thing to do.  If not configured, or set to '', the File
+     Dialog will be centered.
+
+
+-SelHook
+--------
+
+@asis{}
+     
+     SelHook is configured with a reference to a routine that will be
+     called when a file is chosen. The file is called with a sole
+     parameter of the full path and file name of the file chosen. If the
+     Create flag is disabled (and the user is not allowed to specify new
+     files), the file will be known to exist at the time that SelHook is
+     called. Note that SelHook will also be called with directories if
+     the SelDir Flag is enabled, and that the FileDialog box will still
+     be displayed. The FileDialog box should *not* be destroyed from
+     within the SelHook routine, although it may generally be
+     configured.
+
+     SelHook routines return 0 to reject the selection and allow the
+     user to reselect, and any other value to accept the selection. If a
+     SelHook routine returns non-zero, the FileDialog will immediately
+     be withdrawn, and the file will be returned to the caller.
+
+     There may be only one SelHook routine active at any
+     time. Configuring the SelHook routine replaces any existing SelHook
+     routine. Configuring the SelHook routine with 0 removes the SelHook
+     routine. The default SelHook routine is undef.
+
+
+Strings
+-------
+
+The following two switches may be used to set default variables, and to
+get final values after the Show method has returned (but has not been
+explicitly destroyed by the caller)
+
+@asis{}
+     
+     *-File*  The file selected, or the default file. The default is ''.
+
+     *-Path*  The path of the selected file, or the initial path. The default is $ENV{'HOME'}.
+
+
+Labels and Captions
+-------------------
+
+For support of internationalization, the text on any of the subwidgets
+may be changed.
+
+@asis{}
+     
+     -Title  The Title of the dialog box. The default is 'Select File:'.
+
+     *-DirLBCaption* The Caption above the Directory List
+     Box. The default is 'Directories'.
+
+     *-FileLBCaption*  The Caption above the File List Box. The default is 'Files'.
+
+     *-FileEntryLabel*  The label to the left of the File Entry. The Default is 'Filename:'.
+
+     *-PathEntryLabel*  The label to the left of the Path Entry. The default is 'Pathname:'.
+
+     *-FltEntryLabel*  The label to the left of the Filter entry. The default is 'Filter:'.
+
+     *-ShowAllLabel*  The text of the Show All Checkbutton. The default is 'Show All'.
+
+
+Button Text
+-----------
+
+For support of internationalization, the text on the three buttons may
+be changed.
+
+@asis{}
+     
+     *-OKButtonLabel*  The text for the OK button. The default is 'OK'.
+
+     *-RescanButtonLabel*  The text for the Rescan button. The default is 'Rescan'.
+
+     *-CancelButtonLabel*  The text for the Cancel button. The default is 'Cancel'.
+
+
+Error Dialog Switches
+---------------------
+
+If the Create switch is set to 0, and the user specifies a file that
+does not exist, a dialog box will be displayed informing the user of the
+error. These switches allow some configuration of that dialog box.
+
+@asis{}
+     
+
+-EDlgTitle
+----------
+
+@asis{}
+     
+     The title of the Error Dialog Box. The default is 'File does not
+     exist!'.
+
+
+-EDlgText
+---------
+
+@asis{}
+     
+     The message of the Error Dialog Box. The variables $path, $file,
+     and $filename (the full path and filename of the selected file) are
+     available. The default is *"You must specify an existing
+     file.\n(\$filename not found)"*
+
+
+Author
+======
+
+*Brent B. Powers, Merrill Lynch (B2Pi)*
+
+powers@ml.com
+
+This code may be distributed under the same conditions as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/FileSelect, Next: Tk/Font, Prev: Tk/FileDialog, Up: Module List
+
+a widget for choosing files
+***************************
+
+
+
+NAME
+====
+
+FileSelect - a widget for choosing files
+
+
+SYNOPSIS
+========
+
+     use Tk::FileSelect;
+
+     $FSref = $top->FileSelect(-directory => $start_dir);
+                   $top            - a window reference, e.g. MainWindow->new
+                   $start_dir      - the starting point for the FileSelect
+     $file = $FSref->Show;
+                   Executes the fileselector until either a filename is
+                   accepted or the user hits Cancel. Returns the filename
+                   or the empty string, respectively, and unmaps the
+                   FileSelect.
+     $FSref->configure(option => value[, ...])
+                   Please see the Populate subroutine as the configuration
+                   list changes rapidly.
+
+
+DESCRIPTION
+===========
+
+     This Module pops up a Fileselector box, with a directory entry on
+     top, a list of directories in the current directory, a list of
+     files in the current directory, an entry for entering/modifying a
+     file name, an accept button and a cancel button.
+
+     You can enter a starting directory in the directory entry. After
+     hitting Return, the listboxes get updated. Double clicking on any
+     directory shows you the respective contents. Single clicking on a
+     file brings it into the file entry for further consideration,
+     double clocking on a file pops down the file selector and calls
+     the optional command with the complete path for the selected file.
+     Hitting return in the file selector box or pressing the accept
+     button will also work. *NOTE* the file selector box will only then
+     get destroyed if the file name is not zero length. If you want
+     yourself take care of it, change the if(length(.. in sub
+     accept_file.
+
+
+AUTHORS
+=======
+
+Based on original FileSelect by Klaus Lichtenwalder,
+Lichtenwalder@ACM.org, Datapat GmbH, Munich, April 22, 1995 adapted by
+Frederick L. Wagner, derf@ti.com, Texas Instruments Incorporated,
+Dallas, 21Jun95
+
+
+HISTORY
+=======
+
+     950621 -- The following changes were made:
+       1: Rewrote Tk stuff to take advantage of new Compound widget module, so
+          FileSelect is now composed of 2 LabEntry and 2 ScrlListbox2 
+          subwidgets.
+       2: Moved entry labels (from to the left of) to above the entry fields.
+       3: Caller is now able to control these aspects of widget, in both
+            FileSelect (new) and configure :
+
+     (Please see subroutine Populate	for details, as these options 
+      change rapidly!)
+
+     4: I changed from Double-Button-1 to Button-1 in the Files listbox,
+        to work with multiple mode in addition to browse mode.  I also
+        made some name changes (LastPath --> saved_path, ...).
+     5: The show method is not yet updated.  
+     6: The topLevel stuff is not done yet.  I took it out while I toy with
+        the idea of FileSelect as a subwidget.  Then the 'normal' topLevel
+        thing with Buttons along the bottom could be build on top of it. 
+
+     By request of Henry Katz <katz@fs09.webo.dg.com>, I added the functionality
+     of using the Directory entry as a filter. So, if you want to only see the
+     *.c files, you add a .c (the *'s already there :) and hit return.
+
+     95/10/17, SOL, LUCC.  lusol@Lehigh.EDU 
+  
+      . Allow either file or directory names to be accepted.
+      . Require double click to move into a new directory rather than a single 
+        click.  This allows a single click to select a directory name so it can
+        be accepted.
+      . Add -verify list option so that standard Perl file test operators (like
+        -d and -x) can be specified for further name validation.  The default
+        value is the special value '!-d' (not a directory), so any name can be
+        selected as long as it's not a directory - after all, this IS FileSelect!
+
+     For example:
+
+     $fs->configure(-verify => ['-d', [\&verify_code, $P1, $P2, ... $Pn]]);
+
+     ensures that the selected name is a directory.  Further, if an element of
+     the list is an array reference, the first element is a code reference to a
+     subroutine and the remaining optional elements are it's parameters.  The
+     subroutine is called like this:
+
+     &verify_code($cd, $leaf, $P1, $P2, ... $Pn);
+
+     where $cd is the current directory, $leaf is a directory or file name, and
+     $P1 .. $Pn are your optional parameters.  The subroutine should return TRUE
+     if success or FALSE if failure.
+
+     961008 -- derf@ti.com :
+       By request of Jim Stern <js@world.northgrum.com> and Brad Vance
+       <bvance@ti.com>, I updated the Accept and Show functions to support 
+       selection of multiple files.  I also corrected a typo in the -verify code.
+
+
+
+
+File: pm.info, Node: Tk/Font, Next: Tk/Getopt, Prev: Tk/FileSelect, Up: Module List
+
+a class for finding X Fonts
+***************************
+
+
+
+NAME
+====
+
+Tk::Font - a class for finding X Fonts
+
+
+SYNOPSIS
+========
+
+     use Tk::Font;
+
+     $font = $widget->Font(foundry => 'adobe',
+                           family  => 'times',
+                           point   => 120
+                          );
+
+     $font = $widget->Font('*-courier-medium-r-normal-*-*');
+
+
+DESCRIPTION
+===========
+
+     This module can be use to interrogate the X server what fonts are
+     avaliable.
+
+
+METHODS
+=======
+
+
+Foundry( [ $val ] )
+-------------------
+
+
+Family( [ $val ] )
+------------------
+
+
+Weight( [ $val ] )
+------------------
+
+
+Slant( [ $val ] )
+-----------------
+
+
+Swidth( [ $val ] )
+------------------
+
+
+Adstyle( [ $val ] )
+-------------------
+
+
+Pixel( [ $val ] )
+-----------------
+
+
+Point( [ $val ] )
+-----------------
+
+
+Xres( [ $val ] )
+----------------
+
+
+Yres( [ $val ] )
+----------------
+
+
+Space( [ $val ] )
+-----------------
+
+
+Avgwidth( [ $val ] )
+--------------------
+
+
+Registry( [ $val ] )
+--------------------
+
+
+Encoding( [ $val ] )
+--------------------
+
+Set the given field in the font name to `$val' if given and return the
+current or previous value
+
+
+Name( [ $max ] )
+----------------
+
+In a list context it returns a list of all font names that match the
+fields given. It will return a maximum of `$max' names, or 128 if $max
+is not given.
+
+In a scalar contex it returns the first matching name or undef
+
+
+Clone( [ key => value, [ ...]] )
+--------------------------------
+
+Create a duplicate of the curent font object and modify the given fields
+
+
+AUTHOR
+======
+
+Graham Barr <Graham.Barr@tiuk.ti.com>
+
+
+HISTORY
+=======
+
+11-Jan-96 Initial version
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1996 Graham Barr. All rights reserved. This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tk/Getopt, Next: Tk/Ghostscript, Prev: Tk/Font, Up: Module List
+
+User configuration window for Tk with interface to Getopt::Long
+***************************************************************
+
+
+
+NAME
+====
+
+Tk::Getopt - User configuration window for Tk with interface to
+Getopt::Long
+
+
+SYNOPSIS
+========
+
+     use Tk::Getopt;
+     @opttable = (['opt1', '=s', 'default'], ['opt2', '!', 1], ...);
+     $opt = new Tk::Getopt(-opttable => \@opttable,
+                           -options => \%options,
+     			  -filename => "$ENV{HOME}/.options");
+     $opt->load_options;
+     $opt->get_options;
+     $opt->process_options;
+     print $options->{'opt1'}, $options->{'opt2'} ...;
+     ...
+     $top = new MainWindow;
+     $opt->option_editor($top);
+
+or using a Getopt::Long-like interface
+
+     $opt = new Tk::Getopt(-getopt => ['help'   => \$HELP,
+     				      'file:s' => \$FILE,
+     				      'foo!'   => \$FOO,
+     				      'num:i'  => \$NO,
+     				     ]);
+
+or an alternative Getopt::Long interface
+
+     %optctl = ('foo' => \$foo,
+     	       'bar' => \$bar);
+     $opt = new Tk::Getopt(-getopt => [\%optctl, "foo!", "bar=s"]);
+
+
+DESCRIPTION
+===========
+
+`Tk::Getopt' provides an interface to access command line options via
+Getopt::Long and editing with a graphical user interface via a Tk
+window.
+
+Unlike Getopt::Long, this package uses a object oriented interface, so
+you have to create a new `Tk::Getopt' object with new. Unlike other
+packages in the Tk hierarchy, this package does not define a Tk
+widget. The graphical interface is calles by the method *option_editor*.
+
+After creating an object with new, you can parse command line options
+by calling get_options. This method calls itself
+*Getopt::Long::GetOptions*.
+
+
+METHODS
+=======
+
+*new Tk::Getopt(**arg_hash**)*
+     Constructs a new object of the class `Tk::Getopt'. Arguments are
+     passed in a hash (just like Tk widgets and methods). There are many
+     variants to specify the option description. You can use an
+     interface similar to *Getopt::Long::GetOptions* by using *-getopt*
+     or a more powerful interface by using *-opttable*. Internally, the
+     option description will be converted to the *-opttable*
+     interface. One of the arguments *-getopt* or *-opttable* are
+     mandatory.
+
+     The arguments for new are:
+
+     -getopt
+          *-getopt* should be a reference to a hash or an array. This hash has the
+          same format as the argument to the *Getopt::Long::GetOptions*
+          function.  Look at *Note Getopt/Long: Getopt/Long, for a
+          detailed description. Note also that not all of *GetOptions*
+          is implemented, see `BUGS' in this node for further
+          information.
+
+          Example:
+
+               new Tk::Options(-getopt => [\%options,
+                                           "opt1=i", "opt2=s" ...]);
+
+     -opttable
+          *-opttable* provides a more powerful interface. The options are stored
+          in variables named *$opt_XXX* or in a hash when *-options* is
+          given (see below). *-opttable* should be a reference to an
+          array containing all options. Elements of this array may be
+          strings, which indicate the beginning of a new group, or array
+          references describing the options. The first element of this
+          array is the name of the option, the second is the type (=s
+          for string, =i for integer, ! for boolean, =f for float etc.,
+          see *Note Getopt/Long: Getopt/Long,) for a detailed list. The
+          third element is optional and contains the default value
+          (otherwise the default is undefined). The fourth element is
+          optional too and describes further attributes. It have to be a
+          reference to a hash with following keys:
+
+          alias
+               An array of aliases also accepted by Getopt::Long.
+
+          label
+               A label to be displayed in the GUI instead of the option
+               name.
+
+          help
+               A short help string used by usage and the Balloon help facility in
+               *option_editor*.
+
+          longhelp
+               A long help string used by *option_editor*.
+
+          choices
+               An array of additional choices for the options editor.
+
+          range
+               An array with the beginning and end of a range for an
+               integer or float value.
+
+          strict
+               Must be used with choices or range. When set to true,
+               options have to match either the choices or the range.
+
+          var
+               Use variable instead of *$options-*{optname}> or
+               *$opt_optname* to store the value.
+
+          nogui
+               This option will not have an entry in the GUI.
+
+          widget
+               This should be a reference to a subroutine for creating
+               an own widget.  Folowing arguments will be passed to this
+               subroutine: a reference to the `Tk::Getopt' object, Frame
+               object, options entry.  The subroutine should create a
+               widget in the frame (packing is not necessary!) and
+               should return a reference to the created widget.
+
+          nosafe
+               Do not use a safe compartment when loading options (see
+               *load_options*.
+
+          Here is an example for this rather complicated argument:
+
+               @opttable = (['debug', # name of the option (--debug)
+                             '!',     # type boolean, accept --nodebug
+                             0,       # default is 0 (false)
+                             {'callback' => sub { $^W = 1 
+                                                    if $options->{'debug'}; }
+                             # additional attribute: callback to be called if
+                             # you set or change the value
+                             }],
+                            ['age',
+                             '=i',    # option accepts integer value
+                             18,
+                             {'strict' => 1, # value must be in range
+                              'range' => [0, 100], # allowed range
+                              'alias' => ['year', 'years'] # possible aliases
+                             }],
+                            ['browser',
+                             '=s',    # option accepts string value
+                             'tkweb',
+                             {'choices' => ['mosaic', 'netscape',
+                                            'lynx', 'chimera'],
+                              # choices for the list widget in the GUI
+                              'label' => 'WWW browser program'
+                              # label for the GUI instead of 'browser'
+                             }],
+                            ['foo',
+                             '=f',    # option accepts float value
+                             undef,   # no default value
+                             {'help' => 'This is a short help',
+                              # help string for usage() and the help balloon
+                              'longhelp' => 'And this is a slightly longer help'
+                              # longer help displayed in the GUI's help window
+                             }]);
+               new Tk::Options(-opttable => \@opttable,
+                               -options => \%options);
+
+     -options
+          This argument should be a reference to an (empty)
+          hash. Options are set into this hash. If this argument is
+          missing, options will be stored in variables named *$opt_XXX*.
+
+     -filename
+          This argument is optional and specified the filename for
+          loading and saving options.
+
+set_defaults
+     Set default values. This only applies if the *-opttable* variant is
+     used.
+
+*load_options(*filename*)*
+     Loads options from file filename, or, if not specified, from
+     object's filename as specified in new. The loading is done in a
+     safe compartment ensure security.The loaded file should have a
+     reference to a hash named *$loadoptions*.
+
+*save_options(*filename*)*
+     Writes options to file filename, or, if not specified, from
+     object's filename as specified in new. The saving is done with
+     `Data::Dumper'. Since saving may fail, you should call this method
+     inside of `eval {}' and check *$@*. Possible exceptions are `No
+     Data::Dumper' (cannot find the `Data::Dumper' module) and `Writing
+     failed' (cannot write to file).
+
+get_options
+     Gets options via *GetOptions*. Returns the same value as
+     *GetOptions*, i.e.  0 indicates that the function detected one or
+     more errors.
+
+     If you want to process options which does not appear in the GUI,
+     you have two alternatives:
+
+        * Use the *-opttable* variant of new and mark all non-GUI
+          options with nogui, e.g.
+
+               new Tk::Getopt(-opttable => ['not-in-gui', '!', undef,
+                                            {'nogui' => 1}], ...)
+
+        * Use *Getopt::Long::passthrough* and process non-GUI options directly with
+          *Getopt::Long::GetOptions*. The remaining args can be passed to
+          get_options.
+
+          Example:
+
+               use Tk::Getopt;
+               use Getopt::Long;
+
+               $Getopt::Long::passthrough = 1;
+               GetOptions('options!' => \$preloadopt);
+               $Getopt::Long::passthrough = 0;
+
+               $opt = new Tk::Getopt( ... );
+               $opt->get_options;
+
+usage
+     Generates an usage string from object's opttable. The usage string
+     is constructed from the option name, default value and help
+     entries.
+
+*process_options(*[*undo_hash*]*)*
+     Checks wheather given values are valid (if strict is set) and calls
+     any callbacks specified by the sub option. If *undo_hash* is given
+     and the new value of an option did not change, no sub is called.
+
+*option_editor(*widget, [*arguments ...*]*)*
+     Pops the option editor up. The editor provides facilitied for
+     editing options, undoing, restoring to their default valued and
+     saving to the default options file.
+
+     The first argument is the parent widget. Further optional arguments
+     are passed as a hash:
+
+     -callback
+          Execute additional callback after creating the option
+          editor. Arguments passed to this callback are: reference to
+          the `Tk::Getopt' object and a reference to the option editor
+          window.
+
+     -nosave
+          Disable saving of options.
+
+     -toplevel
+          Use another widget instead of Toplevel for embedding the
+          option editor, e.g. Frame to embed the editor into another
+          toplevel widget (do not forget to pack the frame!).
+
+     -statusbar
+          Use an additional status bar for help messages.
+
+     -string
+          Change button labels and title. This argument should be a hash
+          reference with following keys: `optedit', `undo', `lastsaved',
+          save, `defaults', ok, `cancel'.
+
+     Since the option editor uses the `NoteBook' widget, options may be
+     grouped in several pages. Grouping is only possible if using the
+     `-opttable' variant of new. Help messages are shown in balloons
+     and, if specified, in a statusbar.
+
+     *option_editor* returns a reference to the created window.
+
+     Note: this method returns immediately to the calling program.
+
+     Buttons in the option editor window:
+
+     OK
+          Accept options and close option editor window.
+
+     Cancel
+          Set old values and close option editor window.
+
+     Undo
+          Set old values.
+
+     Last saved
+          Set last saved options. This button is not displayed if no
+          filename was given in new.
+
+     Save
+          Save options to file. This button is not displayed if no
+          filename was given in new.
+
+     The option types are translated to following widgets:
+
+     Boolean
+          Checkbutton (*_boolean_widget*)
+
+     Integer and Float
+          Scale, if range is set, otherwise either *BrowseEntry* or
+          Entry (*_integer_widget*, *_float_widget*).
+
+     String
+          *BrowseEntry* if choices is set, otherwise *entry* (*_string_widget*).
+
+
+REQUIREMENTS
+============
+
+`Tk::Getopt' needs `Data::Dumper' (Version 2.07) for saving options and,
+of course, the `Tk' (Version 400.202) package, if you want to use the
+graphical interface. You can found these packages at CPAN.
+
+
+BUGS
+====
+
+Not all of Getopt::Long is supported (array and hash options, <>, alias
+names, abbrevs).
+
+The Options editor probably should be a real widget.
+
+You should use Tk400.203, since Tk::Balloon has a bug when its parent
+window is destroyed.
+
+The API will not be stable until version 1.00.
+
+This manual is confusing. In fact, the whole module is confusing.
+
+
+AUTHOR
+======
+
+Slaven Rezic <eserte@cs.tu-berlin.de>
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+SEE ALSO
+========
+
+*Note Perl: (perl.info)perl,, *Note Getopt/Long: Getopt/Long,, *Note Data/Dumper: Data/Dumper,, `Tk' in this node, *Note Tk/NoteBook: Tk/NoteBook,, *Note Safe: Safe,
+
+
+
+

@@ -1,0 +1,1712 @@
+Info file: perl.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigperl.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+settitle perl
+
+
+
+File: perl.info, Node: perlfaq, Next: perldata, Prev: perldelta, Up: Top
+
+frequently asked questions about Perl ($Date: 1997/04/24 22:46:06 $)
+********************************************************************
+
+
+
+NAME
+====
+
+perlfaq - frequently asked questions about Perl ($Date: 1997/04/24
+22:46:06 $)
+
+
+DESCRIPTION
+===========
+
+This document is structured into the following sections:
+
+perlfaq: Structural overview of the FAQ.
+     This document.
+
+*Note Perlfaq1: perlfaq1,: General Questions About Perl
+     Very general, high-level information about Perl.
+
+*Note Perlfaq2: perlfaq2,: Obtaining and Learning about Perl
+     Where to find source and documentation to Perl, support and
+     training, and related matters.
+
+*Note Perlfaq3: perlfaq3,: Programming Tools
+     Programmer tools and programming support.
+
+*Note Perlfaq4: perlfaq4,: Data Manipulation
+     Manipulating numbers, dates, strings, arrays, hashes, and
+     miscellaneous data issues.
+
+*Note Perlfaq5: perlfaq5,: Files and Formats
+     I/O and the "f" issues: filehandles, flushing, formats and footers.
+
+*Note Perlfaq6: perlfaq6,: Regexps
+     Pattern matching and regular expressions.
+
+*Note Perlfaq7: perlfaq7,: General Perl Language Issues
+     General Perl language issues that don't clearly fit into any of the
+     other sections.
+
+*Note Perlfaq8: perlfaq8,: System Interaction
+     Interprocess communication (IPC), control over the user-interface
+     (keyboard, screen and pointing devices).
+
+*Note Perlfaq9: perlfaq9,: Networking
+     Networking, the Internet, and a few on the web.
+
+
+Where to get this document
+--------------------------
+
+This document is posted regularly to comp.lang.perl.announce and several
+other related newsgroups.  It is available in a variety of formats from
+CPAN in the /CPAN/doc/FAQs/FAQ/ directory, or on the web at
+http://www.perl.com/perl/faq/ .
+
+
+How to contribute to this document
+----------------------------------
+
+You may mail corrections, additions, and suggestions to
+perlfaq-suggestions@perl.com .  Mail sent to the old perlfaq alias will
+merely cause the FAQ to be sent to you.
+
+
+What will happen if you mail your Perl programming problems to the authors
+--------------------------------------------------------------------------
+
+Your questions will probably go unread, unless they're suggestions of
+new questions to add to the FAQ, in which case they should have gone to
+the perlfaq-suggestions@perl.com instead.
+
+You should have read section 2 of this faq.  There you would have
+learned that comp.lang.perl.misc is the appropriate place to go for free
+advice.  If your question is really important and you require a prompt
+and correct answer, you should hire a consultant.
+
+
+Credits
+=======
+
+When I first began the Perl FAQ in the late 80s, I never realized it
+would have grown to over a hundred pages, nor that Perl would ever
+become so popular and widespread.  This document could not have been
+written without the tremendous help provided by Larry Wall and the rest
+of the Perl Porters.
+
+
+Author and Copyright Information
+================================
+
+Copyright (c) 1997 Tom Christiansen and Nathan Torkington.  All rights
+reserved.
+
+
+Noncommercial Reproduction
+--------------------------
+
+Permission is granted to distribute this document, in part or in full,
+via electronic means or printed copy providing that (1) that all credits
+and copyright notices be retained, (2) that no charges beyond
+reproduction be involved, and (3) that a reasonable attempt be made to
+use the most current version available.
+
+Furthermore, you may include this document in any distribution of the
+full Perl source or binaries, in its verbatim documentation, or on a
+complete dump of the CPAN archive, providing that the three stipulations
+given above continue to be met.
+
+
+Commercial Reproduction
+-----------------------
+
+Requests for all other distribution rights, including the incorporation
+in part or in full of this text or its code into commercial products
+such as but not limited to books, magazine articles, or CD-ROMs, must be
+made to perlfaq-legal@perl.com.  Any commercial use of any portion of
+this document without prior written authorization by its authors will be
+subject to appropriate action.
+
+
+Disclaimer
+----------
+
+This information is offered in good faith and in the hope that it may be
+of use, but is not guaranteed to be correct, up to date, or suitable for
+any particular purpose whatsoever.  The authors accept no liability in
+respect of this information or its use.
+
+
+Changes
+=======
+
+24/April/97
+     Style and whitespace changes from Chip, new question on reading one
+     character at a time from a terminal using POSIX from Tom.
+
+23/April/97
+     Added http://www.oasis.leo.org/perl/ to *Note Perlfaq2: perlfaq2,.  Style fix to
+     *Note Perlfaq3: perlfaq3,.  Added floating point precision, fixed complex number
+     arithmetic, cross-references, caveat for Text::Wrap, alternative
+     answer for initial capitalizing, fixed incorrect regexp, added
+     example of Tie::IxHash to *Note Perlfaq4: perlfaq4,.  Added example
+     of passing and storing filehandles, added commify to *Note
+     Perlfaq5: perlfaq5,.  Restored variable suicide, and added mass
+     commenting to *Note Perlfaq7: perlfaq7,.  Added Net::Telnet, fixed
+     backticks, added reader/writer pair to telnet question, added
+     FindBin, grouped module questions together in *Note Perlfaq8:
+     perlfaq8,.  Expanded caveats for the simple URL extractor, gave LWP
+     example, added CGI security question, expanded on the email address
+     answer in *Note Perlfaq9: perlfaq9,.
+
+25/March/97
+     Added more info to the binary distribution section of *Note Perlfaq2: perlfaq2,.
+     Added Net::Telnet to *Note Perlfaq6: perlfaq6,.  Fixed typos in *Note Perlfaq8: perlfaq8,.  Added
+     mail sending example to *Note Perlfaq9: perlfaq9,.  Added Merlyn's columns to
+     *Note Perlfaq2: perlfaq2,.
+
+18/March/97
+     Added the DATE to the NAME section, indicating which sections have
+     changed.
+
+     Mentioned SIGPIPE and *Note Perlipc: perlipc, in the forking open answer in
+     *Note Perlfaq8: perlfaq8,.
+
+     Fixed description of a regular expression in
+     *Note Perlfaq4: perlfaq4,.
+
+17/March/97 Version
+     Various typos fixed throughout.
+
+     Added new question on Perl BNF on *Note Perlfaq7: perlfaq7,.
+
+Initial Release: 11/March/97
+     This is the initial release of version 3 of the FAQ; consequently
+     there have been no changes since its initial release.
+
+
+
+
+File: perl.info, Node: perlsec, Next: perltrap, Prev: perldiag, Up: Top
+
+Perl security
+*************
+
+
+
+NAME
+====
+
+perlsec - Perl security
+
+
+DESCRIPTION
+===========
+
+Perl is designed to make it easy to program securely even when running
+with extra privileges, like setuid or setgid programs.  Unlike most
+command line shells, which are based on multiple substitution passes on
+each line of the script, Perl uses a more conventional evaluation scheme
+with fewer hidden snags.  Additionally, because the language has more
+builtin functionality, it can rely less upon external (and possibly
+untrustworthy) programs to accomplish its purposes.
+
+Perl automatically enables a set of special security checks, called *taint
+mode*, when it detects its program running with differing real and effective
+user or group IDs.  The setuid bit in Unix permissions is mode 04000, the
+setgid bit mode 02000; either or both may be set.  You can also enable taint
+mode explicitly by using the -T command line flag. This flag is
+*strongly* suggested for server programs and any program run on behalf of
+someone else, such as a CGI script.
+
+While in this mode, Perl takes special precautions called *taint checks*
+to prevent both obvious and subtle traps.  Some of these checks are
+reasonably simple, such as verifying that path directories aren't
+writable by others; careful programmers have always used checks like
+these.  Other checks, however, are best supported by the language
+itself, and it is these checks especially that contribute to making a
+setuid Perl program more secure than the corresponding C program.
+
+You may not use data derived from outside your program to affect
+something else outside your program--at least, not by accident.  All
+command line arguments, environment variables, locale information (see
+*Note Perllocale: perllocale,), and file input are marked as "tainted".
+Tainted data may not be used directly or indirectly in any command that
+invokes a sub-shell, nor in any command that modifies files,
+directories, or processes.  Any variable set within an expression that
+has previously referenced a tainted value itself becomes tainted, even
+if it is logically impossible for the tainted value to influence the
+variable.  Because taintedness is associated with each scalar value,
+some elements of an array can be tainted and others not.
+
+For example:
+
+     $arg = shift;		# $arg is tainted
+     $hid = $arg, 'bar';		# $hid is also tainted
+     $line = <>;			# Tainted
+     $line = <STDIN>;		# Also tainted
+     open FOO, "/home/me/bar" or die $!;
+     $line = <FOO>;		# Still tainted
+     $path = $ENV{'PATH'};	# Tainted, but see below
+     $data = 'abc';		# Not tainted
+
+     system "echo $arg";		# Insecure
+     system "/bin/echo", $arg;	# Secure (doesn't use sh)
+     system "echo $hid";		# Insecure
+     system "echo $data";	# Insecure until PATH set
+
+     $path = $ENV{'PATH'};	# $path now tainted
+
+     $ENV{'PATH'} = '/bin:/usr/bin';
+     delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+     $path = $ENV{'PATH'};	# $path now NOT tainted
+     system "echo $data";	# Is secure now!
+
+     open(FOO, "< $arg");	# OK - read-only file
+     open(FOO, "> $arg"); 	# Not OK - trying to write
+
+     open(FOO,"echo $arg|");	# Not OK, but...
+     open(FOO,"-|")
+     	or exec 'echo', $arg;	# OK
+
+     $shout = `echo $arg`;	# Insecure, $shout now tainted
+
+     unlink $data, $arg;		# Insecure
+     umask $arg;			# Insecure
+
+     exec "echo $arg";		# Insecure
+     exec "echo", $arg;		# Secure (doesn't use the shell)
+     exec "sh", '-c', $arg;	# Considered secure, alas!
+
+     @files = <*.c>;		# Always insecure (uses csh)
+     @files = glob('*.c');	# Always insecure (uses csh)
+
+If you try to do something insecure, you will get a fatal error saying
+something like "Insecure dependency" or "Insecure PATH".  Note that you
+can still write an insecure system or exec, but only by explicitly doing
+something like the last example above.
+
+
+Laundering and Detecting Tainted Data
+-------------------------------------
+
+To test whether a variable contains tainted data, and whose use would thus
+trigger an "Insecure dependency" message, you can use the following
+*is_tainted()* function.
+
+     sub is_tainted {
+     	return ! eval {
+     	    join('',@_), kill 0;
+     	    1;
+     	};
+     }
+
+This function makes use of the fact that the presence of tainted data
+anywhere within an expression renders the entire expression tainted.  It
+would be inefficient for every operator to test every argument for
+taintedness.  Instead, the slightly more efficient and conservative
+approach is used that if any tainted value has been accessed within the
+same expression, the whole expression is considered tainted.
+
+But testing for taintedness gets you only so far.  Sometimes you have
+just to clear your data's taintedness.  The only way to bypass the
+tainting mechanism is by referencing subpatterns from a regular
+expression match.  Perl presumes that if you reference a substring using
+$1, $2, etc., that you knew what you were doing when you wrote the
+pattern.  That means using a bit of thought--don't just blindly untaint
+anything, or you defeat the entire mechanism.  It's better to verify
+that the variable has only good characters (for certain values of
+"good") rather than checking whether it has any bad characters.  That's
+because it's far too easy to miss bad characters that you never thought
+of.
+
+Here's a test to make sure that the data contains nothing but "word"
+characters (alphabetics, numerics, and underscores), a hyphen, an at
+sign, or a dot.
+
+     if ($data =~ /^([-\@\w.]+)$/) {
+     	$data = $1; 			# $data now untainted
+     } else {
+     	die "Bad data in $data"; 	# log this somewhere
+     }
+
+This is fairly secure because `/\w+/' doesn't normally match shell
+metacharacters, nor are dot, dash, or at going to mean something special
+to the shell.  Use of `/.+/' would have been insecure in theory because
+it lets everything through, but Perl doesn't check for that.  The lesson
+is that when untainting, you must be exceedingly careful with your
+patterns.  Laundering data using regular expression is the *ONLY*
+mechanism for untainting dirty data, unless you use the strategy
+detailed below to fork a child of lesser privilege.
+
+The example does not untaint $data if `use locale' is in effect, because
+the characters matched by `\w' are determined by the locale.  Perl
+considers that locale definitions are untrustworthy because they contain
+data from outside the program.  If you are writing a locale-aware
+program, and want to launder data with a regular expression containing
+`\w', put `no locale' ahead of the expression in the same block.  See
+`SECURITY', *Note Perllocale: perllocale, for further discussion and
+examples.
+
+
+Switches On the "#!" Line
+-------------------------
+
+When you make a script executable, in order to make it usable as a
+command, the system will pass switches to perl from the script's #!
+line.  Perl checks that any command line switches given to a setuid (or
+setgid) script actually match the ones set on the #! line.  Some Unix
+and Unix-like environments impose a one-switch limit on the #!  line, so
+you may need to use something like `-wU' instead of `-w -U' under such
+systems.  (This issue should arise only in Unix or Unix-like
+environments that support #! and setuid or setgid scripts.)
+
+
+Cleaning Up Your Path
+---------------------
+
+For "Insecure `$ENV{PATH}'" messages, you need to set `$ENV{'PATH'}' to
+a known value, and each directory in the path must be non-writable by
+others than its owner and group.  You may be surprised to get this
+message even if the pathname to your executable is fully qualified.
+This is *not* generated because you didn't supply a full path to the
+program; instead, it's generated because you never set your PATH
+environment variable, or you didn't set it to something that was safe.
+Because Perl can't guarantee that the executable in question isn't
+itself going to turn around and execute some other program that is
+dependent on your PATH, it makes sure you set the PATH.
+
+It's also possible to get into trouble with other operations that don't
+care whether they use tainted values.  Make judicious use of the file
+tests in dealing with any user-supplied filenames.  When possible, do
+opens and such after setting `$> = $<'.  (Remember group IDs, too!)
+Perl doesn't prevent you from opening tainted filenames for reading, so
+be careful what you print out.  The tainting mechanism is intended to
+prevent stupid mistakes, not to remove the need for thought.
+
+Perl does not call the shell to expand wild cards when you pass system
+and exec explicit parameter lists instead of strings with possible shell
+wildcards in them.  Unfortunately, the open, glob, and backtick
+functions provide no such alternate calling convention, so more
+subterfuge will be required.
+
+Perl provides a reasonably safe way to open a file or pipe from a setuid
+or setgid program: just create a child process with reduced privilege
+who does the dirty work for you.  First, fork a child using the special
+open syntax that connects the parent and child by a pipe.  Now the child
+resets its ID set and any other per-process attributes, like environment
+variables, umasks, current working directories, back to the originals or
+known safe values.  Then the child process, which no longer has any
+special permissions, does the open or other system call.  Finally, the
+child passes the data it managed to access back to the parent.  Because
+the file or pipe was opened in the child while running under less
+privilege than the parent, it's not apt to be tricked into doing
+something it shouldn't.
+
+Here's a way to do backticks reasonably safely.  Notice how the exec is
+not called with a string that the shell could expand.  This is by far
+the best way to call something that might be subjected to shell escapes:
+just never call the shell at all.  By the time we get to the exec,
+tainting is turned off, however, so be careful what you call and what
+you pass it.
+
+     use English;
+     die unless defined $pid = open(KID, "-|");
+     if ($pid) {	          # parent
+     	while (<KID>) {
+     	    # do something
+     	}
+     	close KID;
+     } else {
+     	$EUID = $UID;
+     	$EGID = $GID;    # XXX: initgroups() not called
+     	$ENV{PATH} = "/bin:/usr/bin";
+     	exec 'myprog', 'arg1', 'arg2';
+     	die "can't exec myprog: $!";
+     }
+
+A similar strategy would work for wildcard expansion via glob.
+
+Taint checking is most useful when although you trust yourself not to
+have written a program to give away the farm, you don't necessarily
+trust those who end up using it not to try to trick it into doing
+something bad.  This is the kind of security checking that's useful for
+setuid programs and programs launched on someone else's behalf, like CGI
+programs.
+
+This is quite different, however, from not even trusting the writer of
+the code not to try to do something evil.  That's the kind of trust
+needed when someone hands you a program you've never seen before and
+says, "Here, run this."  For that kind of safety, check out the Safe
+module, included standard in the Perl distribution.  This module allows
+the programmer to set up special compartments in which all system
+operations are trapped and namespace access is carefully controlled.
+
+
+Security Bugs
+-------------
+
+Beyond the obvious problems that stem from giving special privileges to
+systems as flexible as scripts, on many versions of Unix, setuid scripts
+are inherently insecure right from the start.  The problem is a race
+condition in the kernel.  Between the time the kernel opens the file to
+see which interpreter to run and when the (now-setuid) interpreter turns
+around and reopens the file to interpret it, the file in question may
+have changed, especially if you have symbolic links on your system.
+
+Fortunately, sometimes this kernel "feature" can be disabled.
+Unfortunately, there are two ways to disable it.  The system can simply
+outlaw scripts with the setuid bit set, which doesn't help much.
+Alternately, it can simply ignore the setuid bit on scripts.  If the
+latter is true, Perl can emulate the setuid and setgid mechanism when it
+notices the otherwise useless setuid/gid bits on Perl scripts.  It does
+this via a special executable called suidperl that is automatically
+invoked for you if it's needed.
+
+However, if the kernel setuid script feature isn't disabled, Perl will
+complain loudly that your setuid script is insecure.  You'll need to
+either disable the kernel setuid script feature, or put a C wrapper
+around the script.  A C wrapper is just a compiled program that does
+nothing except call your Perl program.  Compiled programs are not
+subject to the kernel bug that plagues setuid scripts.  Here's a simple
+wrapper, written in C:
+
+     #define REAL_PATH "/path/to/script"
+     main(ac, av)
+     	char **av;
+     {
+     	execv(REAL_PATH, av);
+     }
+
+Compile this wrapper into a binary executable and then make *it* rather
+than your script setuid or setgid.
+
+See the program wrapsuid in the `eg' directory of your Perl distribution
+for a convenient way to do this automatically for all your setuid Perl
+programs.  It moves setuid scripts into files with the same name plus a
+leading dot, and then compiles a wrapper like the one above for each of
+them.
+
+In recent years, vendors have begun to supply systems free of this
+inherent security bug.  On such systems, when the kernel passes the name
+of the setuid script to open to the interpreter, rather than using a
+pathname subject to meddling, it instead passes */dev/fd/3*.  This is a
+special file already opened on the script, so that there can be no race
+condition for evil scripts to exploit.  On these systems, Perl should be
+compiled with `-DSETUID_SCRIPTS_ARE_SECURE_NOW'.  The *Configure*
+program that builds Perl tries to figure this out for itself, so you
+should never have to specify this yourself.  Most modern releases of
+SysVr4 and BSD 4.4 use this approach to avoid the kernel race condition.
+
+Prior to release 5.003 of Perl, a bug in the code of suidperl could
+introduce a security hole in systems compiled with strict POSIX
+compliance.
+
+
+Protecting Your Programs
+------------------------
+
+There are a number of ways to hide the source to your Perl programs,
+with varying levels of "security".
+
+First of all, however, you *can't* take away read permission, because
+the source code has to be readable in order to be compiled and
+interpreted.  (That doesn't mean that a CGI script's source is readable
+by people on the web, though.)  So you have to leave the permissions at
+the socially friendly 0755 level.
+
+Some people regard this as a security problem.  If your program does
+insecure things, and relies on people not knowing how to exploit those
+insecurities, it is not secure.  It is often possible for someone to
+determine the insecure things and exploit them without viewing the
+source.  Security through obscurity, the name for hiding your bugs
+instead of fixing them, is little security indeed.
+
+You can try using encryption via source filters (Filter::* from CPAN).
+But crackers might be able to decrypt it.  You can try using the byte
+code compiler and interpreter described below, but crackers might be
+able to de-compile it.  You can try using the native-code compiler
+described below, but crackers might be able to disassemble it.  These
+pose varying degrees of difficulty to people wanting to get at your
+code, but none can definitively conceal it (this is true of every
+language, not just Perl).
+
+If you're concerned about people profiting from your code, then the
+bottom line is that nothing but a restrictive licence will give you
+legal security.  License your software and pepper it with threatening
+statements like "This is unpublished proprietary software of XYZ Corp.
+Your access to it does not give you permission to use it blah blah
+blah."  You should see a lawyer to be sure your licence's wording will
+stand up in court.
+
+
+
+File: perl.info, Node: perllol, Next: perltoot, Prev: perldsc, Up: Top
+
+Manipulating Lists of Lists in Perl
+***********************************
+
+
+
+NAME
+====
+
+perlLoL - Manipulating Lists of Lists in Perl
+
+
+DESCRIPTION
+===========
+
+
+Declaration and Access of Lists of Lists
+========================================
+
+The simplest thing to build is a list of lists (sometimes called an
+array of arrays).  It's reasonably easy to understand, and almost
+everything that applies here will also be applicable later on with the
+fancier data structures.
+
+A list of lists, or an array of an array if you would, is just a regular
+old array @LoL that you can get at with two subscripts, like
+`$LoL[3][2]'.  Here's a declaration of the array:
+
+     # assign to our array a list of list references
+     @LoL = (
+     	   [ "fred", "barney" ],
+     	   [ "george", "jane", "elroy" ],
+     	   [ "homer", "marge", "bart" ],
+     );
+
+     print $LoL[2][2];
+       bart
+
+Now you should be very careful that the outer bracket type is a round
+one, that is, parentheses.  That's because you're assigning to an @list,
+so you need parentheses.  If you wanted there *not* to be an @LoL, but
+rather just a reference to it, you could do something more like this:
+
+     # assign a reference to list of list references
+     $ref_to_LoL = [
+     	[ "fred", "barney", "pebbles", "bambam", "dino", ],
+     	[ "homer", "bart", "marge", "maggie", ],
+     	[ "george", "jane", "alroy", "judy", ],
+     ];
+
+     print $ref_to_LoL->[2][2];
+
+Notice that the outer bracket type has changed, and so our access syntax
+has also changed.  That's because unlike C, in perl you can't freely
+interchange arrays and references thereto.  $ref_to_LoL is a reference
+to an array, whereas @LoL is an array proper.  Likewise, `$LoL[2]' is
+not an array, but an array ref.  So how come you can write these:
+
+     $LoL[2][2]
+     $ref_to_LoL->[2][2]
+
+instead of having to write these:
+
+     $LoL[2]->[2]
+     $ref_to_LoL->[2]->[2]
+
+Well, that's because the rule is that on adjacent brackets only (whether
+square or curly), you are free to omit the pointer dereferencing arrow.
+But you cannot do so for the very first one if it's a scalar containing
+a reference, which means that $ref_to_LoL always needs it.
+
+
+Growing Your Own
+================
+
+That's all well and good for declaration of a fixed data structure, but
+what if you wanted to add new elements on the fly, or build it up
+entirely from scratch?
+
+First, let's look at reading it in from a file.  This is something like
+adding a row at a time.  We'll assume that there's a flat file in which
+each line is a row and each word an element.  If you're trying to
+develop an
+ @LoL list containing all these, here's the right way to do that:
+
+     while (<>) {
+     	@tmp = split;
+     	push @LoL, [ @tmp ];
+     }
+
+You might also have loaded that from a function:
+
+     for $i ( 1 .. 10 ) {
+     	$LoL[$i] = [ somefunc($i) ];
+     }
+
+Or you might have had a temporary variable sitting around with the list
+in it.
+
+     for $i ( 1 .. 10 ) {
+     	@tmp = somefunc($i);
+     	$LoL[$i] = [ @tmp ];
+     }
+
+It's very important that you make sure to use the `[]' list reference
+constructor.  That's because this will be very wrong:
+
+     $LoL[$i] = @tmp;
+
+You see, assigning a named list like that to a scalar just counts the
+number of elements in @tmp, which probably isn't what you want.
+
+If you are running under `use strict', you'll have to add some
+declarations to make it happy:
+
+     use strict;
+     my(@LoL, @tmp);
+     while (<>) {
+     	@tmp = split;
+     	push @LoL, [ @tmp ];
+     }
+
+Of course, you don't need the temporary array to have a name at all:
+
+     while (<>) {
+     	push @LoL, [ split ];
+     }
+
+You also don't have to use push().  You could just make a direct
+assignment if you knew where you wanted to put it:
+
+     my (@LoL, $i, $line);
+     for $i ( 0 .. 10 ) {
+     	$line = <>;
+     	$LoL[$i] = [ split ' ', $line ];
+     }
+
+or even just
+
+     my (@LoL, $i);
+     for $i ( 0 .. 10 ) {
+     	$LoL[$i] = [ split ' ', <> ];
+     }
+
+You should in general be leery of using potential list functions in a
+scalar context without explicitly stating such.  This would be clearer
+to the casual reader:
+
+     my (@LoL, $i);
+     for $i ( 0 .. 10 ) {
+     	$LoL[$i] = [ split ' ', scalar(<>) ];
+     }
+
+If you wanted to have a $ref_to_LoL variable as a reference to an array,
+you'd have to do something like this:
+
+     while (<>) {
+     	push @$ref_to_LoL, [ split ];
+     }
+
+Actually, if you were using strict, you'd have to declare not only
+$ref_to_LoL as you had to declare @LoL, but you'd *also* having to
+initialize it to a reference to an empty list.  (This was a bug in perl
+version 5.001m that's been fixed for the 5.002 release.)
+
+     my $ref_to_LoL = [];
+     while (<>) {
+     	push @$ref_to_LoL, [ split ];
+     }
+
+Ok, now you can add new rows.  What about adding new columns?  If you're
+dealing with just matrices, it's often easiest to use simple assignment:
+
+     for $x (1 .. 10) {
+     	for $y (1 .. 10) {
+     	    $LoL[$x][$y] = func($x, $y);
+     	}
+     }
+
+     for $x ( 3, 7, 9 ) {
+     	$LoL[$x][20] += func2($x);
+     }
+
+It doesn't matter whether those elements are already there or not: it'll
+gladly create them for you, setting intervening elements to undef as
+need be.
+
+If you wanted just to append to a row, you'd have to do something a bit
+funnier looking:
+
+     # add new columns to an existing row
+     push @{ $LoL[0] }, "wilma", "betty";
+
+Notice that I *couldn't* say just:
+
+     push $LoL[0], "wilma", "betty";  # WRONG!
+
+In fact, that wouldn't even compile.  How come?  Because the argument to
+push() must be a real array, not just a reference to such.
+
+
+Access and Printing
+===================
+
+Now it's time to print your data structure out.  How are you going to do
+that?  Well, if you want only one of the elements, it's trivial:
+
+     print $LoL[0][0];
+
+If you want to print the whole thing, though, you can't say
+
+     print @LoL;		# WRONG
+
+because you'll get just references listed, and perl will never
+automatically dereference things for you.  Instead, you have to roll
+yourself a loop or two.  This prints the whole structure, using the
+shell-style for() construct to loop across the outer set of subscripts.
+
+     for $aref ( @LoL ) {
+     	print "\t [ @$aref ],\n";
+     }
+
+If you wanted to keep track of subscripts, you might do this:
+
+     for $i ( 0 .. $#LoL ) {
+     	print "\t elt $i is [ @{$LoL[$i]} ],\n";
+     }
+
+or maybe even this.  Notice the inner loop.
+
+     for $i ( 0 .. $#LoL ) {
+     	for $j ( 0 .. $#{$LoL[$i]} ) {
+     	    print "elt $i $j is $LoL[$i][$j]\n";
+     	}
+     }
+
+As you can see, it's getting a bit complicated.  That's why sometimes is
+easier to take a temporary on your way through:
+
+     for $i ( 0 .. $#LoL ) {
+     	$aref = $LoL[$i];
+     	for $j ( 0 .. $#{$aref} ) {
+     	    print "elt $i $j is $LoL[$i][$j]\n";
+     	}
+     }
+
+Hmm... that's still a bit ugly.  How about this:
+
+     for $i ( 0 .. $#LoL ) {
+     	$aref = $LoL[$i];
+     	$n = @$aref - 1;
+     	for $j ( 0 .. $n ) {
+     	    print "elt $i $j is $LoL[$i][$j]\n";
+     	}
+     }
+
+
+Slices
+======
+
+If you want to get at a slice (part of a row) in a multidimensional
+array, you're going to have to do some fancy subscripting.  That's
+because while we have a nice synonym for single elements via the pointer
+arrow for dereferencing, no such convenience exists for slices.
+(Remember, of course, that you can always write a loop to do a slice
+operation.)
+
+Here's how to do one operation using a loop.  We'll assume an @LoL
+variable as before.
+
+     @part = ();
+     $x = 4;
+     for ($y = 7; $y < 13; $y++) {
+     	push @part, $LoL[$x][$y];
+     }
+
+That same loop could be replaced with a slice operation:
+
+     @part = @{ $LoL[4] } [ 7..12 ];
+
+but as you might well imagine, this is pretty rough on the reader.
+
+Ah, but what if you wanted a *two-dimensional slice*, such as having $x
+run from 4..8 and $y run from 7 to 12?  Hmm... here's the simple way:
+
+     @newLoL = ();
+     for ($startx = $x = 4; $x <= 8; $x++) {
+     	for ($starty = $y = 7; $y <= 12; $y++) {
+     	    $newLoL[$x - $startx][$y - $starty] = $LoL[$x][$y];
+     	}
+     }
+
+We can reduce some of the looping through slices
+
+     for ($x = 4; $x <= 8; $x++) {
+     	push @newLoL, [ @{ $LoL[$x] } [ 7..12 ] ];
+     }
+
+If you were into Schwartzian Transforms, you would probably have
+selected map for that
+
+     @newLoL = map { [ @{ $LoL[$_] } [ 7..12 ] ] } 4 .. 8;
+
+Although if your manager accused of seeking job security (or rapid
+insecurity) through inscrutable code, it would be hard to argue. :-) If
+I were you, I'd put that in a function:
+
+     @newLoL = splice_2D( \@LoL, 4 => 8, 7 => 12 );
+     sub splice_2D {
+     	my $lrr = shift; 	# ref to list of list refs!
+     	my ($x_lo, $x_hi,
+     	    $y_lo, $y_hi) = @_;
+
+     return map {
+         [ @{ $lrr->[$_] } [ $y_lo .. $y_hi ] ]
+     } $x_lo .. $x_hi;
+         }
+
+
+SEE ALSO
+========
+
+perldata(1), perlref(1), perldsc(1)
+
+
+AUTHOR
+======
+
+Tom Christiansen <`tchrist@perl.com'>
+
+Last udpate: Sat Oct 7 19:35:26 MDT 1995
+
+
+
+File: perl.info, Node: perlapio, Next: perlxs, Prev: perlembed, Up: Top
+
+perl's IO abstraction interface.
+********************************
+
+
+
+NAME
+====
+
+perlapio - perl's IO abstraction interface.
+
+
+SYNOPSIS
+========
+
+     PerlIO *PerlIO_stdin(void);
+     PerlIO *PerlIO_stdout(void);
+     PerlIO *PerlIO_stderr(void);
+
+     PerlIO *PerlIO_open(const char *,const char *);
+     int     PerlIO_close(PerlIO *);
+
+     int     PerlIO_stdoutf(const char *,...)
+     int     PerlIO_puts(PerlIO *,const char *);
+     int     PerlIO_putc(PerlIO *,int);
+     int     PerlIO_write(PerlIO *,const void *,size_t);
+     int     PerlIO_printf(PerlIO *, const char *,...);
+     int     PerlIO_vprintf(PerlIO *, const char *, va_list);
+     int     PerlIO_flush(PerlIO *);
+
+     int     PerlIO_eof(PerlIO *);
+     int     PerlIO_error(PerlIO *);
+     void    PerlIO_clearerr(PerlIO *);
+
+     int     PerlIO_getc(PerlIO *);
+     int     PerlIO_ungetc(PerlIO *,int);
+     int     PerlIO_read(PerlIO *,void *,size_t);
+
+     int     PerlIO_fileno(PerlIO *);
+     PerlIO *PerlIO_fdopen(int, const char *);
+     PerlIO *PerlIO_importFILE(FILE *);
+     FILE   *PerlIO_exportFILE(PerlIO *);
+     FILE   *PerlIO_findFILE(PerlIO *);
+     void    PerlIO_releaseFILE(PerlIO *,FILE *);
+
+     void    PerlIO_setlinebuf(PerlIO *);
+
+     long    PerlIO_tell(PerlIO *);
+     int     PerlIO_seek(PerlIO *,off_t,int);
+     int     PerlIO_getpos(PerlIO *,Fpos_t *)
+     int     PerlIO_setpos(PerlIO *,Fpos_t *)
+     void    PerlIO_rewind(PerlIO *);
+
+     int     PerlIO_has_base(PerlIO *);
+     int     PerlIO_has_cntptr(PerlIO *);
+     int     PerlIO_fast_gets(PerlIO *);
+     int     PerlIO_canset_cnt(PerlIO *);
+
+     char   *PerlIO_get_ptr(PerlIO *);
+     int     PerlIO_get_cnt(PerlIO *);
+     void    PerlIO_set_cnt(PerlIO *,int);
+     void    PerlIO_set_ptrcnt(PerlIO *,char *,int);
+     char   *PerlIO_get_base(PerlIO *);
+     int     PerlIO_get_bufsiz(PerlIO *);
+
+
+DESCRIPTION
+===========
+
+Perl's source code should use the above functions instead of those
+defined in ANSI C's *stdio.h*, *perlio.h* will the `#define' them to the
+I/O mechanism selected at Configure time.
+
+The functions are modeled on those in *stdio.h*, but parameter order has
+been "tidied up a little".
+
+*PerlIO **
+     This takes the place of FILE *. Unlike FILE * it should be treated
+     as opaque (it is probably safe to assume it is a pointer to
+     something).
+
+*PerlIO_stdin()*, *PerlIO_stdout()*, *PerlIO_stderr()*
+     Use these rather than `stdin', `stdout', `stderr'. They are written
+     to look like "function calls" rather than variables because this
+     makes it easier to *make them* function calls if platform cannot
+     export data to loaded modules, or if (say) different "threads"
+     might have different values.
+
+*PerlIO_open(path, mode)*, *PerlIO_fdopen(fd,mode)*
+     These correspond to fopen()/fdopen() arguments are the same.
+
+*PerlIO_printf(f,fmt,...)*, *PerlIO_vprintf(f,fmt,a)*
+     These are is fprintf()/vfprintf equivalents.
+
+PerlIO_stdoutf(fmt,...)
+     This is printf() equivalent. printf is #defined to this function,
+     so it is (currently) legal to use `printf(fmt,...)' in perl
+     sources.
+
+*PerlIO_read(f,buf,count)*, *PerlIO_write(f,buf,count)*
+     These correspond to fread() and fwrite(). Note that arguments are
+     different, there is only one "count" and order has "file" first.
+
+PerlIO_close(f)
+*PerlIO_puts(f,s)*, *PerlIO_putc(f,c)*
+     These correspond to fputs() and fputc().  Note that arguments have
+     been revised to have "file" first.
+
+PerlIO_ungetc(f,c)
+     This corresponds to ungetc().  Note that arguments have been
+     revised to have "file" first.
+
+PerlIO_getc(f)
+     This corresponds to getc().
+
+PerlIO_eof(f)
+     This corresponds to feof().
+
+PerlIO_error(f)
+     This corresponds to ferror().
+
+PerlIO_fileno(f)
+     This corresponds to fileno(), note that on some platforms, the
+     meaning of "fileno" may not match Unix.
+
+PerlIO_clearerr(f)
+     This corresponds to clearerr(), i.e., clears 'eof' and 'error'
+     flags for the "stream".
+
+PerlIO_flush(f)
+     This corresponds to fflush().
+
+PerlIO_tell(f)
+     This corresponds to ftell().
+
+PerlIO_seek(f,o,w)
+     This corresponds to fseek().
+
+*PerlIO_getpos(f,p)*, *PerlIO_setpos(f,p)*
+     These correspond to fgetpos() and fsetpos(). If platform does not
+     have the stdio calls then they are implemented in terms of
+     PerlIO_tell() and PerlIO_seek().
+
+PerlIO_rewind(f)
+     This corresponds to rewind(). Note may be redefined in terms of
+     PerlIO_seek() at some point.
+
+PerlIO_tmpfile()
+     This corresponds to tmpfile(), i.e., returns an anonymous PerlIO
+     which will automatically be deleted when closed.
+
+
+Co-existence with stdio
+-----------------------
+
+There is outline support for co-existence of PerlIO with stdio.
+Obviously if PerlIO is implemented in terms of stdio there is no
+problem. However if perlio is implemented on top of (say) sfio then
+mechanisms must exist to create a FILE * which can be passed to library
+code which is going to use stdio calls.
+
+PerlIO_importFILE(f,flags)
+     Used to get a PerlIO * from a FILE *.  May need additional
+     arguments, interface under review.
+
+PerlIO_exportFILE(f,flags)
+     Given an PerlIO * return a 'native' FILE * suitable for passing to
+     code expecting to be compiled and linked with ANSI C *stdio.h*.
+
+     The fact that such a FILE * has been 'exported' is recorded, and
+     may affect future PerlIO operations on the original PerlIO *.
+
+PerlIO_findFILE(f)
+     Returns previously 'exported' FILE * (if any).  Place holder until
+     interface is fully defined.
+
+PerlIO_releaseFILE(p,f)
+     Calling PerlIO_releaseFILE informs PerlIO that all use of FILE * is
+     complete. It is removed from list of 'exported' FILE *s, and
+     associated PerlIO * should revert to original behaviour.
+
+PerlIO_setlinebuf(f)
+     This corresponds to setlinebuf(). Use is deprecated pending further
+     discussion. (Perl core uses it *only* when "dumping" is has nothing
+     to do with $| auto-flush.)
+
+In addition to user API above there is an "implementation" interface
+which allows perl to get at internals of PerlIO.  The following calls
+correspond to the various FILE_xxx macros determined by Configure. This
+section is really of interest to only those concerned with detailed
+perl-core behaviour or implementing a PerlIO mapping.
+
+PerlIO_has_cntptr(f)
+     Implementation can return pointer to current position in the
+     "buffer" and a count of bytes available in the buffer.
+
+PerlIO_get_ptr(f)
+     Return pointer to next readable byte in buffer.
+
+PerlIO_get_cnt(f)
+     Return count of readable bytes in the buffer.
+
+PerlIO_canset_cnt(f)
+     Implementation can adjust its idea of number of bytes in the
+     buffer.
+
+PerlIO_fast_gets(f)
+     Implementation has all the interfaces required to allow perl's fast
+     code to handle <FILE> mechanism.
+
+          PerlIO_fast_gets(f) = PerlIO_has_cntptr(f) && \
+                                PerlIO_canset_cnt(f) && \
+                                `Can set pointer into buffer'
+
+PerlIO_set_ptrcnt(f,p,c)
+     Set pointer into buffer, and a count of bytes still in the
+     buffer. Should be used only to set pointer to within range implied
+     by previous calls to `PerlIO_get_ptr' and `PerlIO_get_cnt'.
+
+PerlIO_set_cnt(f,c)
+     Obscure - set count of bytes in the buffer. Deprecated.  Currently
+     used in only doio.c to force count < -1 to -1.  Perhaps should be
+     PerlIO_set_empty or similar.  This call may actually do nothing if
+     "count" is deduced from pointer and a "limit".
+
+PerlIO_has_base(f)
+     Implementation has a buffer, and can return pointer to whole buffer
+     and its size. Used by perl for -T / *-B* tests.  Other uses would
+     be very obscure...
+
+PerlIO_get_base(f)
+     Return *start* of buffer.
+
+PerlIO_get_bufsiz(f)
+     Return *total size* of buffer.
+
+
+
+
+File: perl.info, Node: perldata, Next: perlsyn, Prev: perlfaq, Up: Top
+
+Perl data types
+***************
+
+
+
+NAME
+====
+
+perldata - Perl data types
+
+
+DESCRIPTION
+===========
+
+
+Variable names
+--------------
+
+Perl has three data structures: scalars, arrays of scalars, and
+associative arrays of scalars, known as "hashes".  Normal arrays are
+indexed by number, starting with 0.  (Negative subscripts count from the
+end.)  Hash arrays are indexed by string.
+
+Values are usually referred to by name (or through a named reference).
+The first character of the name tells you to what sort of data structure
+it refers.  The rest of the name tells you the particular value to which
+it refers.  Most often, it consists of a single identifier, that is, a
+string beginning with a letter or underscore, and containing letters,
+underscores, and digits.  In some cases, it may be a chain of
+identifiers, separated by `::' (or by `'', but that's deprecated); all
+but the last are interpreted as names of packages, to locate the
+namespace in which to look up the final identifier (see `Packages',
+*Note Perlmod: perlmod, for details).  It's possible to substitute for a
+simple identifier an expression which produces a reference to the value
+at runtime; this is described in more detail below, and in `Packages',
+*Note Perlref: perlref,.
+
+There are also special variables whose names don't follow these rules,
+so that they don't accidentally collide with one of your normal
+variables.  Strings which match parenthesized parts of a regular
+expression are saved under names containing only digits after the `$'
+(see *Note Perlop: perlop, and *Note Perlre: perlre,).  In addition,
+several special variables which provide windows into the inner working
+of Perl have names containing punctuation characters (see *Note Perlvar:
+perlvar,).
+
+Scalar values are always named with '$', even when referring to a scalar
+that is part of an array.  It works like the English word "the".  Thus
+we have:
+
+     $days		# the simple scalar value "days"
+     $days[28]		# the 29th element of array @days
+     $days{'Feb'}	# the 'Feb' value from hash %days
+     $#days		# the last index of array @days
+
+but entire arrays or array slices are denoted by '@', which works much
+like the word "these" or "those":
+
+     @days		# ($days[0], $days[1],... $days[n])
+     @days[3,4,5]	# same as @days[3..5]
+     @days{'a','c'}	# same as ($days{'a'},$days{'c'})
+
+and entire hashes are denoted by '%':
+
+     %days		# (key1, val1, key2, val2 ...)
+
+In addition, subroutines are named with an initial '&', though this is
+optional when it's otherwise unambiguous (just as "do" is often
+redundant in English).  Symbol table entries can be named with an
+initial '*', but you don't really care about that yet.
+
+Every variable type has its own namespace.  You can, without fear of
+conflict, use the same name for a scalar variable, an array, or a hash
+(or, for that matter, a filehandle, a subroutine name, or a label).
+This means that $foo and @foo are two different variables.  It also
+means that `$foo[1]' is a part of @foo, not a part of $foo.  This may
+seem a bit weird, but that's okay, because it is weird.
+
+Because variable and array references always start with '$', '@', or
+'%', the "reserved" words aren't in fact reserved with respect to
+variable names.  (They ARE reserved with respect to labels and
+filehandles, however, which don't have an initial special character.
+You can't have a filehandle named "log", for instance.  Hint: you could
+say `open(LOG,'logfile')' rather than `open(log,'logfile')'.  Using
+uppercase filehandles also improves readability and protects you from
+conflict with future reserved words.)  Case *IS* significant--"FOO",
+"Foo", and "foo" are all different names.  Names that start with a
+letter or underscore may also contain digits and underscores.
+
+It is possible to replace such an alphanumeric name with an expression
+that returns a reference to an object of that type.  For a description
+of this, see *Note Perlref: perlref,.
+
+Names that start with a digit may contain only more digits.  Names which
+do not start with a letter, underscore, or digit are limited to one
+character, e.g., $% or $$.  (Most of these one character names have a
+predefined significance to Perl.  For instance, $$ is the current
+process id.)
+
+
+Context
+-------
+
+The interpretation of operations and values in Perl sometimes depends on
+the requirements of the context around the operation or value.  There
+are two major contexts: scalar and list.  Certain operations return list
+values in contexts wanting a list, and scalar values otherwise.  (If
+this is true of an operation it will be mentioned in the documentation
+for that operation.)  In other words, Perl overloads certain operations
+based on whether the expected return value is singular or plural.  (Some
+words in English work this way, like "fish" and "sheep".)
+
+In a reciprocal fashion, an operation provides either a scalar or a list
+context to each of its arguments.  For example, if you say
+
+     int( <STDIN> )
+
+the integer operation provides a scalar context for the <STDIN>
+operator, which responds by reading one line from STDIN and passing it
+back to the integer operation, which will then find the integer value of
+that line and return that.  If, on the other hand, you say
+
+     sort( <STDIN> )
+
+then the sort operation provides a list context for <STDIN>, which will
+proceed to read every line available up to the end of file, and pass
+that list of lines back to the sort routine, which will then sort those
+lines and return them as a list to whatever the context of the sort was.
+
+Assignment is a little bit special in that it uses its left argument to
+determine the context for the right argument.  Assignment to a scalar
+evaluates the righthand side in a scalar context, while assignment to an
+array or array slice evaluates the righthand side in a list context.
+Assignment to a list also evaluates the righthand side in a list
+context.
+
+User defined subroutines may choose to care whether they are being
+called in a scalar or list context, but most subroutines do not need to
+care, because scalars are automatically interpolated into lists.  See
+`wantarray', *Note Perlfunc: perlfunc,.
+
+
+Scalar values
+-------------
+
+All data in Perl is a scalar or an array of scalars or a hash of
+scalars.  Scalar variables may contain various kinds of singular data,
+such as numbers, strings, and references.  In general, conversion from
+one form to another is transparent.  (A scalar may not contain multiple
+values, but may contain a reference to an array or hash containing
+multiple values.)  Because of the automatic conversion of scalars,
+operations, and functions that return scalars don't need to care (and,
+in fact, can't care) whether the context is looking for a string or a
+number.
+
+Scalars aren't necessarily one thing or another.  There's no place to
+declare a scalar variable to be of type "string", or of type "number",
+or type "filehandle", or anything else.  Perl is a contextually
+polymorphic language whose scalars can be strings, numbers, or
+references (which includes objects).  While strings and numbers are
+considered pretty much the same thing for nearly all purposes,
+references are strongly-typed uncastable pointers with builtin
+reference-counting and destructor invocation.
+
+A scalar value is interpreted as TRUE in the Boolean sense if it is not
+the null string or the number 0 (or its string equivalent, "0").  The
+Boolean context is just a special kind of scalar context.
+
+There are actually two varieties of null scalars: defined and undefined.
+Undefined null scalars are returned when there is no real value for
+something, such as when there was an error, or at end of file, or when
+you refer to an uninitialized variable or element of an array.  An
+undefined null scalar may become defined the first time you use it as if
+it were defined, but prior to that you can use the defined() operator to
+determine whether the value is defined or not.
+
+To find out whether a given string is a valid nonzero number, it's
+usually enough to test it against both numeric 0 and also lexical "0"
+(although this will cause -w noises).  That's because strings that
+aren't numbers count as 0, just as they do in *awk*:
+
+     if ($str == 0 && $str ne "0")  {
+     	warn "That doesn't look like a number";
+     }
+
+That's usually preferable because otherwise you won't treat IEEE
+notations like `NaN' or `Infinity' properly.  At other times you might
+prefer to use a regular expression to check whether data is numeric.
+See *Note Perlre: perlre, for details on regular expressions.
+
+     warn "has nondigits"	if     /\D/;
+     warn "not a whole number"   unless /^\d+$/;
+     warn "not an integer"       unless /^[+-]?\d+$/
+     warn "not a decimal number" unless /^[+-]?\d+\.?\d*$/
+     warn "not a C float"
+     	unless /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/;
+
+The length of an array is a scalar value.  You may find the length of
+array @days by evaluating `$#days', as in *csh*.  (Actually, it's not
+the length of the array, it's the subscript of the last element, because
+there is (ordinarily) a 0th element.)  Assigning to `$#days' changes the
+length of the array.  Shortening an array by this method destroys
+intervening values.  Lengthening an array that was previously shortened
+*NO LONGER* recovers the values that were in those elements.  (It used to
+in Perl 4, but we had to break this to make sure destructors were called
+when expected.)  You can also gain some measure of efficiency by
+pre-extending an array that is going to get big.  (You can also extend
+an array by assigning to an element that is off the end of the array.)
+You can truncate an array down to nothing by assigning the null list ()
+to it.  The following are equivalent:
+
+     @whatever = ();
+     $#whatever = -1;
+
+If you evaluate a named array in a scalar context, it returns the length
+of the array.  (Note that this is not true of lists, which return the
+last value, like the C comma operator.)  The following is always true:
+
+     scalar(@whatever) == $#whatever - $[ + 1;
+
+Version 5 of Perl changed the semantics of $[: files that don't set the
+value of $[ no longer need to worry about whether another file changed
+its value.  (In other words, use of $[ is deprecated.)  So in general
+you can assume that
+
+     scalar(@whatever) == $#whatever + 1;
+
+Some programmers choose to use an explicit conversion so nothing's left
+to doubt:
+
+     $element_count = scalar(@whatever);
+
+If you evaluate a hash in a scalar context, it returns a value which is
+true if and only if the hash contains any key/value pairs.  (If there
+are any key/value pairs, the value returned is a string consisting of
+the number of used buckets and the number of allocated buckets,
+separated by a slash.  This is pretty much useful only to find out
+whether Perl's (compiled in) hashing algorithm is performing poorly on
+your data set.  For example, you stick 10,000 things in a hash, but
+evaluating %HASH in scalar context reveals "1/16", which means only one
+out of sixteen buckets has been touched, and presumably contains all
+10,000 of your items.  This isn't supposed to happen.)
+
+
+Scalar value constructors
+-------------------------
+
+Numeric literals are specified in any of the customary floating point or
+integer formats:
+
+     12345
+     12345.67
+     .23E-10
+     0xffff		# hex
+     0377		# octal
+     4_294_967_296	# underline for legibility
+
+String literals are usually delimited by either single or double quotes.
+They work much like shell quotes: double-quoted string literals are
+subject to backslash and variable substitution; single-quoted strings
+are not (except for "`\''" and "`\\'").  The usual Unix backslash rules
+apply for making characters such as newline, tab, etc., as well as some
+more exotic forms.  See `Quote and Quotelike Operators', *Note Perlop:
+perlop, for a list.
+
+Octal or hex representations in string literals (e.g. '0xffff') are not
+automatically converted to their integer representation.  The hex() and
+oct() functions make these conversions for you.  See `hex', *Note
+Perlfunc: perlfunc, and `oct', *Note Perlfunc: perlfunc, for more
+details.
+
+You can also embed newlines directly in your strings, i.e., they can end
+on a different line than they begin.  This is nice, but if you forget
+your trailing quote, the error will not be reported until Perl finds
+another line containing the quote character, which may be much further
+on in the script.  Variable substitution inside strings is limited to
+scalar variables, arrays, and array slices.  (In other words, names
+beginning with $ or @, followed by an optional bracketed expression as a
+subscript.)  The following code segment prints out "The price is $100."
+
+     $Price = '$100';	# not interpreted
+     print "The price is $Price.\n";	# interpreted
+
+As in some shells, you can put curly brackets around the name to delimit
+it from following alphanumerics.  In fact, an identifier within such
+curlies is forced to be a string, as is any single identifier within a
+hash subscript.  Our earlier example,
+
+     $days{'Feb'}
+
+can be written as
+
+     $days{Feb}
+
+and the quotes will be assumed automatically.  But anything more
+complicated in the subscript will be interpreted as an expression.
+
+Note that a single-quoted string must be separated from a preceding word
+by a space, because single quote is a valid (though deprecated)
+character in a variable name (see `Packages', *Note Perlmod: perlmod,).
+
+Three special literals are __FILE__, __LINE__, and __PACKAGE__, which
+represent the current filename, line number, and package name at that
+point in your program.  They may be used only as separate tokens; they
+will not be interpolated into strings.  If there is no current package
+(due to a `package;' directive), __PACKAGE__ is the undefined value.
+
+The tokens __END__ and __DATA__ may be used to indicate the logical end
+of the script before the actual end of file.  Any following text is
+ignored, but may be read via a DATA filehandle: main::DATA for __END__,
+or PACKNAME::DATA (where PACKNAME is the current package) for __DATA__.
+The two control characters ^D and ^Z are synonyms for __END__ (or
+__DATA__ in a module).  See *Note SelfLoader: (pm.info)SelfLoader, for
+more description of __DATA__, and an example of its use.  Note that you
+cannot read from the DATA filehandle in a BEGIN block: the BEGIN block
+is executed as soon as it is seen (during compilation), at which point
+the corresponding __DATA__ (or __END__) token has not yet been seen.
+
+A word that has no other interpretation in the grammar will be treated
+as if it were a quoted string.  These are known as "barewords".  As with
+filehandles and labels, a bareword that consists entirely of lowercase
+letters risks conflict with future reserved words, and if you use the -w
+switch, Perl will warn you about any such words.  Some people may wish
+to outlaw barewords entirely.  If you say
+
+     use strict 'subs';
+
+then any bareword that would NOT be interpreted as a subroutine call
+produces a compile-time error instead.  The restriction lasts to the end
+of the enclosing block.  An inner block may countermand this by saying
+`no strict 'subs''.
+
+Array variables are interpolated into double-quoted strings by joining
+all the elements of the array with the delimiter specified in the $"
+variable ($LIST_SEPARATOR in English), space by default.  The following
+are equivalent:
+
+     $temp = join($",@ARGV);
+     system "echo $temp";
+
+     system "echo @ARGV";
+
+Within search patterns (which also undergo double-quotish substitution)
+there is a bad ambiguity: Is `/$foo[bar]/' to be interpreted as
+`/${foo}[bar]/' (where `[bar]' is a character class for the regular
+expression) or as `/${foo[bar]}/' (where `[bar]' is the subscript to
+array
+ @foo)?  If @foo doesn't otherwise exist, then it's obviously a
+character class.  If @foo exists, Perl takes a good guess about `[bar]',
+and is almost always right.  If it does guess wrong, or if you're just
+plain paranoid, you can force the correct interpretation with curly
+brackets as above.
+
+A line-oriented form of quoting is based on the shell "here-doc" syntax.
+Following a `<<' you specify a string to terminate the quoted material,
+and all lines following the current line down to the terminating string
+are the value of the item.  The terminating string may be either an
+identifier (a word), or some quoted text.  If quoted, the type of quotes
+you use determines the treatment of the text, just as in regular
+quoting.  An unquoted identifier works like double quotes.  There must
+be no space between the `<<' and the identifier.  (If you put a space it
+will be treated as a null identifier, which is valid, and matches the
+first empty line.)  The terminating string must appear by itself
+(unquoted and with no surrounding whitespace) on the terminating line.
+
+     print <<EOF;
+         The price is $Price.
+         EOF
+
+     print <<"EOF";	# same as above
+         The price is $Price.
+         EOF
+
+     print <<`EOC`;	# execute commands
+         echo hi there
+         echo lo there
+         EOC
+
+     print <<"foo", <<"bar";	# you can stack them
+         I said foo.
+         foo
+         I said bar.
+         bar
+
+     myfunc(<<"THIS", 23, <<'THAT');
+         Here's a line
+         or two.
+         THIS
+         and here's another.
+         THAT
+
+Just don't forget that you have to put a semicolon on the end to finish
+the statement, as Perl doesn't know you're not going to try to do this:
+
+     print <<ABC
+         179231
+         ABC
+     + 20;
+
+
+List value constructors
+-----------------------
+
+List values are denoted by separating individual values by commas (and
+enclosing the list in parentheses where precedence requires it):
+
+     (LIST)
+
+In a context not requiring a list value, the value of the list literal
+is the value of the final element, as with the C comma operator.  For
+example,
+
+     @foo = ('cc', '-E', $bar);
+
+assigns the entire list value to array foo, but
+
+     $foo = ('cc', '-E', $bar);
+
+assigns the value of variable bar to variable foo.  Note that the value
+of an actual array in a scalar context is the length of the array; the
+following assigns the value 3 to $foo:
+
+     @foo = ('cc', '-E', $bar);
+     $foo = @foo;		# $foo gets 3
+
+You may have an optional comma before the closing parenthesis of a list
+literal, so that you can say:
+
+     @foo = (
+     	1,
+     	2,
+     	3,
+     );
+
+LISTs do automatic interpolation of sublists.  That is, when a LIST is
+evaluated, each element of the list is evaluated in a list context, and
+the resulting list value is interpolated into LIST just as if each
+individual element were a member of LIST.  Thus arrays lose their
+identity in a LIST--the list
+
+     (@foo,@bar,&SomeSub)
+
+contains all the elements of @foo followed by all the elements of @bar,
+followed by all the elements returned by the subroutine named SomeSub
+when it's called in a list context.  To make a list reference that does
+*NOT* interpolate, see *Note Perlref: perlref,.
+
+The null list is represented by ().  Interpolating it in a list has no
+effect.  Thus ((),(),()) is equivalent to ().  Similarly, interpolating
+an array with no elements is the same as if no array had been
+interpolated at that point.
+
+A list value may also be subscripted like a normal array.  You must put
+the list in parentheses to avoid ambiguity.  For example:
+
+     # Stat returns list value.
+     $time = (stat($file))[8];
+
+     # SYNTAX ERROR HERE.
+     $time = stat($file)[8];  # OOPS, FORGOT PARENTHESES
+
+     # Find a hex digit.
+     $hexdigit = ('a','b','c','d','e','f')[$digit-10];
+
+     # A "reverse comma operator".
+     return (pop(@foo),pop(@foo))[0];
+
+You may assign to undef in a list.  This is useful for throwing away
+some of the return values of a function:
+
+     ($dev, $ino, undef, undef, $uid, $gid) = stat($file);
+
+Lists may be assigned to if and only if each element of the list is
+legal to assign to:
+
+     ($a, $b, $c) = (1, 2, 3);
+
+     ($map{'red'}, $map{'blue'}, $map{'green'}) = (0x00f, 0x0f0, 0xf00);
+
+Array assignment in a scalar context returns the number of elements
+produced by the expression on the right side of the assignment:
+
+     $x = (($foo,$bar) = (3,2,1));	# set $x to 3, not 2
+     $x = (($foo,$bar) = f());	        # set $x to f()'s return count
+
+This is very handy when you want to do a list assignment in a Boolean
+context, because most list functions return a null list when finished,
+which when assigned produces a 0, which is interpreted as FALSE.
+
+The final element may be an array or a hash:
+
+     ($a, $b, @rest) = split;
+     local($a, $b, %rest) = @_;
+
+You can actually put an array or hash anywhere in the list, but the
+first one in the list will soak up all the values, and anything after it
+will get a null value.  This may be useful in a local() or my().
+
+A hash literal contains pairs of values to be interpreted as a key and a
+value:
+
+     # same as map assignment above
+     %map = ('red',0x00f,'blue',0x0f0,'green',0xf00);
+
+While literal lists and named arrays are usually interchangeable, that's
+not the case for hashes.  Just because you can subscript a list value
+like a normal array does not mean that you can subscript a list value as
+a hash.  Likewise, hashes included as parts of other lists (including
+parameters lists and return lists from functions) always flatten out
+into key/value pairs.  That's why it's good to use references sometimes.
+
+It is often more readable to use the `=>' operator between key/value
+pairs.  The `=>' operator is mostly just a more visually distinctive
+synonym for a comma, but it also arranges for its left-hand operand to
+be interpreted as a string, if it's a bareword which would be a legal
+identifier.  This makes it nice for initializing hashes:
+
+     %map = (
+     		 red   => 0x00f,
+     		 blue  => 0x0f0,
+     		 green => 0xf00,
+        );
+
+or for initializing hash references to be used as records:
+
+     $rec = {
+     		witch => 'Mable the Merciless',
+     		cat   => 'Fluffy the Ferocious',
+     		date  => '10/31/1776',
+     };
+
+or for using call-by-named-parameter to complicated functions:
+
+     $field = $query->radio_group(
+     	       name      => 'group_name',
+                 values    => ['eenie','meenie','minie'],
+                 default   => 'meenie',
+                 linebreak => 'true',
+                 labels    => \%labels
+     );
+
+Note that just because a hash is initialized in that order doesn't mean
+that it comes out in that order.  See `sort', *Note Perlfunc: perlfunc,
+for examples of how to arrange for an output ordering.
+
+
+Typeglobs and Filehandles
+-------------------------
+
+Perl uses an internal type called a *typeglob* to hold an entire symbol
+table entry.  The type prefix of a typeglob is a *, because it
+represents all types.  This used to be the preferred way to pass arrays
+and hashes by reference into a function, but now that we have real
+references, this is seldom needed.  It also used to be the preferred way
+to pass filehandles into a function, but now that we have the
+*foo{THING} notation it isn't often needed for that, either.  It is
+still needed to pass new filehandles into functions (*HANDLE{IO} only
+works if HANDLE has already been used).
+
+If you need to use a typeglob to save away a filehandle, do it this way:
+
+     $fh = *STDOUT;
+
+or perhaps as a real reference, like this:
+
+     $fh = \*STDOUT;
+
+This is also a way to create a local filehandle.  For example:
+
+     sub newopen {
+     	my $path = shift;
+     	local *FH;  # not my!
+     	open (FH, $path) || return undef;
+     	return *FH;
+     }
+     $fh = newopen('/etc/passwd');
+
+Another way to create local filehandles is with IO::Handle and its ilk,
+see the bottom of `open()', *Note Perlfunc: perlfunc,.
+
+See *Note Perlref: perlref,, *Note Perlsub: perlsub,, and `"Symbol
+Tables"', *Note Perlmod: perlmod, for more discussion on typeglobs.
+
+
+

@@ -1,0 +1,1508 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Class/Struct, Next: Class/Template, Prev: Class/MethodMaker, Up: Module List
+
+declare struct-like datatypes as Perl classes
+*********************************************
+
+
+
+NAME
+====
+
+Class::Struct - declare struct-like datatypes as Perl classes
+
+
+SYNOPSIS
+========
+
+     use Class::Struct;
+             # declare struct, based on array:
+     struct( CLASS_NAME => [ ELEMENT_NAME => ELEMENT_TYPE, ... ]);
+             # declare struct, based on hash:
+     struct( CLASS_NAME => { ELEMENT_NAME => ELEMENT_TYPE, ... });
+
+     package CLASS_NAME;
+     use Class::Struct;
+             # declare struct, based on array, implicit class name:
+     struct( ELEMENT_NAME => ELEMENT_TYPE, ... );
+
+     package Myobj;
+     use Class::Struct;
+             # declare struct with four types of elements:
+     struct( s => '$', a => '@', h => '%', c => 'My_Other_Class' );
+
+     $obj = new Myobj;               # constructor
+
+     # scalar type accessor:
+         $element_value = $obj->s;           # element value
+         $obj->s('new value');               # assign to element
+
+     # array type accessor:
+         $ary_ref = $obj->a;                 # reference to whole array
+         $ary_element_value = $obj->a(2);    # array element value
+         $obj->a(2, 'new value');            # assign to array element
+
+     # hash type accessor:
+         $hash_ref = $obj->h;                # reference to whole hash
+         $hash_element_value = $obj->h('x'); # hash element value
+         $obj->h('x', 'new value');        # assign to hash element
+
+     # class type accessor:
+         $element_value = $obj->c;           # object reference
+         $obj->c->method(...);               # call method of object
+         $obj->c(new My_Other_Class);        # assign a new object
+
+
+DESCRIPTION
+===========
+
+Class::Struct exports a single function, `struct'.  Given a list of
+element names and types, and optionally a class name, `struct' creates a
+Perl 5 class that implements a "struct-like" data structure.
+
+The new class is given a constructor method, new, for creating struct
+objects.
+
+Each element in the struct data has an accessor method, which is used to
+assign to the element and to fetch its value.  The default accessor can
+be overridden by declaring a sub of the same name in the package.  (See
+Example 2.)
+
+Each element's type can be scalar, array, hash, or class.
+
+
+The `struct()' function
+-----------------------
+
+The `struct' function has three forms of parameter-list.
+
+     struct( CLASS_NAME => [ ELEMENT_LIST ]);
+     struct( CLASS_NAME => { ELEMENT_LIST });
+     struct( ELEMENT_LIST );
+
+The first and second forms explicitly identify the name of the class
+being created.  The third form assumes the current package name as the
+class name.
+
+An object of a class created by the first and third forms is based on an
+array, whereas an object of a class created by the second form is based
+on a hash. The array-based forms will be somewhat faster and smaller;
+the hash-based forms are more flexible.
+
+The class created by `struct' must not be a subclass of another class
+other than UNIVERSAL.
+
+A function named new must not be explicitly defined in a class created
+by `struct'.
+
+The *ELEMENT_LIST* has the form
+
+     NAME => TYPE, ...
+
+Each name-type pair declares one element of the struct. Each element
+name will be defined as an accessor method unless a method by that name
+is explicitly defined; in the latter case, a warning is issued if the
+warning flag (-w) is set.
+
+
+Element Types and Accessor Methods
+----------------------------------
+
+The four element types -- scalar, array, hash, and class -- are
+represented by strings -- `'$'', `'@'', `'%'', and a class name --
+optionally preceded by a `'*''.
+
+The accessor method provided by `struct' for an element depends on the
+declared type of the element.
+
+Scalar (`'$'' or `'*$'')
+     The element is a scalar, and is initialized to undef.
+
+     The accessor's argument, if any, is assigned to the element.
+
+     If the element type is `'$'', the value of the element (after
+     assignment) is returned. If the element type is `'*$'', a reference
+     to the element is returned.
+
+Array (`'@'' or `'*@'')
+     The element is an array, initialized to `()'.
+
+     With no argument, the accessor returns a reference to the element's
+     whole array.
+
+     With one or two arguments, the first argument is an index
+     specifying one element of the array; the second argument, if
+     present, is assigned to the array element.  If the element type is
+     `'@'', the accessor returns the array element value.  If the
+     element type is `'*@'', a reference to the array element is
+     returned.
+
+Hash (`'%'' or `'*%'')
+     The element is a hash, initialized to `()'.
+
+     With no argument, the accessor returns a reference to the element's
+     whole hash.
+
+     With one or two arguments, the first argument is a key specifying
+     one element of the hash; the second argument, if present, is
+     assigned to the hash element.  If the element type is `'%'', the
+     accessor returns the hash element value.  If the element type is
+     `'*%'', a reference to the hash element is returned.
+
+Class (`'Class_Name'' or `'*Class_Name'')
+     The element's value must be a reference blessed to the named class
+     or to one of its subclasses. The element is initialized to the
+     result of calling the new constructor of the named class.
+
+     The accessor's argument, if any, is assigned to the element. The
+     accessor will croak if this is not an appropriate object reference.
+
+     If the element type does not start with a `'*'', the accessor
+     returns the element value (after assignment). If the element type
+     starts with a `'*'', a reference to the element itself is returned.
+
+
+EXAMPLES
+========
+
+Example 1
+     Giving a struct element a class type that is also a struct is how
+     structs are nested.  Here, `timeval' represents a time (seconds and
+     microseconds), and `rusage' has two elements, each of which is of
+     type `timeval'.
+
+          use Class::Struct;
+
+          struct( rusage => {
+              ru_utime => timeval,  # seconds
+              ru_stime => timeval,  # microseconds
+          });
+
+          struct( timeval => [
+              tv_secs  => '$',
+              tv_usecs => '$',
+          ]);
+
+          # create an object:
+              my $t = new rusage;
+              	# $t->ru_utime and $t->ru_stime are objects of type timeval.
+
+          # set $t->ru_utime to 100.0 sec and $t->ru_stime to 5.0 sec.
+              $t->ru_utime->tv_secs(100);
+              $t->ru_utime->tv_usecs(0);
+              $t->ru_stime->tv_secs(5);
+              $t->ru_stime->tv_usecs(0);
+
+Example 2
+     An accessor function can be redefined in order to provide
+     additional checking of values, etc.  Here, we want the count
+     element always to be nonnegative, so we redefine the count accessor
+     accordingly.
+
+          package MyObj;
+          use Class::Struct;
+
+          # declare the struct
+              struct ( 'MyObj', { count => '$', stuff => '%' } );
+
+          # override the default accessor method for 'count'
+              sub count {
+                  my $self = shift;
+                  if ( @_ ) {
+                      die 'count must be nonnegative' if $_[0] < 0;
+                      $self->{'count'} = shift;
+                      warn "Too many args to count" if @_;
+                  }
+                  return $self->{'count'};
+              }
+
+          package main;
+          $x = new MyObj;
+          print "\$x->count(5) = ", $x->count(5), "\n";
+                                  # prints '$x->count(5) = 5'
+
+          print "\$x->count = ", $x->count, "\n";
+                                  # prints '$x->count = 5'
+
+          print "\$x->count(-5) = ", $x->count(-5), "\n";
+                                  # dies due to negative argument!
+
+
+Author and Modification History
+===============================
+
+Renamed to Class::Struct and modified by Jim Miner, 1997-04-02.
+
+     members() function removed.
+     Documentation corrected and extended.
+     Use of struct() in a subclass prohibited.
+     User definition of accessor allowed.
+     Treatment of '*' in element types corrected.
+     Treatment of classes as element types corrected.
+     Class name to struct() made optional.
+     Diagnostic checks added.
+
+Originally `Class::Template' by Dean Roehrich.
+
+     # Template.pm   -- struct/member template builder
+     #   12mar95
+     #   Dean Roehrich
+     #
+     # changes/bugs fixed since 28nov94 version:
+     #  - podified
+     # changes/bugs fixed since 21nov94 version:
+     #  - Fixed examples.
+     # changes/bugs fixed since 02sep94 version:
+     #  - Moved to Class::Template.
+     # changes/bugs fixed since 20feb94 version:
+     #  - Updated to be a more proper module.
+     #  - Added "use strict".
+     #  - Bug in build_methods, was using @var when @$var needed.
+     #  - Now using my() rather than local().
+     #
+     # Uses perl5 classes to create nested data types.
+     # This is offered as one implementation of Tom Christiansen's "structs.pl"
+     # idea.
+
+
+
+
+File: pm.info, Node: Class/Template, Next: Config, Prev: Class/Struct, Up: Module List
+
+struct/member template builder
+******************************
+
+
+
+NAME
+====
+
+Class::Template - struct/member template builder
+
+
+EXAMPLES
+========
+
+   * Example 1
+          use Class::Template;
+
+          struct( rusage => {
+          	ru_utime => timeval,
+          	ru_stime => timeval,
+          });
+
+          struct( timeval => [
+          	tv_secs  => '$',
+          	tv_usecs => '$',
+          ]);
+
+          my $s = new rusage;
+
+   * Example 2
+          package OBJ;
+          use Class::Template;
+
+          members OBJ {
+          	'a'	=> '$',
+          	'b'	=> '$',
+          };
+
+          members OBJ2 {
+          	'd'	=> '@',
+          	'c'	=> '$',
+          };
+
+          package OBJ2; @ISA = (OBJ);
+
+          sub new {
+          	my $r = InitMembers( &OBJ::InitMembers() );
+          	bless $r;
+          }
+
+
+NOTES   Use '%' if the member should point to an anonymous hash.  Use '@' if the member should point to an anonymous array.
+===========================================================================================================================
+
+
+When using % and @ the method requires one argument for the key or index
+into the hash or array.
+
+Prefix the %, @, or $ with '*' to indicate you want to retrieve pointers
+to the values rather than the values themselves.
+
+
+
+
+File: pm.info, Node: Config, Next: Convert/BinHex, Prev: Class/Template, Up: Module List
+
+access Perl configuration information
+*************************************
+
+
+
+NAME
+====
+
+Config - access Perl configuration information
+
+
+SYNOPSIS
+========
+
+     use Config;
+     if ($Config{'cc'} =~ /gcc/) {
+     	print "built by gcc\n";
+     } 
+
+     use Config qw(myconfig config_sh config_vars);
+
+     print myconfig();
+
+     print config_sh();
+
+     config_vars(qw(osname archname));
+
+
+DESCRIPTION
+===========
+
+The Config module contains all the information that was available to the
+`Configure' program at Perl build time (over 900 values).
+
+Shell variables from the `config.sh' file (written by Configure) are
+stored in the readonly-variable `%Config', indexed by their names.
+
+Values stored in config.sh as 'undef' are returned as undefined values.
+The perl exists function can be used to check if a named variable
+exists.
+
+myconfig()
+     Returns a textual summary of the major perl configuration values.
+     See also -V in `Switches', *Note Perlrun: (perl.info)perlrun,.
+
+config_sh()
+     Returns the entire perl configuration information in the form of
+     the original config.sh shell variable assignment script.
+
+config_vars(@names)
+     Prints to STDOUT the values of the named configuration
+     variable. Each is printed on a separate line in the form:
+
+          name='value';
+
+     Names which are unknown are output as `name='UNKNOWN';'.  See also
+     `-V:name' in `Switches', *Note Perlrun: (perl.info)perlrun,.
+
+
+EXAMPLE
+=======
+
+Here's a more sophisticated example of using %Config:
+
+     use Config;
+     use strict;
+
+     my %sig_num;
+     my @sig_name;
+     unless($Config{sig_name} && $Config{sig_num}) {
+     	die "No sigs?";
+     } else {
+     	my @names = split ' ', $Config{sig_name};
+     	@sig_num{@names} = split ' ', $Config{sig_num};
+     	foreach (@names) {
+     	    $sig_name[$sig_num{$_}] ||= $_;
+     	}   
+     }
+
+     print "signal #17 = $sig_name[17]\n";
+     if ($sig_num{ALRM}) { 
+     	print "SIGALRM is $sig_num{ALRM}\n";
+     }   
+
+
+WARNING
+=======
+
+Because this information is not stored within the perl executable itself
+it is possible (but unlikely) that the information does not relate to
+the actual perl binary which is being used to access it.
+
+The Config module is installed into the architecture and version
+specific library directory ($Config{installarchlib}) and it checks the
+perl version number when loaded.
+
+
+NOTE
+====
+
+This module contains a good example of how to use tie to implement a
+cache and an example of how to make a tied variable readonly to those
+outside of it.
+
+
+
+
+File: pm.info, Node: Convert/BinHex, Next: Convert/UU, Prev: Config, Up: Module List
+
+extract data from Macintosh BinHex files
+****************************************
+
+
+
+NAME
+====
+
+Convert::BinHex - extract data from Macintosh BinHex files
+
+*ALPHA WARNING: this code is currently in its Alpha release.
+Things may change drastically until the interface is hammered out: if
+you have suggestions or objections, please speak up now!*
+
+
+SYNOPSIS
+========
+
+*Simple functions:*
+
+     use Convert::BinHex qw(binhex_crc macbinary_crc);
+
+     # Compute HQX7-style CRC for data, pumping in old CRC if desired:
+     $crc = binhex_crc($data, $crc);
+
+     # Compute the MacBinary-II-style CRC for the data:
+     $crc = macbinary_crc($data, $crc);
+
+*Hex to bin, low-level interface.*
+Conversion is actually done via an object (`"Convert::BinHex::Hex2Bin"'
+in this node) which keeps internal conversion state:
+
+     # Create and use a "translator" object:
+     my $H2B = Convert::BinHex->hex2bin;    # get a converter object
+     while (<STDIN>) {
+     	print $STDOUT $H2B->next($_);        # convert some more input
+     }
+     print $STDOUT $H2B->done;              # no more input: finish up
+
+*Hex to bin, OO interface.*
+The following operations *must* be done in the order shown!
+
+     # Read data in piecemeal:
+     $HQX = Convert::BinHex->open(FH=>\*STDIN) || die "open: $!";
+     $HQX->read_header;                  # read header info
+     @data = $HQX->read_data;            # read in all the data
+     @rsrc = $HQX->read_resource;        # read in all the resource
+
+*Bin to hex, low-level interface.*
+Conversion is actually done via an object (`"Convert::BinHex::Bin2Hex"'
+in this node) which keeps internal conversion state:
+
+     # Create and use a "translator" object:
+     my $B2H = Convert::BinHex->bin2hex;    # get a converter object
+     while (<STDIN>) {
+     	print $STDOUT $B2H->next($_);        # convert some more input
+     }
+     print $STDOUT $B2H->done;              # no more input: finish up
+
+*Bin to hex, file interface.*  Yes, you can convert to BinHex
+as well as from it!
+
+     # Create new, empty object:
+     my $HQX = Convert::BinHex->new;
+
+     # Set header attributes:
+     $HQX->filename("logo.gif");
+     $HQX->type("GIFA");
+     $HQX->creator("CNVS");
+
+     # Give it the data and resource forks (either can be absent):
+     $HQX->data(Path => "/path/to/data");       # here, data is on disk
+     $HQX->resource(Data => $resourcefork);     # here, resource is in core
+
+     # Output as a BinHex stream, complete with leading comment:
+     $HQX->encode(\*STDOUT);
+
+*PLANNED!!!! Bin to hex, "CAP" interface.*
+*Thanks to Ken Lunde for suggesting this*.
+
+     # Create new, empty object from CAP tree: my $HQX =
+     Convert::BinHex->from_cap("/path/to/root/file"); $HQX->encode(\*STDOUT);
+
+
+DESCRIPTION
+===========
+
+BinHex is a format used by Macintosh for transporting Mac files safely
+through electronic mail, as short-lined, 7-bit, semi-compressed data
+streams.  Ths module provides a means of converting those data streams
+back into into binary data.
+
+
+FORMAT
+======
+
+*(Some text taken from RFC-1741.)*
+Files on the Macintosh consist of two parts, called *forks*:
+
+Data fork
+     The actual data included in the file.  The Data fork is typically
+     the only meaningful part of a Macintosh file on a non-Macintosh
+     computer system.  For example, if a Macintosh user wants to send a
+     file of data to a user on an IBM-PC, she would only send the Data
+     fork.
+
+Resource fork
+     Contains a collection of arbitrary attribute/value pairs, including
+     program segments, icon bitmaps, and parametric values.
+
+Additional information regarding Macintosh files is stored by the Finder
+in a hidden file, called the "Desktop Database".
+
+Because of the complications in storing different parts of a Macintosh
+file in a non-Macintosh filesystem that only handles consecutive data in
+one part, it is common to convert the Macintosh file into some other
+format before transferring it over the network.  The BinHex format
+squashes that data into transmittable ASCII as follows:
+
+  1. The file is output as a *byte stream* consisting of some basic
+     header information (filename, type, creator), then the data fork,
+     then the resource fork.
+
+  2. The byte stream is *compressed* by looking for series of duplicated
+     bytes and representing them using a special binary escape sequence
+     (of course, any occurences of the escape character must also be
+     escaped).
+
+  3. The compressed stream is *encoded* via the "6/8 hemiola" common to
+     base64 and *uuencode*: each group of three 8-bit bytes (24 bits) is
+     chopped into four 6-bit numbers, which are used as indexes into an
+     ASCII "alphabet".  (I assume that leftover bytes are zero-padded;
+     documentation is thin).
+
+
+FUNCTIONS
+=========
+
+
+CRC computation
+---------------
+
+macbinary_crc DATA, SEED
+     Compute the MacBinary-II-style CRC for the given DATA, with the CRC
+     seeded to SEED.  Normally, you start with a SEED of 0, and you pump
+     in the previous CRC as the SEED if you're handling a lot of data
+     one chunk at a time.  That is:
+
+          $crc = 0;
+          while (<STDIN>) {
+              $crc = macbinary_crc($_, $crc);
+          }
+
+     *Note:* Extracted from the *mcvert* utility (Doug Moore, April '87),
+     using a "magic array" algorithm by Jim Van Verth for efficiency.
+     Converted to Perl5 by Eryq.  *Untested.*
+
+binhex_crc DATA, SEED
+     Compute the HQX-style CRC for the given DATA, with the CRC seeded
+     to SEED.  Normally, you start with a SEED of 0, and you pump in the
+     previous CRC as the SEED if you're handling a lot of data one chunk
+     at a time.  That is:
+
+          $crc = 0;
+          while (<STDIN>) {
+              $crc = binhex_crc($_, $crc);
+          }
+
+     *Note:* Extracted from the *mcvert* utility (Doug Moore, April '87),
+     using a "magic array" algorithm by Jim Van Verth for efficiency.
+     Converted to Perl5 by Eryq.
+
+
+OO INTERFACE
+============
+
+
+Conversion
+----------
+
+bin2hex
+     *Class method, constructor.*
+     Return a converter object.  Just creates a new instance of
+     `"Convert::BinHex::Bin2Hex"' in this node; see that class for
+     details.
+
+hex2bin
+     *Class method, constructor.*
+     Return a converter object.  Just creates a new instance of
+     `"Convert::BinHex::Hex2Bin"' in this node; see that class for
+     details.
+
+
+Construction
+------------
+
+new PARAMHASH
+     *Class method, constructor.*
+     Return a handle on a BinHex'able entity.  In general, the data and
+     resource forks for such an entity are stored in native format
+     (binary) format.
+
+     Parameters in the PARAMHASH are the same as header-oriented method
+     names, and may be used to set attributes:
+
+          $HQX = new Convert::BinHex filename => "icon.gif",
+                                     type    => "GIFB",
+                                     creator => "CNVS";
+
+open PARAMHASH
+     *Class method, constructor.*
+     Return a handle on a new BinHex'ed stream, for parsing.  Params
+     are:
+
+     Data
+          Input a HEX stream from the given data.  This can be a scalar,
+          or a reference to an array of scalars.
+
+     Expr
+          Input a HEX stream from any open()able expression.  It will be
+          opened and binmode'd, and the filehandle will be closed either
+          on a `close()' or when the object is destructed.
+
+     FH
+          Input a HEX stream from the given filehandle.
+
+     NoComment
+          If true, the parser should not attempt to skip a leading
+          "(This file...)"  comment.  That means that the first nonwhite
+          characters encountered must be the binhex'ed data.
+
+
+Get/set header information
+--------------------------
+
+creator [VALUE]
+     *Instance method.*
+     Get/set the creator of the file.  This is a four-character string
+     (though I don't know if it's guaranteed to be printable ASCII!)
+     that serves as part of the Macintosh's version of a MIME
+     "content-type".
+
+     For example, a document created by "Canvas" might have creator
+     `"CNVS"'.
+
+data [PARAMHASH]
+     *Instance method.*
+     Get/set the data fork.  Any arguments are passed into the new()
+     method of `"Convert::BinHex::Fork"' in this node.
+
+filename [VALUE]
+     *Instance method.*
+     Get/set the name of the file.
+
+flags [VALUE]
+     *Instance method.*
+     Return the flags, as an integer.  Use bitmasking to get as the
+     values you need.
+
+header_as_string
+     Return a stringified version of the header that you might use for
+     logging/debugging purposes.  It looks like this:
+
+          X-HQX-Software: BinHex 4.0 (Convert::BinHex 1.102)
+          X-HQX-Filename: Something_new.eps
+          X-HQX-Version: 0
+          X-HQX-Type: EPSF
+          X-HQX-Creator: ART5
+          X-HQX-Data-Length: 49731
+          X-HQX-Rsrc-Length: 23096
+
+     As some of you might have guessed, this is RFC-822-style, and may
+     be easily plunked down into the middle of a mail header, or split
+     into lines, etc.
+
+requires [VALUE]
+     *Instance method.*
+     Get/set the software version required to convert this file, as
+     extracted from the comment that preceded the actual binhex'ed data;
+     e.g.:
+
+          (This file must be converted with BinHex 4.0)
+
+     In this case, after parsing in the comment, the code:
+
+          $HQX->requires;
+
+     would get back "4.0".
+
+resource [PARAMHASH]
+     *Instance method.*
+     Get/set the resource fork.  Any arguments are passed into the new()
+     method of `"Convert::BinHex::Fork"' in this node.
+
+type [VALUE]
+     *Instance method.*
+     Get/set the type of the file.  This is a four-character string
+     (though I don't know if it's guaranteed to be printable ASCII!)
+     that serves as part of the Macintosh's version of a MIME
+     "content-type".
+
+     For example, a GIF89a file might have type `"GF89"'.
+
+version [VALUE]
+     *Instance method.*
+     Get/set the version, as an integer.
+
+
+Decode, high-level
+------------------
+
+read_comment
+     *Instance method.*
+     Skip past the opening comment in the file, which is of the form:
+
+          (This file must be converted with BinHex 4.0)
+
+     As per RFC-1741, *this comment must immediately precede the BinHex
+     data,* and any text before it will be ignored.
+
+     *You don't need to invoke this method yourself;* `read_header()' will
+     do it for you.  After the call, the version number in the comment
+     is accessible via the `requires()' method.
+
+read_header
+     *Instance method.*
+     Read in the BinHex file header.  You must do this first!
+
+read_data [NBYTES]
+     *Instance method.*
+     Read information from the data fork.  Use it in an array context to
+     slurp all the data into an array of scalars:
+
+          @data = $HQX->read_data;
+
+     Or use it in a scalar context to get the data piecemeal:
+
+          while (defined($data = $HQX->read_data)) {
+             # do stuff with $data
+          }
+
+     The NBYTES to read defaults to 2048.
+
+read_resource [NBYTES]
+     *Instance method.*
+     Read in all/some of the resource fork.  See `read_data()' for
+     usage.
+
+
+Encode, high-level
+------------------
+
+encode OUT
+     Encode the object as a BinHex stream to the given output handle
+     OUT.  OUT can be a filehandle, or any blessed object that responds
+     to a `print()' message.
+
+     The leading comment is output, using the `requires()' attribute.
+
+
+SUBMODULES
+==========
+
+
+Convert::BinHex::Bin2Hex
+------------------------
+
+A BINary-to-HEX converter.  This kind of conversion requires a certain
+amount of state information; it cannot be done by just calling a simple
+function repeatedly.  Use it like this:
+
+     # Create and use a "translator" object:
+     my $B2H = Convert::BinHex->bin2hex;    # get a converter object
+     while (<STDIN>) {
+     	print STDOUT $B2H->next($_);          # convert some more input
+     }
+     print STDOUT $B2H->done;               # no more input: finish up
+
+     # Re-use the object:
+     $B2H->rewind;                 # ready for more action!
+     while (<MOREIN>) { ...
+
+On each iteration, `next()' (and `done()') may return either a
+decent-sized non-empty string (indicating that more converted data is
+ready for you) or an empty string (indicating that the converter is
+waiting to amass more input in its private buffers before handing you
+more stuff to output.
+
+Note that `done()' *always* converts and hands you whatever is left.
+
+This may have been a good approach.  It may not.  Someday, the converter
+may also allow you give it an object that responds to read(), or a
+FileHandle, and it will do all the nasty buffer-filling on its own,
+serving you stuff line by line:
+
+     # Someday, maybe...
+     my $B2H = Convert::BinHex->bin2hex(\*STDIN);
+     while (defined($_ = $B2H->getline)) {
+     	print STDOUT $_;
+     }
+
+Someday, maybe.  Feel free to voice your opinions.
+
+
+Convert::BinHex::Hex2Bin
+------------------------
+
+A HEX-to-BINary converter. This kind of conversion requires a certain
+amount of state information; it cannot be done by just calling a simple
+function repeatedly.  Use it like this:
+
+     # Create and use a "translator" object:
+     my $H2B = Convert::BinHex->hex2bin;    # get a converter object
+     while (<STDIN>) {
+     	print STDOUT $H2B->next($_);          # convert some more input
+     }
+     print STDOUT $H2B->done;               # no more input: finish up
+
+     # Re-use the object:
+     $H2B->rewind;                 # ready for more action!
+     while (<MOREIN>) { ...
+
+On each iteration, `next()' (and `done()') may return either a
+decent-sized non-empty string (indicating that more converted data is
+ready for you) or an empty string (indicating that the converter is
+waiting to amass more input in its private buffers before handing you
+more stuff to output.
+
+Note that `done()' *always* converts and hands you whatever is left.
+
+Note that this converter does *not* find the initial "BinHex version"
+comment.  You have to skip that yourself.  It only handles data between
+the opening and closing `":"'.
+
+
+Convert::BinHex::Fork
+---------------------
+
+A fork in a Macintosh file.
+
+     # How to get them...
+     $data_fork = $HQX->data;      # get the data fork
+     $rsrc_fork = $HQX->resource;  # get the resource fork
+
+     # Make a new fork:
+     $FORK = Convert::BinHex::Fork->new(Path => "/tmp/file.data");
+     $FORK = Convert::BinHex::Fork->new(Data => $scalar);
+     $FORK = Convert::BinHex::Fork->new(Data => \@array_of_scalars);
+
+     # Get/set the length of the data fork:
+     $len = $FORK->length;
+     $FORK->length(170);        # this overrides the REAL value: be careful!
+
+     # Get/set the path to the underlying data (if in a disk file):
+     $path = $FORK->path;
+     $FORK->path("/tmp/file.data");
+
+     # Get/set the in-core data itself, which may be a scalar or an arrayref:
+     $data = $FORK->data;
+     $FORK->data($scalar);
+     $FORK->data(\@array_of_scalars);
+
+     # Get/set the CRC:
+     $crc = $FORK->crc;
+     $FORK->crc($crc);
+
+
+UNDER THE HOOD
+==============
+
+
+Design issues
+-------------
+
+BinHex needs a stateful parser
+     Unlike its cousins base64 and *uuencode*, BinHex format is not
+     amenable to being parsed line-by-line.  There appears to be no
+     guarantee that lines contain 4n encoded characters... and even if there
+     is one, the BinHex compression algorithm interferes: even when you
+     can decode one line at a time, you can't necessarily
+     *decompress* a line at a time.
+
+     For example: a decoded line ending with the byte `\x90' (the escape
+     or "mark" character) is ambiguous: depending on the next decoded
+     byte, it could mean a literal `\x90' (if the next byte is a
+     `\x00'), or it could mean n-1 more repetitions of the previous
+     character (if the next byte is some nonzero n).
+
+     For this reason, a BinHex parser has to be somewhat stateful: you
+     cannot have code like this:
+
+          #### NO! #### NO! #### NO! #### NO! #### NO! ####
+          while (<STDIN>) {            # read HEX
+              print hexbin($_);          # convert and write BIN
+          }
+
+     unless something is happening "behind the scenes" to keep track of
+     what was last done.  *The dangerous thing, however, is that this
+     approach will *seem* to work, if you only test it on BinHex files
+     which do not use compression and which have 4n HEX characters on
+     each line.*
+
+     Since we have to be stateful anyway, we use the parser object to
+     keep our state.
+
+We need to be handle large input files
+     Solutions that demand reading everything into core don't cut it in
+     my book.  The first MPEG file that comes along can louse up your
+     whole day.  So, there are no size limitations in this module: the
+     data is read on-demand, and filehandles are always an option.
+
+Boy, is this slow!
+     A lot of the byte-level manipulation that has to go on, particularly
+     the CRC computing (which involves intensive bit-shifting and masking)
+     slows this module down significantly.  What is needed perhaps is an
+     *optional* extension library where the slow pieces can be done more
+     quickly... a Convert::BinHex::CRC, if you will.  Volunteers,
+     anyone?
+
+     Even considering that, however, it's slower than I'd like.  I'm
+     sure many improvements can be made in the HEX-to-BIN end of things.
+     No doubt I'll attempt some as time goes on...
+
+
+How it works
+------------
+
+Since BinHex is a layered format, consisting of...
+
+     A Macintosh file [the "BIN"]...
+        Encoded as a structured 8-bit bytestream, then...
+           Compressed to reduce duplicate bytes, then...
+              Encoded as 7-bit ASCII [the "HEX"]
+
+...there is a layered parsing algorithm to reverse the process.
+Basically, it works in a similar fashion to stdio's fread():
+
+     0. There is an internal buffer of decompressed (BIN) data,
+        initially empty.
+     1. Application asks to read() n bytes of data from object
+     2. If the buffer is not full enough to accomodate the request:
+          2a. The read() method grabs the next available chunk of input
+              data (the HEX).
+          2b. HEX data is converted and decompressed into as many BIN
+              bytes as possible.
+          2c. BIN bytes are added to the read() buffer.
+          2d. Go back to step 2a. until the buffer is full enough
+              or we hit end-of-input.
+
+The conversion-and-decompression algorithms need their own internal
+buffers and state (since the next input chunk may not contain all the
+data needed for a complete conversion/decompression operation).  These
+are maintained in the object, so parsing two different input streams
+simultaneously is possible.
+
+
+WARNINGS
+========
+
+Only handles `Hqx7' files, as per RFC-1741.
+
+Remember that Macintosh text files use `"\r"' as end-of-line: this means
+that if you want a textual file to look normal on a non-Mac system, you
+probably want to do this to the data:
+
+     # Get the data, and output it according to normal conventions:
+     foreach ($HQX->read_data) { s/\r/\n/g; print }
+
+
+CHANGE LOG
+==========
+
+Current version: $Id: BinHex.pm,v 1.119 1997/06/28 05:12:42 eryq Exp $
+
+Version 1.118
+     Ready to go public (with Paul's version, patched for native Mac
+     support)!  Warnings have been suppressed in a few places where
+     undefined values appear.
+
+Version 1.115
+     Fixed another bug in comp2bin, related to the MARK falling on a
+     boundary between inputs.  Added testing code.
+
+Version 1.114
+     Added BIN-to-HEX conversion.  Eh.  It's a start.  Also, a lot of
+     documentation additions and cleanups.  Some methods were also
+     renamed.
+
+Version 1.103
+     Fixed bug in decompression (wasn't saving last character).  Fixed
+     "NoComment" bug.
+
+Version 1.102
+     Initial release.
+
+
+AUTHOR AND CREDITS
+==================
+
+Written by Eryq, `http://www.enteract.com/~eryq' / `eryq@enteract.com'
+
+Support for native-Mac conversion, *plus* invaluable contributions in
+Alpha Testing, *plus* a few patches, *plus* the baseline binhex/debinhex
+programs, were provided by Paul J. Schinder (NASA/GSFC).
+
+Ken Lunde (Adobe) suggested incorporating the CAP file representation.
+
+
+TERMS AND CONDITIONS
+====================
+
+Copyright (c) 1997 by Eryq.  All rights reserved.  This program is free
+software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
+
+This software comes with NO WARRANTY of any kind.  See the COPYING file
+in the distribution for details.
+
+
+
+
+File: pm.info, Node: Convert/UU, Next: Curses, Prev: Convert/BinHex, Up: Module List
+
+Perl module for uuencode and uudecode
+*************************************
+
+
+
+NAME
+====
+
+Convert::UU, uuencode, uudecode - Perl module for uuencode and uudecode
+
+
+SYNOPSIS
+========
+
+     use Convert::UU qw(uudecode uuencode);
+     $encoded_string = uuencode($string,[$filename],[$mode]);
+     ($string,$filename,$mode) = uudecode($string);
+     $string = uudecode($string); # in scalar context
+
+
+DESCRIPTION
+===========
+
+uuencode() takes as the first argument a string that is to be
+uuencoded. Note, that it is the string that is encoded, not a
+filename. Alternatively a filehandle may be passed that must be opened
+for reading. It returns the uuencoded string including `begin' and
+end. Second and third argument are optional and specify filename and
+mode. If unspecified these default to "uuencode.uu" and 644.
+
+uudecode() takes a string as argument which will be uudecoded. If the
+argument is a filehandle this handle will be read instead. If it is a
+reference to an ARRAY, the elements are treated like lines that form a
+string. Leading and trailing garbage will be ignored. The function
+returns the uudecoded string for the first begin/end pair. In array
+context it returns an array whose first element is the uudecoded string,
+the second is the filename and the third is the mode.
+
+
+EXPORT
+======
+
+Both uudecode and uuencode are in @EXPORT_OK.
+
+
+PORTABILITY
+===========
+
+No effort has been made yet to port this module to non UNIX operating
+systems. Volunteers are welcome.
+
+
+AUTHOR
+======
+
+Andreas Koenig <andreas.koenig@mind.de>. With code stolen from Hans
+Mulder <hansm@wsinti05.win.tue.nl> and Randal L. Schwartz
+<merlyn@teleport.com>.
+
+
+SEE ALSO
+========
+
+puuencode(1), puudecode(1) for examples of how to use this module.
+
+
+
+
+File: pm.info, Node: Curses, Next: Cwd, Prev: Convert/UU, Up: Module List
+
+terminal screen handling and optimization
+*****************************************
+
+
+
+NAME
+====
+
+Curses - terminal screen handling and optimization
+
+
+SYNOPSIS
+========
+
+     use Curses;
+
+     initscr;
+     ...
+     endwin;
+
+
+DESCRIPTION
+===========
+
+`Curses' is the interface between Perl and your system's curses(3)
+library.  For descriptions on the usage of a given function, variable,
+or constant, consult your system's documentation, as such information
+invariably varies (:-) between different curses(3) libraries and
+operating systems.  This document describes the interface itself, and
+assumes that you already know how your system's curses(3) library works.
+
+
+Unified Functions
+-----------------
+
+Many curses(3) functions have variants starting with the prefixes
+*w-*, *mv-*, and/or *wmv-*.  These variants differ only in the
+explicit addition of a window, or by the addition of two coordinates
+that are used to move the cursor first.  For example, `addch()' has
+three other variants: `waddch()', `mvaddch()', and `mvwaddch()'.  The
+variants aren't very interesting; in fact, we could roll all of the
+variants into original function by allowing a variable number of
+arguments and analyzing the argument list for which variant the user
+wanted to call.
+
+Unfortunately, curses(3) predates varargs(3), so in C we were stuck with
+all the variants.  However, `Curses' is a Perl interface, so we are free
+to "unify" these variants into one function.  The section `"Supported
+Functions"' in this node below lists all curses(3) function supported by
+`Curses', along with a column listing if it is *unified*.  If so, it
+takes a varying number of arguments as follows:
+
+`function( [win], [y, x], args );'
+
+*win* is an optional window argument, defaulting to `stdscr' if not
+specified.
+
+*y, x* is an optional coordinate pair used to move the cursor,
+defaulting to no move if not specified.
+
+*args* are the required arguments of the function.  These are the
+arguments you would specify if you were just calling the base function
+and not any of the variants.
+
+This makes the variants obsolete, since their functionality has been
+merged into a single function, so `Curses' does not define them by
+default.  You can still get them if you want, by setting the variable
+`$Curses::OldCurses' to a non-zero value before using the `Curses'
+package.  See `"Perl 4.X `cursperl' Compatibility"' in this node for an
+example of this.
+
+
+Objects
+-------
+
+Objects are supported.  Example:
+
+     $win = new Curses;
+     $win->addstr(10, 10, 'foo');
+     $win->refresh;
+     ...
+
+Any function that has been marked as *unified* (see `"Supported
+Functions"' in this node below and `"Unified Functions"' in this node
+above) can be called as a method for a Curses object.
+
+Do not use `initscr()' if using objects, as the first call to get a `new
+Curses' will do it for you.
+
+
+COMPATIBILITY
+=============
+
+
+Perl 4.X `cursperl' Compatibility
+---------------------------------
+
+`Curses' has been written to take advantage of the new features of Perl.
+I felt it better to provide an improved curses programming environment
+rather than to be 100% compatible.  However, many old `curseperl'
+applications will probably still work by starting the script with:
+
+     BEGIN { $Curses::OldCurses = 1; }
+     use Curses;
+
+Any old application that still does not work should print an
+understandable error message explaining the problem.
+
+Some functions and variables are not supported by `Curses', even with
+the BEGIN line.  They are listed under `"curses(3) items not supported
+by Curses"' in this node.
+
+The variables `$stdscr' and `$curscr' are also available as functions
+`stdscr' and `curscr'.  This is because of a Perl bug.  See the `BUGS'
+in this node section for details.
+
+
+Incompatibilities with previous versions of `Curses'
+----------------------------------------------------
+
+In previous versions of this software, some Perl functions took a
+different set of parameters than their C counterparts.  This is no
+longer true.  You should now use `getstr($str)' and `getyx($y, $x)'
+instead of `$str = getstr()' and `($y, $x) = getyx()'.
+
+
+Incompatibilities with other Perl programs
+------------------------------------------
+
+     menu.pl, v3.0 and v3.1
+     	There were various interaction problems between these two
+     	releases and Curses.  Please upgrade to the latest version
+     	(v3.3 as of 3/16/96).
+
+
+DIAGNOSTICS
+===========
+
+   * Curses function '%s' called with too %s arguments at ...
+
+     You have called a `Curses' function with a wrong number of
+     arguments.
+
+   * argument %d to Curses function '%s' is not a Curses window at ... =item * argument is not a Curses window at ...
+
+     The window argument you gave to the function wasn't really a
+     window.
+
+     This probably means that you didn't give the right arguments to a
+     *unified* function.  See the DESCRIPTION section on `Unified
+     Functions' in this node for more information.
+
+   * Curses function '%s' is not defined by your vendor at ...
+
+     You have a `Curses' function in your code that your system's
+     curses(3) library doesn't define.
+
+   * Curses constant '%s' is not defined by your vendor at ...
+
+     You have a `Curses' constant in your code that your system's
+     curses(3) library doesn't define.
+
+   * Curses does not support the curses function '%s', used at ...
+
+     You have a curses(3) function in your code that the `Curses' module
+     doesn't support.
+
+   * Curses does not support the curses variable '%s', used at ...
+
+     You have a curses(3) variable in your code that the `Curses' module
+     doesn't support.
+
+   * Curses does not support the curses constant '%s', used at ...
+
+     You have a bareword in your code that is trying to be interpreted
+     as a `Curses' constant, but `Curses' doesn't know anything about
+     it.
+
+   * Curses::Vars::FETCH called with bad index at ... =item * Curses::Vars::STORE called with bad index at ...
+
+     You've been playing with the tie interface to the `Curses'
+     variables.  Don't do that.  :-)
+
+   * Anything else
+
+     Check out the `perldiag' man page to see if the error is in there.
+
+
+BUGS
+====
+
+If you use the variables `$stdscr' and `$curscr' instead of their
+functional counterparts (`stdscr' and `curscr'), you might run into a
+bug in Perl where the "magic" isn't called early enough.  This is
+manifested by the `Curses' package telling you `$stdscr' isn't a window.
+One workaround is to put a line like `$stdscr = $stdscr' near the front
+of your program.
+
+Probably many more.
+
+
+AUTHOR
+======
+
+William Setzer <William_Setzer@ncsu.edu>
+
+
+SYNOPSIS OF PERL CURSES SUPPORT
+===============================
+
+
+Supported Functions
+-------------------
+
+     Supported     Unified?		Supported via $OldCurses[*]
+     ---------     --------		------------------------
+     addch		Yes		waddch mvaddch mvwaddch
+     addchnstr	Yes		waddchnstr mvaddchnstr mvwaddchnstr
+     addchstr	Yes		waddchstr mvaddchstr mvwaddchstr
+     addnstr		Yes		waddnstr mvaddnstr mvwaddnstr
+     addstr		Yes		waddstr mvaddstr mvwaddstr
+     attroff		Yes		wattroff
+     attron		Yes		wattron
+     attrset		Yes		wattrset
+     baudrate	No
+     beep		No
+     bkgd		Yes		wbkgd
+     bkgdset		Yes		wbkgdset
+     border		Yes		wborder
+     box		Yes
+     can_change_color No
+     cbreak		No
+     clear		Yes		wclear
+     clearok		Yes
+     clrtobot	Yes		wclrtobot
+     clrtoeol	Yes		wclrtoeol
+     color_content	No
+     COLOR_PAIR	No
+     copywin		No
+     delch		Yes		wdelch mvdelch mvwdelch
+     deleteln	Yes		wdeleteln
+     delwin		Yes
+     derwin		Yes
+     doupdate	No
+     echo		No
+     echochar	Yes		wechochar
+     endwin		No
+     erase		Yes		werase
+     erasechar	No
+     flash		No
+     flushinp	No
+     flusok		Yes
+     getattrs	Yes
+     getbegyx	Yes
+     getbkgd		Yes
+     getcap		No
+     getch		Yes		wgetch mvgetch mvwgetch
+     getmaxyx	Yes
+     getnstr		Yes		wgetnstr mvgetnstr mvwgetnstr
+     getparyx	Yes
+     getstr		Yes		wgetstr mvgetstr mvwgetstr
+     gettmode	No
+     getyx		Yes
+     halfdelay	No
+     has_colors	No
+     has_ic		No
+     has_il		No
+     hline		Yes		whline
+     idcok		Yes
+     idlok		Yes
+     immedok		Yes
+     inch		Yes		winch mvinch mvwinch
+     inchnstr	Yes		winchnstr mvinchnstr mvwinchnstr
+     inchstr		Yes		winchstr mvinchstr mvwinchstr
+     init_color	No
+     init_pair	No
+     initscr		No
+     innstr		Yes		winnstr mvinnstr mvwinnstr
+     insch		Yes		winsch mvinsch mvwinsch
+     insdelln	Yes		winsdelln
+     insertln	Yes		winsertln
+     insnstr		Yes		winsnstr mvinsnstr mvwinsnstr
+     insstr		Yes		winsstr mvinsstr mvwinsstr
+     instr		Yes		winstr mvinstr mvwinstr
+     intrflush	Yes
+     is_linetouched	Yes
+     is_wintouched	Yes
+     isendwin	No
+     keyname		No
+     keypad		Yes
+     killchar	No
+     leaveok		Yes
+     longname	No
+     meta		Yes
+     move		Yes		wmove
+     mvcur		No
+     mvwin		Yes
+     newpad		No
+     newwin		No
+     nl		No
+     nocbreak	No
+     nodelay		Yes
+     noecho		No
+     nonl		No
+     noqiflush	No
+     noraw		No
+     notimeout	Yes
+     noutrefresh	Yes		wnoutrefresh
+     overlay		No
+     overwrite	No
+     pair_content	No
+     PAIR_NUMBER	No
+     pechochar	No
+     pnoutrefresh	No
+     prefresh	No
+     qiflush		No
+     raw		No
+     refresh		Yes		wrefresh
+     resetty		No
+     savetty		No
+     scrl		Yes		wscrl
+     scroll		Yes
+     scrollok	Yes
+     setscrreg	Yes		wsetscrreg
+     setterm		No
+     slk_clear	No
+     slk_init	No
+     slk_label	No
+     slk_noutrefresh	No
+     slk_refresh	No
+     slk_restore	No
+     slk_set		No
+     slk_touch	No
+     standend	Yes		wstandend
+     standout	Yes		wstandout
+     start_color	No
+     subpad		No
+     subwin		Yes
+     syncok		Yes
+     timeout		Yes		wtimeout
+     touchline	Yes
+     touchln		Yes		wtouchln
+     touchoverlap	No
+     touchwin	Yes
+     typeahead	No
+     unctrl		No
+     ungetch		No
+     vline		Yes		wvline
+
+     [*] To use any functions in this column, the variable
+     C<$Curses::OldCurses> must be set to a non-zero value before using the
+     C<Curses> package.  See L<"Perl 4.X cursperl Compatibility"> for an
+     example of this.
+
+
+Supported Variables 	 	LINES		COLS		stdscr[*]	curscr[*] 	 =head2 Supported Constants 	 	OK		ERR 	 	ACS_BLOCK	ACS_BOARD	ACS_BTEE	ACS_BULLET 	ACS_CKBOARD	ACS_DARROW	ACS_DEGREE	ACS_DIAMOND 	ACS_HLINE	ACS_LANTERN	ACS_LARROW	ACS_LLCORNER 	ACS_LRCORNER	ACS_LTEE	ACS_PLMINUS	ACS_PLUS 	ACS_RARROW	ACS_RTEE	ACS_S1		ACS_S9 	ACS_TTEE	ACS_UARROW	ACS_ULCORNER	ACS_URCORNER 	ACS_VLINE 	 	A_ALTCHARSET	A_ATTRIBUTES	A_BLINK		A_BOLD 	A_CHARTEXT	A_COLOR		A_DIM		A_INVIS 	A_NORMAL	A_PROTECT	A_REVERSE	A_STANDOUT 	A_UNDERLINE 	 	COLOR_BLACK	COLOR_BLUE	COLOR_CYAN	COLOR_GREEN 	COLOR_MAGENTA	COLOR_RED	COLOR_WHITE	COLOR_YELLOW 	 	KEY_A1		KEY_A3		KEY_B2		KEY_BACKSPACE 	KEY_BEG		KEY_BREAK	KEY_BTAB	KEY_C1 	KEY_C3		KEY_CANCEL	KEY_CATAB	KEY_CLEAR 	KEY_CLOSE	KEY_COMMAND	KEY_COPY	KEY_CREATE 	KEY_CTAB	KEY_DC		KEY_DL		KEY_DOWN 	KEY_EIC		KEY_END		KEY_ENTER	KEY_EOL 	KEY_EOS		KEY_EXIT	KEY_F0		KEY_FIND 	KEY_HELP	KEY_HOME	KEY_IC		KEY_IL 	KEY_LEFT	KEY_LL		KEY_MARK	KEY_MAX 	KEY_MESSAGE	KEY_MIN		KEY_MOVE	KEY_NEXT 	KEY_NPAGE	KEY_OPEN	KEY_OPTIONS	KEY_PPAGE 	KEY_PREVIOUS	KEY_PRINT	KEY_REDO	KEY_REFERENCE 	KEY_REFRESH	KEY_REPLACE	KEY_RESET	KEY_RESTART 	KEY_RESUME	KEY_RIGHT	KEY_SAVE	KEY_SBEG 	KEY_SCANCEL	KEY_SCOMMAND	KEY_SCOPY	KEY_SCREATE 	KEY_SDC		KEY_SDL		KEY_SELECT	KEY_SEND 	KEY_SEOL	KEY_SEXIT	KEY_SF		KEY_SFIND 	KEY_SHELP	KEY_SHOME	KEY_SIC		KEY_SLEFT 	KEY_SMESSAGE	KEY_SMOVE	KEY_SNEXT	KEY_SOPTIONS 	KEY_SPREVIOUS	KEY_SPRINT	KEY_SR		KEY_SREDO 	KEY_SREPLACE	KEY_SRESET	KEY_SRIGHT	KEY_SRSUME 	KEY_SSAVE	KEY_SSUSPEND	KEY_STAB	KEY_SUNDO 	KEY_SUSPEND	KEY_UNDO	KEY_UP 	 =head2 curses(3) items not supported by `Curses' 	 	Functions 	--------- 	tstp printw wprintw mvprintw mvwprintw scanw wscanw mvscanw mvwscanw 	_putchar fullname 	 	Variables 	--------- 	ttytype Def_term My_term   [*] stdscr and curscr are also available via the Perl functions `stdscr' and `curscr'.  See `"Perl 4.X cursperl Compatibility"' in this node for more information.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+

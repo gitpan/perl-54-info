@@ -1,0 +1,1779 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Mail/Address, Next: Mail/Alias, Prev: Mac/Apps/MacPGP, Up: Module List
+
+Parse mail addresses
+********************
+
+
+
+NAME
+====
+
+Mail::Address - Parse mail addresses
+
+
+DESCRIPTION
+===========
+
+`Mail::Address' extracts and manipulates RFC822 compilant email
+addresses. As well as being able to create `Mail::Address' objects in
+the normal manner, `Mail::Address' can extract addresses from the To and
+Cc lines found in an email message.
+
+
+CONSTRUCTORS
+============
+
+new( PHRASE,  ADDRESS, [ COMMENT ])
+          Mail::Address->new("Perl5 Porters", "perl5-porters@africa.nicoh.com");
+
+     Create a new object which represent an address with the elements
+     given. In a message these 3 elements would be seen like:
+
+          PHRASE <ADDRESS> (COMMENT)
+          ADDRESS (COMMENT)
+
+parse( LINE )
+          Mail::Address->parse($line);
+
+     Parse the given line a return a list of extracted objects. The line
+     would normally be one taken from a To,Cc or Bcc line in a message
+
+
+METHODS
+=======
+
+phrase ()
+     Return the phrase part of the object.
+
+address ()
+     Return the address part of the object.
+
+comment ()
+     Return teh comment part of the object
+
+format ()
+     Return a string representing the address in a suitable form to be
+     placed on a To,Cc or Bcc line of a message
+
+name ()
+     Using the information contained within the object attempt to
+     identify what the person or groups name is
+
+host ()
+     Return the address excluding the user id and '@'
+
+user ()
+     Return the address excluding the '@' and the mail domain
+
+path ()
+     Unimplemented yet but should return the UUCP path for the message
+
+canon ()
+     Unimplemented yet but should return the UUCP canon for the message
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Alias, Next: Mail/Cap, Prev: Mail/Address, Up: Module List
+
+maniulate mail alias files of various formats
+*********************************************
+
+
+
+NAME
+====
+
+Mail::Alias - maniulate mail alias files of various formats
+
+
+SYNOPSIS
+========
+
+     use Mail::Alias;
+
+
+DESCRIPTION
+===========
+
+`Mail::Alias' can read various formats of mail alias. Once an object has
+been created it can be used to expand aliases and output in another
+format.
+
+*NOTE: This package is unfinished*
+
+
+CONSTRUCTOR
+===========
+
+new ()
+
+METHODS
+=======
+
+read ()
+write ()
+format ()
+exists ()
+expand ()
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Cap, Next: Mail/Field, Prev: Mail/Alias, Up: Module List
+
+Parse mailcap files
+*******************
+
+
+
+NAME
+====
+
+Mail::Cap - Parse mailcap files
+
+
+DESCRIPTION
+===========
+
+Parse mailcap files as specified in RFC 1524 - *A User Agent
+Configuration Mechanism For Multimedia Mail Format Information*.  In the
+description below $type refers to the MIME type as specified in the
+*Content-Type* header of mail or HTTP messages.  Examples of types are:
+
+     image/gif
+     text/html
+     text/plain; charset=iso-8859-1
+
+
+METHODS
+=======
+
+
+new()
+-----
+
+     $mcap = new Mail::Cap;
+     $mcap = new Mail::Cap "/mydir/mailcap";
+
+Create and initialize a new Mail::Cap object.  If you give it an
+argument it will try to parse the specified file.  Without any arguments
+it will search for the mailcap file using the standard mailcap path, or
+the MAILCAPS environment variable if it is defined.
+
+
+view($type, $file)
+------------------
+
+
+compose($type, $file)
+---------------------
+
+
+edit($type, $file)
+------------------
+
+
+print($type, $file)
+-------------------
+
+These methods invoke a suitable progam presenting or manipulating the
+media object in the specified file.  They all return 1 if a command was
+found, and `0' otherwise.  You might test C<$?" for the outcome of the
+command.
+
+
+viewCmd($type, $file)
+---------------------
+
+
+composeCmd($type, $file)
+------------------------
+
+
+editCmd($type, $file)
+---------------------
+
+
+printCmd($type, $file)
+----------------------
+
+These methods return a string that is suitable for feeding to system()
+in order to invoke a suitable progam presenting or manipulating the
+media object in the specified file.  It will return undef if no suitable
+specification exists.
+
+
+field($type, $field)
+--------------------
+
+Returns the specified field for the type.  Returns undef if no
+specification exsists.
+
+
+description($type)
+------------------
+
+
+textualnewlines($type)
+----------------------
+
+
+x11_bitmap($type)
+-----------------
+
+
+nametemplate($type)
+-------------------
+
+These methods return the corresponding mailcap field for the type.
+These methods should be more convenient to use than the field() method
+for the same fields.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Gisle Aas. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@oslonett.no>
+
+Maintained by Graham Barr <gbarr@ti.com>
+
+
+
+
+File: pm.info, Node: Mail/Field, Next: Mail/Folder, Prev: Mail/Cap, Up: Module List
+
+Base class for manipulation of mail header fields
+*************************************************
+
+
+
+NAME
+====
+
+Mail::Field - Base class for manipulation of mail header fields
+
+
+SYNOPSIS
+========
+
+     use Mail::Field;
+
+     $field = Mail::Field->new('Subject', 'some subject text');
+     print $field->tag,": ",$field->stringify,"\n";
+
+     $field = Mail::Field->subject('some subject text');
+
+
+DESCRIPTION
+===========
+
+`Mail::Field' is a base class for packages that create and manipulate
+fields from Email (and MIME) headers. Each different field will have its
+own sub-class, defining its own interface.
+
+This document describes the minimum interface that each sub-class should
+provide, and also guidlines on how the field specific interface should
+be defined.
+
+
+CONSTRUCTOR
+===========
+
+Mail::Field, and it's sub-classes define several methods which return
+new objects. These can all be termed to be constructors.
+
+new ( TAG [, STRING | OPTIONS ] )
+     The new constructor will create an object in the class which
+     defines the field specified by the tag argument.
+
+     After creation of the object :-
+
+     If the tag argument is followed by a single string then the parse
+     method will be called with this string.
+
+     If the tag argument is followed by more than one arguments then the
+     create method will be called with these arguments.
+
+extract ( TAG, HEAD [, INDEX ] )
+     This constuctor takes as arguments the tag name, a `Mail::Head'
+     object and optionally an index.
+
+     If the index argument is given then extract will retrieve the given
+     tag from the `Mail::Head' object and create a new `Mail::Field'
+     based object.  undef will be returned in the field does not exist.
+
+     If the index argument is not given the the result depends on the
+     context in which extract is called. If called in a scalar context
+     the result will be as if extract was called with an index value of
+     zero. If called in an array context then all tags will be retrieved
+     and a list of `Mail::Field' objects will be returned.
+
+combine ( FIELD_LIST )
+     This constructor takes as arguments a list of `Mail::Field'
+     objects, which should all be of the same sub-class, and creates a
+     new object in that same class.
+
+     This constructor is nor defined in `Mail::Field' as there is no
+     generic way to combine the various field types. Each sub-class
+     should define its own combine constructor, if combining is
+     possible/allowed.
+
+
+METHODS
+=======
+
+parse
+set
+tag
+stringify
+
+SUB-CLASS PACKAGE NAMES
+=======================
+
+All sub-classes should be called Mail::Field::name where name is derived
+from the tag using these rules.
+
+   * Consider a tag as being made up of elements separated by '-'
+
+   * Convert all characters to lowercase except the first in each
+     element, which should be uppercase.
+
+   * name is then created from these elements by using the first N
+     characters from each element.
+
+   * N is calculated by using the formula :-
+
+          int((7 + #elements) / #elements)
+
+   * name is then limited to a maximum of 8 characters, keeping the
+     first 8 characters
+
+For an example of this take a look at the definition of the
+`_header_pkg_name' subroutine in `Mail::Field'
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+SEE ALSO
+========
+
+`MIME::*' in this nodes
+
+
+CREDITS
+=======
+
+Eryq <eryq@rhine.gsfc.nasa.gov> - for all the help in defining this
+package so that Mail::* and MIME::* can be integrated together.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Folder, Next: Mail/Folder/Emaul, Prev: Mail/Field, Up: Module List
+
+A folder-independant interface to email folders.
+************************************************
+
+
+
+NAME
+====
+
+Mail::Folder - A folder-independant interface to email folders.
+
+*WARNING: This code is in alpha release. Expect the interface to change.*
+
+
+SYNOPSIS
+========
+
+`use Mail::Folder;'
+
+
+DESCRIPTION
+===========
+
+This base class, and companion subclasses provide an object-oriented
+interface to email folders independant of the underlying folder
+implementation.
+
+The following folder interfaces are provided with this package:
+
+Mail::Folder::Mbox
+     Ye olde standard mailbox format.
+
+Mail::Folder::Maildir
+     An interface to maildir (ala qmail) folders.  This is a very
+     interesting folder format.  It is 'missing' some of the nicer
+     features that some other folder interfaces have (like the message
+     sequences in MH), but is probably one of the more resilient folder
+     formats around.
+
+Mail::Folder::Emaul
+     Emaul is a folder interfaces of my own design (in the loosest sense
+     of the word :-).  It is vaguely similar to MH.  I wrote it to flesh
+     out earlier versions of the `Mail::Folder' package.
+
+Mail::Folder::NNTP
+     The beginnings of an interface to NNTP.  Some of the `Mail::Folder'
+     methods are not implemented yet, and no regression tests have been
+     written yet.
+
+Here is a snippet of code that retrieves the third message from a
+mythical emaul folder and outputs it to stdout:
+
+     use Mail::Folder::Emaul;
+
+     $folder = new Mail::Folder('emaul', "mythicalfolder");
+     $message = $folder->get_message(3);
+     $message->print(\*STDOUT);
+     $folder->close;
+
+
+METHODS
+=======
+
+
+new($foldertype [, %options])
+-----------------------------
+
+
+new($foldertype, $folder_name [, %options])
+-------------------------------------------
+
+Create a new, empty *Mail::Folder* object of the specified folder type.
+If `$folder_name' is specified, then the open method will be
+automatically called with that argument.
+
+If `$foldertype' is `'AUTODETECT'' then the foldertype is deduced by
+querying each registered foldertype for a match.
+
+Options are specified as hash items using key and value pairs.
+
+The following options are currently builtin:
+
+   * Create
+
+     If set, open will create the folder if it does not already exist.
+
+   * Content-Length
+
+     If set, the Content-Length header field will be automatically
+     created or updated by the `append_message' and `update_message'
+     methods.
+
+   * DotLock
+
+     If set and appropriate for the folder interface, the folder
+     interface will use '`.lock'' style folder locking.  Currently, this
+     is only used by the mbox interface - please refer to the
+     documentation for the mbox interface for more information.  This
+     mechanism will probably be replaced with something more generalized
+     in the future.
+
+   * Flock
+
+     If set and appropriate for the folder interface, the folder
+     interface will use flock style folder locking.  Currently this is
+     only used by the mbox interface - please refer to the documentation
+     for the mbox interface for more information.  This mechanism will
+     probably be replaced with something more generalized in the future.
+
+   * NFSLock
+
+     If set and appropriate for the folder interface, the folder
+     interface will take extra measures necessary to deal with folder
+     locking across NFS.  These special measure typically consist of
+     constructing lock files in a special manner that is more immune to
+     the atomicity problems that NFS has when creating a lock file.  Use
+     of this option will generally require the ability to use long
+     filenames on the NFS server in question.
+
+   * NotMUA
+
+     If the option is set, the folder interface will still make updates
+     like deletes and appends, and the like, but will not save the
+     message labels or the current message indicator.
+
+     If the option is not set (the default), the folder interface will
+     save the persistant labels and the current message indicator as
+     appropriate for the folder interface.
+
+     The default setting is designed for the types of updates to the
+     state of mail mssages that a Mail User Agent typically makes.
+     Programmatic updates to folders might be better served to turn the
+     option off so that labels like 'seen' aren't inadvertantly set and
+     saved when they really shouldn't be.
+
+   * Timeout
+
+     If this options is set, the folder interface will use it to
+     override any default value for Timeout.  For folder interfaces that
+     entail network communications it is used to specify the maximum
+     amount of time, in seconds, to wait for a response from the server.
+     For folder interfaces that entail local file locking it is used to
+     specify the maximum amount of time, in seconds, to wait for a lock
+     to be acquired.  And for the `maildir' interface it is, of course,
+     meaningless `:-)'.
+
+   * DefaultFolderType
+
+     If the `Create' option is set and `AUTODETECT' is being used to
+     determine folder type, this option will be used to determine what
+     type of folder to create.
+
+
+open($folder_name)
+------------------
+
+Open the given folder and populate internal data structures with
+information about the messages in the folder.  If the `Create' option is
+set, then the folder will be created if it does not already exist.
+
+The readonly attribute will be set if the underlying folder interface
+determines that the folder is readonly.
+
+Please note that I have not done any testing for using this module
+against system folders.  I am a strong advocate of using a filter
+package or mail delivery agent that migrates the incoming email to the
+home directory of the user.  If you try to use `MailFolder' against a
+system folder, you deserve what you get.  Consider yourself warned.  I
+have no intention, at this point in time, to deal with system folders
+and the related issues.  If you work on it, and get it working in a
+portable manner, let me know.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass new method.
+   * Call set_readonly if folder is not writable.
+   * Call `remember_message' for each message in the folder.
+   * Initialize current_message.
+   * Initialize any message labels from the persistant storage that the folder has.
+
+close
+-----
+
+
+Performs any housecleaning to affect a 'closing' of the folder.  It does
+not perform an implicit sync.  Make sure you do a sync before the close
+if you want the pending deletes, appends, updates, and the like to be
+performed on the folder.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Appropriate cleanup specific to the folder interface.
+   * Return the result of calling the superclass close method.
+
+sync
+----
+
+
+Synchronize the folder with the internal data structures.  The folder
+interface will process deletes, updates, appends, refiles, and dups.  It
+also reads in any new messages that have arrived in the folder since the
+last time it was either opened or synced.
+
+Folder interface are expected to perform the following tasks:
+
+   * Call the superclass sync method.
+   * Lock the folder.
+   * Absorb any new messages
+   * Perform any pending deletes and updates.
+   * Update the folder persistant storage of current message.
+   * Update the folder persistant storage of message labels.
+   * Unlock the folder.
+
+pack
+----
+
+
+For folder formats that may have holes in the message number sequence
+(like mh) this will rename the files in the folder so that there are no
+gaps in the message number sequence.
+
+Please remember that because this method might renumber the messages in
+a folder.  Any code that remembers message numbers outside of the object
+could get out of sync after a pack.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass pack method.
+   * Perform the guts of the pack
+   * Renumber the `Messages' member of $self.
+   * Do not forget to update current_message based on the renumbering.
+
+get_message($msg_number)
+------------------------
+
+
+Retrieve a `Mail::Internet' reference to specified `$msg_number'.  The
+base class method will return `0' if a folder has not been opened in the
+object or if the specified `$msg_number' does not exist.
+
+If present, it removes the `Content-Length' field from the message
+reference that it returns.
+
+It also caches the header just like `get_header' does.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass get_message method.
+   * Extract the message into a `Mail::Internet' object.
+
+get_mime_message($msg_number [, parserobject] [, %options])
+-----------------------------------------------------------
+
+
+Retrieves a `MIME::Entity' reference for the specified `$msg_number'.
+Returns undef on failure.
+
+It essentially calls get_message_file to get a file to parse, creates a
+`MIME::Parser' object, configures it a little, and then calls the
+`MIME::Parser-'read> method to create the `MIME::Entity' object.
+
+If `parserobject' is specified it will be used instead of an internally
+created parser object.  The parser object is expected to a class
+instance and a subcless (however far removed) of `MIME::ParserBase'.
+
+Options are specified as hash items using key and value pairs.
+
+Here is the list of known options.  They essentially map into the
+`MIME::Parser' methods of the same name.  For documentation regarding
+these options, refer to the documentation for `MIME::Parser'.
+
+   * output_dir
+   * output_prefix
+   * output_to_core
+
+get_message_file($msg_number)
+-----------------------------
+
+
+Acts like `get_message()' except that a filename is returned instead of
+a *Mail::Internet* object reference.  This might be useful for dealing
+with the *MIME-tools* package.
+
+Please note that get_message_file does NOT perform any 'From ' escaping
+or unescaping regardless of the underlying folder architecture.  I am
+working on a mechanism that will resolve any resulting issues with this
+malfeature.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass get_message_file method.
+   * Extract the message into a temp file (if not already in one) and return the name of the file.
+
+get_header($msg_number)
+-----------------------
+
+
+Retrieves a message header.  Returns a reference to a *Mail::Header*
+object.  It caches the result for later use.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass `get_header' method.
+   * Return the cached entry if it exists.
+   * Extract the header into a `Mail::Internet' object.
+   * Cache it.
+
+get_mime_header($msg_number)
+----------------------------
+
+
+Retrieves the message header for the given message and returns a
+reference to `MIME::Head' object.  It actually calls `get_header',
+creates a `MIME::Head' object, then stuffs the contents of the
+`Mail::Header' object into the `MIME::Head' object.
+
+
+append_message($mref)
+---------------------
+
+Add a message to a folder.  Given a reference to a *Mail::Internet*
+object, append it to the end of the folder.  The result is not committed
+to the original folder until a sync is performed.
+
+The `Content-Length' field is added to the written file if the
+`Content-Length' option is enabled.
+
+This method will, under certain circumstances, alter the message
+reference that was passed to it.  If you are writing a folder interface,
+make sure you pass a dup of the message reference when calling the SUPER
+of the method.  For examples, see the code for the stock folder
+interfaces provided with Mail::Folder.
+
+
+update_message($msg_number, $mref)
+----------------------------------
+
+Replaces the message identified by `$msg_number' with the contents of
+the message in reference to a *Mail::Internet* object `$mref'.  The
+result is not committed to the original folder until a sync is
+performed.
+
+This method will, under certain circumstances, alter the message
+reference that was passed to it.  If you are writing a folder interface,
+make sure you pass a dup of the message reference when calling the SUPER
+of the method.  For examples, see the code for the stock folder
+interfaces provided with Mail::Folder.
+
+Folder interfaces are expected to perform the following tasks:
+
+   * Call the superclass `update_message' method.
+   * Replace the specified message in the working copy of the folder.
+
+refile($msg_number, $folder_ref)
+--------------------------------
+
+
+Moves a message from one folder to another.  Note that this method uses
+`delete_message' and `append_message' so the changes will show up in the
+folder objects, but will need a syncs performed in order for the changes
+to show up in the actual folders.
+
+
+dup($msg_number, $folder_ref)
+-----------------------------
+
+Copies a message to a folder.  Works like `refile', but does not delete
+the original message.  Note that this method uses `append_message' so
+the change will show up in the folder object, but will need a sync
+performed in order for the change to show up in the actual folder.
+
+
+delete_message(@msg_numbers)
+----------------------------
+
+Mark a list of messages for deletion.  The actual delete in the original
+folder is not performed until a sync is performed.  This is merely a
+convenience wrapper around `add_label'.  It returns 1.
+
+If any of the items in `@msg_numbers' are array references,
+`delete_message' will expand out the array reference(s) and call
+`add_label' for each of the items in the reference(s).
+
+
+undelete_message(@msg_numbers)
+------------------------------
+
+Unmarks a list of messages marked for deletion.  This is merely a
+convenience wrapper around `delete_label'.  It returns 1.
+
+If any of the items in `@msg_numbers' are array references,
+`undelete_message' will expand out the array reference(s) and call
+`delete_label' for each of the items in the reference(s).
+
+
+message_list
+------------
+
+Returns a list of the message numbers in the folder.  The list is not
+guaranteed to be in any specific order.
+
+
+qty
+---
+
+Returns the quantity of messages in the folder.
+
+
+first_message
+-------------
+
+Returns the message number of the first message in the folder.
+
+
+last_message
+------------
+
+Returns the message number of the last message in the folder.
+
+
+next_message
+------------
+
+
+next_message($msg_number)
+-------------------------
+
+Returns the message number of the next message in the folder relative to
+`$msg_number'.  If `$msg_number' is not specified then the message
+number of the next message relative to the current message is returned.
+It returns `0' if there is no next message (ie. at the end of the
+folder).
+
+
+prev_message
+------------
+
+
+prev_message($msg_number)
+-------------------------
+
+Returns the message number of the previous message in the folder
+relative to `$msg_number'.  If `$msg_number' is not specified then the
+message number of the next message relative to the current message is
+returned.  It returns `0' is there is no previous message (ie. at the
+beginning of the folder).
+
+
+first_labeled_message($label)
+-----------------------------
+
+Returns the message number of the first message in the folder that has
+the label $label associated with it.  Returns `0' is there are no
+messages with the given label.
+
+
+last_labeled_message($label)
+----------------------------
+
+Returns the message number of the last message in the folder that has
+the label `$label' associated with it.  Returns `0' if there are no
+messages with the given label.
+
+
+next_labeled_message($msg_number, $label)
+-----------------------------------------
+
+Returns the message number of the next message (relative to
+`$msg_number') in the folder that has the label `$label' associated with
+it.  It returns `0' is there is no next message with the given label.
+
+
+prev_labeled_message($msg_number, $label)
+-----------------------------------------
+
+Returns the message number of the previous message (relative to
+`$msg_number') in the folder that has the label `$label' associated with
+it.  It returns `0' is there is no previous message with the given
+label.
+
+
+current_message
+---------------
+
+
+current_message($msg_number)
+----------------------------
+
+When called with no arguments returns the message number of the current
+message in the folder.  When called with an argument set the current
+message number for the folder to the value of the argument.
+
+For folder mechanisms that provide persistant storage of the current
+message, the underlying folder interface will update that storage.  For
+those that do not, changes to current_message will be affect while the
+folder is open.
+
+
+sort($func_ref)
+---------------
+
+Returns a sorted list of messages.  It works conceptually similar to
+the regular perl sort.  The `$func_ref' that is passed to sort
+must be a reference to a function.  The function will be passed two
+*Mail::Header* message references and it must return an integer less
+than, equal to, or greater than 0, depending on how the list is to be
+ordered.
+
+
+select($func_ref)
+-----------------
+
+Returns a list of message numbers that match a set of criteria.  The
+method is passed a reference to a function that is used to determine
+the match criteria.  The function will be passed a reference to a
+*Mail::Internet* message object containing only a header.
+
+The list of message numbers returned is not guaranteed to be in any
+specific order.
+
+
+inverse_select($func_ref)
+-------------------------
+
+Returns a list of message numbers that do not match a set of criteria.
+The method is passed a reference to a function that is used to determine
+the match criteria.  The function will be passed a reference to a
+*Mail::Internet* message object containing only a header.
+
+The list of message numbers returned is not guarenteed to be in any
+specific order.
+
+
+add_label($msg_number, $label)
+------------------------------
+
+Associates `$label' with `$msg_number'.  The label must have a length >
+0 and should be a printable string, although there are currently no
+requirements for this.
+
+`add_label' will return `0' if `$label' is of zero length, otherwise it
+returns 1.
+
+The persistant storage of labels is dependant on the underlying folder
+interface.  Some folder interfaces may not support arbitrary labels.  In
+this case, the labels will not exist when the folder is reopened.
+
+There are a few standard labels that have implied meaning.  Unless
+stated, these labels are not actually acted on my the module interface,
+rather they represent a standard set of labels for MUAs to use.
+
+   * deleted
+
+     This is used by the `delete_message' and sync to process the
+     deletion of messages.  These will not be reflected in any
+     persistant storage of message labels.
+
+   * edited
+
+     This tag is added by `update_message' to reflect that the message
+     has been altered.  This behaviour may go away.
+
+   * seen
+
+     This means that the message has been viewed by the user.  The
+     concept of `seen' is nebulous at best.  The get_message method sets
+     this label for any message it is asked to retrieve.
+
+   * filed
+   * replied
+   * forwarded
+   * printed
+
+delete_label($msg_number, $label)
+---------------------------------
+
+
+Deletes the association of `$label' with `$msg_number'.
+
+Returns `0' if the label `$label' was not associated with `$msg_number',
+otherwise returns a 1.
+
+
+clear_label($label)
+-------------------
+
+Deletes the association of `$label' for all of the messages in the
+folder.
+
+Returns the quantity of messages that were associated with the label
+before they were cleared.
+
+
+label_exists($msg_number, $label)
+---------------------------------
+
+Returns 1 if the label `$label' is associated with `$msg_number'
+otherwise returns `0'.
+
+
+list_labels($msg_number)
+------------------------
+
+Returns a list of the labels that are associated with `$msg_number'.
+
+If `list_labels' is called in a scalar context, it returns the quantity
+of labels that are associated with `$msg_number'.
+
+The returned list is not guaranteed to be in any specific order.
+
+
+list_all_labels
+---------------
+
+Returns a list of all the labels that are associated with the messages
+in the folder.  The items in the returned list are not guaranteed to be
+in any particular order.
+
+If list_all_labels is called in a scalar context, it returns the
+quantity of labels that are associated with the messages.
+
+
+select_label($label)
+--------------------
+
+Returns a list of message numbers that have the given label `$label'
+associated with them.
+
+If `select_label' is called in a scalar context, it will return the
+quantity of messages that have the given label.
+
+
+foldername
+----------
+
+Returns the name of the folder that the object has open.
+
+
+message_exists($msg_number)
+---------------------------
+
+Returns 1 if the folder object contains a reference for `$msg_number',
+otherwise returns `0'.
+
+
+set_readonly
+------------
+
+Sets the `readonly' attribute for the folder.  This will cause the sync
+command to not perform any updates to the actual folder.
+
+
+is_readonly
+-----------
+
+Returns 1 if the `readonly' attribute for the folder is set, otherwise
+returns `0'.
+
+
+get_option($option)
+-------------------
+
+Returns the setting for the given option.  Returns undef if the option
+does not exist.
+
+
+set_option($option, $value)
+---------------------------
+
+Set `$option' to $value.
+
+
+debug($value)
+-------------
+
+Set the level of debug information for the object.  If $value is not
+given then the current debug level is returned.
+
+
+debug_print($text)
+------------------
+
+Outputs $text, along with some other information to STDERR.  The format
+of the outputted line is as follows:
+
+C<-<gt> $subroutine $self $text>
+
+
+WRITING A FOLDER INTERFACE
+==========================
+
+
+General Concepts
+----------------
+
+In general, writing a folder interface consists of writing a set of
+methods that overload some of the native ones in `Mail::Folder'.  Below
+is a list of the methods that will typically need to overridden.  See
+the code of the folder interfaces provided with the package for specific
+examples.
+
+Basically, the goal of an interface writer is to map the mechanics of
+interfacing to the folder format into the methods provided by the base
+class.  If there are any obvious additions to be made, let me know.  If
+it looks like I can fit them in and they make sense in the larger
+picture, I will add them.
+
+If you set about writing a folder interface and find that something is
+missing from this documentation, please let me know.
+
+
+Initialization
+--------------
+
+The beginning of a new folder interface module should start with
+something like the following chunk of code:
+
+     package Mail::Folder::YOUR_FOLDER_TYPE;
+     @ISA = qw(Mail::Folder);
+     use Mail::Folder;
+
+     Mail::Folder::register_folder_type('Mail::Folder::YOUR_FOLDER_TYPE',
+     				       'your_folder_type_name');
+
+
+Envelopes
+---------
+
+Please take note that inter-folder envelope issues are not complete
+ironed out yet.  Some folder types (maildir via qmail) actually store
+all of the envelope information, some (mbox) only store a portion of it,
+and others do not store any.  Electronic has a rich history of various
+issues related this issue (anyone out there remember the days when many
+elm programs were compiled to use the '`From_'' field for replies
+instead of the fields in the actual header - and then everyone started
+do non-uucp email? :-).
+
+Depending on the expectations, the scale of the problem is relative.
+Here is what I have done so far to deal with the problem.
+
+In the stock folder interfaces, the underlying Mail::Internet object is
+created with the 'MailFrom' option set to '`COERCE''.  This will cause
+it to rename a '`From_'' field to a '`Mail-From'' field.  All interface
+writers should do the same.  This will prevent the interface writer from
+needing to deal with it themselves.
+
+For folder interfaces that require part or all of the envelope to be
+present as part of the stored message, then coercion is sometimes
+necessary.  As an example, the `maildir' folder format uses a
+'`Return-Path'' field as the first line in the file to signify the
+sender portion of the envelope.  If that field is not present, then the
+interfaces tries to synthesize it by way of the '`Reply-To'', 'From',
+and '`Sender'' fields (in that order).  Currently, it croaks if it fails
+that sequence of fields (this will probably change in the future -
+feedback please).  At some time in the future, I am going to try to
+provide some generalized routines to perform these processes in a
+consistant manner across all of the interfaces; in the mean time, keep
+an eye out for issues related to this whole mess.
+
+Every folder interface should take to prevent some of the more common
+problems like being passed in a message with a '`From_'' field.  If all
+other fields that carry similar information are present, then delete the
+field.  If the interface can benefit from coercing it into another field
+that would otherwise be missing, go for it.  Even if all of the other
+interfaces do the right thing, a user might hand it a mail message that
+contains a '`From_'' field, so one cannot be to careful.
+
+The recipient portion of the envelope is pretty much not dealt with at
+all.  If it presents any major issues, describe them to me and I will
+try to work something out.
+
+
+Methods to override
+-------------------
+
+The following methods will typically need to be overridden in the folder
+interface.
+
+   * open
+   * close
+   * sync
+   * pack
+   * get_header
+   * get_message
+   * get_message_file
+   * update_message
+
+FOLDER INTERFACE METHODS
+========================
+
+
+This section describes the methods that for use by interface writers.
+Refer to the stock folder interfaces for examples of their use.
+
+
+register_folder_type($class, $type)
+-----------------------------------
+
+Registers a folder interface with Mail::Folder.
+
+
+is_valid_folder_format($default, $foldername)
+---------------------------------------------
+
+In a folder interface, this method should return 1 if it thinks the
+folder is valid format and return `0' otherwise.  It is used by the
+Mail::Folder open method when `AUTODETECT' is used as the folder type.
+The open method iterates through the list of known folder interfaces
+until it finds one that answer yes to the question.
+
+This method is always overrided by the folder interface.
+
+
+init
+----
+
+This is a stub entry called by new.  The primary purpose is to provide a
+method for subclasses to override for initialization to be performed at
+constructor time.  It is called after the object members variables have
+been initialized and before the optional call to open.  The new method
+will return undef if the init method returns `0'.  Only interface
+writers need to worry about this one.
+
+
+create($foldername)
+-------------------
+
+In a folder interface, this method should return 1 after it successfully
+creates a folder with the given name and return `0' otherwise.
+
+This method is always overrided by the folder interface.  The base class
+method returns a `0' so that if create is not defined in the folder
+interface, the call to create will return failure.
+
+
+cache_header($msg_number, $header_ref)
+--------------------------------------
+
+Associates `$header_ref' with `$msg_number' in the internal header cache
+of the object.
+
+
+invalidate_header($msg_number)
+------------------------------
+
+Clobbers the header cache entry for `$msg_number'.
+
+
+remember_message($msg_number)
+-----------------------------
+
+Add an entry for `$msg_number' to the internal data structure of the
+folder object.
+
+
+forget_message($msg_number)
+---------------------------
+
+Removes the entry for `$msg_number' from the internal data structure of
+the folder object.
+
+
+MISC
+====
+
+
+detect_folder_type($foldername)
+-------------------------------
+
+Returns the folder type of the given `$foldername'.  Returns undef if it
+cannot deduce the folder type.
+
+
+CAVEATS
+=======
+
+
+Forking children
+----------------
+
+If a script forks while having any folders open, only the parent
+should make any changes to the folder.  In addition, when the parent
+closes the folder, related temporary files will be reaped.  This
+temporary file cleanup will not occur for the child.  I am
+contemplating a more general solution to this problem, but until then
+*ONLY PARENTS SHOULD MANIPULATE MAIL*.
+
+
+Folder locking
+--------------
+
+Ugh... Folder locking...
+
+Please note that I am not pleased with the folder locking as it is
+currently implemented in `Mail::Folder' for some of the folder
+interfaces.  It will improve.
+
+Folder locking is problematic in certain circumstances.  For those not
+familier with some of these issues, I will elaborate.
+
+An interface like `maildir' has no locking issues.  This is because the
+design of the folder format inherently eliminates the need for locking
+(cheers from the crowd).
+
+An interface like `nntp' has no locking issues, because it merely
+implements an interface to a network protocol.  Locking issues are left
+as an exercise to the server on the other end of a socket.
+
+Interfaces like mbox, on the other hand, are another story.
+
+Taken as a whole, the locking mechanism(s) used for mbox folders are not
+inherently *rock-solid* in all circumstances.  To further complicate
+things, there are a several variations that have been implemented as
+attempts to work around the fundemental issues of the design of mbox
+folder locking.
+
+In the simplest implementation, an mbox folder merely uses a `dotlock'
+file as a semaphore to prevent simultaneous updates to the folder.  All
+processes are supposed to cooperate and honor the lock file.
+
+In a non-NFS environment, the only typical issue with a dotlock is that
+the code implementing the lock file needs to be written in such a way as
+to prevent race conditions be testing for the locking and creating the
+lockfile.  This is typically done with a `O_EXCL' flag passed to the
+call to `open(2)'.  This allows for an atomic creation of the lock file
+if and only if the file does not already exist, assuming the operating
+system implements the `O_EXCL' feature.  Some operating systems
+implementations have also resorted to using `lockf', fcntl, or flock as
+way to atomically test and set the folder lock.  The major issue for
+`Mail::Folder' in this type of environment is to merely detect what
+flavor(s) is necessary and implement it.
+
+In an NFS environment, the story is somewhat different and a lot more
+complicated.  The `O_EXCL' is not atomic across NFS and some
+implementations of flock do not work across NFS, and not all operating
+systems use flock to lock mbox folders.  To further complicate matters,
+all processes that lock mbox folder need to do it un such a way that all
+clients mounting the data can also cooperate in the locking mechanism.
+
+Here are a few of the outstanding folder locking issues in
+`Mail::Folder' for folder interfaces that do not provide a native way to
+solve locking issues.
+
+   * only DotLock is supported
+
+     There are snippets of code related to flock, but I have disabled it
+     for a time.
+
+   * not NFS safe
+
+     Sorry...
+
+We now return you to your regularly scheduled program...
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996-1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Folder/Emaul, Next: Mail/Folder/Maildir, Prev: Mail/Folder, Up: Module List
+
+An Emaul folder interface for Mail::Folder.
+*******************************************
+
+
+
+NAME
+====
+
+Mail::Folder::Emaul - An Emaul folder interface for Mail::Folder.
+
+*WARNING: This code is in alpha release. Expect the interface to
+change.*
+
+
+SYNOPSIS
+========
+
+`use Mail::Folder::Emaul;'
+
+
+DESCRIPTION
+===========
+
+This module provides an interface to the *emaul* folder mechanism.  It
+is currently intended to be used as an example of hooking a folder
+interface into Mail::Folder.
+
+The folder structure of *Emaul* is styled after *mh*.  It uses
+directories for folders and numerically-named files for the individual
+mail messages.  The current message for a particular folder is stored in
+a file `.current_msg' in the folder directory.
+
+Folder locking is accomplished through the use of a .lock file in the
+folder directory.
+
+If a `Timeout' option is specified when the object is created, that
+value will be used to determine the timeout for attempting to aquire a
+folder lock.  The default is 10 seconds.
+
+
+METHODS
+=======
+
+
+open($folder_name)
+------------------
+
+Populates the `Mail::Folder' object with information about the folder.
+
+   * Call the superclass open method.
+   * Make sure it is a valid mbox folder.
+   * Check to see it it is readonly
+   * Lock the folder if it is not readonly.  (This is dubious)
+   * For every message file in the `$folder_name' directory, add the message_number to the list of messages in the object.
+   * Load the contents of `$folder_dir/.current_msg' into `$self->{Current}'.
+   * Set current_message.
+   * Load message labels.
+   * Unlock the folder if it is not readonly.
+
+sync
+----
+
+
+Flushes any pending changes out to the original folder.
+
+   * Call the superclass sync method.
+   * Return `-1' if the folder is readonly.
+   * Return `-1' if the folder cannot be locked.
+   * Scan the folder directory for message files that were not present the last time the folder was either opened or synced and absorb them.
+   * For every pending delete, unlink that file in the folder directory
+   * Clear out the 'pending delete' list.
+   * Update the `.current_msg' file and the `.msg_labels' file if the `NotMUA' option is not set.
+   * Return the number of new messages found.
+
+pack
+----
+
+
+Calls the superclass pack method.
+
+Return `0' if the folder is readonly.
+
+Return `0' if the folder cannot be locked.
+
+Renames the message files in the folder so that there are no gaps in the
+numbering sequence.  It will tweak current_message accordingly.
+
+Old deleted message files (ones that start with `,') are also renamed as
+necessary.
+
+It will abandon the operation and return `0' if a rename fails,
+otherwise it returns 1.
+
+Please note that pack acts on the real folder.
+
+
+get_message($msg_number)
+------------------------
+
+Calls the superclass get_message method.
+
+Retrieves the given mail message file into a *Mail::Internet* object
+reference and returns the reference.
+
+It will coerce the `From_' field into a `Mail-From' field, add the
+'`seen'' label to the message, remove the `Content-Length' field if
+present, and cache the header.
+
+Returns undef on failure.
+
+
+get_message_file($msg_number)
+-----------------------------
+
+Calls the superclass get_message_file method.
+
+Retrieves the given mail message file and returns the name of the file.
+
+Returns undef on failure.
+
+
+get_header($msg_number)
+-----------------------
+
+Calls the superclass `get_header' method.
+
+If the particular header has never been retrieved then `get_header'
+loads the header of the given mail message into a member of
+`$self->{Messages}{$msg_number}' and returns the object reference
+
+If the header for the given mail message has already been retrieved in a
+prior call to `get_header', then the cached entry is returned.
+
+The `Content-Length' field is deleted from the header object it returns.
+
+
+append_message($mref)
+---------------------
+
+Calls the superclass `append_message' method.
+
+Returns `0' if it cannot lock the folder.
+
+Appends the contents of the mail message contained `$mref' to the the
+folder.
+
+It also caches the header.
+
+Please note that, contrary to other documentation for *Mail::Folder*,
+the Emaul `append_message' method actually updates the real folder,
+rather than queueing it up for a subsequent sync.  The dup and `refile'
+methods are also affected. This will be fixed soon.
+
+
+update_message($msg_number, $mref)
+----------------------------------
+
+Calls the superclass `update_message' method.
+
+It returns `0' if it cannot lock the folder.
+
+Replaces the message pointed to by `$msg_number' with the contents of
+the `Mail::Internet' object reference `$mref'.
+
+Please note that, contrary to other documentation for *Mail::Folder*,
+the Emaul `update_message' method actually updates the real folder,
+rather than queueing it up for a subsequent sync.  This will be fixed
+soon.
+
+
+is_valid_folder_format($foldername)
+-----------------------------------
+
+Returns `0' if the folder is not a directory or looks like a maildir
+folder.  The current logic allows it to handle MH directories, but watch
+out; you should probably set the `NotMUA' option so the interface
+doesn't create it's own little folder droppings like `.msg_labels' and
+such.
+
+
+create($foldername)
+-------------------
+
+Returns `0' if the folder already exists.
+
+Creates a new folder named `$foldername' with mode `0700' and then
+returns 1.
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996-1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Folder/Maildir, Next: Mail/Folder/Mbox, Prev: Mail/Folder/Emaul, Up: Module List
+
+A maildir folder interface for Mail::Folder.
+********************************************
+
+
+
+NAME
+====
+
+Mail::Folder::Maildir - A maildir folder interface for Mail::Folder.
+
+*WARNING: This code is in alpha release. Expect the interface to
+change.*
+
+
+SYNOPSIS
+========
+
+`use Mail::Folder::Maildir;'
+
+
+DESCRIPTION
+===========
+
+This module provides an interface to the *maildir* folder mechanism.
+
+The *maildir* folder format is the preferred folder mechanism for the
+*qmail* mail transport agent.  It uses directories as folders and
+files as messages.  It also provides separate directories for new and
+current messages.  One of the most distinguishing features of the
+`maildir' format is that it accomplishes it's job without the need for
+file locking, so it's better equipped to deal with things like nfs
+mounts and the like.
+
+More information about qmail is available from
+`http://pobox.com/~djb/qmail.html'.
+
+
+METHODS
+=======
+
+
+open($folder_name)
+------------------
+
+Populates the `Mail::Folder' object with information about the folder.
+
+   * Call the superclass open method.
+   * Make sure it is a valid maildir folder.
+   * Detect whether the folder is readonly.
+   * Clean the folder `tmp' directory.
+   * Move message in folder new directory into the `cur' directory.
+   * Clean up the folder `tmp' directory.
+   * Moves message file in new directory to the `cur' directory.
+   * For every message in the folder, add a new message number to the list of messages in the object, and remember the association between the message number and the message filename.
+   * Set current_message to 1 (ugh).
+
+close
+-----
+
+
+Deletes the working copy of the folder and calls the superclass close
+method.
+
+
+sync
+----
+
+   * Call the superclass sync method.
+   * Scan for new messages and absorb them.
+   * If the folder is not readonly, expunge messages marked for deletion.
+   * Update the `:info' portion of each file in the folder.
+   * Return the quantity of new messages found.
+
+pack
+----
+
+
+Calls the superclass pack method.  Reassociates the filenames in the
+folders to message numbers, deleting holes in the sequence of message
+numbers.
+
+
+get_message($msg_number)
+------------------------
+
+Call the superclass get_message method.
+
+Retrieves the contents of the file pointed to by `$msg_number' into a
+*Mail::Internet* object reference, caches the header, marks the
+message as '`seen'' and returns the reference.
+
+
+get_message_file($msg_number)
+-----------------------------
+
+Call the superclass get_message_file method.
+
+Retrieves the given mail message file pointed to by $msg_number and
+returns the name of the file.
+
+
+get_header($msg_number)
+-----------------------
+
+If the particular header has never been retrieved then `get_header'
+loads the header of the given mail message into a member of
+`$self->{Messages}{$msg_number}' and returns the object reference
+
+If the header for the given mail message has already been retrieved in a
+prior call to `get_header', then the cached entry is returned.
+
+
+append_message($mref)
+---------------------
+
+Calls the superclass `append_message' method.
+
+Writes a temporary copy of the message in `$mref' to the folder `tmp'
+directory, then moves that temporary copy into the folder `cur'
+directory.
+
+It will delete the `From_' line in the header if one is present.
+
+
+update_message($msg_number, $mref)
+----------------------------------
+
+Calls the superclass `update_message' method.
+
+Writes a temporary copy of the message in `$mref' to the folder `tmp'
+directory, then moves that temporary copy into the folder `cur'
+directory, replacing the message pointed to by `$msg_number'.
+
+It will delete the `From_' line in the header if one is present.
+
+
+is_valid_folder_format($foldername)
+-----------------------------------
+
+Returns 1 if the folder is a directory and contains `tmp', `cur', and
+new subdirectories otherwise returns `0'.
+
+
+create($foldername)
+-------------------
+
+Creates a new folder named `$foldername'.  Returns `0' if the folder
+already exists, otherwise returns 1.
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996-1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+

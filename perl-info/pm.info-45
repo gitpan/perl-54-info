@@ -1,0 +1,2044 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Penguin/Easy, Next: Pg, Prev: Parse/Token.fr, Up: Module List
+
+provides easy access to Penguin module.
+***************************************
+
+
+
+NAME
+====
+
+     Penguin::Easy -- provides easy access to Penguin module.
+
+
+SYNOPSIS
+========
+
+     use Penguin::Easy;
+     my $ep = new Penguin::Easy Title => 'Easy Program',
+     			     Name => 'James Duncan',
+     			     Sig => $my_pgp_sig,
+     			     Code => $my_perl_code;
+     $results = $ep->run;
+     print "$results\n";
+
+
+DESCRIPTION
+===========
+
+`Penguin::Easy' is an OO module, that provides quick-and-dirty access to
+the penguin module for those not wanting to learn the nittygrittys about
+it.  The `Easy' module provides transparent access to the `Penguin'
+module, even to the extent of deciding whether the Penguin code should
+be transparently wrapped, or PGP wrapped (if you include a sig in the
+call to the new method, it will use PGP).
+
+
+NOTES
+=====
+
+While writing this little module, I've decided that `Wrapper' is perhaps
+one of the funniest words I have ever seen.  It has completly lost all
+meaning.
+
+
+
+
+File: pm.info, Node: Pg, Next: Pod/Html, Prev: Penguin/Easy, Up: Module List
+
+Perl extension for PostgreSQL
+*****************************
+
+
+
+NAME
+====
+
+Pg - Perl extension for PostgreSQL
+
+
+SYNOPSIS
+========
+
+new style:
+
+     use Pg;
+     $conn = Pg::connectdb("dbname = template1");
+     $result = $conn->exec("create database test");
+
+you may also use the old style:
+
+     use Pg;
+     $conn = PQsetdb('', '', '', '', template1);
+     $result = PQexec($conn, "create database test");
+     PQclear($result);
+     PQfinish($conn);
+
+
+DESCRIPTION
+===========
+
+The Pg module permits you to access all functions of the 
+Libpq interface of PostgreSQL. Libpq is the programmer's 
+interface to PostgreSQL. Pg tries to resemble this 
+interface as close as possible. For examples of how to 
+use this module, look at the file test.pl. For further 
+examples look at the Libpq applications in 
+../src/test/examples and ../src/test/regress.
+
+You have the choice between the old C-style and a new, more Perl-ish
+style. The old style has the benefit, that existing Libpq applications
+can be ported to perl just by prepending every variable with a '$'. The
+new style uses class packages and might be more familiar for
+C++-programmers.
+
+
+GUIDELINES
+==========
+
+
+new style
+---------
+
+The new style uses blessed references as objects.  After creating a new
+connection or result object, the relevant Libpq functions serve as
+virtual methods.  One benefit of the new style: you do not have to care
+about freeing the connection- and result-structures.  Perl calls the
+destructor whenever the last reference to an object goes away.
+
+
+old style
+---------
+
+All functions and constants are imported into the calling packages
+namespace. In order to to get a uniform naming, all functions start with
+'PQ' (e.g. PQlo_open) and all constants start with 'PGRES_'
+(e.g. PGRES_CONNECTION_OK).
+
+There are two functions, which allocate memory, that has to be freed by
+the user:
+
+     PQsetdb, use PQfinish to free memory.
+     PQexec,  use PQclear to free memory.
+
+Pg.pm contains one convenience function: doQuery. It fills a
+two-dimensional array with the result of your query. Usage:
+
+     Pg::doQuery($conn, "select attr1, attr2 from tbl", \@ary);
+
+     for $i ( 0 .. $#ary ) {
+         for $j ( 0 .. $#{$ary[$i]} ) {
+             print "$ary[$i][$j]\t";
+         }
+         print "\n";
+     }
+
+Notice the inner loop !
+
+
+CAVEATS
+=======
+
+There are few exceptions, where the perl-functions differs from the
+C-counterpart: PQprint, PQnotifies and PQconndefaults.  These functions
+deal with structures, which have been implemented in perl using lists or
+hash.
+
+
+FUNCTIONS
+=========
+
+The functions have been divided into three sections: Connection, Result,
+Large Objects.
+
+
+1. Connection
+-------------
+
+With these functions you can establish and close a connection to a
+database. In Libpq a connection is represented by a structure called
+PGconn. Using the appropriate methods you can access almost all fields
+of this structure.
+
+     $conn = Pg::setdb($pghost, $pgport, $pgoptions, $pgtty, $dbname)
+
+Opens a new connection to the backend. You may use an empty string for
+any argument, in which case first the environment is checked and then
+hardcoded defaults are used. The connection identifier $conn ( a pointer
+to the PGconn structure ) must be used in subsequent commands for unique
+identification. Before using $conn you should call $conn->status to
+ensure, that the connection was properly made. Use the methods below to
+access the contents of the PGconn structure.
+
+     $conn = Pg::connectdb("option = value")
+
+Opens a new connection to the backend using connection information in a
+string.  The connection identifier $conn ( a pointer to the PGconn
+structure ) must be used in subsequent commands for unique
+identification. Before using $conn you should call $conn->status to
+ensure, that the connection was properly made.  Use the methods below to
+access the contents of the PGconn structure.
+
+     $Option_ref = Pg::conndefaults()
+
+     while(($key, $val) = each %$Option_ref) {
+         print "$key, $val\n";
+     }
+
+Returns a reference to a hash containing as keys all possible options
+for connectdb(). The values are the current defaults. This function
+differs from his C-counterpart, which returns the complete
+conninfoOption structure.
+
+     PQfinish($conn)
+
+Old style only !  Closes the connection to the backend and frees all
+memory.
+
+     $conn->reset
+
+Resets the communication port with the backend and tries to establish a
+new connection.
+
+     $dbname = $conn->db
+
+Returns the database name of the connection.
+
+     $pguser = $conn->user
+
+Returns the Postgres user name of the connection.
+
+     $pghost = $conn->host
+
+Returns the host name of the connection.
+
+     $pgoptions = $conn->options
+
+Returns the options used in the connection.
+
+     $pgport = $conn->port
+
+Returns the port of the connection.
+
+     $pgtty = $conn->tty
+
+Returns the tty of the connection.
+
+     $status = $conn->status
+
+Returns the status of the connection. For comparing the status you may
+use the following constants:
+
+     - PGRES_CONNECTION_OK
+     - PGRES_CONNECTION_BAD
+
+     $errorMessage = $conn->errorMessage
+
+Returns the last error message associated with this connection.
+
+     $conn->trace(debug_port)
+
+Messages passed between frontend and backend are echoed to the
+debug_port file stream.
+
+     $conn->untrace
+
+Disables tracing.
+
+     $result = $conn->exec($query)
+
+Submits a query to the backend. The return value is a pointer to the
+PGresult structure, which contains the complete query-result returned by
+the backend. In case of failure, the pointer points to an empty
+structure. In this, the perl implementation differs from the
+C-implementation. Using the old style, even the empty structure has to
+be freed using PQfree. Before using $result you should call resultStatus
+to ensure, that the query was properly executed.
+
+     $ret = $conn->getline($string, $length)
+
+Reads a string up to $length - 1 characters from the backend.  getline
+returns EOF at EOF, 0 if the entire line has been read, and 1 if the
+buffer is full. If a line consists of the two characters "\." the
+backend has finished sending the results of the copy command.
+
+     $conn->putline($string)
+
+Sends a string to the backend. The application must explicitly send the
+two characters "\." to indicate to the backend that it has finished
+sending its data.
+
+     $ret = $conn->endcopy
+
+This function waits until the backend has finished the copy.  It should
+either be issued when the last string has been sent to the backend using
+putline or when the last string has been received from the backend using
+getline. endcopy returns 0 on success, nonzero otherwise.
+
+     ($table, $pid) = $conn->notifies
+
+Checks for asynchronous notifications. This functions differs from the
+C-counterpart which returns a pointer to a new allocated structure,
+whereas the perl implementation returns a list. $table is the table
+which has been listened to and $pid is the process id of the backend.
+
+
+2. Result
+---------
+
+With these functions you can send commands to a database and investigate
+the results. In Libpq the result of a command is represented by a
+structure called PGresult. Using the appropriate methods you can access
+almost all fields of this structure.
+
+Use the functions below to access the contents of the PGresult
+structure.
+
+     $ntups = $result->ntuples
+
+Returns the number of tuples in the query result.
+
+     $nfields = $result->nfields
+
+Returns the number of fields in the query result.
+
+     $fname = $result->fname($field_num)
+
+Returns the field name associated with the given field number.
+
+     $fnumber = $result->fnumber($field_name)
+
+Returns the field number associated with the given field name.
+
+     $ftype = $result->ftype($field_num)
+
+Returns the oid of the type of the given field number.
+
+     $fsize = $result->fsize($field_num)
+
+Returns the size in bytes of the type of the given field number.  It
+returns -1 if the field has a variable length.
+
+     $value = $result->getvalue($tup_num, $field_num)
+
+Returns the value of the given tuple and field. This is a
+null-terminated ASCII string. Binary cursors will not work.
+
+     $length = $result->getlength($tup_num, $field_num)
+
+Returns the length of the value for a given tuple and field.
+
+     $null_status = $result->getisnull($tup_num, $field_num)
+
+Returns the NULL status for a given tuple and field.
+
+     $result_status = $result->resultStatus
+
+Returns the status of the result. For comparing the status you may use
+one of the following constants depending upon the command executed:
+
+     - PGRES_EMPTY_QUERY
+     - PGRES_COMMAND_OK
+     - PGRES_TUPLES_OK
+     - PGRES_COPY_OUT
+     - PGRES_COPY_IN
+     - PGRES_BAD_RESPONSE
+     - PGRES_NONFATAL_ERROR
+     - PGRES_FATAL_ERROR
+
+     $cmdStatus = $result->cmdStatus
+
+Returns the command status of the last query command.
+
+     $oid = $result->oidStatus
+
+In case the last query was an INSERT command it returns the oid of the
+inserted tuple.
+
+     $result->printTuples($fout, $printAttName, $terseOutput, $width)
+
+Kept for backward compatibility. Use print.
+
+     $result->print($fout, $header, $align, $standard, $html3, $expanded, $pager, $fieldSep, $tableOpt, $caption, ...)
+
+Prints out all the tuples in an intelligent manner. This function
+differs from the C-counterpart. The struct PQprintOpt has been
+implemented with a list. This list is of variable length, in order to
+care for the character array fieldName in PQprintOpt.  The arguments
+$header, $align, $standard, $html3, $expanded, $pager are boolean
+flags. The arguments $fieldSep, $tableOpt, $caption are strings. You may
+append additional strings, which will be taken as replacement for the
+field names.
+
+     PQclear($result)
+
+Old style only !  Frees all memory of the given result.
+
+
+3. Large Objects
+----------------
+
+These functions provide file-oriented access to user data.  The large
+object interface is modeled after the Unix file system interface with
+analogues of open, close, read, write, lseek, tell. In order to get a
+consistent naming, all function names have been prepended with 'PQ' (old
+style only).
+
+     $lobjId = $conn->lo_creat($mode)
+
+Creates a new large object. $mode is a bitmask describing different
+attributes of the new object. Use the following constants:
+
+     - PGRES_INV_SMGRMASK
+     - PGRES_INV_ARCHIVE
+     - PGRES_INV_WRITE
+     - PGRES_INV_READ
+
+Upon failure it returns PGRES_InvalidOid.
+
+     $ret = $conn->lo_unlink($lobjId)
+
+Deletes a large object. Returns -1 upon failure.
+
+     $lobj_fd = $conn->lo_open($lobjId, $mode)
+
+Opens an existing large object and returns an object id.  For the mode
+bits see lo_create. Returns -1 upon failure.
+
+     $ret = $conn->lo_close($lobj_fd)
+
+Closes an existing large object. Returns 0 upon success and -1 upon
+failure.
+
+     $nbytes = $conn->lo_read($lobj_fd, $buf, $len)
+
+Reads $len bytes into $buf from large object $lobj_fd.  Returns the
+number of bytes read and -1 upon failure.
+
+     $nbytes = $conn->lo_write($lobj_fd, $buf, $len)
+
+Writes $len bytes of $buf into the large object $lobj_fd.  Returns the
+number of bytes written and -1 upon failure.
+
+     $ret = $conn->lo_lseek($lobj_fd, $offset, $whence)
+
+Change the current read or write location on the large object
+$obj_id. Currently $whence can only be 0 (L_SET).
+
+     $location = $conn->lo_tell($lobj_fd)
+
+Returns the current read or write location on the large object $lobj_fd.
+
+     $lobjId = $conn->lo_import($filename)
+
+Imports a Unix file as large object and returns the object id of the new
+object.
+
+     $ret = $conn->lo_export($lobjId, $filename)
+
+Exports a large object into a Unix file.  Returns -1 upon failure, 1
+otherwise.
+
+
+AUTHOR
+======
+
+     Edmund Mergl <E.Mergl@bawue.de>
+
+
+SEE ALSO
+========
+
+libpq(3), large_objects(3).
+
+
+
+
+File: pm.info, Node: Pod/Html, Next: Pod/Parser, Prev: Pg, Up: Module List
+
+module to convert pod files to HTML
+***********************************
+
+
+
+NAME
+====
+
+Pod::HTML - module to convert pod files to HTML
+
+
+SYNOPSIS
+========
+
+     use Pod::HTML;
+     pod2html([options]);
+
+
+DESCRIPTION
+===========
+
+Converts files from pod format (see *Note Perlpod: (perl.info)perlpod,)
+to HTML format.  It can automatically generate indexes and
+cross-references, and it keeps a cache of things it knows how to
+cross-reference.
+
+
+ARGUMENTS
+=========
+
+Pod::Html takes the following arguments:
+
+help
+          --help
+
+     Displays the usage message.
+
+htmlroot
+          --htmlroot=name
+
+     Sets the base URL for the HTML files.  When cross-references are
+     made, the HTML root is prepended to the URL.
+
+infile
+          --infile=name
+
+     Specify the pod file to convert.  Input is taken from STDIN if no
+     infile is specified.
+
+outfile
+          --outfile=name
+
+     Specify the HTML file to create.  Output goes to STDOUT if no
+     outfile is specified.
+
+podroot
+          --podroot=name
+
+     Specify the base directory for finding library pods.
+
+podpath
+          --podpath=name:...:name
+
+     Specify which subdirectories of the podroot contain pod files whose
+     HTML converted forms can be linked-to in cross-references.
+
+libpods
+          --libpods=name:...:name
+
+     List of page names (eg, "perlfunc") which contain linkable =items.
+
+netscape
+          --netscape
+
+     Use Netscape HTML directives when applicable.
+
+nonetscape
+          --nonetscape
+
+     Do not use Netscape HTML directives (default).
+
+index
+          --index
+
+     Generate an index at the top of the HTML file (default behaviour).
+
+noindex
+          --noindex
+
+     Do not generate an index at the top of the HTML file.
+
+recurse
+          --recurse
+
+     Recurse into subdirectories specified in podpath (default
+     behaviour).
+
+norecurse
+          --norecurse
+
+     Do not recurse into subdirectories specified in podpath.
+
+title
+          --title=title
+
+     Specify the title of the resulting HTML file.
+
+verbose
+          --verbose
+
+     Display progress messages.
+
+
+EXAMPLE
+=======
+
+     pod2html("pod2html",
+     	     "--podpath=lib:ext:pod:vms", 
+     	     "--podroot=/usr/src/perl",
+     	     "--htmlroot=/perl/nmanual",
+     	     "--libpods=perlfunc:perlguts:perlvar:perlrun:perlop",
+     	     "--recurse",
+     	     "--infile=foo.pod",
+     	     "--outfile=/perl/nmanual/foo.html");
+
+
+AUTHOR
+======
+
+Tom Christiansen, <tchrist@perl.com>.
+
+
+BUGS
+====
+
+Has trouble with etc in = commands.
+
+
+SEE ALSO
+========
+
+*Note Perlpod: (perl.info)perlpod,
+
+
+COPYRIGHT
+=========
+
+This program is distributed under the Artistic License.
+
+
+
+
+File: pm.info, Node: Pod/Parser, Next: Pod/Select, Prev: Pod/Html, Up: Module List
+
+base class for creating pod filters and translators
+***************************************************
+
+
+
+NAME
+====
+
+Pod::Parser - base class for creating pod filters and translators
+
+
+SYNOPSIS
+========
+
+     use Pod::Parser;
+     package MyParser;
+     @ISA = qw(Pod::Parser);
+
+     sub new {
+         ## constructor code ...
+     }
+
+     ## implementation of appropriate subclass methods ...
+
+     package main;
+     $parser = new MyParser;
+     @ARGV = ('-')  unless (@ARGV > 0);
+     for (@ARGV) {
+         $parser->parse_from_file($_);
+     }
+
+
+DESCRIPTION
+===========
+
+*Pod::Parser* is an abstract base class for implementing filters and/or
+translators to parse pod documentation into other formats. It handles
+most of the difficulty of parsing the pod sections in a file and leaves
+it to the subclasses to override various methods to provide the actual
+translation. The other thing that *Pod::Parser* provides is the ability
+to process only selected sections of pod documentation from the input.
+
+
+SECTION SPECIFICATIONS
+----------------------
+
+Certain methods and functions provided by *Pod::Parser* may be given one
+or more "section specifications" to restrict the text processed to only
+the desired set of sections and their corresponding subsections.  A
+section specification is a string containing one or more Perl-style
+regular expressions separated by forward slashes ("/").  If you need to
+use a forward slash literally within a section title you can escape it
+with a backslash ("\/").
+
+The formal syntax of a section specification is:
+
+@asis{}
+     
+     *head1-title-regexp*/*head2-title-regexp*/...
+
+Any omitted or empty regular expressions will default to ".*".
+Please note that each regular expression given is implicitly
+anchored by adding "^" and "$" to the beginning and end.  Also, if
+a given regular expression starts with a "!" character, then the
+expression is negated (so `!foo' would match anything
+*except* foo).
+
+Some example section specifications follow.
+
+Match the NAME and SYNOPSIS sections and all of their subsections:
+     `NAME|SYNOPSIS'
+
+Match only the `Question' and `Answer' subsections of the DESCRIPTION section:
+     `DESCRIPTION/Question|Answer'
+
+Match the Comments subsection of all sections:
+     `/Comments'
+
+Match all subsections of DESCRIPTION *except* for Comments:
+     `DESCRIPTION/!Comments'
+
+Match the DESCRIPTION section but do *not* match any of its subsections:
+     `DESCRIPTION/!.+'
+
+Match all top level sections but none of their subsections:
+     `/!.+'
+
+
+FUNCTIONS
+=========
+
+*Pod::Parser* provides the following functions (please note that these
+are functions and *not* methods, they do not take an object reference as
+an implicit first parameter):
+
+
+version()
+---------
+
+Return the current version of this package.
+
+
+INSTANCE METHODS
+================
+
+*Pod::Parser* provides several methods, some of which should be
+overridden by subclasses.  They are as follows:
+
+
+new()
+-----
+
+This is the the constructor for the base class. You should only use it
+if you want to create an instance of a *Pod::Parser* instead of one of
+its subclasses. The constructor for this class and all of its subclasses
+should return a blessed reference to an associative array (hash).
+
+
+initialize()
+------------
+
+This method performs any necessary base class initialization.  It takes
+no arguments (other than the object instance of course).  If subclasses
+override this method then they *must* be sure to invoke the superclass'
+initialize() method.
+
+
+select($section_spec1, $section_spec2, ...)
+-------------------------------------------
+
+This is the method that is used to select the particular sections and
+subsections of pod documentation that are to be printed and/or
+processed. If the *first* argument is the string "+", then the remaining
+section specifications are *added* to the current list of selections;
+otherwise the given section specifications will replace the current list
+of selections.
+
+Each of the `$section_spec' arguments should be a section specification
+as described in `"SECTION SPECIFICATIONS"' in this node.  The section
+specifications are parsed by this method and the resulting regular
+expressions are stored in the array referenced by `$self->{SELECTED}'
+(please see the description of this member variable in `"INSTANCE DATA"'
+in this node).
+
+This method should *not* normally be overridden by subclasses.
+
+
+want_section($head1_title, $head2_title, ...)
+---------------------------------------------
+
+Returns a value of true if the given section and subsection titles match
+any of the section specifications passed to the *select()* method (or if
+no section specifications were given). Returns a value of false
+otherwise. If `$headN_title' is ommitted then it defaults to the current
+`headN' section title in the input.
+
+This method should *not* normally be overridden by subclasses.
+
+
+begin_input()
+-------------
+
+This method is invoked by *parse_from_filehandle()* immediately *before*
+processing input from a filehandle. The base class implementation does
+nothing but subclasses may override it to perform any per-file
+intializations.
+
+
+end_input()
+-----------
+
+This method is invoked by *parse_from_filehandle()* immediately *after*
+processing input from a filehandle. The base class implementation does
+nothing but subclasses may override it to perform any per-file cleanup
+actions.
+
+
+preprocess_line($text)
+----------------------
+
+This methods should be overridden by subclasses that wish to perform any
+kind of preprocessing for each *line* of input (*before* it has been
+determined whether or not it is part of a pod paragraph). The parameter
+`$text' is the input line and the value returned should correspond to
+the new text to use in its place. If the empty string or an undefined
+value is returned then no further process will be performed for this
+line. If desired, this method can call the *parse_paragraph()* method
+directly with any preprocessed text and return an empty string (to
+indicate that no further processing is needed).
+
+Please note that the *preprocess_line()* method is invoked *before* the
+*preprocess_paragraph()* method. After all (possibly preprocessed) lines
+in a paragraph have been assembled together and it has been determined
+that the paragraph is part of the pod documentation from one of the
+selected sections, then *preprocess_paragraph()* is invoked.
+
+The base class implementation of this method returns the given text.
+
+
+preprocess_paragraph($text)
+---------------------------
+
+This method should be overridden by subclasses that wish to perform any
+kind of preprocessing for each block (paragraph) of pod documentation
+that appears in the input stream.  The parameter `$text' is the pod
+paragraph from the input file and the value returned should correspond
+to the new text to use in its place.  If the empty string is returned or
+an undefined value is returned, then the given `$text' is ignored (not
+processed).
+
+This method is invoked by *parse_paragraph()*. After it returns,
+*parse_paragraph()* examines the current cutting state (which is
+stored in `$self->{CUTTING}'). If it evaluates to false then input text
+(including the given `$text') is cut (not processed) until the next pod
+directive is encountered.
+
+Please note that the *preprocess_line()* method is invoked *before* the
+*preprocess_paragraph()* method. After all (possibly preprocessed) lines
+in a paragraph have been assembled together and it has been determined
+that the paragraph is part of the pod documentation from one of the
+selected sections, then *preprocess_paragraph()* is invoked.
+
+The base class implementation of this method returns the given text.
+
+
+parse_pragmas($cmd, $text, $sep)
+--------------------------------
+
+This method is called when an `=pod' directive is encountered. When such
+a pod directive is seen in the input, this method is called and is
+passed the command name `$cmd' (which should be "pod") and the remainder
+of the text paragraph `$text' which appeared immediately after the
+command name. If desired, the text which separated the `=pod' directive
+from its corresponding text may be found in `$sep'.  Each word in
+`$text' is examined to see if it is a pragma specification.  Pragma
+specifications are of the form `pragma_name=pragma_value'.
+
+Unless the given object is an instance of the *Pod::Parser* class, the
+base class implementation of this method will invoke the *pragma()*
+method for each pragma specification in `$text'.  *If and only if* the
+given object *is* an instance of the *Pod::Parser* class, the base class
+version of this method will simply reproduce the `=pod' command exactly
+as it appeared in the input.
+
+Derived classes should *not* usually need to reimplement this method.
+
+
+pragma($pragma_name, $pragma_value)
+-----------------------------------
+
+This method is invoked for each pragma encountered inside an `=pod'
+paragraph (see the description of the *parse_pragmas()* method). The
+pragma name is passed in `$pragma_name' (which should always be
+lowercase) and the corresponding value is `$pragma_value'.
+
+The base class implementation of this method does nothing.  Derived
+class implementations of this method should be able to recognize at
+least the following pragmas and take any necessary actions when they are
+encountered:
+
+fill=value
+     The argument value should be one of `on', `off', or `previous'.
+     Specifies that "filling-mode" should set to 1, 0, or its previous
+     value (respectively). If value is omitted then the default is `on'.
+     Derived classes may use this to decide whether or not to perform
+     any filling (wrapping) of subsequent text.
+
+style=value
+     The argument value should be one of `bold', `italic', code,
+     `plain', or `previous'. Specifies that the current default
+     paragraph font should be set to `bold', `italic', code, the empty
+     string , or its previous value (respectively).  If value is omitted
+     then the default is `plain'.  Derived classes may use this to
+     determine the default font style to use for subsequent text.
+
+indent=value
+     The argument value should be an integer value (with an optional
+     sign).  Specifies that the current indentation level should be
+     reset to the given value. If a plus (minus) sign precedes the
+     number then the indentation level should be incremented
+     (decremented) by the given number. If only a plus or minus sign is
+     given (without a number) then the current indentation level is
+     incremented or decremented by some default amount (to be determined
+     by subclasses).
+
+The value returned will be 1 if the pragma name was recognized and 0 if
+it wasnt (in which case the pragma was ignored).
+
+Derived classes should override this method if they wish to implement
+any pragmas. The base class implementation of this method does nothing
+but it does contain some commented-out code which subclasses may want to
+make use of when implementing pragmas.
+
+
+command($cmd, $text, $sep)
+--------------------------
+
+This method should be overridden by subclasses to take the appropriate
+action when a pod command paragraph (denoted by a line beginning with
+"=") is encountered.  When such a pod directive is seen in the input,
+this method is called and is passed the command name `$cmd' and the
+remainder of the text paragraph `$text' which appears immediately after
+the command name. If desired, the text which separated the command from
+its corresponding text may be found in `$sep'.  Note that this method is
+*not* called for `=pod' paragraphs.
+
+The base class implementation of this method simply prints the raw pod
+command to the output filehandle and then invokes the *textblock()*
+method, passing it the `$text' parameter.
+
+
+verbatim($text)
+---------------
+
+This method may be overridden by subclasses to take the appropriate
+action when a block of verbatim text is encountered. It is passed the
+text block `$text' as a parameter.
+
+The base class implementation of this method simply prints the textblock
+(unmodified) to the output filehandle.
+
+
+textblock($text)
+----------------
+
+This method may be overridden by subclasses to take the appropriate
+action when a normal block of pod text is encountered (although the base
+class method will usually do what you want). It is passed the text block
+`$text' as a parameter.
+
+In order to process interior sequences, subclasses implementations of
+this method will probably want invoke the *interpolate()* method,
+passing it the text block `$text' as a parameter and then perform any
+desired processing upon the returned result.
+
+The base class implementation of this method simply prints the text
+block as it occurred in the input stream).
+
+
+interior_sequence($seq_cmd, $seq_arg)
+-------------------------------------
+
+This method should be overridden by subclasses to take the appropriate
+action when an interior sequence is encountered. An interior sequence is
+an embedded command within a block of text which appears as a command
+name (usually a single uppercase character) followed immediately by a
+string of text which is enclosed in angle brackets. This method is
+passed the sequence command `$seq_cmd' and the corresponding text
+$seq_arg and is invoked by the *interpolate()* method for each interior
+sequence that occurs in the string that it is passed.  It should return
+the desired text string to be used in place of the interior sequence.
+
+Subclass implementationss of this method may wish to examine the the
+array referenced by `$self->{SEQUENCES}' which is a stack of all the
+interior sequences that are currently being processed (they may be
+nested). The current interior sequence (the one given by
+`$seq_cmd<$seq_arg>') should always be at the top of this stack.
+
+The base class implementation of the *interior_sequence()* method simply
+returns the raw text of the of the interior sequence (as it occurred in
+the input) to the output filehandle.
+
+
+interpolate($text, $end_re)
+---------------------------
+
+This method will translate all text (including any embedded interior
+sequences) in the given text string `$text' and return the
+interpolated result.  If a second argument is given, then it is taken to
+be a regular expression that indicates when to quit interpolating the
+string.  Upon return, the `$text' parameter will have been modified to
+contain only the un-processed portion of the given string (which will
+*not* contain any text matched by `$end_re').
+
+This method should probably *not* be overridden by subclasses.  It
+should be noted that this method invokes itself recursively to handle
+any nested interior sequences.
+
+
+parse_paragraph($text)
+----------------------
+
+This method takes the text of a pod paragraph to be processed and
+invokes the appropriate method (one of *command()*, *verbatim()*, or
+*textblock()*).
+
+This method does *not* usually need to be overridden by subclasses.
+
+
+parse_from_filehandle($infilehandle, $outfilehandle)
+----------------------------------------------------
+
+This method takes a glob to a filehandle (which is assumed to already be
+opened for reading) and reads the entire input stream looking for blocks
+(paragraphs) of pod documentation to be processed. For each block of pod
+documentation encountered it will call the *parse_paragraph()* method.
+
+If a second argument is given then it should be a filehandle glob where
+output should be sent (otherwise the default output filehandle is
+`STDOUT'). If no first argument is given the default input filehandle
+`STDIN' is used.
+
+The input filehandle that is currently in use is stored in the member
+variable whose key is "INPUT" (e.g. `$self->{INPUT}').
+
+The output filehandle that is currently in use is stored in the member
+variable whose key is "OUTPUT" (e.g. `$self->{OUTPUT}').
+
+Input is read line-by-line and assembled into paragraphs (which are
+separated by lines containing nothing but whitespace). The current line
+number is stored in the member variable whose key is "LINE" (e.g.
+`$self->{LINE}') and the current paragraph number is stored in the
+member variable whose key is "PARAGRAPH" (e.g.  `$self->{PARAGRAPH}').
+
+This method does *not* usually need to be overridden by subclasses.
+
+
+parse_from_file($filename, $outfile)
+------------------------------------
+
+This method takes a filename and does the following:
+
+   * opens the input and output files for reading (creating the
+     appropriate filehandles)
+
+   * invokes the *parse_from_filehandle()* method passing it the
+     corresponding input and output filehandles.
+
+   * closes the input and output files.
+
+If the special input filename "-" or "<&STDIN" is given then the STDIN
+filehandle is used for input (and no open or close is performed).  If no
+input filename is specified then "-" is implied.  If a reference is
+passed instead of a filename then it is assumed to be a glob-style
+reference to a filehandle.
+
+If a second argument is given then it should be the name of the desired
+output file.  If the special output filename "-" or ">&STDOUT" is given
+then the STDOUT filehandle is used for output (and no open or close is
+performed). If the special output filename ">&STDERR" is given then the
+STDERR filehandle is used for output (and no open or close is
+performed).  If no output filename is specified then "-" is implied.  If
+a reference is passed instead of a filename then it is assumed to be a
+glob-style reference to a filehandle.
+
+The name of the input file that is currently being read is stored in the
+member variable whose key is "INFILE" (e.g. `$self->{INFILE}').
+
+The name of the output file that is currently being written is stored in
+the member variable whose key is "OUTFILE" (e.g.  `$self->{OUTFILE}').
+
+This method does *not* usually need to be overridden by subclasses.
+
+
+INSTANCE DATA
+=============
+
+*Pod::Parser* uses the following data members for each of its
+instances (where `$self' is a reference to such an instance):
+
+
+$self->{INPUT}
+--------------
+
+The current input filehandle.
+
+
+$self->{OUTPUT}
+---------------
+
+The current output filehandle.
+
+
+$self->{INFILE}
+---------------
+
+The name of the current input file.
+
+
+$self->{OUTFILE}
+----------------
+
+The name of the current output file.
+
+
+$self->{LINE}
+-------------
+
+The current line number from the input stream.
+
+
+$self->{PARAGRAPH}
+------------------
+
+The current paragraph number from the input stream (which includes input
+paragraphs that are *not* part of the pod documentation).
+
+
+$self->{HEADINGS}
+-----------------
+
+A reference to an array of the current section heading titles for each
+heading level (note that the first heading level title is at index 0).
+
+
+$self->{SELECTED}
+-----------------
+
+A reference to an array of references to arrays. Each subarray is a list
+of anchored regular expressions (preceded by a "!" if the regexp is to
+be negated). The index of the expression in the subarray should
+correspond to the index of the heading title in *$self->{HEADINGS}* that
+it is to be matched against.
+
+
+$self->{CUTTING}
+----------------
+
+A boolean-valued scalar which evaluates to true if text from the input
+file is currently being "cut".
+
+
+$self->{SEQUENCES}
+------------------
+
+An array reference to the stack of interior sequence commands that are
+currently in the middle of being processed.
+
+
+NOTES
+=====
+
+To create a pod translator to translate pod documentation to some other
+format, you usually only need to create a subclass of *Pod::Parser*
+which overrides the base class implementation for the following methods:
+
+   * *pragma()*
+
+   * *command()*
+
+   * *verbatim()*
+
+   * *textblock()*
+
+   * *interior_sequence()*
+
+You may also want to implement the begin_input() and end_input() methods
+for your subclass (to perform any needed per-file intialization or
+cleanup).
+
+If you need to perform any preprocesssing of input before it is parsed
+you may want to implement one or both of the *preprocess_line()* and/or
+*preprocess_paragraph()* methods.
+
+Also, don't forget to make sure your subclass constructor invokes the
+base class' initialize() method.
+
+Sometimes it may be necessary to make more than one pass over the input
+files. This isn't a problem as long as none of the input files
+correspond to `STDIN'. You can override either the
+*parse_from_filehandle()* method or the *parse_from_file()* method to
+make the first pass yourself to collect all the information you need and
+then invoke the base class method to do the rest of the standard
+processing.
+
+Feel free to add any member data fields you need to keep track of things
+like current font, indentation, horizontal or vertical position, or
+whatever else you like.
+
+For the most part, the *Pod::Parser* base class should be able to do
+most of the input parsing for you and leave you free to worry about how
+to intepret the commands and translate the result.
+
+
+AUTHOR
+======
+
+Brad Appleton <Brad_Appleton-GBDA001@email.mot.com>
+
+Based on code for Pod::Text written by Tom Christiansen
+<tchrist@mox.perl.com>
+
+
+
+
+File: pm.info, Node: Pod/Select, Next: Pod/Text, Prev: Pod/Parser, Up: Module List
+
+function to extract selected sections of pod documentation
+**********************************************************
+
+
+
+NAME
+====
+
+podselect - function to extract selected sections of pod documentation
+
+
+SYNOPSIS
+========
+
+     use Pod::Select;
+     podselect (@filelist);
+     podselect ({OUTPUT => "tmp.out"}, @filelist):
+     podselect ({SELECT => ["NAME|SYNOPSIS", "OPTIONS"]}, @filelist):
+     podselect ({OUTPUT => ">&STDERR", SELECT => ["DESCRIPTION"]}, "-");
+
+
+DESCRIPTION
+===========
+
+*podselect()* is a function which will extract specified sections of
+pod documentation from an input stream. This ability is already provided
+in the *Pod::Parser* module. Subclasses of *Pod::Parser* that wish to
+take advantage of this feature do *not* need to derive from
+*Pod::Select*. *Pod::Select* merely provides a single function named
+*podselect()* which provides this capability in function form (as
+opposed to object form) for extracting the raw pod docs.
+
+
+podselect(\%options, @filelist)
+-------------------------------
+
+*podselect* will print the raw (untranslated) pod documentation of all
+pod sections in the given input files specified by `@filelist' according
+to the given options.
+
+If any argument to *podselect* is a reference to a hash (associative
+array) then the values with the following keys are processed as follows:
+
+`OUTPUT'
+     A string corresponding to the desired output file (or ">&STDOUT" or
+     ">&STDERR"). The default is to use standard output.
+
+`SELECT'
+     A reference to an array of sections specifications (as described in
+     `"SECTION SPECIFICATIONS"', *Note Pod/Parser: Pod/Parser,) which
+     indicate the desired set of pod sections and subsections to be
+     selected from input. If no section specifications are given, then
+     all sections of pod documentation are used.
+
+All other arguments should correspond to the names of input files
+containing pod documentation. A file name of "-" or "<&STDIN" will be
+interpeted to mean standard input (which is the default if no filenames
+are given).
+
+
+SEE ALSO
+========
+
+*Note Pod/Parser: Pod/Parser,
+
+
+AUTHOR
+======
+
+Brad Appleton <Brad_Appleton-GBDA001@email.mot.com>
+
+Based on code for *pod2text* written by Tom Christiansen
+<tchrist@mox.perl.com>
+
+
+
+
+File: pm.info, Node: Pod/Text, Next: Pod/Usage, Prev: Pod/Select, Up: Module List
+
+convert POD data to formatted ASCII text
+****************************************
+
+
+
+NAME
+====
+
+Pod::Text - convert POD data to formatted ASCII text
+
+
+SYNOPSIS
+========
+
+     use Pod::Text;
+
+     pod2text("perlfunc.pod");
+
+Also:
+
+     pod2text [B<-a>] [B<->I<width>] < input.pod
+
+
+DESCRIPTION
+===========
+
+Pod::Text is a module that can convert documentation in the POD format
+(such as can be found throughout the Perl distribution) into formatted
+ASCII.  Termcap is optionally supported for boldface/underline, and can
+enabled via `$Pod::Text::termcap=1'. If termcap has not been enabled,
+then backspaces will be used to simulate bold and underlined text.
+
+A separate `pod2text' program is included that is primarily a wrapper
+for Pod::Text.
+
+The single function `pod2text()' can take the optional options -a for an
+alternative output format, then a -*width* option with the max terminal
+width, followed by one or two arguments. The first should be the name of
+a file to read the pod from, or "<&STDIN" to read from STDIN. A second
+argument, if provided, should be a filehandle glob where output should
+be sent.
+
+
+AUTHOR
+======
+
+Tom Christiansen <`tchrist@mox.perl.com'>
+
+
+TODO
+====
+
+Cleanup work. The input and output locations need to be more flexible,
+termcap shouldn't be a global variable, and the terminal speed needs to
+be properly calculated.
+
+
+
+
+File: pm.info, Node: Pod/Usage, Next: Pod/foo, Prev: Pod/Text, Up: Module List
+
+print a usage message using a script's embedded pod documentation
+*****************************************************************
+
+
+
+NAME
+====
+
+pod2usage - print a usage message using a script's embedded pod
+documentation
+
+
+SYNOPSIS
+========
+
+     use Pod::Usage;
+     pod2usage();
+     pod2usage(2);
+     pod2usage({EXIT => 2});
+     pod2usage({EXIT => 2, VERBOSE => 0});
+     pod2usage(EXIT => 1, VERBOSE => 2, OUTPUT=\*STDERR);
+     pod2usage(VERBOSE => 2);
+
+
+DESCRIPTION
+===========
+
+*pod2usage* will print a usage message for the invoking script (using
+its embedded pod documentation) and then exit the script with the
+specified exit value. It takes a single argument which is either a
+numeric value corresponding to the desired exit status (which defaults
+to 2), or a reference to a hash. If more than one argument is given then
+the entire argument list is assumed to be a hash. If a hash is supplied
+it should contain elements with one or more of the following keys:
+
+`EXIT'
+     The desired exit status to pass to the *exit()* function.
+
+VERBOSE
+     The desired level of "verboseness" to use when printing the usage
+     message. If the corresponding value is 0, then only the "SYNOPSIS"
+     section of the pod documentation is printed. If the corresponding
+     value is 1, then the "SYNOPSIS" section, along with any section
+     entitled "OPTIONS", "ARGUMENTS", or "OPTIONS AND ARGUMENTS" is
+     printed.  If the corresponding value is 2 or more then the entire
+     manpage is printed.
+
+`OUTPUT'
+     A reference to a filehandle, or the pathname of a file to which the
+     usage message should be written. The default is `\*STDERR' unless
+     the exit value is less than 2 (in which case the default is
+     `\*STDOUT').
+
+INPUT
+     A reference to a filehandle, or the pathname of a file from which
+     the invoking script's pod documentation should be read.  It
+     defaults to the file indicated by $0 ($PROGRAM_NAME for `use
+     English;' users).
+
+If neither the exit value nor the verbose level is specified, then the
+default is to use an exit value of 2 with a verbose level of 0.
+
+If an exit value is specified but the verbose level is not, then the
+verbose level will default to 1 if the exit value is less than 2 and
+will default to 0 otherwise.
+
+If a verbose level is specified but an exit value is not, then the exit
+value will default to 2 if the verbose level is 0 and will default to 1
+otherwise.
+
+
+EXAMPLE
+=======
+
+Most scripts should print some type of usage message to STDERR when a
+command line syntax error is detected. They should also provide an
+option (usually -h or `-help') to print a (possibly more verbose)
+usage message to STDOUT. Some scripts may even wish to go so far as to
+provide a means of printing their complete documentation to STDOUT
+(perhaps by allowing a `-man' option). The following example uses
+*pod2usage* in combination with Getopt::Long to do all of these
+things:
+
+     use Pod::Usage;
+     use Getopt::Long;
+
+     GetOptions("help", "man")  ||  pod2usage(2);
+     pod2usage(1)  if ($opt_help);
+     pod2usage(VERBOSE => 2)  if ($opt_man);
+
+
+CAVEATS
+=======
+
+By default, *pod2usage()* will use $0 as the path to the pod input file.
+Unfortunately, not all systems on which Perl runs will set $0 properly
+(although if $0 isn't found, *pod2usage()* will search `$ENV{PATH}').
+If this is the case for your system, you may need to explicitly specify
+the path to the pod docs for the invoking script using something similar
+to the following:
+
+@asis{}
+     
+     `pod2usage(EXIT => 2, INPUT => "/path/to/your/pod/docs");'
+
+
+AUTHOR
+======
+
+Brad Appleton <Brad_Appleton-GBDA001@email.mot.com>
+
+Based on code for *Pod::Text::pod2text()* written by Tom Christiansen
+<tchrist@mox.perl.com>
+
+
+
+ File: pm.info, Node: Pod/foo, Next: Pod/newrun, Prev: Pod/Usage, Up:
+Module List perlvar - Perl predefined variables
+
+The following names have special meaning to Perl. Most of the
+punctuational names have reasonable mnemonics, or analogues in one of
+the shells. Nevertheless, if you wish to use the long variable names,
+you just need to say
+
+     use English;
+
+at the top of your program. This will alias all the short names to the
+long names in the current package. Some of them even have medium names,
+generally borrowed from *awk*.
+
+To go a step further, those variables that depend on the currently
+selected filehandle may instead be set by calling an object method on
+the FileHandle object. (Summary lines below for this contain the word
+HANDLE.)  First you must say
+
+     use FileHandle;
+
+after which you may use either
+
+     method HANDLE EXPR
+
+or
+
+     HANDLE->method(EXPR)
+
+Each of the methods returns the old value of the FileHandle
+attribute. The methods each take an optional EXPR, which if supplied
+specifies the new value for the FileHandle attribute in question. If not
+supplied, most of the methods do nothing to the current value, except
+for *`autoflush()' in this node*, which will assume a 1 for you, just to
+be different.
+
+A few of these variables are considered "read-only". This means that if
+you try to assign to this variable, either directly or indirectly
+through a reference, you'll raise a run-time exception.
+
+X<$ARG>
+X<$_>
+     The default input and pattern-searching space. The following pairs
+     are equivalent:
+
+          while (<>) {...}    # only equivalent in while!
+          while ($_ = <>) {...}
+
+          /^Subject:/
+          $_ =~ /^Subject:/
+
+          tr/a-z/A-Z/
+          $_ =~ tr/a-z/A-Z/
+
+          chop
+          chop($_)
+
+     Here are the places where Perl will assume ``$_' in this node' even
+     if you don't use it:
+
+@asis{}
+     
+     Various unary functions, including functions like *`ord()' in this
+     node* and *`int()' in this node*, as well as the all file tests
+     (-f, -d) except for -t, which defaults to STDIN.
+
+@asis{}
+     
+     Various list functions like *`print()' in this node* and
+     *`unlink()' in this node*.
+
+@asis{}
+     
+     The pattern matching operations m//, s///, and tr/// when used
+     without an `=~' operator.
+
+@asis{}
+     
+     The default iterator variable in a `foreach' loop if no other
+     variable is supplied.
+
+@asis{}
+     
+     The implicit iterator variable in the *`grep()' in this node* and
+     *`map()' in this node* functions.
+
+@asis{}
+     
+     The default place to put an input record when a `<FH>' operation's
+     result is tested by itself as the sole criterion of a `while'
+     test. Note that outside of a `while' test, this will not happen.
+
+     (Mnemonic: underline is understood in certain operations.)
+
+X<$<*digit*;$<digit>>
+     Contains the subpattern from the corresponding set of parentheses
+     in the last pattern matched, not counting patterns matched in
+     nested blocks that have been exited already. (Mnemonic: like
+     \digit.) These variables are all read-only.
+
+X<$MATCH>
+X<$&>
+     The string matched by the last successful pattern match (not
+     counting any matches hidden within a BLOCK or *`eval()' in this
+     node* enclosed by the current BLOCK). (Mnemonic: like & in some
+     editors.) This variable is read-only.
+
+X<$PREMATCH>
+X<$`>
+     The string preceding whatever was matched by the last successful
+     pattern match (not counting any matches hidden within a BLOCK or
+     eval enclosed by the current BLOCK). (Mnemonic: ` often precedes a
+     quoted string.) This variable is read-only.
+
+X<$POSTMATCH>
+X<$'>
+     The string following whatever was matched by the last successful
+     pattern match (not counting any matches hidden within a BLOCK or
+     *`eval()' in this node* enclosed by the current BLOCK). (Mnemonic:
+     ' often follows a quoted string.) Example:
+
+          $_ = 'abcdefghi';
+          /def/;
+          print "$`:$&:$'\n";         # prints abc:def:ghi
+
+     This variable is read-only.
+
+X<$LAST_PAREN_MATCH>
+X<$+>
+     The last bracket matched by the last search pattern. This is useful
+     if you don't know which of a set of alternative patterns
+     matched. For example:
+
+          /Version: (.*)|Revision: (.*)/ && ($rev = $+);
+
+     (Mnemonic: be positive and forward looking.) This variable is
+     read-only.
+
+X<$MULTILINE_MATCHING>
+@asis{}
+     
+     Set to 1 to do multiline matching within a string, 0 to tell Perl
+     that it can assume that strings contain a single line, for the
+     purpose of optimizing pattern matches. Pattern matches on strings
+     containing multiple newlines can produce confusing results when $*
+     is 0. Default is 0.  (Mnemonic: * matches multiple things.) Note
+     that this variable only influences the interpretation of `^' and
+     `$'. A literal newline can be searched for even when `$* == 0'.
+
+     Use of $* is deprecated in Perl 5.
+
+X<input_line_number> HANDLE EXPR
+X<$INPUT_LINE_NUMBER>
+X<$NR>
+X<$.>
+     The current input line number of the last filehandle that was
+     read. An explicit close on the filehandle resets the line
+     number. Since `<>' never does an explicit close, line numbers
+     increase across ARGV files (but see examples under *`eof()' in this
+     node*). Localizing $. has the effect of also localizing Perl's
+     notion of "the last read filehandle". (Mnemonic: many programs use
+     "." to mean the current line number.)
+
+X<input_record_separator> HANDLE EXPR
+X<$INPUT_RECORD_SEPARATOR>
+X<$RS>
+X<$/>
+     The input record separator, newline by default. Works like *awk*'s
+     RS variable, including treating blank lines as delimiters if set to
+     the null string. You may set it to a multicharacter string to match
+     a multi-character delimiter. Note that setting it to `"\n\n"' means
+     something slightly different than setting it to `""', if the file
+     contains consecutive blank lines. Setting it to `""' will treat two
+     or more consecutive blank lines as a single blank line. Setting it
+     to `"\n\n"' will blindly assume that the next input character
+     belongs to the next paragraph, even if it's a newline. (Mnemonic: /
+     is used to delimit line boundaries when quoting poetry.)
+
+          undef $/;
+          $_ = <FH>;          # whole file now here
+          s/\n[ \t]+/ /g;
+
+X<autoflush> HANDLE EXPR
+X<$OUTPUT_AUTOFLUSH>
+X<$|>
+     If set to nonzero, forces a flush after every write or print on the
+     currently selected output channel. Default is 0. Note that STDOUT
+     will typically be line buffered if output is to the terminal and
+     block buffered otherwise. Setting this variable is useful primarily
+     when you are outputting to a pipe, such as when you are running a
+     Perl script under rsh and want to see the output as it's
+     happening. This has no effect on input buffering. (Mnemonic: when
+     you want your pipes to be piping hot.)
+
+X<output_field_separator> HANDLE EXPR
+X<$OUTPUT_FIELD_SEPARATOR>
+X<$OFS>
+X<$,>
+     The output field separator for the print operator. Ordinarily the print 
+     operator simply prints out the comma separated fields you specify. In 
+     order to get behavior more like *awk*, set this variable as you would set 
+     *awk*'s OFS variable to specify what is printed between fields. 
+     (Mnemonic: what is printed when there is a , in your print
+     statement.)
+
+X<output_record_separator> HANDLE EXPR
+X<$OUTPUT_RECORD_SEPARATOR>
+X<$ORS>
+X<$\>
+     The output record separator for the print operator. Ordinarily the
+     print operator simply prints out the comma separated fields you
+     specify, with no trailing newline or record separator assumed. In
+     order to get behavior more like *awk*, set this variable as you
+     would set *awk*'s ORS variable to specify what is printed at the
+     end of the print. (Mnemonic: you set $\ instead of adding \n at the
+     end of the print. Also, it's just like /, but it's what you get
+     "back" from Perl.)
+
+X<$LIST_SEPARATOR>
+X<$">
+     This is like $, except that it applies to array values interpolated
+     into a double-quoted string (or similar interpreted
+     string). Default is a space. (Mnemonic: obvious, I think.)
+
+X<$SUBSCRIPT_SEPARATOR>
+X<$SUBSEP>
+X<$;>
+     The subscript separator for multi-dimensional array emulation. If
+     you refer to a hash element as
+
+          $foo{$a,$b,$c}
+
+     it really means
+
+          $foo{join($;, $a, $b, $c)}
+
+     But don't put
+
+          @foo{$a,$b,$c}      # a slice--note the @
+
+     which means
+
+          ($foo{$a},$foo{$b},$foo{$c})
+
+     Default is "\034", the same as SUBSEP in *awk*. Note that if your
+     keys contain binary data there might not be any safe value for $;.
+     (Mnemonic: comma (the syntactic subscript separator) is a
+     semi-semicolon.  Yeah, I know, it's pretty lame, but $, is already
+     taken for something more important.)
+
+     Consider using "real" multi-dimensional arrays in Perl 5.
+
+X<$OFMT>
+X<$#>
+     The output format for printed numbers. This variable is a half-hearted 
+     attempt to emulate *awk*'s OFMT variable. There are times, however, when 
+     *awk* and Perl have differing notions of what is in fact numeric. Also, 
+     the initial value is %.20g rather than %.6g, so you need to set $#
+     explicitly to get *awk*'s value. (Mnemonic: # is the number sign.)
+
+     Use of $# is deprecated in Perl 5.
+
+X<format_page_number> HANDLE EXPR
+X<$FORMAT_PAGE_NUMBER>
+X<$%>
+     The current page number of the currently selected output channel.
+     (Mnemonic: % is page number in *nroff*.)
+
+X<format_lines_per_page> HANDLE EXPR
+X<$FORMAT_LINES_PER_PAGE>
+X<$=>
+     The current page length (printable lines) of the currently selected
+     output channel. Default is 60. (Mnemonic: = has horizontal lines.)
+
+X<format_lines_left> HANDLE EXPR
+X<$FORMAT_LINES_LEFT>
+X<$->
+     The number of lines left on the page of the currently selected
+     output channel. (Mnemonic: lines_on_page - lines_printed.)
+
+X<format_name> HANDLE EXPR
+X<$FORMAT_NAME>
+X<$~>
+     The name of the current report format for the currently selected
+     output channel. Default is name of the filehandle. (Mnemonic:
+     brother to $^.)
+
+X<format_top_name> HANDLE EXPR
+X<$FORMAT_TOP_NAME>
+X<$^>
+     The name of the current top-of-page format for the currently
+     selected output channel. Default is name of the filehandle with
+     _TOP appended.  (Mnemonic: points to top of page.)
+
+X<format_line_break_characters> HANDLE EXPR
+X<$FORMAT_LINE_BREAK_CHARACTERS>
+X<$:>
+     The current set of characters after which a string may be broken to fill 
+     continuation fields (starting with ^) in a format. Default is " \n-", 
+     to break on whitespace or hyphens. (Mnemonic: a "colon" in poetry is a 
+     part of a line.)
+
+X<format_formfeed> HANDLE EXPR
+X<$FORMAT_FORMFEED>
+X<$^L>
+     What formats output to perform a formfeed. Default is \f.
+
+X<$ACCUMULATOR>
+X<$^A>
+     The current value of the *`write()' in this node* accumulator for
+     *`format()' in this node* lines. A format contains *`formline()' in
+     this node* commands that put their result into $^A. After calling
+     its format, *`write()' in this node* prints out the contents of $^A
+     and empties. So you never actually see the contents of $^A unless
+     you call *`formline()' in this node* yourself and then look at
+     it. See L<ARRAY(0xd73c0)<>> and L<ARRAY(0xd7054)<>>.
+
+X<$CHILD_ERROR>
+X<$?>
+     The status returned by the last pipe close, backtick (```')
+     command, or *`system()' in this node* operator. Note that this is
+     the status word returned by the *`wait()' in this node* system
+     call, so the exit value of the subprocess is actually (`$? >>
+     8'). Thus on many systems, `$? & 255' gives which signal, if any,
+     the process died from, and whether there was a core
+     dump. (Mnemonic: similar to *sh* and *ksh*.)
+
+X<$OS_ERROR>
+X<$ERRNO>
+X<$!>
+     If used in a numeric context, yields the current value of errno,
+     with all the usual caveats. (This means that you shouldn't depend
+     on the value of $!  to be anything in particular unless you've
+     gotten a specific error return indicating a system error.) If used
+     in a string context, yields the corresponding system error
+     string. You can assign to $! in order to set errno if, for
+     instance, you want $! to return the string for error n, or you want
+     to set the exit value for the *`die()' in this node*
+     operator. (Mnemonic: What just went bang?)
+
+X<$EVAL_ERROR>
+X<$@>
+     The Perl syntax error message from the last *`eval()' in this node*
+     command. If null, the last *`eval()' in this node* parsed and
+     executed correctly (although the operations you invoked may have
+     failed in the normal fashion). (Mnemonic: Where was the syntax
+     error "at"?)
+
+     Note that warning messages are not collected in this variable. You
+     can, however, set up a routine to process warnings by setting
+     ``$SIG' in this node'{__WARN__} below.
+
+X<$PROCESS_ID>
+X<$PID>
+X<$$>
+     The process number of the Perl running this script. (Mnemonic: same
+     as shells.)
+
+X<$REAL_USER_ID>
+X<$UID>
+X<$<;$<>
+     The real uid of this process. (Mnemonic: it's the uid you came
+     *FROM*, if you're running setuid.)
+
+X<$EFFECTIVE_USER_ID>
+X<$EUID>
+X<$>>
+     The effective uid of this process. Example:
+
+          $< = $>;       # set real to effective uid
+          ($<,$>) = ($>,$<);  # swap real and effective uid
+
+     (Mnemonic: it's the uid you went TO, if you're running setuid.)
+     Note: `$<' and `$>' can only be swapped on machines supporting
+     *`setreuid()' in this node*.
+
+X<$REAL_GROUP_ID>
+X<$GID>
+X<$(>
+     The real gid of this process. If you are on a machine that supports
+     membership in multiple groups simultaneously, gives a space
+     separated list of groups you are in. The first number is the one
+     returned by *`getgid()' in this node*, and the subsequent ones by
+     *`getgroups()' in this node*, one of which may be the same as the
+     first number. (Mnemonic: parentheses are used to *GROUP* things.
+     The real gid is the group you *LEFT*, if you're running setgid.)
+
+X<$EFFECTIVE_GROUP_ID>
+X<$EGID>
+X<$)>
+     The effective gid of this process. If you are on a machine that
+     supports membership in multiple groups simultaneously, gives a
+     space separated list of groups you are in. The first number is the
+     one returned by *`getegid()' in this node*, and the subsequent ones
+     by *`getgroups()' in this node*, one of which may be the same as
+     the first number. (Mnemonic: parentheses are used to *GROUP*
+     things.  The effective gid is the group that's *RIGHT* for you, if
+     you're running setgid.)
+
+     Note: `$<', `$>', $( and $) can only be set on machines that
+     support the corresponding *set[re][ug]*`id()' in this node**
+     routine. $( and $) can only be swapped on machines supporting
+     *`setregid()' in this node*. Because Perl doesn't currently use
+     *`initgroups()' in this node*, you can't set your group vector to
+     multiple groups.
+
+X<$PROGRAM_NAME>
+X<$0>
+     Contains the name of the file containing the Perl script being
+     executed.  Assigning to $0 modifies the argument area that the
+     *`ps(1)' in this node* program sees. This is more useful as a way
+     of indicating the current program state than it is for hiding the
+     program you're running. (Mnemonic: same as *sh* and *ksh*.)
+
+X<$[>
+     The index of the first element in an array, and of the first
+     character in a substring. Default is 0, but you could set it to 1
+     to make Perl behave more like *awk* (or Fortran) when subscripting
+     and when evaluating the *`index()' in this node* and *`substr()' in
+     this node* functions. (Mnemonic: [ begins subscripts.)
+
+     As of Perl 5, assignment to $[ is treated as a compiler directive,
+     and cannot influence the behavior of any other file. Its use is
+     discouraged.
+
+X<$PERL_VERSION>
+X<$]>
+     The string printed out when you say `perl -v'. (This is currently
+     *BROKEN*).  It can be used to determine at the beginning of a
+     script whether the perl interpreter executing the script is in the
+     right range of versions. If used in a numeric context, returns the
+     version + patchlevel / 1000.  Example:
+
+          # see if getc is available
+          ($version,$patchlevel) =
+                   $] =~ /(\d+\.\d+).*\nPatch level: (\d+)/;
+          print STDERR "(No filename completion available.)\n"
+                   if $version * 1000 + $patchlevel < 2016;
+
+     or, used numerically,
+
+          warn "No checksumming!\n" if $] < 3.019;
+
+     (Mnemonic: Is this version of perl in the right bracket?)
+
+X<$DEBUGGING>
+X<$^D>
+     The current value of the debugging flags. (Mnemonic: value of `-D;switches' in this node 
+     switch.)
+
+X<$SYSTEM_FD_MAX>
+X<$^F>
+     The maximum system file descriptor, ordinarily 2. System file
+     descriptors are passed to *`exec()' in this node*ed processes,
+     while higher file descriptors are not. Also, during an *`open()' in
+     this node*, system file descriptors are preserved even if the
+     *`open()' in this node* fails. (Ordinary file descriptors are
+     closed before the *`open()' in this node* is attempted.) Note that
+     the close-on-exec status of a file descriptor will be decided
+     according to the value of $^F at the time of the open, not the time
+     of the exec.
+
+X<$INPLACE_EDIT>
+X<$^I>
+     The current value of the inplace-edit extension. Use undef to disable 
+     inplace editing. (Mnemonic: value of `-i;switches' in this node switch.)
+
+X<$PERLDB>
+X<$^P>
+     The internal flag that the debugger clears so that it doesn't debug
+     itself. You could conceivable disable debugging yourself by
+     clearing it.
+
+X<$BASETIME>
+X<$^T>
+     The time at which the script began running, in seconds since the epoch 
+     (beginning of 1970). The values returned by the `-M;switches' in this node, `-A;switches' in this node 
+     and `-C;switches' in this node filetests are based on this value.
+
+X<$WARNING>
+X<$^W>
+     The current value of the warning switch, either TRUE or FALSE. (Mnemonic: 
+     related to the `-w;switches' in this node switch.)
+
+X<$EXECUTABLE_NAME>
+X<$^X>
+     The name that the Perl binary itself was executed as, from C's
+     `argv[0]'.
+
+X<$ARGV>
+     contains the name of the current file when reading from <>.
+
+X<@ARGV>
+     The array ``@ARGV' in this node' contains the command line
+     arguments intended for the script. Note that `$#ARGV' is the
+     generally number of arguments minus one, since `$ARGV[0]' is the
+     first argument, *NOT* the command name. See $0 for the command
+     name.
+
+X<@INC>
+     The array ``@INC' in this node' contains the list of places to look for Perl scripts 
+     to be evaluated by the `do EXPR', require, or use constructs. It 
+     initially consists of the arguments to any `-I;switches' in this node command 
+     line switches, followed by the default Perl library, probably 
+     "/usr/local/lib/perl", followed by ".", to represent the current 
+     directory. If you need to modify this at runtime, you should use the `use 
+     lib' pragma in order to also get the machine-dependent library properly 
+     loaded:
+
+          use lib '/mypath/libdir/';
+          use SomeMod;
+
+X<%INC>
+     The hash ``%INC' in this node' contains entries for each filename
+     that has been included via do or require. The key is the filename
+     you specified, and the value is the location of the file actually
+     found. The require command uses this array to determine whether a
+     given file has already been included.
+
+X<$ENV{expr}>
+     The hash ``%ENV' in this node' contains your current
+     environment. Setting a value in `ENV' changes the environment for
+     child processes.
+
+X<$SIG{expr}>
+     The hash ``%SIG' in this node' is used to set signal handlers for
+     various signals.  Example:
+
+          sub handler {       # 1st argument is signal name
+              local($sig) = @_;
+              print "Caught a SIG$sig--shutting down\n";
+              close(LOG);
+              exit(0);
+          }
+
+          $SIG{'INT'} = 'handler';
+          $SIG{'QUIT'} = 'handler';
+          ...
+          $SIG{'INT'} = 'DEFAULT';    # restore default action
+          $SIG{'QUIT'} = 'IGNORE';    # ignore SIGQUIT
+
+     The ``%SIG' in this node' array only contains values for the
+     signals actually set within the Perl script. Here are some other
+     examples:
+
+          $SIG{PIPE} = Plumber;       # SCARY!!
+          $SIG{"PIPE"} = "Plumber";   # just fine, assumes main::Plumber
+          $SIG{"PIPE"} = \&Plumber;   # just fine; assume current Plumber
+          $SIG{"PIPE"} = Plumber();   # oops, what did Plumber() return??
+
+     The one marked scary is problematic because it's a bareword, which
+     means sometimes it's a string representing the function, and
+     sometimes it's going to call the subroutine call right then and
+     there! Best to be sure and quote it or take a reference to
+     it. *Plumber works too. See L<ARRAY(0xd7228)<>>.
+
+     Certain internal hooks can be also set using the ``%SIG' in this
+     node' hash. The routine indicated by ``$SIG' in this
+     node'{__WARN__} is called when a warning message is about to be
+     printed. The warning message is passed as the first argument. The
+     presence of a __WARN__ hook causes the ordinary printing of
+     warnings to STDERR to be suppressed. You can use this to save
+     warnings in a variable, or turn warnings into fatal errors, like
+     this:
+
+          local $SIG{__WARN__} = sub { die $_[0] };
+          eval $proggie;
+
+     The routine indicated by ``$SIG' in this node'{__DIE__} is called
+     when a fatal exception is about to be thrown. The error message is
+     passed as the first argument. When a __DIE__ hook routine returns,
+     the exception processing continues as it would have in the absence
+     of the hook, unless the hook routine itself exits via a goto, a
+     loop exit, or a *`die()' in this node*. The __DIE__ handler is
+     explicitly disabled during the call, so that you can die from a
+     __DIE__ handler. Similarly for __WARN__.
+
+
+
+

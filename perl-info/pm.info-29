@@ -1,0 +1,1870 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: LWP/MemberMixin, Next: LWP/Protocol, Prev: LWP/MediaTypes, Up: Module List
+
+Member access mixin class
+*************************
+
+
+
+NAME
+====
+
+LWP::MemberMixin - Member access mixin class
+
+
+SYNOPSIS
+========
+
+     package Foo;
+     require LWP::MemberMixin;
+     @ISA=qw(LWP::MemberMixin);
+
+
+DESCRIPTION
+===========
+
+A mixin class to get methods that provide easy access to member
+variables in the %$self.
+
+
+BUGS
+====
+
+Ideally there should be better Perl langauge support for this.
+
+
+METHODS
+=======
+
+
+_elem($elem [, $val])
+---------------------
+
+Internal method to get/set the value of member variable `$elem'. If
+`$val' is defined it is used as the new value for the member variable.
+If it is undefined the current value is not touched. In both cases the
+previous value of the member variable is returned.
+
+
+
+
+File: pm.info, Node: LWP/Protocol, Next: LWP/RobotUA, Prev: LWP/MemberMixin, Up: Module List
+
+Base class for LWP protocols
+****************************
+
+
+
+NAME
+====
+
+LWP::Protocol - Base class for LWP protocols
+
+
+SYNOPSIS
+========
+
+     package LWP::Protocol::foo;
+     require LWP::Protocol;
+     @ISA=qw(LWP::Protocol);
+
+
+DESCRIPTION
+===========
+
+This class is used a the base class for all protocol implementations
+supported by the LWP library.
+
+When creating an instance of this class using
+`LWP::Protocol::create($url)', and you get an initialised subclass
+appropriate for that access method. In other words, the
+LWP::Protocol::create() function calls the constructor for one of its
+subclasses.
+
+All derived LWP::Protocol classes need to override the request() method
+which is used to service a request. The overridden method can make use
+of the collect() function to collect together chunks of data as it is
+received.
+
+
+SEE ALSO
+========
+
+Inspect the `LWP/Protocol/file.pm' and `LWP/Protocol/http.pm' files for
+examples of usage.
+
+
+METHODS AND FUNCTIONS
+=====================
+
+
+$prot = new HTTP::Protocol;
+---------------------------
+
+The LWP::Protocol constructor is inherited by subclasses. As this is a
+virtual base class this method should *not* be called directly.
+
+
+$prot = LWP::Protocol::create($url)
+-----------------------------------
+
+Create an object of the class implementing the protocol to handle the
+given scheme. This is a function, not a method. It is more an object
+factory than a constructor. This is the function user agents should use
+to access protocols.
+
+
+$class = LWP::Protocol::implementor($scheme, [$class])
+------------------------------------------------------
+
+Get and/or set implementor class for a scheme.  Returns '' if the
+specified scheme is not supported.
+
+
+$prot->request(...)
+-------------------
+
+     $response = $protocol->request($request, $proxy, undef);
+     $response = $protocol->request($request, $proxy, '/tmp/sss');
+     $response = $protocol->request($request, $proxy, \&callback, 1024);
+
+Dispactches a request over the protocol, and returns a response
+object. This method needs to be overridden in subclasses.  Referer to
+*Note LWP/UserAgent: LWP/UserAgent, for description of the arguments.
+
+
+$prot->timeout($seconds)
+------------------------
+
+Get and set the timeout value in seconds
+
+
+$prot->use_alarm($yesno)
+------------------------
+
+Indicates if the library is allowed to use the core alarm() function to
+implement timeouts.
+
+
+$prot->parse_head($yesno)
+-------------------------
+
+Should we initialize response headers from the <head> section of HTML
+documents.
+
+
+$prot->collect($arg, $response, $collector)
+-------------------------------------------
+
+Called to collect the content of a request, and process it appropriately
+into a scalar, file, or by calling a callback.  If $arg is undefined,
+then the content is stored within the $response.  If $arg is a simple
+scalar, then $arg is interpreted as a file name and the content is
+written to this file.  If $arg is a reference to a routine, then content
+is passed to this routine.
+
+The $collector is a routine that will be called and which is reponsible
+for returning pieces (as ref to scalar) of the content to process.  The
+$collector signals EOF by returning a reference to an empty sting.
+
+The return value from collect() is the $response object reference.
+
+*Note:* We will only use the callback or file argument if
+$response->is_success().  This avoids sendig content data for redirects
+and authentization responses to the callback which would be confusing.
+
+
+$prot->collect_once($arg, $response, $content)
+----------------------------------------------
+
+Can be called when the whole response content is available as $content.
+This will invoke collect() with a collector callback that returns a
+reference to $content the first time and an empty string the next.
+
+
+
+
+File: pm.info, Node: LWP/RobotUA, Next: LWP/SecureSocket, Prev: LWP/Protocol, Up: Module List
+
+A class for Web Robots
+**********************
+
+
+
+NAME
+====
+
+LWP::RobotUA - A class for Web Robots
+
+
+SYNOPSIS
+========
+
+     require LWP::RobotUA;
+     $ua = new LWP::RobotUA 'my-robot/0.1', 'me@foo.com';
+     $ua->delay(10);  # be very nice, go slowly
+     ...
+     # just use it just like a normal LWP::UserAgent
+     $res = $ua->request($req);
+
+
+DESCRIPTION
+===========
+
+This class implements a user agent that is suitable for robot
+applications.  Robots should be nice to the servers they visit.  They
+should consult the `robots.txt' file to ensure that they are welcomed
+and they should not send too frequent requests.
+
+But, before you consider writing a robot take a look at
+<URL:http://info.webcrawler.com/mak/projects/robots/robots.html>.
+
+When you use a LWP::RobotUA as your user agent, then you do not really
+have to think about these things yourself.  Just send requests as you do
+when you are using a normal *LWP::UserAgent* and this special agent will
+make sure you are nice.
+
+
+METHODS
+=======
+
+The LWP::RobotUA is a sub-class of LWP::UserAgent and implements the
+same methods.  The use_alarm() method also desides whether we will wait
+if a request is tried too early (if true), or will return an error
+response (if false).
+
+In addition these methods are provided:
+
+
+$ua = LWP::RobotUA->new($agent_name, $from, [$rules])
+-----------------------------------------------------
+
+Your robot's name and the mail address of the human responsible for the
+robot (i.e. you) is required by the constructor.
+
+Optionally it allows you to specify the *WWW::RobotRules* object to use.
+
+
+$ua->delay([$minutes])
+----------------------
+
+Set the minimum delay between requests to the same server.  The default
+is 1 minute.
+
+
+$ua->rules([$rules])
+--------------------
+
+Set/get which *WWW::RobotRules* object to use.
+
+
+$ua->no_visits($netloc)
+-----------------------
+
+Returns the number of documents fetched from this server host.
+
+
+$ua->host_wait($netloc)
+-----------------------
+
+Returns the number of seconds you must wait before you can make a new
+request to this host.
+
+
+$ua->as_string
+--------------
+
+Returns a text that describe the state of the UA.  Mainly useful for
+debugging.
+
+
+SEE ALSO
+========
+
+*Note LWP/UserAgent: LWP/UserAgent,, *Note WWW/RobotRules: WWW/RobotRules,
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: LWP/SecureSocket, Next: LWP/Simple, Prev: LWP/RobotUA, Up: Module List
+
+SSL TCP/IP socket interface
+***************************
+
+
+
+NAME
+====
+
+LWP::SecureSocket - SSL TCP/IP socket interface
+
+
+SYNOPSIS
+========
+
+     $socket = new LWP::SecureSocket;
+     $socket->connect('localhost', 7); # echo
+     $quote = 'I dunno, I dream in Perl sometimes...';
+     $socket->write("$quote\n");
+     $socket->read_until("\n", \$buffer);
+     $socket->read(\$buffer);
+     $socket = undef;  # close
+
+
+DESCRIPTION
+===========
+
+This class implements TCP/IP sockets.  It groups socket generation, TCP
+address manipulation and buffered reading. Errors are handled by dying
+(throws exceptions).
+
+This class should really not be required, something like this should be
+part of the standard Perl5 library.
+
+Running this module standalone executes a self test which requires
+localhost to serve chargen and echo protocols.
+
+
+METHODS
+=======
+
+
+$sock = new LWP::SecureSocket()
+-------------------------------
+
+Constructs a new socket object.
+
+
+$sock->connect($host, $port)
+----------------------------
+
+Connect the socket to given host and port.
+
+
+$sock->shutdown()
+-----------------
+
+Shuts down the connection.
+
+
+$sock->bind($host, $port)
+-------------------------
+
+Binds a name to the socket.
+
+
+$sock->listen($queuesize)
+-------------------------
+
+Set up listen queue for socket.
+
+
+$sock->accept($timeout)
+-----------------------
+
+Accepts a new connection.  Returns a new LWP::SecureSocket object if
+successful.  Timeout not implemented yet.  would require modifying new,
+and not
+    necessary for app, so I\'m not bothering to modify.  Might work
+anyways, though.
+
+
+$sock->getsockname()
+--------------------
+
+Returns a 2 element array ($host, $port)
+
+
+$sock->read_until($delim, $data_ref, $size, $timeout)
+-----------------------------------------------------
+
+Reads data from the socket, up to a delimiter specified by a regular
+expression.  If $delim is undefined all data is read.  If $size is
+defined, data will be read internally in chunks of $size bytes.  This
+does not mean that we will return the data when size bytes are read.
+
+Note that $delim is discarded from the data returned.
+
+
+$sock->read($bufref, [$size, $timeout])
+---------------------------------------
+
+Reads data of the socket.  Not more than $size bytes.  Might return less
+if the data is available.  Dies on timeout.
+
+
+$sock->pushback($data)
+----------------------
+
+Put data back into the socket.  Data will returned next time you read().
+Can be used if you find out that you have read too much.
+
+
+$sock->write($data, [$timeout])
+-------------------------------
+
+Write data to socket.  The $data argument might be a scalar or code.
+
+If data is a reference to a subroutine, then we will call this routine
+to obtain the data to be written.  The routine will be called until it
+returns undef or empty data.  Data might be returned from the callback
+as a scalar or as a reference to a scalar.
+
+Write returns the number of bytes written to the socket.
+
+
+_getaddress($h, $p)
+-------------------
+
+Given a host and a port, it will return the address (sockaddr_in)
+suitable as the name argument for connect() or bind(). Might return
+several addresses in array context if the hostname is bound to several
+IP addresses.
+
+
+SELF TEST
+=========
+
+This self test is only executed when this file is run standalone. It
+tests its functions against some standard TCP services implemented by
+inetd. If you do not have them around the tests will fail.
+
+
+
+
+File: pm.info, Node: LWP/Simple, Next: LWP/Socket, Prev: LWP/SecureSocket, Up: Module List
+
+Procedural LWP interface
+************************
+
+
+
+NAME
+====
+
+get, head, getprint, getstore, mirror - Procedural LWP interface
+
+
+SYNOPSIS
+========
+
+     perl -MLWP::Simple -e 'getprint "http://www.sn.no"'
+
+     use LWP::Simple;
+     $content = get("http://www.sn.no/")
+     if (mirror("http://www.sn.no/", "foo") == RC_NOT_MODIFIED) {
+         ...
+     }
+     if (is_success(getprint("http://www.sn.no/"))) {
+         ...
+     }
+
+
+DESCRIPTION
+===========
+
+This interface is intended for those who want a simplified view of the
+libwww-perl library.  This interface should also be suitable for
+one-liners.  If you need more control or access to the header fields in
+the requests sent and responses received you should use the full OO
+interface provided by the LWP::UserAgent module.
+
+This following functions are provided (and exported) by this module:
+
+get($url)
+     This function will get the document identified by the given URL.
+     The get() function will return the document if successful or
+     'undef' if it fails.  The $url argument can be either a simple
+     string or a reference to a URI::URL object.
+
+     You will not be able to examine the response code or response
+     headers (like *Content-Type*) when you are accessing the web using
+     this function.  If you need this you should use the full OO
+     interface.
+
+head($url)
+     Get document headers. Returns the following values if successful:
+     ($content_type, $document_length, $modified_time, $expires,
+     $server)
+
+     Returns an empty list if it fails.
+
+getprint($url)
+     Get and print a document identified by a URL. The document is
+     printet on STDOUT. The error message (formatted as HTML) is printed
+     on STDERR if the request fails.  The return value is the HTTP
+     response code.
+
+getstore($url, $file)
+     Gets a document identified by a URL and stores it in the file. The
+     return value is the HTTP response code.
+
+mirror($url, $file)
+     Get and store a document identified by a URL, using
+     *If-modified-since*, and checking of the *Content-Length*.  Returns
+     the HTTP response code.
+
+This module also exports the HTTP::Status constants and procedures.
+These can be used when you check the response code from getprint(),
+getstore() and mirror().  The constants are:
+
+     RC_CONTINUE
+     RC_SWITCHING_PROTOCOLS
+     RC_OK
+     RC_CREATED
+     RC_ACCEPTED
+     RC_NON_AUTHORITATIVE_INFORMATION
+     RC_NO_CONTENT
+     RC_RESET_CONTENT
+     RC_PARTIAL_CONTENT
+     RC_MULTIPLE_CHOICES
+     RC_MOVED_PERMANENTLY
+     RC_MOVED_TEMPORARILY
+     RC_SEE_OTHER
+     RC_NOT_MODIFIED
+     RC_USE_PROXY
+     RC_BAD_REQUEST
+     RC_UNAUTHORIZED
+     RC_PAYMENT_REQUIRED
+     RC_FORBIDDEN
+     RC_NOT_FOUND
+     RC_METHOD_NOT_ALLOWED
+     RC_NOT_ACCEPTABLE
+     RC_PROXY_AUTHENTICATION_REQUIRED
+     RC_REQUEST_TIMEOUT
+     RC_CONFLICT
+     RC_GONE
+     RC_LENGTH_REQUIRED
+     RC_PRECONDITION_FAILED
+     RC_REQUEST_ENTITY_TOO_LARGE
+     RC_REQUEST_URI_TOO_LARGE
+     RC_UNSUPPORTED_MEDIA_TYPE
+     RC_INTERNAL_SERVER_ERROR
+     RC_NOT_IMPLEMENTED
+     RC_BAD_GATEWAY
+     RC_SERVICE_UNAVAILABLE
+     RC_GATEWAY_TIMEOUT
+     RC_HTTP_VERSION_NOT_SUPPORTED
+
+The HTTP::Status classification functions are:
+
+is_success($rc)
+     Check if response code indicated successfull request.
+
+is_error($rc)
+     Check if response code indicated that an error occured.
+
+The module will also export the LWP::UserAgent object as `$ua' if you
+ask for it explicitly.
+
+The user agent created by this module will identify itself as
+"LWP::Simple/0.00" and will initialize its proxy defaults from the
+environment (by calling $ua->env_proxy).
+
+
+SEE ALSO
+========
+
+*Note LWP: LWP,, *Note LWP/UserAgent: LWP/UserAgent,, *Note HTTP/Status: HTTP/Status,, `request' in this node, `mirror' in this node
+
+
+
+
+File: pm.info, Node: LWP/Socket, Next: LWP/TkIO, Prev: LWP/Simple, Up: Module List
+
+TCP/IP socket interface
+***********************
+
+
+
+NAME
+====
+
+LWP::Socket - TCP/IP socket interface
+
+
+SYNOPSIS
+========
+
+     $socket = new LWP::Socket;
+     $socket->connect('localhost', 7); # echo
+     $quote = 'I dunno, I dream in Perl sometimes...';
+     $socket->write("$quote\n");
+     $socket->read_until("\n", \$buffer);
+     $socket->read(\$buffer);
+     $socket = undef;  # close
+
+
+DESCRIPTION
+===========
+
+This class implements TCP/IP sockets.  It groups socket generation, TCP
+address manipulation and buffered reading. Errors are handled by dying
+(throws exceptions).
+
+This class should really not be required, something like this should be
+part of the standard Perl5 library.
+
+Running this module standalone executes a self test which requires
+localhost to serve chargen and echo protocols.
+
+
+METHODS
+=======
+
+
+$sock = new LWP::Socket()
+-------------------------
+
+Constructs a new socket object.
+
+
+$sock->connect($host, $port)
+----------------------------
+
+Connect the socket to given host and port.
+
+
+$sock->shutdown()
+-----------------
+
+Shuts down the connection.
+
+
+$sock->bind($host, $port)
+-------------------------
+
+Binds a name to the socket.
+
+
+$sock->listen($queuesize)
+-------------------------
+
+Set up listen queue for socket.
+
+
+$sock->accept($timeout)
+-----------------------
+
+Accepts a new connection.  Returns a new LWP::Socket object if
+successful.  Timeout not implemented yet.
+
+
+$sock->getsockname()
+--------------------
+
+Returns a 2 element array ($host, $port)
+
+
+$sock->read_until($delim, $data_ref, $size, $timeout)
+-----------------------------------------------------
+
+Reads data from the socket, up to a delimiter specified by a regular
+expression.  If $delim is undefined all data is read.  If $size is
+defined, data will be read internally in chunks of $size bytes.  This
+does not mean that we will return the data when size bytes are read.
+
+Note that $delim is discarded from the data returned.
+
+
+$sock->read($bufref, [$size, $timeout])
+---------------------------------------
+
+Reads data of the socket.  Not more than $size bytes.  Might return less
+if the data is available.  Dies on timeout.
+
+
+$sock->pushback($data)
+----------------------
+
+Put data back into the socket.  Data will returned next time you read().
+Can be used if you find out that you have read too much.
+
+
+$sock->write($data, [$timeout])
+-------------------------------
+
+Write data to socket.  The $data argument might be a scalar or code.
+
+If data is a reference to a subroutine, then we will call this routine
+to obtain the data to be written.  The routine will be called until it
+returns undef or empty data.  Data might be returned from the callback
+as a scalar or as a reference to a scalar.
+
+Write returns the number of bytes written to the socket.
+
+
+_getaddress($h, $p)
+-------------------
+
+Given a host and a port, it will return the address (sockaddr_in)
+suitable as the name argument for connect() or bind(). Might return
+several addresses in array context if the hostname is bound to several
+IP addresses.
+
+
+SELF TEST
+=========
+
+This self test is only executed when this file is run standalone. It
+tests its functions against some standard TCP services implemented by
+inetd. If you do not have them around the tests will fail.
+
+
+
+
+File: pm.info, Node: LWP/TkIO, Next: LWP/UserAgent, Prev: LWP/Socket, Up: Module List
+
+Tk I/O routines for the LWP library
+***********************************
+
+
+
+NAME
+====
+
+LWP::TkIO - Tk I/O routines for the LWP library
+
+
+SYNOPSIS
+========
+
+     use Tk;
+     require LWP::TkIO;
+     require LWP::UserAgent;
+
+
+DESCRIPTION
+===========
+
+This module provide replacement functions for the LWP::IO
+functions. Require this module if you use Tk and want non exclusive IO
+behaviour from LWP.  This does not allow LWP to run simultaneous
+requests though.
+
+See also *Note LWP/IO: LWP/IO,.
+
+
+
+
+File: pm.info, Node: LWP/UserAgent, Next: Locale/Country, Prev: LWP/TkIO, Up: Module List
+
+A WWW UserAgent class
+*********************
+
+
+
+NAME
+====
+
+LWP::UserAgent - A WWW UserAgent class
+
+
+SYNOPSIS
+========
+
+     require LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+
+     $request = new HTTP::Request('GET', 'file://localhost/etc/motd');
+
+     $response = $ua->request($request); # or
+     $response = $ua->request($request, '/tmp/sss'); # or
+     $response = $ua->request($request, \&callback, 4096);
+
+     sub callback { my($data, $response, $protocol) = @_; .... }
+
+
+DESCRIPTION
+===========
+
+The `LWP::UserAgent' is a class implementing a simple World-Wide Web
+user agent in Perl. It brings together the HTTP::Request, HTTP::Response
+and the LWP::Protocol classes that form the rest of the core of
+libwww-perl library. For simple uses this class can be used directly to
+dispatch WWW requests, alternatively it can be subclassed for
+application-specific behaviour.
+
+In normal usage the application creates a UserAgent object, and then
+configures it with values for timeouts proxies, name, etc. The next step
+is to create an instance of HTTP::Request for the request that needs to
+be performed. This request is then passed to the UserAgent request()
+method, which dispatches it using the relevant protocol, and returns a
+`HTTP::Response' object.
+
+The basic approach of the library is to use HTTP style communication for
+all protocol schemes, i.e. you will receive an `HTTP::Response' object
+also for gopher or ftp requests.  In order to achieve even more
+similarities with HTTP style communications, gopher menus and file
+directories will be converted to HTML documents.
+
+The request() method can process the content of the response in one of
+three ways: in core, into a file, or into repeated calls of a
+subroutine.  You choose which one by the kind of value passed as the
+second argument to request().
+
+The in core variant simply returns the content in a scalar attribute
+called content() of the response object, and is suitable for small HTML
+replies that might need further parsing.  This variant is used if the
+second argument is missing (or is undef).
+
+The filename variant requires a scalar containing a filename as the
+second argument to request(), and is suitable for large WWW objects
+which need to be written directly to the file, without requiring large
+amounts of memory. In this case the response object returned from
+request() will have empty content().  If the request fails, then the
+content() might not be empty, and the file will be untouched.
+
+The subroutine variant requires a reference to callback routine as the
+second argument to request() and it can also take an optional chuck size
+as third argument.  This variant can be used to construct "pipe-lined"
+processing, where processing of received chuncks can begin before the
+complete data has arrived.  The callback function is called with 3
+arguments: the data received this time, a reference to the response
+object and a reference to the protocol object.  The response object
+returned from request() will have empty content().  If the request
+fails, then the the callback routine will not have been called, and the
+response->content() might not be empty.
+
+The request can be aborted by calling die() within the callback routine.
+The die message will be available as the "X-Died" special response
+header field.
+
+The library also accepts that you put a subroutine reference as content
+in the request object.  This subroutine should return the content
+(possibly in pieces) when called.  It should return an empty string when
+there is no more content.
+
+The user of this module can finetune timeouts and error handling by
+calling the use_alarm() and use_eval() methods.
+
+By default the library uses alarm() to implement timeouts, dying if the
+timeout occurs. If this is not the prefered behaviour or it interferes
+with other parts of the application one can disable the use alarms. When
+alarms are disabled timeouts can still occur for example when reading
+data, but other cases like name lookups etc will not be timed out by the
+library itself.
+
+The library catches errors (such as internal errors and timeouts) and
+present them as HTTP error responses. Alternatively one can switch off
+this behaviour, and let the application handle dies.
+
+
+SEE ALSO
+========
+
+See *Note LWP: LWP, for a complete overview of libwww-perl5.  See
+`request' in this node and `mirror' in this node for examples of usage.
+
+
+METHODS
+=======
+
+
+$ua = new LWP::UserAgent;
+-------------------------
+
+Constructor for the UserAgent.  Returns a reference to a LWP::UserAgent
+object.
+
+
+$ua->simple_request($request, [$arg [, $size]])
+-----------------------------------------------
+
+This method dispatches a single WWW request on behalf of a user, and
+returns the response received.  The `$request' should be a reference to
+a HTTP::Request object with values defined for at least the method() and
+url() attributes.
+
+If `$arg' is a scalar it is taken as a filename where the content of the
+response is stored.
+
+If `$arg' is a reference to a subroutine, then this routine is called as
+chunks of the content is received.  An optional $size argument is taken
+as a hint for an appropriate chunk size.
+
+If `$arg' is omitted, then the content is stored in the response object
+itself.
+
+
+$ua->request($request, $arg [, $size])
+--------------------------------------
+
+Process a request, including redirects and security.  This method may
+actually send several different simple reqeusts.
+
+The arguments are the same as for `simple_request()'.
+
+
+$ua->redirect_ok
+----------------
+
+This method is called by request() before it tries to do any redirects.
+It should return a true value if the redirect is allowed to be
+performed. Subclasses might want to override this.
+
+The default implementation will return FALSE for POST request and TRUE
+for all others.
+
+
+$ua->credentials($netloc, $realm, $uname, $pass)
+------------------------------------------------
+
+Set the user name and password to be used for a realm.  It is often more
+useful to specialize the get_basic_credentials() method instead.
+
+
+$ua->get_basic_credentials($realm, $uri)
+----------------------------------------
+
+This is called by request() to retrieve credentials for a Realm
+protected by Basic Authentication or Digest Authentication.
+
+Should return username and password in a list.  Return undef to abort
+the authentication resolution atempts.
+
+This implementation simply checks a set of pre-stored member
+variables. Subclasses can override this method to e.g. ask the user for
+a username/password.  An example of this can be found in `lwp-request'
+program distributed with this library.
+
+
+$ua->agent([$product_id])
+-------------------------
+
+Get/set the product token that is used to identify the user agent on the
+network.  The agent value is sent as the "User-Agent" header in the
+requests. The default agent name is "libwww-perl/#.##", where "#.##" is
+substitued with the version numer of this library.
+
+The user agent string should be one or more simple product identifiers
+with an optional version number separated by the "/" character.
+Examples are:
+
+     $ua->agent('Checkbot/0.4 ' . $ua->agent);
+     $ua->agent('Mozilla/5.0');
+
+
+$ua->from([$email_address])
+---------------------------
+
+Get/set the Internet e-mail address for the human user who controls the
+requesting user agent.  The address should be machine-usable, as defined
+in RFC 822.  The from value is send as the "From" header in the
+requests.  There is no default.  Example:
+
+     $ua->from('aas@sn.no');
+
+
+$ua->timeout([$secs])
+---------------------
+
+Get/set the timeout value in seconds. The default timeout() value is 180
+seconds, i.e. 3 minutes.
+
+
+$ua->use_alarm([$boolean])
+--------------------------
+
+Get/set a value indicating wether to use alarm() when implementing
+timeouts.  The default is TRUE, if your system supports it.  You can
+disable it if it interfers with other uses of alarm in your application.
+
+
+$ua->use_eval([$boolean])
+-------------------------
+
+Get/set a value indicating wether to handle internal errors internally
+by trapping with eval.  The default is TRUE, i.e. the $ua->request()
+will never die.
+
+
+$ua->parse_head([$boolean])
+---------------------------
+
+Get/set a value indicating wether we should initialize response headers
+from the <head> section of HTML documents. The default is TRUE.  Do not
+turn this off, unless you know what you are doing.
+
+
+$ua->max_size([$bytes])
+-----------------------
+
+Get/set the size limit for response content.  The default is undef,
+which means that there is not limit.  If the returned response content
+is only partial, because the size limit was exceeded, then a
+"X-Content-Range" header will be added to the response.
+
+
+$ua->clone;
+-----------
+
+Returns a copy of the LWP::UserAgent object
+
+
+$ua->is_protocol_supported($scheme)
+-----------------------------------
+
+You can use this method to query if the library currently support the
+specified `scheme'.  The `scheme' might be a string (like 'http' or
+'ftp') or it might be an URI::URL object reference.
+
+
+$ua->mirror($url, $file)
+------------------------
+
+Get and store a document identified by a URL, using If-Modified-Since,
+and checking of the Content-Length.  Returns a reference to the response
+object.
+
+
+$ua->proxy(...)
+---------------
+
+Set/retrieve proxy URL for a scheme:
+
+     $ua->proxy(['http', 'ftp'], 'http://proxy.sn.no:8001/');
+     $ua->proxy('gopher', 'http://proxy.sn.no:8001/');
+
+The first form specifies that the URL is to be used for proxying of
+access methods listed in the list in the first method argument,
+i.e. 'http' and 'ftp'.
+
+The second form shows a shorthand form for specifying proxy URL for a
+single access scheme.
+
+
+$ua->env_proxy()
+----------------
+
+Load proxy settings from *_proxy environment variables.  You might
+specify proxies like this (sh-syntax):
+
+     gopher_proxy=http://proxy.my.place/
+     wais_proxy=http://proxy.my.place/
+     no_proxy="my.place"
+     export gopher_proxy wais_proxy no_proxy
+
+Csh or tcsh users should use the `setenv' command to define these
+envirionment variables.
+
+
+$ua->no_proxy($domain,...)
+--------------------------
+
+Do not proxy requests to the given domains.  Calling no_proxy without
+any domains clears the list of domains. Eg:
+
+     $ua->no_proxy('localhost', 'no', ...);
+
+
+
+
+File: pm.info, Node: Locale/Country, Next: Locale/Iconv, Prev: LWP/UserAgent, Up: Module List
+
+ISO two letter codes for country identification (ISO 3166)
+**********************************************************
+
+
+
+NAME
+====
+
+Locale::Country - ISO two letter codes for country identification (ISO
+3166)
+
+
+SYNOPSIS
+========
+
+     use Locale::Country;
+
+     $country = code2country('jp');         # $country gets 'Japan'
+     $code    = country2code('Norway');     # $code gets 'no'
+
+     @codes   = all_country_codes();
+     @names   = all_country_names();
+
+
+DESCRIPTION
+===========
+
+The Locale::Country module provides access to the ISO two-letter codes
+for identifying countries, as defined in ISO 3166. You can either access
+the codes via the `conversion routines' in this node (described below),
+or with the two functions which return lists of all country codes or all
+country names.
+
+
+CONVERSION ROUTINES
+===================
+
+There are two conversion routines: code2country() and country2code().
+
+code2country()
+     This function takes a two letter country code and returns a string
+     which contains the name of the country identified. If the code is
+     not a valid country code, as defined by ISO 3166, then undef will
+     be returned:
+
+          $country = code2country('fi');
+
+country2code()
+     This function takes a country name and returns the corresponding
+     two letter country code, if such exists.  If the argument could not
+     be identified as a country name, then undef will be returned:
+
+          $code = country2code('Norway');
+
+     The case of the country name is not important.  See the section
+     `KNOWN BUGS AND LIMITATIONS' in this node below.
+
+
+QUERY ROUTINES
+==============
+
+There are two function which can be used to obtain a list of all codes,
+or all country names:
+
+`all_country_codes()'
+     Returns a list of all two-letter country codes.  The codes are
+     guaranteed to be all lower-case, and not in any particular order.
+
+`all_country_names()'
+     Returns a list of all country names for which there is a
+     corresponding two-letter country code. The names are capitalised,
+     and not returned in any particular order.
+
+
+EXAMPLES
+========
+
+The following example illustrates use of the code2country() function.
+The user is prompted for a country code, and then told the corresponding
+country name:
+
+     $| = 1;   # turn off buffering
+
+     print "Enter country code: ";
+     chop($code = <STDIN>);
+     $country = code2country($code);
+     if (defined $country)
+     {
+         print "$code = $country\n";
+     }
+     else
+     {
+         print "'$code' is not a valid country code!\n";
+     }
+
+
+DOMAIN NAMES
+============
+
+Most top-level domain names are based on these codes, but there are
+certain codes which aren't.  If you are using this module to identify
+country from hostname, your best bet is to preprocess the country code.
+
+For example, *edu*, *com*, *gov* and friends would map to *us*;
+*uk* would map to *gb*. Any others?
+
+
+KNOWN BUGS AND LIMITATIONS
+==========================
+
+   * When using country2code(), the country name must currently appear
+     exactly as it does in the source of the module. For example,
+
+          country2code('United States')
+
+     will return *us*, as expected. But the following will all return
+     undef:
+
+          country2code('United States of America')
+          country2code('Great Britain')
+          country2code('U.S.A.')
+
+     If there's need for it, a future version could have variants for
+     country names.
+
+   * In the current implementation, all data is read in when the module
+     is loaded, and then held in memory.  A lazy implementation would be
+     more memory friendly.
+
+
+SEE ALSO
+========
+
+Locale::Language
+     ISO two letter codes for identification of language (ISO 639).
+
+ISO 3166
+     The ISO standard which defines these codes.
+
+ftp://info.ripe.net/iso3166-countrycodes
+     Online file with the two-letter codes, three-letter codes, and
+     country code numbers.  Maintained by the RIPE Network Coordination
+     Centre.
+
+
+AUTHOR
+======
+
+Neil Bowers <neilb@cre.canon.co.uk>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Canon Research Centre Europe (CRE).
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Locale/Iconv, Next: Locale/Language, Prev: Locale/Country, Up: Module List
+
+Perl interface to the XPG4 iconv() function
+*******************************************
+
+
+
+NAME
+====
+
+Locale::Iconv - Perl interface to the XPG4 iconv() function
+
+
+SYNOPSIS
+========
+
+     use Locale::Iconv;
+     $converter = Locale::Iconv->new("fromcode", "tocode");
+     $converted = $converter->convert("Text to convert");
+
+
+DESCRIPTION
+===========
+
+The *Locale::Iconv* module provides a Perl interface to the iconv()
+function as defined by the X/Open Single UNIX Specification (XPG4).  The
+convert() method converts the encoding of characters in the input string
+from the *fromcode* code set to the *tocode* code set, and returns the
+result.
+
+Settings of *fromcode* and *tocode* and their permitted combinations are
+implementation-dependent. Valid values are specified in the system
+documentation
+
+
+Interoperability
+----------------
+
+Locale::Iconv can be used with Gisle Aas' Unicode module (available from
+CPAN) to convert between Unicode and other character sets, provided that
+there are Unicode conversion tables on the system.
+
+
+ERRORS
+======
+
+If the conversion can't be initialized an error is generated (using
+croak()). If an error occurs in the conversion a warning describing the
+problem is emitted (using warn()) and undef is returned.
+
+Consult `iconv(3)' in this node for details on errors that might occur.
+
+
+NOTES
+=====
+
+The quality of the conversion is system-dependent.
+
+
+AUTHOR
+======
+
+Michael Piotrowski, mxp@linguistik.uni-erlangen.de
+
+
+SEE ALSO
+========
+
+perl(1), iconv(3), Unicode::String(3).
+
+
+
+
+File: pm.info, Node: Locale/Language, Next: Locale/Msgcat, Prev: Locale/Iconv, Up: Module List
+
+ISO two letter codes for language identification (ISO 639)
+**********************************************************
+
+
+
+NAME
+====
+
+Locale::Language - ISO two letter codes for language identification (ISO
+639)
+
+
+SYNOPSIS
+========
+
+     use Locale::Language;
+
+     $lang = code2language('en');        # $lang gets 'English'
+     $code = language2code('French');    # $code gets 'fr'
+
+     @codes   = all_language_codes();
+     @names   = all_language_names();
+
+
+DESCRIPTION
+===========
+
+The Locale::Language module provides access to the ISO two-letter codes
+for identifying languages, as defined in ISO 639. You can either access
+the codes via the `conversion routines' in this node (described below),
+or with the two functions which return lists of all language codes or
+all language names.
+
+
+CONVERSION ROUTINES
+===================
+
+There are two conversion routines: code2language() and language2code().
+
+code2language()
+     This function takes a two letter language code and returns a string
+     which contains the name of the language identified. If the code is
+     not a valid language code, as defined by ISO 639, then undef will
+     be returned.
+
+          $lang = code2language($code);
+
+language2code()
+     This function takes a language name and returns the corresponding
+     two letter language code, if such exists.  If the argument could
+     not be identified as a language name, then undef will be returned.
+
+          $code = language2code('French');
+
+     The case of the language name is not important.  See the section
+     `KNOWN BUGS AND LIMITATIONS' in this node below.
+
+
+QUERY ROUTINES
+==============
+
+There are two function which can be used to obtain a list of all
+language codes, or all language names:
+
+`all_language_codes()'
+     Returns a list of all two-letter language codes.  The codes are
+     guaranteed to be all lower-case, and not in any particular order.
+
+`all_language_names()'
+     Returns a list of all language names for which there is a
+     corresponding two-letter language code. The names are capitalised,
+     and not returned in any particular order.
+
+
+EXAMPLES
+========
+
+The following example illustrates use of the code2language() function.
+The user is prompted for a language code, and then told the
+corresponding language name:
+
+     $| = 1;    # turn off buffering
+
+     print "Enter language code: ";
+     chop($code = <STDIN>);
+     $lang = code2language($code);
+     if (defined $lang)
+     {
+         print "$code = $lang\n";
+     }
+     else
+     {
+         print "'$code' is not a valid language code!\n";
+     }
+
+
+KNOWN BUGS AND LIMITATIONS
+==========================
+
+   * In the current implementation, all data is read in when the module
+     is loaded, and then held in memory.  A lazy implementation would be
+     more memory friendly.
+
+
+SEE ALSO
+========
+
+Locale::Country
+     ISO two letter codes for identification of country (ISO 3166).
+
+ISO 639:1988 (E/F)
+     Code for the representation of names of languages.
+
+
+AUTHOR
+======
+
+Neil Bowers <neilb@cre.canon.co.uk>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Canon Research Centre Europe (CRE).
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Locale/Msgcat, Next: Log/Topics, Prev: Locale/Language, Up: Module List
+
+Perl extension for blah blah blah
+*********************************
+
+
+
+NAME
+====
+
+Locale::Msgcat - Perl extension for blah blah blah
+
+
+SYNOPSIS
+========
+
+     use Locale::Msgcat;
+
+     $cat = new Locale::Msgcat;
+
+     $rc  = $cat->catopen(name, oflag);
+     $msg = $cat->catgets(set_number, message_number, string);
+     $rc  = $cat->catclose();
+
+
+DESCRIPTION
+===========
+
+The *Locale::Msgcat* module allows access to the message catalog
+functions which are available on some systems. A new Locale::Msgcat
+object must first be created for each catalog which has to be open at a
+given time.
+
+The *catopen* operation opens the catalog whose name is given as
+argument.  The oflag can be either 0 or NL_CAT_LOCALE (usually 1) which
+is the recommended value.
+
+The *catgets* message retrieves message_number for the set_number
+message set, and if not found returns string.
+
+The *catclose* function should be used when access to a catalog is not
+needed anymore.
+
+
+EXAMPLES
+========
+
+     use Locale::Msgcat;
+
+     $cat = new Locale::Msgcat;
+     unless ($cat->catopen("whois.cat", 1)) {
+         print STDERR "Can't open whois catalog.\n";
+         exit(1);
+     }
+     printf "First message, first set : %s\n", $cat->catgets(1, 1, "not found");
+     unless ($cat->catclose()) {
+         print STDERR "Can't close whois catalog.\n";
+         exit(1);
+     }
+
+The above example would print the first message from the first message
+set found in the whois catalog, or if not found it would print "not
+found".
+
+
+AUTHOR
+======
+
+Christophe Wolfhugel, wolf@pasteur.fr
+
+
+SEE ALSO
+========
+
+catopen(3), catclose(3), catgets(3), perl(1).
+
+
+
+
+File: pm.info, Node: Log/Topics, Next: Logfile, Prev: Locale/Msgcat, Up: Module List
+
+control flow of logging messages
+********************************
+
+
+
+NAME
+====
+
+Log::Topics - control flow of logging messages
+
+
+SYNOPSIS
+========
+
+     use Log::Topics qw(add_topic log_topic topics);
+     add_topic $topic_name,$filehandle,$overload
+     add_topic $topic_name,$filename,$overload
+     log_topic $topic_name,@messages
+     @topicslist=topics();
+
+
+DESCRIPTION
+===========
+
+This package provides services for controlling the output of logging
+messages from an application. Log messages are identified by named
+topics, and the messages for each topic can be directed or redirected to
+file handles or files.
+
+The add_topic() function can be used to associate a named topic with a
+particular file handle. If a value of 0 then logging of that particular
+topic is switched off. If the file handle is not connected to a file
+then it will be created and connected to a file of the same
+name. add_topic() returns the name of the file handle. The third
+$overload parameter, if specified and false will only set the file
+handle if the specified topic is not already associated with a file
+handle.
+
+Log messages are written using the log_topic() function which takes the
+topic name, and if that particular topic is enabled will print its
+remaining arguments to the associated file handle. It is an error to use
+a topic name that has not been declared using add_topic() first.
+
+The topics() function returns a list of all the current registered
+topics.
+
+This package can usefully be used for controlling all the output of a
+program, not just debugging and logging messages.
+
+If you have Getopt::Regex package then the following lines of code allow
+the user to control the log messages from the command line using either
+'-Lname=FILE' or '-Lname FILE' syntaxes.
+
+     use Log::Topics qw(add_topic log_topic);
+     use Getopt::Regex qw(GetOptions);
+     GetOptions(\@ARGV,
+      ['-L(.+)=(.+)',sub { add_topic $1,$2; }    ,0],
+      ['-L(.+)',     sub { add_topic $1; $_[0]; },1]);
+
+
+HISTORY
+=======
+
+     $Log: Topics.pm,v $
+     Revision 1.5  1996/01/04 20:45:38  willijar
+     Renamed module to Log::Topics, and renamed functions to more
+     accurately reflect modules operation.
+     Added topics() function to obtain list of available topics and removed
+     internal hash variable from export list.
+     Reduced to one the hash dereference in log_topic for slight efficiency
+     gain.
+
+     Revision 1.4  1995/12/17 17:16:31  willijar
+     Fixed bug that crept in in non-overloading case of diagnose
+
+     Revision 1.3  1995/12/16 11:59:19  willijar
+     Removed function for reading arguments from commandline -
+     use Getopt::Regex instead.
+     Added ability to open files for undefined filehandles.
+     Improvements to documentation
+     Changed name to be closer to module guidlines.
+
+     Revision 1.2  1995/09/20  19:11:44  willijar
+     Added pod documentation and RCS control
+
+
+TO DO
+=====
+
+Could perhaps have the idea of groups of related topics which could be
+set and changed together. Would this be useful?
+
+
+BUGS
+====
+
+Please let me know of any bugs.  Suggestions for improvements gladly
+received.
+
+
+AUTHOR
+======
+
+John A.R. Williams, <J.A.R.Williams@aston.ac.uk>
+
+Thanks to Tim Bunce <Tim.Bunce@ig.co.uk> for helpful suggestions and
+comments.
+
+
+
+
+File: pm.info, Node: Logfile, Next: MD5, Prev: Log/Topics, Up: Module List
+
+Perl extension for generating reports from logfiles
+***************************************************
+
+
+
+NAME
+====
+
+Logfile - Perl extension for generating reports from logfiles
+
+
+SYNOPSIS
+========
+
+     use Logfile::Cern;
+
+     $l = new Logfile::Cern  File  => 'cache.log.gz', 
+                             Group => [Domain,File,Hour];
+     $l->report(Group => File,   Sort => Records);
+     $l->report(Group => Domain, Sort => Bytes);
+     $l->report(Group => Hour, List => [Bytes, Records]);
+
+     use Logfile::Wftp;
+
+     [...]
+
+
+DESCRIPTION
+===========
+
+The Logfile extension will help you generate various reports from
+different server logfiles. In general there is no restriction as to what
+information you extract from the logfiles.
+
+
+Reading the files
+-----------------
+
+The package can be customized by subclassing `Logfile'.
+
+A subclass should provide a funtion next which reads the next record
+from the file handle `$self->{Fh}' and returns an object of type
+`Logfile::Record'. In addition a function `norm' may be specified to
+normalize the various record fields.
+
+Here is a shortened version of the `Logfile::Cern' class:
+
+     package Logfile::Cern;
+     @ISA = qw ( Logfile::Base ) ;
+
+     sub next {
+         my $self = shift;
+         my $fh = $self->{Fh};
+
+     *S = $fh;
+     my ($line,$host,$user,$pass,$rest,$date,$req,$code,$bytes);
+
+     ($host,$user,$pass,$rest) = split ' ', $line, 4;
+     ($rest =~ s!\[([^\]]+)\]\s*!!) && ($date = $1);
+     ($rest =~ s!\"([^\"]+)\"\s*!!) && ($req = (split ' ', $1)[1]);
+     ($code, $bytes) = split ' ', $rest;
+     Logfile::Record->new(Host  => $host,
+                          Date  => $date,
+                          File  => $req,
+                          Bytes => $bytes);
+       }
+
+As stated above, in general you are free to choose the fields you enter
+in the record. But:
+
+Date
+     should be a valid date string. For conversion to the seconds
+     elapsed since the start of epoch the modules `GetDate' and
+     `Date::DateParse' are tried. If both cannot be useed, a crude
+     build-in module is used.
+
+     The record constructor replaces Date by the date in `yymmdd' form
+     to make it sortable. Also the field *Hour* is padded in.
+
+Host
+     Setting Host will also set field *Domain* by the verbose name of
+     the country given by the the domain suffix of the fully qualified
+     domain name (hostname.domain). `foo.bar.PG' will be mapped to `Papua
+     New'. Hostnames containing no dot will be assigned to the domain
+     *Local*. IP numbers will be assiged to the domain
+     *Unresolved*. Mapping of short to long domain names is done in the
+     *Net::Country* extension which might be usefull in other contexts:
+
+          use Net::Country; $germany = Net::Country::Name('de');
+
+Records
+     is always set to 1 in the `Record' constructor. So this field gives
+     the number of successful returns from the next function.
+
+Here is the shortened optional `norm' method:
+
+     sub norm {
+         my ($self, $key, $val) = @_;
+
+     if ($key eq File) {
+         $val =~ s/\?.*//;                             # remove query
+         $val =~ s!%([\da-f][\da-f])!chr(hex($1))!eig; # decode escapes
+     }
+     $val;
+       }
+
+The constructor reads in a logfile and builds one or more indices.
+
+     $l = new Logfile::Cern  File => 'cache.log.gz', 
+                             Group => [Host,Domain,File,Hour,Date];
+
+There is little space but some time overhead in generating additional
+indexes. If the File parameter is not given, *STDIN* is used. The Group
+parameter may be a field name or a reference to a list of field
+names. Only the field names given as constructor argument can be used
+for report generation.
+
+
+Report Generation
+-----------------
+
+The Index to use for a report must be given as the Group
+parameter. Output is sorted by the index field unless a Sort parameter
+is given. Also the output can be truncated by a Top argument or Limit.
+
+The report generator lists the fields *Bytes* and Records for a given
+index. The option List may be a single field name or a reference to an
+array fo field names. It specifies which field should be listed in
+addition to the Group field. List defaults to Records.
+
+     $l->report(Group => Domain, List => [Bytes, Records])
+
+Output is sorted by the Group field unless overwritten by a Sort
+option. Default sorting order is increasing for Date and *Hour* fields
+and decreasing for all other Fields. The order can be reversed using the
+Reverse option.
+
+This code
+
+     $l->report(Group => File, Sort => Records, Top => 10);
+
+prints:
+
+     File                          Records 
+     =====================================
+     /htbin/SFgate               30 31.58% 
+     /freeWAIS-sf/*              22 23.16% 
+     /SFgate/SFgate               8  8.42% 
+     /SFgate/SFgate-small         7  7.37% 
+     /icons/*                     4  4.21% 
+     /~goevert                    3  3.16% 
+     /journals/SIGMOD             3  3.16% 
+     /SFgate/ciw                  2  2.11% 
+     /search                      1  1.05% 
+     /reports/96/                 1  1.05% 
+
+Here are other examples. Also take a look at the `t/*' files.
+
+     $l->report(Group => Domain, Sort => Bytes);
+
+     Domain                  Records 
+     ===============================
+     Germany               12 12.63% 
+     Unresolved             8  8.42% 
+     Israel                34 35.79% 
+     Denmark                4  4.21% 
+     Canada                 3  3.16% 
+     Network                6  6.32% 
+     US Commercial         14 14.74% 
+     US Educational         8  8.42% 
+     Hong Kong              2  2.11% 
+     Sweden                 2  2.11% 
+     Non-Profit             1  1.05% 
+     Local                  1  1.05% 
+
+     $l->report(Group => Hour, List => [Bytes, Records]);
+
+     Hour            Bytes          Records 
+     ======================================
+     07      245093 17.66%        34 35.79% 
+     08      438280 31.59%        19 20.00% 
+     09      156730 11.30%        11 11.58% 
+     10      255451 18.41%        16 16.84% 
+     11      274521 19.79%        10 10.53% 
+     12       17396  1.25%         5  5.26% 
+
+
+Report options
+--------------
+
+Group `=>' *field*
+     Mandatory. *field* must be one of the fields passed to the
+     constructor.
+
+List `=>' *field*
+List `=>' [*field*, *field*]
+     List the subtotals for *field*s. Defaults to Records.
+
+Sort `=>' *field*.
+     Sort output by *field*. By default, Date and *Hour* are sorted in
+     increasing order, whereas all
+       other fields are sorted in decreasing order.
+
+Reverse `=> 1'
+     Reverse sorting order.
+
+Top `=>' number
+     Print only the first number subtotals.
+
+Limit `=>' number
+     Print only the subtotals with Sort field greater than number (less
+     than number if sorted in increasing order).
+
+Currently reports are simply printed to STDOUT.
+
+
+AUTHOR
+======
+
+Ulrich Pfeifer <`pfeifer@ls6.informatik.uni-dortmund.de'>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+

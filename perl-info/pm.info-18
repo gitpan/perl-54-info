@@ -1,0 +1,1671 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Devel/TraceFuncs, Next: DirHandle, Prev: Devel/Symdump, Up: Module List
+
+trace function calls as they happen.
+************************************
+
+
+
+NAME
+====
+
+Devel::TraceFuncs - trace function calls as they happen.
+
+
+SYNOPSIS
+========
+
+Usage:
+  
+  require Devel::TraceFuncs;
+
+     max_trace_depth 5;
+     trace_file "foo.out";
+     trace_file $file_handle;
+
+     sub foo {
+       IN(my $f, "a message");
+
+     DEBUG "hellooo!";
+       }
+
+
+DESCRIPTION
+===========
+
+Devel::TraceFuncs provides utilities to trace the execution of a
+program.  It can print traces that look something like:
+
+     +-> global: '0'
+     |  +-> main::fo(4, 5) (in ./t.pm:32): 'now then'
+     |  |  +-> main::fp(4, 5) (in ./t.pm:19)
+     |  |  |  +-> main::fq() (in ./t.pm:13)
+     |  |  |  |  que pee doll (in ./t.pm:8)
+     |  |  |  +-< main::fq() (in ./t.pm:13)
+     |  |  |  cee dee (in ./t.pm:14)
+     |  |  +-< main::fp(4, 5) (in ./t.pm:19)
+     |  |  ha
+     |  |  hs (in ./t.pm:20)
+     |  +-< main::fo(4, 5) (in ./t.pm:32): 'now then'
+     |  done (in ./t.pm:34)
+     +-< global: '0'
+
+
+IN
+--
+
+A trace begins when a function calls IN.  A my'd variable is passed in,
+such that when that function exits, the destructor for the variable is
+called.  If this trace is to be printed, the opening line of the trace
+in printed at this time.  Any other parameters are concatenated
+together, and printed on both the opening and closing lines of the
+trace.
+
+I wish the syntax could be a little nicer here, but I couldn't find
+anything in perl that resembles Tcl's *uplevel* or *upvar* commands.  If
+I was one of the perl gods, I could have figured out a way to do
+something like perl5db.pl:
+
+     sub sub {
+       # create a new subroutine, with a my'd TraceFunc object
+     }
+
+
+DEBUG
+-----
+
+Print some text to the trace file, at the correct depth in the trace.
+If the last parameter ends in "!", the arguments are printed, regardless
+of current depth.
+
+
+trace_file
+----------
+
+trace_file takes one argument, which is either a file name or an open
+file handle.  All trace output will go to this file.
+
+
+max_trace_depth
+---------------
+
+To avoid lots of nesting, particularly from recursive function calls,
+you can set the maximum depth to be traced.  If this is -1 (the
+default), all levels of functions are traced.  If it is 0, no trace
+output occurs, except for DEBUG statements that end in "!".
+
+
+EXAMPLE
+=======
+
+     #!/usr/local/bin/perl -w
+
+     use Devel::TraceFuncs;
+     use strict;
+
+     sub fq {
+       IN(my $f);
+       DEBUG "que", "pee", "doll!";
+     }
+
+     sub fp {
+       IN(my $f);
+       fq();
+       DEBUG "cee", "dee";
+     }
+
+     sub fo {
+       IN(my $f, "now", "then");
+       &fp;
+       DEBUG "ha\nhs";
+     }
+
+     if (@ARGV) {
+       max_trace_depth shift;
+     }
+
+     if (@ARGV) {
+       trace_file shift;
+     }
+
+     IN(my $f, 0);
+     fo(4,5);
+
+     DEBUG "done";
+
+     =head1 BUGS
+
+For some reason, the closing lines are reversed in this example:
+
+     use Devel::TraceFuncs;
+
+     max_trace_depth -1;
+
+     sub g {
+       IN(my $f);
+     }
+ 
+     sub f {
+       IN(my $f);
+       g();
+     }
+
+     f();
+
+What it boils down to is not letting IN be the last line of a function.
+In the debugger, the objects are destructed in the correct order, so
+this must be caused by some sort of performance optimization in the perl
+runtime.
+
+
+AUTHOR
+======
+
+Joe Hildebrand
+
+     Copyright (c) 1996 Joe Hildebrand. All rights reserved.
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+
+MODIFICATION HISTORY
+====================
+
+Version 0.1, 1 Jun 1996
+
+
+
+
+File: pm.info, Node: DirHandle, Next: DynaLoader, Prev: Devel/TraceFuncs, Up: Module List
+
+supply object methods for directory handles
+*******************************************
+
+
+
+NAME
+====
+
+DirHandle - supply object methods for directory handles
+
+
+SYNOPSIS
+========
+
+     use DirHandle;
+     $d = new DirHandle ".";
+     if (defined $d) {
+         while (defined($_ = $d->read)) { something($_); }
+         $d->rewind;
+         while (defined($_ = $d->read)) { something_else($_); }
+         undef $d;
+     }
+
+
+DESCRIPTION
+===========
+
+The DirHandle method provide an alternative interface to the opendir(),
+closedir(), readdir(), and rewinddir() functions.
+
+The only objective benefit to using DirHandle is that it avoids
+namespace pollution by creating globs to hold directory handles.
+
+
+
+
+File: pm.info, Node: DynaLoader, Next: English, Prev: DirHandle, Up: Module List
+
+Dynamically load C libraries into Perl code
+*******************************************
+
+
+
+NAME
+====
+
+DynaLoader - Dynamically load C libraries into Perl code
+
+dl_error(), dl_findfile(), dl_expandspec(), dl_load_file(),
+dl_find_symbol(), dl_find_symbol_anywhere(), dl_undef_symbols(),
+dl_install_xsub(), dl_load_flags(), bootstrap() - routines used by
+DynaLoader modules
+
+
+SYNOPSIS
+========
+
+     package YourPackage;
+     require DynaLoader;
+     @ISA = qw(... DynaLoader ...);
+     bootstrap YourPackage;
+
+     # optional method for 'global' loading
+     sub dl_load_flags { 0x01 }     
+
+
+DESCRIPTION
+===========
+
+This document defines a standard generic interface to the dynamic
+linking mechanisms available on many platforms.  Its primary purpose is
+to implement automatic dynamic loading of Perl modules.
+
+This document serves as both a specification for anyone wishing to
+implement the DynaLoader for a new platform and as a guide for anyone
+wishing to use the DynaLoader directly in an application.
+
+The DynaLoader is designed to be a very simple high-level interface that
+is sufficiently general to cover the requirements of SunOS, HP-UX, NeXT,
+Linux, VMS and other platforms.
+
+It is also hoped that the interface will cover the needs of OS/2, NT etc
+and also allow pseudo-dynamic linking (using `ld -A' at runtime).
+
+It must be stressed that the DynaLoader, by itself, is practically
+useless for accessing non-Perl libraries because it provides almost no
+Perl-to-C 'glue'.  There is, for example, no mechanism for calling a C
+library function or supplying arguments.  It is anticipated that any
+glue that may be developed in the future will be implemented in a
+separate dynamically loaded module.
+
+DynaLoader Interface Summary
+
+     @dl_library_path
+     @dl_resolve_using
+     @dl_require_symbols
+     $dl_debug
+     @dl_librefs
+     @dl_modules
+                                                     Implemented in:
+     bootstrap($modulename)                               Perl
+     @filepaths = dl_findfile(@names)                     Perl
+     $flags = $modulename->dl_load_flags                  Perl
+     $symref  = dl_find_symbol_anywhere($symbol)          Perl
+
+     $libref  = dl_load_file($filename, $flags)           C
+     $symref  = dl_find_symbol($libref, $symbol)          C
+     @symbols = dl_undef_symbols()                        C
+     dl_install_xsub($name, $symref [, $filename])        C
+     $message = dl_error                                  C
+
+@dl_library_path
+     The standard/default list of directories in which dl_findfile()
+     will search for libraries etc.  Directories are searched in order:
+     $dl_library_path[0], [1], ... etc
+
+     @dl_library_path is initialised to hold the list of 'normal'
+     directories (`/usr/lib', etc) determined by *Configure*
+     (`$Config{'libpth'}').  This should ensure portability across a
+     wide range of platforms.
+
+     @dl_library_path should also be initialised with any other
+     directories that can be determined from the environment at runtime
+     (such as LD_LIBRARY_PATH for SunOS).
+
+     After initialisation @dl_library_path can be manipulated by an
+     application using push and unshift before calling dl_findfile().
+     Unshift can be used to add directories to the front of the search
+     order either to save search time or to override libraries with the
+     same name in the 'normal' directories.
+
+     The load function that dl_load_file() calls may require an absolute
+     pathname.  The dl_findfile() function and @dl_library_path can be
+     used to search for and return the absolute pathname for the
+     library/object that you wish to load.
+
+@dl_resolve_using
+     A list of additional libraries or other shared objects which can be
+     used to resolve any undefined symbols that might be generated by a
+     later call to load_file().
+
+     This is only required on some platforms which do not handle
+     dependent libraries automatically.  For example the Socket Perl
+     extension library (`auto/Socket/Socket.so') contains references to
+     many socket functions which need to be resolved when it's loaded.
+     Most platforms will automatically know where to find the
+     'dependent' library (e.g., `/usr/lib/libsocket.so').  A few
+     platforms need to be told the location of the dependent library
+     explicitly.  Use @dl_resolve_using for this.
+
+     Example usage:
+
+          @dl_resolve_using = dl_findfile('-lsocket');
+
+@dl_require_symbols
+     A list of one or more symbol names that are in the library/object
+     file to be dynamically loaded.  This is only required on some
+     platforms.
+
+@dl_librefs
+     An array of the handles returned by successful calls to
+     dl_load_file(), made by bootstrap, in the order in which they were
+     loaded.  Can be used with dl_find_symbol() to look for a symbol in
+     any of the loaded files.
+
+@dl_modules
+     An array of module (package) names that have been bootstrap'ed.
+
+dl_error()
+     Syntax:
+
+          $message = dl_error();
+
+     Error message text from the last failed DynaLoader function.  Note
+     that, similar to errno in unix, a successful function call does not
+     reset this message.
+
+     Implementations should detect the error as soon as it occurs in any
+     of the other functions and save the corresponding message for later
+     retrieval.  This will avoid problems on some platforms (such as
+     SunOS) where the error message is very temporary (e.g., dlerror()).
+
+$dl_debug
+     Internal debugging messages are enabled when $dl_debug is set true.
+     Currently setting $dl_debug only affects the Perl side of the
+     DynaLoader.  These messages should help an application developer to
+     resolve any DynaLoader usage problems.
+
+     $dl_debug is set to `$ENV{'PERL_DL_DEBUG'}' if defined.
+
+     For the DynaLoader developer/porter there is a similar debugging
+     variable added to the C code (see dlutils.c) and enabled if Perl
+     was built with the *-DDEBUGGING* flag.  This can also be set via
+     the PERL_DL_DEBUG environment variable.  Set to 1 for minimal
+     information or higher for more.
+
+dl_findfile()
+     Syntax:
+
+          @filepaths = dl_findfile(@names)
+
+     Determine the full paths (including file suffix) of one or more
+     loadable files given their generic names and optionally one or more
+     directories.  Searches directories in @dl_library_path by default
+     and returns an empty list if no files were found.
+
+     Names can be specified in a variety of platform independent forms.
+     Any names in the form *-lname* are converted into `libname.*',
+     where `.*' is an appropriate suffix for the platform.
+
+     If a name does not already have a suitable prefix and/or suffix
+     then the corresponding file will be searched for by trying
+     combinations of prefix and suffix appropriate to the platform:
+     "$name.o", "lib$name.*" and "$name".
+
+     If any directories are included in @names they are searched before
+      @dl_library_path.  Directories may be specified as *-Ldir*.  Any
+     other names are treated as filenames to be searched for.
+
+     Using arguments of the form `-Ldir' and `-lname' is recommended.
+
+     Example:
+
+          @dl_resolve_using = dl_findfile(qw(-L/usr/5lib -lposix));
+
+dl_expandspec()
+     Syntax:
+
+          $filepath = dl_expandspec($spec)
+
+     Some unusual systems, such as VMS, require special filename
+     handling in order to deal with symbolic names for files (i.e.,
+     VMS's Logical Names).
+
+     To support these systems a dl_expandspec() function can be
+     implemented either in the `dl_*.xs' file or code can be added to
+     the autoloadable dl_expandspec() function in `DynaLoader.pm'.  See
+     `DynaLoader.pm' for more information.
+
+dl_load_file()
+     Syntax:
+
+          $libref = dl_load_file($filename, $flags)
+
+     Dynamically load $filename, which must be the path to a shared
+     object or library.  An opaque 'library reference' is returned as a
+     handle for the loaded object.  Returns undef on error.
+
+     The $flags argument to alters dl_load_file behaviour.  Assigned
+     bits:
+
+          0x01  make symbols available for linking later dl_load_file's.
+                (only known to work on Solaris 2 using dlopen(RTLD_GLOBAL))
+                (ignored under VMS; this is a normal part of image linking)
+
+     (On systems that provide a handle for the loaded object such as
+     SunOS and HPUX, $libref will be that handle.  On other systems
+     $libref will typically be $filename or a pointer to a buffer
+     containing $filename.  The application should not examine or alter
+     $libref in any way.)
+
+     This is the function that does the real work.  It should use the
+     current values of @dl_require_symbols and @dl_resolve_using if
+     required.
+
+          SunOS: dlopen($filename)
+          HP-UX: shl_load($filename)
+          Linux: dld_create_reference(@dl_require_symbols); dld_link($filename)
+          NeXT:  rld_load($filename, @dl_resolve_using)
+          VMS:   lib$find_image_symbol($filename,$dl_require_symbols[0])
+
+     (The dlopen() function is also used by Solaris and some versions of
+     Linux, and is a common choice when providing a "wrapper" on other
+     mechanisms as is done in the OS/2 port.)
+
+dl_loadflags()
+     Syntax:
+
+          $flags = dl_loadflags $modulename;
+
+     Designed to be a method call, and to be overridden by a derived
+     class (i.e. a class which has DynaLoader in its @ISA).  The
+     definition in DynaLoader itself returns 0, which produces standard
+     behavior from dl_load_file().
+
+dl_find_symbol()
+     Syntax:
+
+          $symref = dl_find_symbol($libref, $symbol)
+
+     Return the address of the symbol $symbol or undef if not found.  If
+     the target system has separate functions to search for symbols of
+     different types then dl_find_symbol() should search for function
+     symbols first and then other types.
+
+     The exact manner in which the address is returned in $symref is not
+     currently defined.  The only initial requirement is that $symref
+     can be passed to, and understood by, dl_install_xsub().
+
+          SunOS: dlsym($libref, $symbol)
+          HP-UX: shl_findsym($libref, $symbol)
+          Linux: dld_get_func($symbol) and/or dld_get_symbol($symbol)
+          NeXT:  rld_lookup("_$symbol")
+          VMS:   lib$find_image_symbol($libref,$symbol)
+
+dl_find_symbol_anywhere()
+     Syntax:
+
+          $symref = dl_find_symbol_anywhere($symbol)
+
+     Applies dl_find_symbol() to the members of @dl_librefs and returns
+     the first match found.
+
+dl_undef_symbols()
+     Example
+
+          @symbols = dl_undef_symbols()
+
+     Return a list of symbol names which remain undefined after
+     load_file().  Returns `()' if not known.  Don't worry if your
+     platform does not provide a mechanism for this.  Most do not need
+     it and hence do not provide it, they just return an empty list.
+
+dl_install_xsub()
+     Syntax:
+
+          dl_install_xsub($perl_name, $symref [, $filename])
+
+     Create a new Perl external subroutine named $perl_name using
+     $symref as a pointer to the function which implements the routine.
+     This is simply a direct call to newXSUB().  Returns a reference to
+     the installed function.
+
+     The $filename parameter is used by Perl to identify the source file
+     for the function if required by die(), caller() or the debugger.
+     If $filename is not defined then "DynaLoader" will be used.
+
+bootstrap()
+     Syntax:
+
+     bootstrap($module)
+
+     This is the normal entry point for automatic dynamic loading in
+     Perl.
+
+     It performs the following actions:
+
+        * locates an auto/$module directory by searching @INC
+
+        * uses dl_findfile() to determine the filename to load
+
+        * sets @dl_require_symbols to `("boot_$module")'
+
+        * executes an `auto/$module/$module.bs' file if it exists
+          (typically used to add to @dl_resolve_using any files which
+          are required to load the module on the current platform)
+
+        * calls dl_load_flags() to determine how to load the file.
+
+        * calls dl_load_file() to load the file
+
+        * calls dl_undef_symbols() and warns if any symbols are
+          undefined
+
+        * calls dl_find_symbol() for "boot_$module"
+
+        * calls dl_install_xsub() to install it as
+          "${module}::bootstrap"
+
+        * calls &{"${module}::bootstrap"} to bootstrap the module
+          (actually it uses the function reference returned by
+          dl_install_xsub for speed)
+
+
+AUTHOR
+======
+
+Tim Bunce, 11 August 1994.
+
+This interface is based on the work and comments of (in no particular
+order): Larry Wall, Robert Sanders, Dean Roehrich, Jeff Okamoto, Anno
+Siegel, Thomas Neumann, Paul Marquess, Charles Bailey, myself and
+others.
+
+Larry Wall designed the elegant inherited bootstrap mechanism and
+implemented the first Perl 5 dynamic loader using it.
+
+Solaris global loading added by Nick Ing-Simmons with design/coding
+assistance from Tim Bunce, January 1996.
+
+
+
+
+File: pm.info, Node: English, Next: Env, Prev: DynaLoader, Up: Module List
+
+use nice English (or awk) names for ugly punctuation variables
+**************************************************************
+
+
+
+NAME
+====
+
+English - use nice English (or awk) names for ugly punctuation variables
+
+
+SYNOPSIS
+========
+
+     use English;
+     ...
+     if ($ERRNO =~ /denied/) { ... }
+
+
+DESCRIPTION
+===========
+
+This module provides aliases for the built-in variables whose names no
+one seems to like to read.  Variables with side-effects which get
+triggered just by accessing them (like $0) will still be affected.
+
+For those variables that have an *awk* version, both long and short
+English alternatives are provided.  For example, the $/ variable can be
+referred to either $RS or $INPUT_RECORD_SEPARATOR if you are using the
+English module.
+
+See *Note Perlvar: (perl.info)perlvar, for a complete list of these.
+
+
+
+
+File: pm.info, Node: Env, Next: Eroot, Prev: English, Up: Module List
+
+perl module that imports environment variables
+**********************************************
+
+
+
+NAME
+====
+
+Env - perl module that imports environment variables
+
+
+SYNOPSIS
+========
+
+     use Env;
+     use Env qw(PATH HOME TERM);
+
+
+DESCRIPTION
+===========
+
+Perl maintains environment variables in a pseudo-hash named %ENV.  For
+when this access method is inconvenient, the Perl module Env allows
+environment variables to be treated as simple variables.
+
+The Env::import() function ties environment variables with suitable
+names to global Perl variables with the same names.  By default it does
+so with all existing environment variables (`keys %ENV').  If the import
+function receives arguments, it takes them to be a list of environment
+variables to tie; it's okay if they don't yet exist.
+
+After an environment variable is tied, merely use it like a normal
+variable.  You may access its value
+
+     @path = split(/:/, $PATH);
+
+or modify it
+
+     $PATH .= ":.";
+
+however you'd like.  To remove a tied environment variable from the
+environment, assign it the undefined value
+
+     undef $PATH;
+
+
+AUTHOR
+======
+
+Chip Salzenberg <`chip@fin.uucp'>
+
+
+
+
+File: pm.info, Node: Eroot, Next: Errno, Prev: Env, Up: Module List
+
+an eternal root to handle persistent objects
+********************************************
+
+
+
+NAME
+====
+
+Eroot - an eternal root to handle persistent objects
+
+
+ABSTRACT
+========
+
+The Eternal Root (eroot) is given references to the root objects of any
+object hierarchies which must persist between separate invocations of
+the application.  When the eroot's destructor is called, the eroot will
+find all objects referenced in the object hierarchies and will store
+them.  All objects will be restored (if possible) when and if the
+*Continue* message is sent to the eroot.
+
+
+SYNOPSIS
+========
+
+     require Class::Eroot;
+     my $some_obj;
+     my $eroot = new EROOT ( 'Name' => "persist.file",
+     			  'Key'  => "myAppObjects" );
+
+     if( $eroot->Continue ){
+     	# No existing objects.  Start from scratch.
+     	$some_obj = new SomeObj;
+     	$eroot->Keep( "Some_obj" => $some_obj );
+     }
+     else{
+     	$some_obj = $eroot->Root("some_obj");
+     }
+
+     $eroot->List;
+     $eroot->Keep( "MyObj" => $myobj );
+     $eroot->Lose( "Old_Obj" );
+     $eroot->Lose( $this_obj );
+
+
+DESCRIPTION
+===========
+
+When the eroot saves a group of object hierarchies, it stores its key
+with them.  The key of any objects being restored must match the key of
+the eroot which is trying to restore them.  The *Continue* method will
+call die if the keys do not match.  Continue will return 0 if the
+objects were loaded and non-zero if they were not.
+
+The eroot will attempt to send a *suspend* message to the object prior
+to storing the object's state.  The object's class is not required to
+have a suspend method defined.
+
+When the eroot restores an object it will bless the object reference in
+the object's class (package) and will attempt to send a *resume* message
+to the object.  The object's class is not required to have a resume
+method defined.
+
+An object should not propagate *suspend* and *resume* messages.  The
+eroot will send suspend messages to the objects in the order in which
+they were stored in the eroot (breadth-first, root-to-leaves).  The
+eroot will send resume messages by starting with the classes of the
+objects at the leaves of the object hierarchy and moving toward the root
+of the object hierarchy.
+
+Note that Perl will call the *destructors* of the persistent objects.
+The programmer should be prepared to deal with this.
+
+It is necessary to *Keep* an object only once.  The object will remain
+persistent until the eroot is told to *Lose* it.
+
+
+INSTANCE VARIABLES
+==================
+
+References will be properly hooked up if they are type SCALAR, ARRAY, REF,
+or HASH.  The eroot assumes that keys and values (if the value is not a
+reference) for the objects' *instance variables* can be represented as text
+within single quotes.  If this is not true for your objects then the object's
+*suspend* method can be used to "wrap" the object for storage, and the
+*resume* method can be used to "unwrap" the object.
+
+Embedded single quotes in the value will be preserved.  This is
+currently the only place where single quotes are handled.
+
+
+THINGS TO AVOID
+===============
+
+     o Storing the eroot.
+     o Storing references to tie()'d variables and objects.
+     o Storing references to CODE objects.
+     o Storing the same object in two different eroots.
+       Unless you think you know what you're doing, of course.
+     o Using two eroots to store each other :)
+     o Storing named arrays and hashes.  These will be restored as
+       anonymous arrays and hashes.
+     o Storing an object while it has an open stream.
+     o Storing an object which has an %OVERLOAD somewhere in
+       it's class hierarchy.
+
+Know your object hierarchy.  Be sure that everything in the hierarchy
+can handle persistence.
+
+
+NOTES
+=====
+
+This is not an OODBMS.
+
+
+FILES
+=====
+
+     Class::Eroot.pm	- Eternal Root class.
+     persist.file	- User-defined file where objects are stored.
+     Class::Template.pm	- Struct/member template builder.
+
+
+
+
+File: pm.info, Node: Errno, Next: Exporter, Prev: Eroot, Up: Module List
+
+System errno constants
+**********************
+
+
+
+NAME
+====
+
+Errno - System errno constants
+
+
+SYNOPSIS
+========
+
+     use Errno qw(EINTR EIO);
+
+
+DESCRIPTION
+===========
+
+`Errno' defined and conditionally exports all the error constants
+defined in your system `errno.h' include file.
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Graham Barr. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Exporter, Next: ExtUtils/Command, Prev: Errno, Up: Module List
+
+Implements default import method for modules
+********************************************
+
+
+
+NAME
+====
+
+Exporter - Implements default import method for modules
+
+
+SYNOPSIS
+========
+
+In module ModuleName.pm:
+
+     package ModuleName;
+     require Exporter;
+     @ISA = qw(Exporter);
+
+     @EXPORT = qw(...);            # symbols to export by default
+     @EXPORT_OK = qw(...);         # symbols to export on request
+     %EXPORT_TAGS = tag => [...];  # define names for sets of symbols
+
+In other files which wish to use ModuleName:
+
+     use ModuleName;               # import default symbols into my package
+
+     use ModuleName qw(...);       # import listed symbols into my package
+
+     use ModuleName ();            # do not import any symbols
+
+
+DESCRIPTION
+===========
+
+The Exporter module implements a default import method which many
+modules choose to inherit rather than implement their own.
+
+Perl automatically calls the import method when processing a use
+statement for a module. Modules and use are documented in *Note
+Perlfunc: (perl.info)perlfunc, and *Note Perlmod:
+(perl.info)perlmod,. Understanding the concept of modules and how the
+use statement operates is important to understanding the Exporter.
+
+
+Selecting What To Export
+------------------------
+
+Do *not* export method names!
+
+Do *not* export anything else by default without a good reason!
+
+Exports pollute the namespace of the module user.  If you must export
+try to use @EXPORT_OK in preference to @EXPORT and avoid short or common
+symbol names to reduce the risk of name clashes.
+
+Generally anything not exported is still accessible from outside the
+module using the ModuleName::item_name (or $blessed_ref->method) syntax.
+By convention you can use a leading underscore on names to informally
+indicate that they are 'internal' and not for public use.
+
+(It is actually possible to get private functions by saying:
+
+     my $subref = sub { ... };
+     &$subref;
+
+But there's no way to call that directly as a method, since a method
+must have a name in the symbol table.)
+
+As a general rule, if the module is trying to be object oriented then
+export nothing. If it's just a collection of functions then
+ @EXPORT_OK anything but use @EXPORT with caution.
+
+Other module design guidelines can be found in *Note Perlmod:
+(perl.info)perlmod,.
+
+
+Specialised Import Lists
+------------------------
+
+If the first entry in an import list begins with !, : or / then the list
+is treated as a series of specifications which either add to or delete
+from the list of names to import. They are processed left to
+right. Specifications are in the form:
+
+     [!]name         This name only
+     [!]:DEFAULT     All names in @EXPORT
+     [!]:tag         All names in $EXPORT_TAGS{tag} anonymous list
+     [!]/pattern/    All names in @EXPORT and @EXPORT_OK which match
+
+A leading ! indicates that matching names should be deleted from the
+list of names to import.  If the first specification is a deletion it is
+treated as though preceded by :DEFAULT. If you just want to import extra
+names in addition to the default set you will still need to include
+:DEFAULT explicitly.
+
+e.g., Module.pm defines:
+
+     @EXPORT      = qw(A1 A2 A3 A4 A5);
+     @EXPORT_OK   = qw(B1 B2 B3 B4 B5);
+     %EXPORT_TAGS = (T1 => [qw(A1 A2 B1 B2)], T2 => [qw(A1 A2 B3 B4)]);
+
+     Note that you cannot use tags in @EXPORT or @EXPORT_OK.
+     Names in EXPORT_TAGS must also appear in @EXPORT or @EXPORT_OK.
+
+An application using Module can say something like:
+
+     use Module qw(:DEFAULT :T2 !B3 A3);
+
+Other examples include:
+
+     use Socket qw(!/^[AP]F_/ !SOMAXCONN !SOL_SOCKET);
+     use POSIX  qw(:errno_h :termios_h !TCSADRAIN !/^EXIT/);
+
+Remember that most patterns (using //) will need to be anchored with a
+leading ^, e.g., `/^EXIT/' rather than `/EXIT/'.
+
+You can say `BEGIN { $Exporter::Verbose=1 }' to see how the
+specifications are being processed and what is actually being imported
+into modules.
+
+
+Exporting without using Export's import method
+----------------------------------------------
+
+Exporter has a special method, 'export_to_level' which is used in
+situations where you can't directly call Export's import method. The
+export_to_level method looks like:
+
+MyPackage->export_to_level($where_to_export, @what_to_export);
+
+where $where_to_export is an integer telling how far up the calling
+stack to export your symbols, and @what_to_export is an array telling
+what symbols *to* export (usually this is @_).
+
+For example, suppose that you have a module, A, which already has an
+import function:
+
+package A;
+
+@ISA = qw(Exporter);
+ @EXPORT_OK = qw ($b);
+
+sub import {
+    $A::b = 1; # not a very useful import method }
+
+and you want to Export symbol $A::b back to the module that called
+package A. Since Exporter relies on the import method to work, via
+inheritance, as it stands Exporter::import() will never get called.
+Instead, say the following:
+
+package A;
+ @ISA = qw(Exporter);
+ @EXPORT_OK = qw ($b);
+
+sub import {
+    $A::b = 1;
+    A->export_to_level(1, @_); }
+
+This will export the symbols one level 'above' the current package - ie:
+to the program or module that used package A.
+
+Note: Be careful not to modify '@_' at all before you call export_to_level
+- or people using your package will get very unexplained results!
+
+
+Module Version Checking
+-----------------------
+
+The Exporter module will convert an attempt to import a number from a
+module into a call to $module_name->require_version($value). This can be
+used to validate that the version of the module being used is greater
+than or equal to the required version.
+
+The Exporter module supplies a default require_version method which
+checks the value of $VERSION in the exporting module.
+
+Since the default require_version method treats the $VERSION number as a
+simple numeric value it will regard version 1.10 as lower than 1.9. For
+this reason it is strongly recommended that you use numbers with at
+least two decimal places, e.g., 1.09.
+
+
+Managing Unknown Symbols
+------------------------
+
+In some situations you may want to prevent certain symbols from being
+exported. Typically this applies to extensions which have functions or
+constants that may not exist on some systems.
+
+The names of any symbols that cannot be exported should be listed in the
+`@EXPORT_FAIL' array.
+
+If a module attempts to import any of these symbols the Exporter will
+give the module an opportunity to handle the situation before generating
+an error. The Exporter will call an export_fail method with a list of
+the failed symbols:
+
+     @failed_symbols = $module_name->export_fail(@failed_symbols);
+
+If the export_fail method returns an empty list then no error is
+recorded and all the requested symbols are exported. If the returned
+list is not empty then an error is generated for each symbol and the
+export fails. The Exporter provides a default export_fail method which
+simply returns the list unchanged.
+
+Uses for the export_fail method include giving better error messages for
+some symbols and performing lazy architectural checks (put more symbols
+into @EXPORT_FAIL by default and then take them out if someone actually
+tries to use them and an expensive check shows that they are usable on
+that platform).
+
+
+Tag Handling Utility Functions
+------------------------------
+
+Since the symbols listed within %EXPORT_TAGS must also appear in either
+ @EXPORT or @EXPORT_OK, two utility functions are provided which allow
+you to easily add tagged sets of symbols to @EXPORT or @EXPORT_OK:
+
+     %EXPORT_TAGS = (foo => [qw(aa bb cc)], bar => [qw(aa cc dd)]);
+
+     Exporter::export_tags('foo');     # add aa, bb and cc to @EXPORT
+     Exporter::export_ok_tags('bar');  # add aa, cc and dd to @EXPORT_OK
+
+Any names which are not tags are added to @EXPORT or @EXPORT_OK
+unchanged but will trigger a warning (with -w) to avoid misspelt tags
+names being silently added to @EXPORT or @EXPORT_OK. Future versions may
+make this a fatal error.
+
+
+
+
+File: pm.info, Node: ExtUtils/Command, Next: ExtUtils/DynaGlue, Prev: Exporter, Up: Module List
+
+utilities to replace common UNIX commands in Makefiles etc.
+***********************************************************
+
+
+
+NAME
+====
+
+ExtUtils::Command - utilities to replace common UNIX commands in
+Makefiles etc.
+
+
+SYNOPSIS
+========
+
+     perl -MExtUtils::Command -e cat files... > destination
+     perl -MExtUtils::Command -e mv source... destination
+     perl -MExtUtils::Command -e cp source... destination
+     perl -MExtUtils::Command -e touch files...
+     perl -MExtUtils::Command -e rm_f file...
+     perl -MExtUtils::Command -e rm_rf directories...
+     perl -MExtUtils::Command -e mkpath directories...
+     perl -MExtUtils::Command -e eqtime source destination
+     perl -MExtUtils::Command -e chmod mode files...
+     perl -MExtUtils::Command -e test_f file
+
+
+DESCRIPTION
+===========
+
+The module is used in Win32 port to replace common UNIX commands.  Most
+commands are wrapers on generic modules File::Path and File::Basename.
+
+cat
+     Concatenates all files mentioned on command line to STDOUT.
+
+eqtime src dst
+     Sets modified time of dst to that of src
+
+rm_f files....
+     Removes directories - recursively (even if readonly)
+
+rm_f files....
+     Removes files (even if readonly)
+
+touch files ...
+     Makes files exist, with current timestamp
+
+mv source... destination
+     Moves source to destination.  Multiple sources are allowed if
+     destination is an existing directory.
+
+cp source... destination
+     Copies source to destination.  Multiple sources are allowed if
+     destination is an existing directory.
+
+chmod mode files...
+     Sets UNIX like permissions 'mode' on all the files.
+
+mkpath directory...
+     Creates directory, including any parent directories.
+
+test_f file
+     Tests if a file exists
+
+
+BUGS
+====
+
+Should probably be Auto/Self loaded.
+
+
+SEE ALSO
+========
+
+ExtUtils::MakeMaker, ExtUtils::MM_Unix, ExtUtils::MM_Win32
+
+
+AUTHOR
+======
+
+Nick Ing-Simmons <`nick@ni-s.u-net.com'>.
+
+
+
+
+File: pm.info, Node: ExtUtils/DynaGlue, Next: ExtUtils/DynaLib, Prev: ExtUtils/Command, Up: Module List
+
+Methods for generating Perl extension files
+*******************************************
+
+
+
+NAME
+====
+
+ExtUtils::DynaGlue - Methods for generating Perl extension files
+
+
+SYNOPSIS
+========
+
+     use ExtUtils::DynaGlue ();
+
+
+DESCRIPTION
+===========
+
+
+AUTHOR
+======
+
+Doug MacEachern <dougm@osf.org> based on h2xs written by Larry Wall and
+others
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: ExtUtils/DynaLib, Next: ExtUtils/DynaLib/Struct, Prev: ExtUtils/DynaGlue, Up: Module List
+
+Perl extension for calling dynamically loaded C functions
+*********************************************************
+
+
+
+NAME
+====
+
+ExtUtils::DynaLib - Perl extension for calling dynamically loaded C
+functions
+
+
+SYNOPSIS
+========
+
+     use ExtUtils::DynaLib;
+     $lib = new ExtUtils::DynaLib( $linker_arg );
+
+     $func = $lib->DeclareSub( $symbol_name
+     			[, $return_type [, @arg_types] ] );
+     # or
+     $func = $lib->DeclareSub( { "name"    => $symbol_name,
+     			["return" => $return_type,]
+     			["args"   => \@arg_types,]
+     			["decl"   => $decl,]
+     			} );
+     $result = $func->( @args );
+
+     use ExtUtils::DynaLib qw(DeclareSub);
+     $func = DeclareSub( $function_pointer,
+     			[, $return_type [, @arg_types] ] );
+     # or
+     $func = DeclareSub( { "ptr" => $function_pointer,
+     			["return" => $return_type,]
+     			["args"   => \@arg_types,]
+     			["decl"   => $decl,]
+     			["libref" => $libref,]
+     			} );
+     $result = $func->( @args );
+
+     $callback = new ExtUtils::DynaLib::Callback( \&my_sub,
+     			$return_type, @arg_types );
+     $callback_pointer = $callback->Ptr();
+
+
+DESCRIPTION
+===========
+
+This module allows Perl programs to link with dynamic libraries and call
+their functions on the fly.
+
+The mechanics of passing arguments and returning values, unfortunately,
+depend on your machine, operating system, and compiler.  Therefore,
+Makefile.PL checks the Perl configuration and may even run a test
+program before the module is built.
+
+
+ExtUtils::DynaLib public constructor
+------------------------------------
+
+The argument to new may be the file name of a shared library.
+Alternatively, a linker command-line argument (e.g., "-lc") may be
+specified.  See DynaLoader(3) for details on how such arguments are
+mapped to file names.
+
+
+Declaring a library routine
+---------------------------
+
+Before you can call a function in a shared library, you must specify its
+name, the return type, and the number and types of arguments it expects.
+This is handled by `DeclareSub'.
+
+`ExtUtils::DynaLib::DeclareSub' can be used as either an object method
+or an ordinary sub.  You can pass its arguments either in a list (what
+we call "positional parameters") or in a hash ("named parameters").
+
+The simplest way to use `DeclareSub' is as a method with positional
+parameters.  This form is illustrated in the first example above and
+both examples below.  When used in this way, the first argument is a
+library function name, the second is the function return type, and the
+rest are function argument types.
+
+C data types are specified using the codes used by Perl's pack and
+unpack operators.  See `perlfunc(1)' in this node.
+
+The arguments to `DeclareSub' are as follows:
+
+name
+     The name of a function exported by `$lib'.  This argument is
+     ignored in the non-method forms of `DeclareSub'.
+
+`ptr'
+     The address of the C function.  This argument is required in the
+     non-method forms of `DeclareSub'.  Either it or the name must be
+     specified in the method forms.
+
+return
+     The return type of the function, encoded for use with the pack
+     operator.  Currently supported values are "" (void), "i" (int), "d"
+     (double), "p" (a NUL-terminated character string), and "ptr" (any
+     pointer type, usually equivalent to "i"; this is not a pack code
+     because there isn't one for generic pointers that aren't
+     dereferenced).
+
+`args'
+     A list of the types of arguments expected by the function,
+     specified using the notation of Perl's pack operator (see
+     perlfunc(1)).  For example, "i" means an integer, "d" means a
+     double, "p" means a NUL-terminated string pointer.
+
+     Note: you probably don't want to use "c" or "s" here, since C
+     normally converts the corresponding types (`char' and `short') to
+     int when passing them to a function.  The ExtUtils::DynaLib package
+     does not perform such conversions.  Use "i" instead.  Likewise, use
+     "I" in place of "C" or "S", and "d" in place of "f".  Stick with
+     "i", "d", and "p" unless you know what you are doing.
+
+`decl'
+     Allows you to specify a function's calling convention.  This is
+     possible only with a named-parameter form of `DeclareSub'.  See
+     below for information about the supported calling conventions.
+
+`libref'
+     A library reference obtained from either `DynaLoader::dl_load_file'
+     or the `ExtUtils::DynaLib::LibRef' method.  You must use a
+     named-parameter form of `DeclareSub' in order to specify this
+     argument.
+
+
+Calling a declared function
+---------------------------
+
+The returned value of `DeclareSub' is a code reference.  Calling through
+it results in a call to the C function.  See `perlref(1)' in this node
+for how to call subs using code references.
+
+
+Using callback routines
+-----------------------
+
+Some C functions expect a pointer to another C function as an argument.
+The library code that receives the pointer may use it to call an
+application function at a later time.  Such functions are called
+callbacks.
+
+This module allows you to use a Perl sub as a C callback, subject to
+certain restrictions.  There is a hard-coded maximum number of callbacks
+that can be active at any given time.  The default (4) may be changed by
+specifying `CALLBACKS=number' on the Makefile.PL command line.
+
+A callback's argument and return types are specified using pack codes,
+as described above for library functions.  Currently, the return value
+must be interpretable as type int or `void', so the only valid codes are
+"i" and "".  The first argument must be of type "i" (or possibly "p" on
+machines where integers are the same size as pointers).  For argument
+positions beyond the first, the permissible types are "i", "p", and "d".
+These limitations are considered bugs to be fixed someday.
+
+To enable a Perl sub to be used as a callback, you must construct an
+object of class ExtUtils::DynaLib::Callback.  The syntax is
+
+     $cb_ref = new ExtUtils::DynaLib::Callback( \&some_sub,
+                       $ret_type, @arg_types );
+
+where `$ret_type' and `@arg_types' are the pack-style types of the
+function return value and arguments, respectively.  Calling
+`$cb_ref->Ptr()' then returns a scalar whose integer value is the
+function address.  C code that calls it will end up calling `&some_sub'.
+
+
+EXAMPLES
+========
+
+This code loads and calls the math library function "sinh".  It assumes
+that you have a dynamic version of the math library which will be found
+by `DynaLoader::dl_findfile("-lm")'.  If this doesn't work, replace
+"-lm" with the name of your dynamic math library.
+
+     use ExtUtils::DynaLib;
+     $libm = new ExtUtils::DynaLib("-lm");
+     $sinh = $libm->DeclareSub("sinh", "d", "d");
+     print "The hyperbolic sine of 3 is ", &{$sinh}(3), "\n";
+     # The hyperbolic sine of 3 is 10.0178749274099
+
+The following example uses the C library's "strncmp" to compare the
+first n characters of two strings:
+
+     use ExtUtils::DynaLib;
+     $libc = new ExtUtils::DynaLib("-lc");
+     $strncmp = $libc->DeclareSub("strncmp", "i", "p", "p", "i");
+     $string1 = "foobar";
+     $string2 = "foolish";
+     $result = &{$strncmp}($string1, $string2, 3);  # $result is 0
+     $result = &{$strncmp}($string1, $string2, 4);  # $result is -1
+
+The files test.pl and README.win32 contain examples using callbacks.
+
+
+CALLING CONVENTIONS
+===================
+
+
+The problem
+-----------
+
+The hardest thing about writing this module is to accommodate the
+different calling conventions used by different compilers, operating
+systems, and CPU types.
+
+"What's a calling convention?" you may be wondering.  It is how
+compiler-generated C functions receive their arguments from and make
+their return values known to the code that calls them, at the level of
+machine instructions and registers.  Each machine has a set of rules for
+this.  Compilers and operating systems may use variations even on the
+same machine type.  In some cases, it is necessary to support more than
+one calling convention on the same system.
+
+"But that's all handled by the compiler!" you might object.  True
+enough, if the calling code knows the signature of the called function
+at compile time.  For example, consider this C code:
+
+     int foo(double bar, const char *baz);
+     ...
+     int res;
+     res = foo(sqrt(2.0), "hi");
+
+A compiler will generate specific instruction sequences to load the
+return value from `sqrt()' and a pointer to the string `"hi"' into
+whatever registers or memory locations `foo()' expects to receive them
+in, based on its calling convention and the types `double' and `char *'.
+Another specific instruction sequence stores the return value in the
+variable `res'.
+
+But when you compile this module, it must be general enough to handle
+all sorts of function argument and return types.
+
+"Why not use varargs/stdarg?"  Most C compilers support a special set of
+macros that allow a function to receive a variable number of arguments
+of variable type.  When the function receiving the arguments is
+compiled, it does not know how it will be called.
+
+But the code that calls such a function does know, at compile time, how
+many and what type of arguments it is passing to the varargs function.
+There is no "reverse stdarg" standard for passing types to be determined
+at run time.  You can't simply pass a `va_list' to a function unless
+that function is defined to receive a `va_list'.  This module does use
+varargs/stdarg where appropriate, but the only appropriate place is in
+the callback support.
+
+
+The solution
+------------
+
+Having failed to find a magic bullet to spare us from the whims of
+system designers and compiler writers, we are forced to examine the
+calling conventions in common use and try to put together some "glue"
+code that stands a chance of being portable.  Honestly, this work has
+just barely begun.
+
+In writing glue code (that which allows code written in one language to
+call code in another), an important issue is reliability.  If we don't
+get the convention just right, chances are we will get a core dump
+(protection fault or illegal instruction).  To write really solid
+Perl-to-C glue, we would have to use assembly language and have detailed
+knowledge of each calling convention.  Compiler source code can be
+helpful in this regard, and if your compiler can output assembly code,
+that helps, too.
+
+However, this is Perl, Perl is meant to be ported, and assembly language
+is not portable.  As of today, this module contains no assembly, though
+this may change in the future.
+
+By avoiding the use of assembly, we lose some reliability and
+flexibility.  By loss of reliability, I mean we can expect crashes,
+especially on untested platforms.  Lost flexibility means having
+restrictions on what parameter types and return types are allowed.
+
+The code for all conventions other than `hack30' (described below)
+relies on the C `alloca()' function.  Unfortunately, `alloca()' itself
+is not standard, so its use introduces new portability concerns.  For
+`cdecl', the most general convention, Makefile.PL creates and runs a
+test program to try to ferret out any compiler peculiarities regarding
+`alloca()'.  If the test program fails, the default choice becomes
+`hack30'.
+
+
+Supported conventions
+---------------------
+
+ExtUtils::DynaLib currently supports the parameter-passing conventions
+listed below.  The module can be compiled with support for one or more
+of them by specifying (for example) `DECL=cdecl' on Makefile.PL's
+command-line.  If none are given, Makefile.PL will try to choose based
+on your Perl configuration and/or the results of running a test program.
+
+At run time, a calling convention may be specified using a
+named-parameter form of `DeclareSub' (described above), or a default may
+be used.  The first `DECL=...' supplied to Makefile.PL will be the
+default convention.
+
+Note that the convention must match that of the function in the dynamic
+library, otherwise crashes are likely to occur.
+
+`cdecl'
+     All arguments are placed on the stack in reverse order from how the
+     function is invoked.  This seems to be the default for Intel-based
+     machines and possibly others.
+
+`sparc'
+     The first 6 machine words of arguments are cast to an array of six
+     ints.  The remaining args (and possibly piece of an arg) are placed
+     on the stack.  Then the C function is called as if it expected six
+     integer arguments.  On a Sparc, the six "pseudo-arguments" are
+     passed in special registers.
+
+`hack30'
+     This is not really a calling convention, it's just some C code that
+     will successfully call a function most of the time on most systems
+     tested so far.  All arguments are copied into an array of 6
+     integers (or 30 if 6 is not enough).  The function is called as if
+     it expected 6 (or 30) integer arguments.
+
+     You will run into problems if the C function either (1) takes more
+     arguments than can fit in the integer array, (2) takes some
+     non-integer arguments on a system that passes them differently from
+     ints (but `cdecl' currently has the same flaw), or (3) cares if it
+     is passed extra arguments.  (This appears to crash certain Win32
+     functions including `RegisterClassA()', which is used in the demo
+     program in the README.win32 file.)
+
+     Because of these problems, the use of `hack30' is recommended only
+     as a quick fix until your system's calling convention is supported.
+
+
+BUGS
+====
+
+Several unresolved issues surround this module.
+
+
+Portability
+-----------
+
+The "glue" code that allows Perl values to be passed as arguments to C
+functions is architecture-dependent.  This is because the author knows
+of no standard means of determining a system's parameter-passing
+conventions or passing arguments to a C function whose signature is not
+known at compile time.
+
+Although some effort is made in Makefile.PL to find out how parameters
+are passed in C, this applies only to the integer type (Perl's `I32', to
+be precise; see `perlguts(1)' in this node).  Functions that recieve or
+return type `double', for example, will not work on systems that use
+floating-point registers for this purpose.  To fix this will require
+changes to the C and XS code, as well as DynaLib.pm, though probably not
+to the documented public interface.
+
+
+Robustness
+----------
+
+Usually, Perl programs run under the control of the Perl interpreter.
+Perl is extremely stable and can almost guarantee an environment free of
+the problems of C, such as bad pointers causing memory access
+violations.  Some Perl modules use a Perl feature called "XSubs" to call
+C code directly from a Perl program.  In such cases, a crash may occur
+if the C or XS code is faulty.  However, once the XS module has been
+sufficiently debugged, one can be reasonably sure that it will work
+right.
+
+C code called through this module is devoid of such protection.  Since
+the association between Perl and C is made at run time, errors due to
+incompatible library interfaces or incorrect assumptions have a much
+greater chance of causing a crash than with either static or XS code.
+
+
+Security
+--------
+
+This section is incomplete.  I don't know what the security implications
+of this module may be.  Use at your own risk.
+
+
+Deallocation of Resources
+-------------------------
+
+To maximize portability, this module uses the DynaLoader(3) interface to
+shared library linking.  DynaLoader's main purpose is to support XS
+modules, which are loaded once by a program and not (to my knowledge)
+unloaded.  It would be nice to be able to free the libraries loaded by
+this module when they are no longer needed.  This is impossible, since
+DynaLoader currently provides no means to do so.
+
+
+Literal and temporary strings
+-----------------------------
+
+Until Perl 5.00402, it was impossible to pass a string literal as a
+pointer-to-nul-terminated-string argument of a C function.  For example,
+the following statement (incorrectly) produced the error "Modification
+of a read-only value attempted":
+
+     $strncmp->("foo", "bar", 3);
+
+To work around this problem, one must assign the value to a variable and
+pass the variable in its place, as in
+
+     $strncmp->($dummy1 = "foo", $dummy2 = "bar", 3);
+
+
+Callbacks
+---------
+
+The Callback code is non-reentrant.  And it assumes that pointers are
+packable as "I".  Callbacks can mess up the message printed by die in
+the presence of nested evals.
+
+
+Miscellaneous
+-------------
+
+There are far too many restrictions on what C data types may be used.
+Using argument types with size not a multiple of the machine word size
+may have nasty results.  The techniques used to pass values to and from
+C functions are all rather hackish and not officially sanctioned.
+Assembly would be more robust, if less portable.
+
+
+TODO
+====
+
+Fiddle with autoloading so we don't have to call DeclareSub all the
+time.  Mangle C++ symbol names.  Get Perl to understand C header files.
+
+
+LICENSE
+=======
+
+Copyright (c) 1997 by John Tobey.  This package is distributed under the
+same license as Perl itself.  There is no expressed or implied warranty,
+since it is free software.  See the file README in the top level Perl
+source directory for details.  The Perl source may be found at
+
+     http://www.perl.com/CPAN/src
+
+
+AUTHOR
+======
+
+John Tobey, jtobey@user1.channel1.com
+
+
+SEE ALSO
+========
+
+perl(1), perlfunc(1) (for pack), perlref(1), DynaLoader(3), perlxs(1),
+perlcall(1).
+
+
+
+

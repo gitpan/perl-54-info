@@ -1,0 +1,2098 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Text/Vpp, Next: Text/Wrap, Prev: Text/Template, Up: Module List
+
+Perl extension for a versatile text pre-processor
+*************************************************
+
+
+
+NAME
+====
+
+Text::Vpp - Perl extension for a versatile text pre-processor
+
+
+SYNOPSIS
+========
+
+     use Text::Vpp ;
+
+     $fin = Text::Vpp-> new('input_file_name') ;
+
+     $fin->setVar('one_variable_name' => 'value_one', 
+     			  'another_variable_name' => 'value_two') ;
+
+     $res = $fin -> substitute ;
+
+     print "Result is : \n\n",join("\n",@$res) ,"\n";
+
+
+DESCRIPTION
+===========
+
+This class enables to preprocess a file a bit like cpp.
+
+First you create a Vpp object passing the name of the file to process,
+then you call setvar() to set the variables you need.
+
+Finally you call substitute on the Vpp object.
+
+
+NON-DESCRIPTION
+===============
+
+Note that it's not designed to replace the well known cpp. Note also
+that if you think of using it to pre-process a perl script, you're
+likely to shoot yourself in the foot. Perl has a lot of built-in
+mechanism so that a pre-processor is not necessary.
+
+
+INPUT FILE SYNTAX
+=================
+
+
+Comments
+--------
+
+All lines beginning with '#' are skipped. (May be changed with
+setCommentChar())
+
+
+in-line eval
+------------
+
+Lines beginning with '@EVAL' (@ being pompously named the 'action char')
+are evaluated as small perl script.
+
+When setActionChar() is called with '#' as a parameter, Vpp doesn't skip
+lines beginning with '#'. In this case, there's no comment possible.
+
+
+Multi-line input
+----------------
+
+Line ending with \ are concatenated with the following line.
+
+
+Variables substitution
+----------------------
+
+You can specify in your text varaibles beginning with $ (like in perl).
+These variables can be set either by the setVar() method or by the
+"eval" capability of Vpp (See below).
+
+
+Setting variables
+-----------------
+
+Line beginning by @ are "evaled" using variables defined by setVar().
+You can use only scalar variables. This way, you can also define
+variables in your text which can be used later.
+
+
+Conditional statements
+----------------------
+
+Text::Vpp understands
+ @IF, @ELSIF, @ENDIF,and so on.
+ @INCLUDES and @IF can be nested.
+
+@IF and @ELSIF are followed by a string which will be evaled using
+the variable you defined (either with setVar() or in the text).
+
+
+Inclusion
+---------
+
+Text::Vpp understands @INCLUDE
+
+
+Constructor
+===========
+
+
+new(file_name, optional_var_hash_ref, optional_action_char)
+-----------------------------------------------------------
+
+Create the file object. The second parameter can be a hash containing
+all variables needed for the substitute method.
+
+
+Methods
+=======
+
+
+substitute([output_file])
+-------------------------
+
+Perform the substitute, inclusion, and so on and write the result in
+"output_file".  Returns 1 on completion, 0 in case of an error.
+
+If output_file is not specified this function store the subtitution
+result in an internal variable. The result can be retrieved with
+getText()
+
+
+getText()
+---------
+
+Returns an array ref containing the result.
+
+
+getError()
+----------
+
+Returns an array ref containing the errors.
+
+
+setVar( key1=> value1, key2 => value2 ,...) or setVar(hash_ref)
+---------------------------------------------------------------
+
+Declare variables for the substitute.  Note that calling this function
+clobbers previously stored values.
+
+
+setActionChar(char)
+-------------------
+
+Enables the user to use another char as action char. (default @)
+
+Example: setActionChar('#') will enable Vpp to understand #include,
+#ifdef ..
+
+
+setCommentChar(char)
+--------------------
+
+Enables the user to use another char as comment char. (default #)
+
+
+AUTHOR
+======
+
+Dominique Dumont Dominique_Dumont@grenoble.hp.com
+
+Copyright (c) 1996 Dominique Dumont. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+VERSION
+=======
+
+Version 0.1
+
+
+SEE ALSO
+========
+
+perl(1),Text::Template(3).
+
+
+
+
+File: pm.info, Node: Text/Wrap, Next: Tie/Dir, Prev: Text/Vpp, Up: Module List
+
+line wrapping to form simple paragraphs
+***************************************
+
+
+
+NAME
+====
+
+Text::Wrap - line wrapping to form simple paragraphs
+
+
+SYNOPSIS
+========
+
+     use Text::Wrap
+
+     print wrap($initial_tab, $subsequent_tab, @text);
+
+     use Text::Wrap qw(wrap $columns);
+
+     $columns = 132;
+
+
+DESCRIPTION
+===========
+
+Text::Wrap::wrap() is a very simple paragraph formatter.  It formats a
+single paragraph at a time by breaking lines at word boundries.
+Indentation is controlled for the first line ($initial_tab) and all
+subsquent lines ($subsequent_tab) independently.  $Text::Wrap::columns
+should be set to the full width of your output device.
+
+
+EXAMPLE
+=======
+
+     print wrap("\t","","This is a bit of text that forms 
+     	a normal book-style paragraph");
+
+
+BUGS
+====
+
+It's not clear what the correct behavior should be when Wrap() is
+presented with a word that is longer than a line.  The previous behavior
+was to die.  Now the word is split at line-length.
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com> with help from Tim Pierce and
+others.
+
+
+
+
+File: pm.info, Node: Tie/Dir, Next: Tie/Handle, Prev: Text/Wrap, Up: Module List
+
+class definition for reading directories via a tied hash
+********************************************************
+
+
+
+NAME
+====
+
+Tie::Dir - class definition for reading directories via a tied hash
+
+
+SYNOPSIS
+========
+
+     use Tie::Dir qw(DIR_UNLINK);
+
+     # Both of these produce identical results
+     #(ie %hash is tied)
+     tie %hash, Tie::Dir, ".", DIR_UNLINK;
+     new Tie::Dir \%hash, ".", DIR_UNLINK;
+
+     # This creates a reference to a hash, which is tied.
+     $hash = new Tie::Dir ".";
+
+     # All these examples assume that %hash is tied (ie one of the
+     # first two tie methods was used
+
+     # itterate through the directory
+     foreach $file ( keys %hash ) {
+     	...
+     }
+
+     # Set the access and modification times (touch :-)
+     $hash{SomeFile} = time;
+
+     # Obtain stat information of a file
+     @stat = @{$hash{SomeFile}};
+
+     # Check if entry exists
+     if(exists $hash{SomeFile}) {
+     	...
+     }
+
+     # Delete an entry, only if DIR_UNLINK specified
+     delete $hash{SomeFile};
+
+
+DESCRIPTION
+===========
+
+This module provides a method of reading directories using a hash.
+
+The keys of the hash are the directory entries and the values are a
+reference to an array which holds the result of stat being called on the
+entry.
+
+The access and modification times of an entry can be changed by
+assigning to an element of the hash. If a single number is assigned then
+the access and modification times will both be set to the same value,
+alternatively the access and modification times may be set separetly by
+passing a reference to an array with 2 entries, the first being the
+access time and the second being the modification time.
+
+new [hashref,] dirname [, options]
+     This method ties the hash referenced by `hashref' to the directory
+     `dirname'.  If `hashref' is omitted then new returns a reference to
+     a hash which hash been tied, otherwise it returns the result of tie
+
+     The possible options are:
+
+     DIR_UNLINK
+          Delete operations on the hash will cause unlink to be called
+          on the corresponding file
+
+
+AUTHOR
+======
+
+Graham Barr <bodg@tiuk.ti.com>, from a quick hack posted by Kenneth
+Albanowski <kjahds@kjahds.com> to the perl5-porters mailing list based
+on a neat idea by Ilya Zakharevich.
+
+
+
+
+File: pm.info, Node: Tie/Handle, Next: Tie/Hash, Prev: Tie/Dir, Up: Module List
+
+tie arbitrary objects to file handles
+*************************************
+
+
+
+NAME
+====
+
+Tie::Handle - tie arbitrary objects to file handles
+
+See the module "Data::Locations" for an example of how to use this
+module.
+
+
+SYNOPSIS
+========
+
+   * `$object->tie('FILEHANDLE');'
+
+   * `$object->tie($filehandle);'
+
+   * `print @items;'
+
+   * `print FILEHANDLE @items;'
+
+   * `print $filehandle @items;'
+
+   * `printf $format, @items;'
+
+   * `printf FILEHANDLE $format, @items;'
+
+   * `printf $filehandle $format, @items;'
+
+   * `$item = <>;'
+
+   * `@list = <>;'
+
+   * `$item = <FILEHANDLE>;'
+
+   * `@list = <FILEHANDLE>;'
+
+   * `$item = <$filehandle>;'
+
+   * `@list = <$filehandle>;'
+
+   * `$key = getc();'
+
+   * `$key = getc(FILEHANDLE);'
+
+   * `$key = getc($filehandle);'
+
+   * `$bytes = [sys]read(FILEHANDLE,$buffer,$length[,$offset]);'
+
+   * `$bytes = [sys]read($filehandle,$buffer,$length[,$offset]);'
+
+   * `untie *FILEHANDLE;'
+
+   * `untie *{FILEHANDLE};'
+
+   * `untie $filehandle;'
+
+   * `untie *{$filehandle};'
+
+
+DESCRIPTION
+===========
+
+This module facilitates the tying of file handles with (arbitrary)
+objects.
+
+File handles must be given either as symbolic file handles (like
+"STDOUT", "MYHANDLE" or "MYPACKAGE::MYHANDLE") or as references as
+returned by the object constructor method "new()" from the "IO::Handle"
+or "FileHandle" class (either one works).
+
+Your class "Your::Class" needs to:
+
+     require Tie::Handle;
+
+and to add "Tie::Handle" to the list of classes to inherit from:
+
+     @ISA = qw(Exporter Tie::Handle);
+
+in order to enable tying of file handles with objects of "Your::Class".
+
+Note that your class "Your::Class" is also responsible for providing
+(i.e., overloading) the appropriate methods needed to access your
+objects:
+
+   * `$object->open();'
+
+     This method is invoked on the given object when a file handle is
+     tied to it.
+
+     For example you can reset the state information associated with the
+     given object (which is needed in most cases to be able to read item
+     after item with "`$item = <FILEHANDLE>;'" from an object) with this
+     method.
+
+     You can also define a dummy method of this name if nothing needs to
+     be done.
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to tie a file handle to one of your objects if you failed
+     to provide this method.
+
+   * `$object->print(@items);'
+
+     This method is invoked on the given object when the associated file
+     handle is printed to with Perl's built-in "print()" or "printf()"
+     function.
+
+     The parameters given to a "print()" statement are simply handed
+     over to the object's "print()" method.
+
+     The parameters of a "printf()" statement are first processed using
+     Perl's built-in "sprintf()" function before being handed over to
+     the object's "print()" method.
+
+     See the section on "printf()" in `perlfunc(1)' in this node and
+     `printf(3)' in this node or `sprintf(3)' in this node on your
+     system for more information about the "printf()" function.
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to print to a tied file handle if you failed to provide
+     this method.
+
+   * `$item = $object->read();'
+
+     This method is called for the given object when the associated file
+     handle is read from using a statement like "`$item =
+     <FILEHANDLE>;'", i.e., when the file handle is read from in SCALAR
+     context.
+
+     For an explanation of "scalar" versus "array" or "list" context,
+     see the section on "Context" in `perldata(1)' in this node!
+
+     The method should return the next item of data to be read from the
+     given object or "undef" when there is no more data to read.
+
+     If no file handle is given explicitly, the statement "`$item =
+     <>;'" will read from STDIN (which may or may not be tied to an
+     object).
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to read from a tied file handle if you failed to provide
+     this method.
+
+   * `@list = $object->read();'
+
+     This method is called for the given object when the associated file
+     handle is read from using a statement like "`@list =
+     <FILEHANDLE>;'", i.e., when the file handle is read from in ARRAY
+     or LIST context.
+
+     For an explanation of "scalar" versus "array" or "list" context,
+     see the section on "Context" in `perldata(1)' in this node!
+
+     The method should return the contents of the associated object as
+     one (possibly very long) list (starting to read where the last
+     "read()" left off!) or an empty list if there is no more data that
+     can be returned.
+
+     If no file handle is given explicitly, the statement "`@list =
+     <>;'" will read from STDIN (which may or may not be tied to an
+     object).
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to read from a tied file handle if you failed to provide
+     this method.
+
+   * `$key = $object->getchar();'
+
+     This method is called for the given object when the associated file
+     handle is read from using Perl's built-in function "getc()".
+
+     The method should return the next character (or byte) from the
+     given object or a null string if there are no more characters to be
+     returned.
+
+     See the section on "getc()" in `perlfunc(1)' in this node for more
+     details.
+
+     If no file handle is given explicitly, the statement "`$key =
+     getc();'" will read from STDIN (which may or may not be tied to an
+     object).
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to read from a tied file handle in this way if you failed
+     to provide this method.
+
+   * `$bytes = $object->'`blockread($buffer,$length[,$offset]);'
+
+     This method is called for the given object when the associated file
+     handle is read from using Perl's built-in function "read()" or
+     "sysread()".
+
+     The method should store the next "$length" characters (or bytes)
+     from the given object in the scalar variable "$buffer", possibly at
+     an offset "$offset" (possibly requiring padding the scalar variable
+     "$buffer" with null characters!), and it should return the number
+     of characters (or bytes) actually read or "undef" if there was an
+     error.
+
+     See the section on "read()" and/or "sysread()" in `perlfunc(1)' in
+     this node for more details.
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to read from a tied file handle in this way if you failed
+     to provide this method.
+
+   * `$object->close();'
+
+     This method is invoked on the given object when the file handle is
+     untied, i.e., when the bond between the file handle and its
+     associated object is dissociated using one of the following
+     alternatives:
+
+          untie *FILEHANDLE;
+          untie *{FILEHANDLE};
+          untie $filehandle;
+          untie *{$filehandle};
+
+     (depending on wether you are using a symbolic file handle, a file
+     handle object reference or a symbolic file handle stored in a
+     scalar variable!)
+
+     For example you can reset the state information associated with the
+     given object (which is needed in most cases to be able to read item
+     after item with "`$item = <FILEHANDLE>;'" from an object) with this
+     method.
+
+     You can also define a dummy method of this name if nothing needs to
+     be done.
+
+     Note that a fatal error will occur ("method not implemented") when
+     you try to untie a file handle from its associated object if you
+     failed to provide this method.
+
+See the module "Data::Locations" for an example of how to implement most
+of these methods.
+
+REMEMBER that you may define the default output file handle using the
+Perl function "select()" so that any subsequent "print()" or "printf()"
+statement without an explicit file handle will send output to the chosen
+default file handle automatically!
+
+See the section on "select()" in `perlfunc(1)' in this node for more
+details!
+
+IMPORTANT:
+
+Note that calling the Perl (built-in) functions "open()" and "close()"
+on a tied file handle has no effect on the object which is tied to it!
+
+(But beware that they attempt to open and close the specified file,
+respectively, even though this is useless in this case!)
+
+Note also that you will get errors if you try to read from a tied file
+handle which you opened for output only using "open()", or vice-versa!
+
+Therefore it is best not to use the built-in Perl functions "open()" and
+"close()" on tied file handles at all.
+
+Instead, if you want to restart reading from the beginning of any given
+object, rather invoke the corresponding method of your class on it (if
+it provides one)!
+
+In case your class "Your::Class" provides such a method (let's call it
+"reset()" here) which allows you to reset the state information
+associated with every object (needed to be able to read item after item
+from an object sequentially), then instead of invoking that method
+directly using:
+
+     $object->reset();
+
+you can also invoke this method via its associated file handle, like
+this:
+
+     ${tied *FILEHANDLE}->reset();
+     ${tied *{FILEHANDLE}}->reset();
+     ${tied *{$filehandle}}->reset();
+
+
+SEE ALSO
+========
+
+Data::Locations(3), Data::Locations::Shell(3), perl(1), perldata(1),
+perlfunc(1), perlsub(1), perlmod(1), perlref(1), perlobj(1), perlbot(1),
+perltoot(1), perltie(1), printf(3), sprintf(3).
+
+
+VERSION
+=======
+
+This man page documents "Tie::Handle" version 3.0.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE
+=======
+
+This package is free software; you can redistribute and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Tie/Hash, Next: Tie/IxHash, Prev: Tie/Handle, Up: Module List
+
+base class definitions for tied hashes
+**************************************
+
+
+
+NAME
+====
+
+Tie::Hash, Tie::StdHash - base class definitions for tied hashes
+
+
+SYNOPSIS
+========
+
+     package NewHash;
+     require Tie::Hash;
+
+     @ISA = (Tie::Hash);
+
+     sub DELETE { ... }		# Provides needed method
+     sub CLEAR { ... }		# Overrides inherited method
+
+
+     package NewStdHash;
+     require Tie::Hash;
+
+     @ISA = (Tie::StdHash);
+
+     # All methods provided by default, define only those needing overrides
+     sub DELETE { ... }
+
+
+     package main;
+
+     tie %new_hash, 'NewHash';
+     tie %new_std_hash, 'NewStdHash';
+
+
+DESCRIPTION
+===========
+
+This module provides some skeletal methods for hash-tying classes. See
+*Note Perltie: (perl.info)perltie, for a list of the functions required in order to tie a hash
+to a package. The basic Tie::Hash package provides a new method, as well
+as methods TIEHASH, EXISTS and CLEAR. The *Tie::StdHash* package
+provides most methods required for hashes in *Note Perltie:
+(perl.info)perltie,. It inherits from Tie::Hash, and causes tied hashes
+to behave exactly like standard hashes, allowing for selective
+overloading of methods. The new method is provided as grandfathering in
+the case a class forgets to include a TIEHASH method.
+
+For developers wishing to write their own tied hashes, the required
+methods are briefly defined below. See the *Note Perltie:
+(perl.info)perltie, section for more detailed descriptive, as well as
+example code:
+
+TIEHASH classname, LIST
+     The method invoked by the command `tie %hash,
+     classname'. Associates a new hash instance with the specified
+     class. LIST would represent additional arguments (along the lines
+     of *Note AnyDBM_File: AnyDBM_File, and compatriots) needed to
+     complete the association.
+
+STORE this, key, value
+     Store datum value into key for the tied hash *this*.
+
+FETCH this, key
+     Retrieve the datum in key for the tied hash *this*.
+
+FIRSTKEY this
+     Return the (key, value) pair for the first key in the hash.
+
+NEXTKEY this, lastkey
+     Return the next (key, value) pair for the hash.
+
+EXISTS this, key
+     Verify that key exists with the tied hash *this*.
+
+DELETE this, key
+     Delete the key key from the tied hash *this*.
+
+CLEAR this
+     Clear all values from the tied hash *this*.
+
+
+CAVEATS
+=======
+
+The *Note Perltie: (perl.info)perltie, documentation includes a method
+called DESTROY as a necessary method for tied hashes. Neither Tie::Hash
+nor *Tie::StdHash* define a default for this method. This is a standard
+for class packages, but may be omitted in favor of a simple default.
+
+
+MORE INFORMATION
+================
+
+The packages relating to various DBM-related implemetations (DB_File,
+NDBM_File, etc.) show examples of general tied hashes, as does the
+*Note Config: Config, module. While these do not utilize Tie::Hash, they serve as
+good working examples.
+
+
+
+
+File: pm.info, Node: Tie/IxHash, Next: Tie/RefHash, Prev: Tie/Hash, Up: Module List
+
+ordered associative arrays for Perl
+***********************************
+
+
+
+NAME
+====
+
+Tie::IxHash - ordered associative arrays for Perl
+
+
+SYNOPSIS
+========
+
+     # simple usage
+     use Tie::IxHash;
+     tie HASHVARIABLE, Tie::IxHash [, LIST];
+
+     # OO interface with more powerful features
+     use Tie::IxHash;
+     TIEOBJECT = Tie::IxHash->new( [LIST] );
+     TIEOBJECT->Splice( OFFSET [, LENGTH [, LIST]] );
+     TIEOBJECT->Push( LIST );
+     TIEOBJECT->Pop;
+     TIEOBJECT->Shift;
+     TIEOBJECT->Unshift( LIST );
+     TIEOBJECT->Keys( [LIST] );
+     TIEOBJECT->Values( [LIST] );
+     TIEOBJECT->Indices( LIST );
+     TIEOBJECT->Delete( [LIST] );
+     TIEOBJECT->Replace( OFFSET, VALUE, [KEY] );
+     TIEOBJECT->Reorder( LIST );
+     TIEOBJECT->SortByKey;
+     TIEOBJECT->SortByValue;
+     TIEOBJECT->Length;
+
+
+DESCRIPTION
+===========
+
+This Perl module implements Perl hashes that preserve the order in which
+the hash elements were added.  The order is not affected when values
+corresponding to existing keys in the IxHash are changed.  The elements
+can also be set to any arbitrary supplied order.  The familiar perl
+array operations can also be performed on the IxHash.
+
+
+Standard TIEHASH Interface
+--------------------------
+
+The standard TIEHASH mechanism is available. This interface is
+recommended for simple uses, since the usage is exactly the same as
+regular Perl hashes after the tie is declared.
+
+
+Object Interface
+----------------
+
+This module also provides an extended object-oriented interface that can
+be used for more powerful operations with the IxHash.  The following
+methods are available:
+
+FETCH, STORE, DELETE, EXISTS
+     These standard TIEHASH methods mandated by Perl can be used
+     directly.  See the tie entry in perlfunc(1) for details.
+
+Push, Pop, Shift, Unshift, Splice
+     These additional methods resembling Perl functions are available
+     for operating on key-value pairs in the IxHash. The behavior is the
+     same as the corresponding perl functions, except when a supplied
+     hash key already exists in the hash. In that case, the existing
+     value is updated but its order is not affected.  To unconditionally
+     alter the order of a supplied key-value pair, first DELETE the
+     IxHash element.
+
+Keys
+     Returns a list of IxHash element keys corresponding to the list of
+     supplied indices.  Returns all the keys if called without
+     arguments.
+
+Values
+     Returns a list of IxHash element values corresponding to the list
+     of supplied indices.  Returns all the values if called without
+     arguments.
+
+Indices
+     Returns the indices corresponding to the supplied list of keys.
+
+Delete
+     Removes elements with the supplied keys from the IxHash.
+
+Replace
+     Substitutes the IxHash element at the specified index with the
+     supplied value-key pair.  If a key is not supplied, simply
+     substitutes the value at index with the supplied value. If an
+     element with the supplied key already exists, it will be removed
+     from the IxHash first.
+
+Reorder
+     This method can be used to manipulate the internal order of the
+     IxHash elements by supplying a list of keys in the desired order.
+     Note however, that any IxHash elements whose keys are not in the
+     list will be removed from the IxHash.
+
+Length
+     Returns the number of IxHash elements.
+
+SortByKey
+     Reorders the IxHash elements by textual comparison of the keys.
+
+SortByValue
+     Reorders the IxHash elements by textual comparison of the values.
+
+
+EXAMPLE
+=======
+
+     use Tie::IxHash;
+
+     # simple interface
+     $t = tie(%myhash, Tie::IxHash, 'a' => 1, 'b' => 2);
+     %myhash = (first => 1, second => 2, third => 3);
+     $myhash{fourth} = 4;
+     @keys = keys %myhash;
+     @values = values %myhash;
+     print("y") if exists $myhash{third};
+
+     # OO interface
+     $t = Tie::IxHash->new(first => 1, second => 2, third => 3);
+     $t->Push(fourth => 4); # same as $myhash{'fourth'} = 4;
+     ($k, $v) = $t->Pop;    # $k is 'fourth', $v is 4
+     $t->Unshift(neg => -1, zeroth => 0); 
+     ($k, $v) = $t->Shift;  # $k is 'neg', $v is -1
+     @oneandtwo = $t->Splice(1, 2, foo => 100, bar => 101);
+
+     @keys = $t->Keys;
+     @values = $t->Values;
+     @indices = $t->Indices('foo', 'zeroth');
+     @itemkeys = $t->Keys(@indices);
+     @itemvals = $t->Values(@indices);
+     $t->Replace(2, 0.3, 'other');
+     $t->Delete('second', 'zeroth');
+     $len = $t->Length;     # number of key-value pairs
+
+     $t->Reorder(reverse @keys);
+     $t->SortByKey;
+     $t->SortByValue;
+
+
+BUGS
+====
+
+You cannot specify a negative length to `Splice'. Negative indexes are
+OK, though.
+
+Indexing always begins at 0 (despite the current $[ setting) for all the
+functions.
+
+
+TODO
+====
+
+Addition of elements with keys that already exist to the end of the
+IxHash must be controlled by a switch.
+
+Provide TIEARRAY interface when it stabilizes in Perl.
+
+Rewrite using XSUBs for efficiency.
+
+
+AUTHOR
+======
+
+Gurusamy Sarathy gsar@umich.edu
+
+Copyright (c) 1995 Gurusamy Sarathy. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+VERSION
+=======
+
+Version 1.2 17 Feb 1997
+
+
+SEE ALSO
+========
+
+perl(1)
+
+
+
+
+File: pm.info, Node: Tie/RefHash, Next: Tie/Scalar, Prev: Tie/IxHash, Up: Module List
+
+use references as hash keys
+***************************
+
+
+
+NAME
+====
+
+Tie::RefHash - use references as hash keys
+
+
+SYNOPSIS
+========
+
+     require 5.004;
+     use Tie::RefHash;
+     tie HASHVARIABLE, 'Tie::RefHash', LIST;
+
+     untie HASHVARIABLE;
+
+
+DESCRIPTION
+===========
+
+This module provides the ability to use references as hash keys if you
+first tie the hash variable to this module.
+
+It is implemented using the standard perl TIEHASH interface.  Please see
+the tie entry in perlfunc(1) and perltie(1) for more information.
+
+
+EXAMPLE
+=======
+
+     use Tie::RefHash;
+     tie %h, 'Tie::RefHash';
+     $a = [];
+     $b = {};
+     $c = \*main;
+     $d = \"gunk";
+     $e = sub { 'foo' };
+     %h = ($a => 1, $b => 2, $c => 3, $d => 4, $e => 5);
+     $a->[0] = 'foo';
+     $b->{foo} = 'bar';
+     for (keys %h) {
+        print ref($_), "\n";
+     }
+
+
+AUTHOR
+======
+
+Gurusamy Sarathy gsar@umich.edu
+
+
+VERSION
+=======
+
+Version 1.2 15 Dec 1996
+
+
+SEE ALSO
+========
+
+perl(1), perlfunc(1), perltie(1)
+
+
+
+
+File: pm.info, Node: Tie/Scalar, Next: Tie/SubstrHash, Prev: Tie/RefHash, Up: Module List
+
+base class definitions for tied scalars
+***************************************
+
+
+
+NAME
+====
+
+Tie::Scalar, Tie::StdScalar - base class definitions for tied scalars
+
+
+SYNOPSIS
+========
+
+     package NewScalar;
+     require Tie::Scalar;
+ 
+     @ISA = (Tie::Scalar);
+ 
+     sub FETCH { ... }		# Provide a needed method
+     sub TIESCALAR { ... }	# Overrides inherited method
+     
+ 
+     package NewStdScalar;
+     require Tie::Scalar;
+
+     @ISA = (Tie::StdScalar);
+
+     # All methods provided by default, so define only what needs be overridden
+     sub FETCH { ... }
+
+
+     package main;
+
+     tie $new_scalar, 'NewScalar';
+     tie $new_std_scalar, 'NewStdScalar';
+
+
+DESCRIPTION
+===========
+
+This module provides some skeletal methods for scalar-tying classes. See
+*Note Perltie: (perl.info)perltie, for a list of the functions required in tying a scalar to a
+package. The basic Tie::Scalar package provides a new method, as well as
+methods TIESCALAR, FETCH and STORE. The *Tie::StdScalar* package
+provides all the methods specified in *Note Perltie:
+(perl.info)perltie,. It inherits from Tie::Scalar and causes scalars
+tied to it to behave exactly like the built-in scalars, allowing for
+selective overloading of methods. The new method is provided as a means
+of grandfathering, for classes that forget to provide their own
+TIESCALAR method.
+
+For developers wishing to write their own tied-scalar classes, the
+methods are summarized below. The *Note Perltie: (perl.info)perltie,
+section not only documents these, but has sample code as well:
+
+TIESCALAR classname, LIST
+     The method invoked by the command `tie $scalar,
+     classname'. Associates a new scalar instance with the specified
+     class. LIST would represent additional arguments (along the lines
+     of *Note AnyDBM_File: AnyDBM_File, and compatriots) needed to
+     complete the association.
+
+FETCH this
+     Retrieve the value of the tied scalar referenced by *this*.
+
+STORE this, value
+     Store data value in the tied scalar referenced by *this*.
+
+DESTROY this
+     Free the storage associated with the tied scalar referenced by
+     *this*.  This is rarely needed, as Perl manages its memory quite
+     well. But the option exists, should a class wish to perform
+     specific actions upon the destruction of an instance.
+
+
+MORE INFORMATION
+================
+
+The *Note Perltie: (perl.info)perltie, section uses a good example of
+tying scalars by associating process IDs with priority.
+
+
+
+
+File: pm.info, Node: Tie/SubstrHash, Next: Tie/TransactHash, Prev: Tie/Scalar, Up: Module List
+
+Fixed-table-size, fixed-key-length hashing
+******************************************
+
+
+
+NAME
+====
+
+Tie::SubstrHash - Fixed-table-size, fixed-key-length hashing
+
+
+SYNOPSIS
+========
+
+     require Tie::SubstrHash;
+
+     tie %myhash, 'Tie::SubstrHash', $key_len, $value_len, $table_size;
+
+
+DESCRIPTION
+===========
+
+The Tie::SubstrHash package provides a hash-table-like interface to an
+array of determinate size, with constant key size and record size.
+
+Upon tying a new hash to this package, the developer must specify the
+size of the keys that will be used, the size of the value fields that
+the keys will index, and the size of the overall table (in terms of
+key-value pairs, not size in hard memory). *These values will not change
+for the duration of the tied hash*. The newly-allocated hash table may
+now have data stored and retrieved. Efforts to store more than
+`$table_size' elements will result in a fatal error, as will efforts to
+store a value not exactly `$value_len' characters in length, or
+reference through a key not exactly `$key_len' characters in
+length. While these constraints may seem excessive, the result is a hash
+table using much less internal memory than an equivalent
+freely-allocated hash table.
+
+
+CAVEATS
+=======
+
+Because the current implementation uses the table and key sizes for the
+hashing algorithm, there is no means by which to dynamically change the
+value of any of the initialization parameters.
+
+
+
+
+File: pm.info, Node: Tie/TransactHash, Next: Tie/Watch, Prev: Tie/SubstrHash, Up: Module List
+
+Edit hash in transactions not changing order during trans.
+**********************************************************
+
+
+
+NAME
+====
+
+Tie::TransactHash - Edit hash in transactions not changing order during
+trans.
+
+
+SYNOPSIS
+========
+
+     use Tie::TransactHash;
+     $::edit_db = tie %::edit_me, TransactHash, \%::db_as_hash, $::db; 
+     while (($key, $value)=each %edit_me)) {
+       $::edit_me{$key} ++ if $key =~ m/counters/ ;
+     }
+
+
+DESCRIPTION
+===========
+
+Tie::TransactHash is a package which provides facilities for editing any
+other hash in transactions.  A transaction is a group of changes which
+go together and are either all applied or none.  When working on a
+standard perl hash or a hash indexed DBM file, one advantage is that the
+original hash remains untouched during the transaction, so its order
+(the order the each(), keys() or values functions give out) is
+maintained - changes can be made to the transact hash whilst iterating
+over it.
+
+
+OVERVIEW
+========
+
+Editing a hash causes problems because it rearranges the hash.  If the
+editing is to be done in sequence then this makes life difficult.  The
+TransactHash class uses a fixed sequence hash class which overlays the
+normal hash and allows editing in place.  It stores all of the changes
+to the original hash in memory until it is told to apply them.
+
+As a side effect of this design, the class also provides a
+commit/rollback system.  When a commit is called, the order of the
+hidden hash will be changed.
+
+A commit will normally be done as the TransactHash object is being
+destroyed.  This could be undesirable if your program exits when it
+discovers a failure.  You can change the.
+
+If you can accept the re-ordering, then you can do partial edits and
+commit half way through.
+
+When working on a DBM file, if a crash occurs during the editing and no
+commit has been called then the original hash will be left intact.  If
+however the crash occurs during the commit, bad things could happen.
+
+     use DB_File;
+     use Tie::TransactHash;
+     use Fcntl;
+
+     $::db = tie %::db_as_hash, DB_File, $::dbname, O_RDWR|O_CREAT, 0640, $db_type
+       or die $!;
+
+     $::edit_db = tie %::edit_me, TransactHash, \%::db_as_hash, $::db; 
+     #the $::db doesn't really do any good right now, but in future it might
+
+     my $count = 0;
+     my ($key,$value)
+     while(($key,$_)=each %edit_me) {
+       s/bouncy/bouncy, very very bouncy./;
+       m/Fred/ && do { 
+     	 $count++;
+     	 $edit_me{ Fred . $count } = $key;
+       }
+     }
+     print "Found Fred in the values $count times\n";
+
+Generally, this package should be used if you want to occasionally do
+small numbers of changes across the values of a large hash.  If you are
+using it overly (often or for large numbers of changes on the database),
+then you should probably switch to btree indexed hashes (Berkley DBM)
+which give you the same ordering effect but don't use a large chunk of
+memory.  Alternately you could consider some kind of multi-pass
+algorithm (scan through the database putting planned changes to a file
+then apply them afterwards all in one go).
+
+
+METHODS
+=======
+
+
+new( \%hidehash [,$hideobj] )
+-----------------------------
+
+This creates a new TransactHash, hiding the hash \%hidehash.
+
+
+TIEHASH (and other hash methods)
+--------------------------------
+
+This is simply a call to new.  See above.  The other hash methods are
+just as for a standard hash (see perltie) and act just like one.
+
+
+Iterator functions (FIRSTKEY & NEXTKEY)
+---------------------------------------
+
+The iterators first iterate over the hidden hash as normal (giving out
+changed values) then iterate over the storehash skipping values in the
+original hash.
+
+
+commit() and reset()
+--------------------
+
+These functions are not normally visible in the hash interface, but can
+be used as object methods.  commit() updates the original hidden hash
+(which changes its order) and reset() loses all of the changes that we
+have made.
+
+In the hash interface commit is called as the variable is destroyed.
+This should happen at exit time, but didn't seem to to me.  Assigning
+undef to the variable you stored the object in and untie()ing the hash
+will force it to happen.
+
+
+$transhash->autostore()
+-----------------------
+
+This method stores a true or false value in the object telling it
+whether it should automatically commit if it is destroyed.  If this is
+set to false, then the object method $transhash->commit() must be called
+to store any changes, otherwise they will be lost.
+
+If this is set to true, then be aware that exiting your program from
+some kind of error condition of your program (that is, not one perl
+knows about) would commit the changes.
+
+
+$transhash->verify_write()
+--------------------------
+
+This function checks that a write has committed to the hash correctly.
+It does this by checking that all of the values in the old temporary
+stores match those in the new ones.
+
+This function is untested since I don't have a sensible test case for it
+yet and don't need it myself.  should work though.
+
+
+COPYING
+-------
+
+     Copyright (c) 1997 Michael De La Rue
+
+This is free software and may be distributed under the same terms as
+perl.  There is no warantee.  See the file COPYING which should have
+been included with the distribution for one set of terms under which it
+may be distributed.  The artistic license, distributed with perl gives
+the other one.
+
+
+
+
+File: pm.info, Node: Tie/Watch, Next: Time/CTime, Prev: Tie/TransactHash, Up: Module List
+
+place watchpoints on Perl variables.
+************************************
+
+
+
+NAME
+====
+
+     Tie::Watch() - place watchpoints on Perl variables.
+
+
+SYNOPSIS
+========
+
+     use Tie::Watch;
+
+     $watch = Tie::Watch->new(
+         -variable  => \$frog,
+         -operation => 'rw',
+         -callback  => \&callback,
+         -args      => \@args,
+     );
+     %vinfo = $watch->Info;
+     $watch->Delete;
+
+
+DESCRIPTION
+===========
+
+     This class module binds a subroutine of your devising to a Perl variable; the
+     callback is invoked when the variable is read, written, or both.  The callback
+     code can pass the value of the variable through unchanged, or modify it on
+     the fly.  You cannot have more than one callback per Perl variable, so it must
+     be coded to handle read and write operations if 'rw' mode is selected.  It is
+     passed at least three arguments:
+
+     my $callback = sub {
+
+     # Callback to uppercase write values.
+
+     my($op, $val, $new_val, @args) = @ARG;
+     print "op=$op, val=", ($val ? "'$val'" : 'undefined'),
+         ", new_val=", ($new_val ? "'$new_val'" : 'undefined'),
+         ", args=@args!\n";
+     return ($op =~ /r/ ? $val : uc $new_val);
+      };
+
+     $op is either 'r' or 'w', $val is the variable's current value, $new_val is
+     the variable's new value if the operation is a write (else it's the same as
+     $val), and @args is a list of optional arguments you (may have) provided to 
+     the Tie::Watch->new() method. The return value from the callback becomes the
+     variable's new value.  
+
+     This example simply uppercases $new_val on a write.  To implement a read-only
+     variable simply return $val on a write.  Note that one callback works for
+     scalar, array or hash variables.
+
+
+METHODS
+=======
+
+
+$watch = Tie::Watch->new(-options => values);
+---------------------------------------------
+
+     -variable  = a *reference* to a scalar, array or hash variable.  If you
+                  specify a string, it's the name of a scalar variable.
+
+     -operation = 'r' to watch reads, 'w' to watch writes, or 'rw' to watch
+                  both reads and writes.
+
+     -callback  = a code reference pointing to the subroutine to handle the
+                  watch activity.
+
+     -args      = an optional reference to a list of arguments to supply the
+                  callback code.
+
+
+%vinfo = $watch->Info;
+----------------------
+
+     Returns a hash detailing the internals of the Watch object, with these keys:
+
+     %vinfo = {
+         watch     =>  SCALAR(0x200737f8)
+         operation =>  'rw'
+         callback  =>  CODE(0x200b2778)
+         arguments =>  \@args
+         value     =>  'HELLO SCALAR'
+         legible   =>  above data formatted as a list of string, for printing
+     }
+
+     For array and hash Watch objects, the 'value' key is replaced with a 'ptr'
+     key which is a reference to the array or hash.
+
+
+$watch->Delete;
+---------------
+
+     Stop watching the variable.  To delete the Watch object use undef($watch).
+
+
+AUTHORS
+=======
+
+     Stephen O. Lidie <lusol@Lehigh.EDU>
+     Hans Mulder <hansm@wsinti07.win.tue.nl>
+
+
+HISTORY
+=======
+
+     lusol@Lehigh.EDU, LUCC, 96/05/30
+      . Original version 1.0 release, based on the Trace module from Hans Mulder.
+
+
+COPYRIGHT
+=========
+
+     Copyright (C) 1996 - 1996 Stephen O. Lidie. All rights reserved.
+
+     This program is free software; you can redistribute it and/or modify it under
+     the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Time/CTime, Next: Time/DaysInMonth, Prev: Tie/Watch, Up: Module List
+
+format times ala POSIX asctime
+******************************
+
+
+
+NAME
+====
+
+Time::CTime -- format times ala POSIX asctime
+
+
+SYNOPSIS
+========
+
+     use Time::CTime
+      	print ctime(time);
+     print asctime(timelocal(time));
+     print strftime(template, localtime(time)); 
+
+
+strftime conversions
+--------------------
+
+     %%	PERCENT
+     %a	day of the week abbr
+     %A	day of the week
+     %b	month abbr
+     %B 	month
+     %c 	ctime format: Sat Nov 19 21:05:57 1994
+     %d 	numeric day of the month
+     %e 	DD
+     %D 	MM/DD/YY
+     %h 	month abbr
+     %H 	hour, 24 hour clock, leading 0's)
+     %I 	hour, 12 hour clock, leading 0's)
+     %j 	day of the year
+     %k 	hour
+     %l 	hour, 12 hour clock
+     %m 	month number, starting with 1
+     %M 	minute, leading 0's
+     %n 	NEWLINE
+     %o	ornate day of month -- "1st", "2nd", "25th", etc.
+     %p 	AM or PM 
+     %r 	time format: 09:05:57 PM
+     %R 	time format: 21:05
+     %S 	seconds, leading 0's
+     %t 	TAB
+     %T 	time format: 21:05:57
+     %U 	week number, Sunday as first day of week
+     %w 	day of the week, numerically, Sunday == 0
+     %W 	week number, Monday as first day of week
+     %x 	date format: 11/19/94
+     %X 	time format: 21:05:57
+     %y	year (2 digits)
+     %Y	year (4 digits)
+     %Z 	timezone in ascii. eg: PST
+
+
+DESCRIPTION
+===========
+
+This module provides routines to format dates.  They correspond to the
+libc routines.  &strftime() supports a pretty good set of coversions --
+more than most C libraries.
+ 
+strftime supports a pretty good set of conversions.
+
+The POSIX module has very similar functionality.  You should consider
+using it instead if you do not have allergic reactions to system
+libraries.
+
+
+GENESIS
+=======
+
+Written by David Muir Sharnoff <muir@idiom.com>.
+
+Tthe starting point for this package was a posting by Paul Foley
+<paul@ascent.com>
+
+
+
+File: pm.info, Node: Time/DaysInMonth, Next: Time/JulianDay, Prev: Time/CTime, Up: Module List
+
+simply report the number of days in a month
+*******************************************
+
+
+
+NAME
+====
+
+Time::DaysInMonth -- simply report the number of days in a month
+
+
+SYNOPSIS 	 	use Time::DaysInMonth; 	$days = days_in($year, $month_1_to_12); 	$leapyear = is_leap($year);
+===========================================================================================================================
+
+
+DESCRIPTION
+===========
+
+DaysInMonth is simply a package to report the number of days in a month.
+That's all it does.  Really!
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com>
+
+
+
+File: pm.info, Node: Time/JulianDay, Next: Time/Local, Prev: Time/DaysInMonth, Up: Module List
+
+Julian calendar manipulations
+*****************************
+
+
+
+NAME
+====
+
+Time::JulianDay -- Julian calendar manipulations
+
+
+SYNOPSIS
+========
+
+     use Time::JulianDay
+
+     $jd = julian_day($year, $month_1_to_12, $day)
+     $jd = local_julian_day($seconds_since_1970);
+     $jd = gm_julian_day($seconds_since_1970);
+     ($year, $month_1_to_12, $day) = inverse_julian_day($jd)
+     $dow = day_of_week($jd) 
+
+     print (Sun,Mon,Tue,Wed,Thu,Fri,Sat)[$dow];
+
+     $seconds_since_jan_1_1970 = jd_secondslocal($jd, $hour, $min, $sec)
+     $seconds_since_jan_1_1970 = jd_secondsgm($jd, $hour, $min, $sec)
+     $seconds_since_jan_1_1970 = jd_timelocal($sec,$min,$hours,$mday,$month_0_to_11,$year)
+     $seconds_since_jan_1_1970 = jd_timegm($sec,$min,$hours,$mday,$month_0_to_11,$year)
+
+
+DESCRIPTION
+===========
+
+JulianDay is a package that manipulates dates as number of days since
+some time a long time ago.  It's easy to add and subtract time using
+julian days...
+
+The day_of_week returned by day_of_week() is 0 for Sunday, and 6 for
+Saturday and everything else is in between.
+
+
+GENESIS
+=======
+
+Written by David Muir Sharnoff <muir@idiom.com> with help from previous
+work by Kurt Jaeger aka PI <zrzr0111@helpdesk.rus.uni-stuttgart.de>
+ 	based on postings from: Ian Miller <ian_m@cix.compulink.co.uk>;
+Gary Puckering <garyp%cognos.uucp@uunet.uu.net>
+	based on Collected Algorithms of the ACM ?; and the
+unknown-to-me author of Time::Local.
+
+
+
+File: pm.info, Node: Time/Local, Next: Time/ParseDate, Prev: Time/JulianDay, Up: Module List
+
+efficiently compute time from local and GMT time
+************************************************
+
+
+
+NAME
+====
+
+Time::Local - efficiently compute time from local and GMT time
+
+
+SYNOPSIS
+========
+
+     $time = timelocal($sec,$min,$hours,$mday,$mon,$year);
+     $time = timegm($sec,$min,$hours,$mday,$mon,$year);
+
+
+DESCRIPTION
+===========
+
+These routines are quite efficient and yet are always guaranteed to
+agree with localtime() and gmtime().  We manage this by caching the
+start times of any months we've seen before.  If we know the start time
+of the month, we can always calculate any time within the month.  The
+start times themselves are guessed by successive approximation starting
+at the current time, since most dates seen in practice are close to the
+current date.  Unlike algorithms that do a binary search (calling gmtime
+once for each bit of the time value, resulting in 32 calls), this
+algorithm calls it at most 6 times, and usually only once or twice.  If
+you hit the month cache, of course, it doesn't call it at all.
+
+timelocal is implemented using the same cache.  We just assume that
+we're translating a GMT time, and then fudge it when we're done for the
+timezone and daylight savings arguments.  The timezone is determined by
+examining the result of localtime(0) when the package is initialized.
+The daylight savings offset is currently assumed to be one hour.
+
+Both routines return -1 if the integer limit is hit. I.e. for dates
+after the 1st of January, 2038 on most machines.
+
+
+
+
+File: pm.info, Node: Time/ParseDate, Next: Time/Period, Prev: Time/Local, Up: Module List
+
+date parsing both relative and absolute
+***************************************
+
+
+
+NAME
+====
+
+Time::ParseDate -- date parsing both relative and absolute
+
+
+SYNOPSIS
+========
+
+     use Time::ParseDate;
+     $seconds_since_jan1_1970 = parsedate("12/11/94 2pm", NO_RELATIVE => 1)
+     $seconds_since_jan1_1970 = parsedate("12/11/94 2pm", %options)
+
+
+OPTIONS
+=======
+
+Date parsing can also use options.  The options are as follows:
+
+     FUZZY	-> it's okay not to parse the entire date string
+     NOW	-> the "current" time for relative times (defaults to time())
+     ZONE	-> local timezone (defaults to $ENV{TZ})
+     WHOLE	-> the whole input string must be parsed
+     GMT	-> input time is assumed to be GMT, not localtime
+     UK	-> prefer UK style dates (dd/mm over mm/dd)
+     DATE_REQUIRED -> do not default the date
+     TIME_REQUIRED -> do not default the time
+     NO_RELATIVE -> input time is not relative to NOW
+     TIMEFIRST -> try parsing time before date [not default]
+     PREFER_PAST -> when year or day of week is ambigueous, assume past
+     PREFER_FUTURE -> when year or day of week is ambigueous, assume future
+
+
+DATE FORMATS RECOGNIZED
+=======================
+
+
+Absolute date formats
+---------------------
+
+     Dow, dd Mon yy
+     Dow, dd Mon yyyy
+     Dow, dd Mon
+     dd Mon yy
+     dd Mon yyyy
+     Month day{st,nd,rd,th}, year
+     Month day{st,nd,rd,th}
+     Mon dd yyyy
+     yyyy/mm/dd
+     yyyy/mm
+     mm/dd/yy
+     mm/dd/yyyy
+     mm/yy
+     yy/mm      (only if year > 12, or > 31 if UK)
+     yy/mm/dd   (only if year > 12 and day < 32, or year > 31 if UK)
+     dd/mm/yy   (only if UK, or an invalid mm/dd/yy or yy/mm/dd)
+     dd/mm/yyyy (only if UK, or an invalid mm/dd/yyyy)
+     dd/mm      (only if UK, or an invalid mm/dd)
+
+
+Relative date formats:
+----------------------
+
+     count "days"
+     count "weeks"
+     count "months"
+     count "years"
+     Dow "after next"
+     Dow 			(requires PREFER_PAST or PREFER_FUTURE)
+     "next" Dow
+     "tomorrow"
+     "today"
+     "yesterday"
+     "last" dow
+     "last week"
+     "now"
+     "now" "+" count units
+     "now" "-" count units
+     "+" count units
+     "-" count units
+
+
+Absolute time formats:
+----------------------
+
+     hh:mm:ss 
+     hh:mm 
+     hh:mm[AP]M
+     hh[AP]M
+     hhmmss[[AP]M] 
+     "noon"
+     "midnight"
+
+
+Relative time formats:
+----------------------
+
+     count "minuts"
+     count "seconds"
+     count "hours"
+     "+" count units
+     "+" count
+     "-" count units
+     "-" count
+
+
+Timezone formats:
+-----------------
+
+     [+-]dddd
+     GMT[+-]d+
+     [+-]dddd (TZN)
+     TZN
+
+
+Special formats:
+----------------
+
+     [ d]d/Mon/yyyy:hh:mm:ss [[+-]dddd]
+     yy/mm/dd.hh:mm
+
+
+DESCRIPTION
+===========
+
+This module recognizes the above date/time formats.  Usually a date and
+a time are specified.  There are numerous options for controlling what
+is recognized and what is not.
+
+The return code is always the time in seconds since January 1st, 1970 or
+zero if it was unable to parse the time.
+
+If a timezone is specified it must be after the time.  Year
+specifications can be tacked onto the end of absolute times.
+
+
+EXAMPLES
+========
+
+     $seconds = parsedate("Mon Jan  2 04:24:27 1995");
+     $seconds = parsedate("Tue Apr 4 00:22:12 PDT 1995");
+     $seconds = parsedate("04.04.95 00:22", ZONE => PDT);
+     $seconds = parsedate("122212 950404", ZONE => PDT, TIMEFIRST => 1);
+     $seconds = parsedate("+3 secs", NOW => 796978800);
+     $seconds = parsedate("2 months", NOW => 796720932);
+     $seconds = parsedate("last Tuesday");
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com>
+
+Patch for UK-style dates: Sam Yates <syates@maths.adelaide.edu.au>
+
+
+
+File: pm.info, Node: Time/Period, Next: Time/Timezone, Prev: Time/ParseDate, Up: Module List
+
+A Perl module to deal with time periods.
+****************************************
+
+
+
+NAME
+====
+
+Time::Period - A Perl module to deal with time periods.
+
+
+SYNOPSIS
+========
+
+`use Time::Period;'
+
+`$result = inPeriod($time, $period);'
+
+
+DESCRIPTION
+===========
+
+The *inPeriod* function determines if a given time falls within a given
+period.  *inPeriod* returns 1 if the time does fall within the given
+period, *0* if not, and *-1* if *inPeriod* detects a malformed time or
+period.
+
+The time is specified as per the `time()' function, which is assumed to
+be the number of non-leap seconds since January 1, 1970.
+
+The period is specified as a string which adheres to the format
+
+     sub-period[, sub-period...]
+
+or the string "none" or whitespace.  The string "none" is not case
+sensitive.
+
+If the period is blank, then any time period is assumed because the time
+period has not been restricted.  In that case, *inPeriod* returns 1.  If
+the period is "none", then no time period applies and *inPeriod* returns
+0.
+
+A sub-period is of the form
+
+     scale {range [range ...]} [scale {range [range ...]}]
+
+Scale must be one of nine different scales (or their equivalent codes):
+
+     Scale  | Scale | Valid Range Values
+            | Code  |
+     *******|*******|************************************************
+     year   |  yr   | n     where n is an integer 0<=n<=99 or n>=1970
+     month  |  mo   | 1-12  or  jan, feb, mar, apr, may, jun, jul,
+            |       |           aug, sep, oct, nov, dec
+     week   |  wk   | 1-6
+     yday   |  yd   | 1-365
+     mday   |  md   | 1-31
+     wday   |  wd   | 1-7   or  su, mo, tu, we, th, fr, sa
+     hour   |  hr   | 0-23  or  12am 1am-11am 12noon 12pm 1pm-11pm
+     minute |  min  | 0-59
+     second |  sec  | 0-59
+
+The same scale type may be specified multiple times.  Additional scales
+simply extend the range defined by previous scales of the same type.
+
+The range for a given scale must be a valid value in the form of
+
+     v
+
+or
+
+     v-v
+
+For the range specification v-v, if the second value is larger than the
+first value, the range wraps around unless the scale specification is
+year.
+
+Year does not wrap because the year is never really reset, it just
+increments.  Ignoring that fact has lead to the dreaded year 2000
+nightmare.  When the year rolls over from 99 to 00, it has really rolled
+over a century, not gone back a century.  *inPeriod* supports the
+dangerous two digit year notation because it is so rampant.  However,
+*inPeriod* converts the two digit notation to four digits by prepending
+the first two digits from the current year.  In the case of 99-1972, the
+99 is translated to whatever current century it is (probably 20th), and
+then range 99-1972 is treated as 1972-1999.  If it were the 21st
+century, then the range would be 1972-2099.
+
+Anyway, if v-v is 9-2 and the scale is month, September, October,
+November, December, January, and February are the months that the range
+specifies.  If v-v is 2-9, then the valid months are February, March,
+April, May, Jun, July, August, and September.  9-2 is the same as
+Sep-Feb.
+
+v isn't a point in time.  In the context of the hour scale, 9 specifies
+the time period from 9:00:00 am to 9:59:59 am.  This is what most people
+would call 9-10.  In other words, v is discrete in its time scale.  9
+changes to 10 when 9:59:59 changes to 10:00:00, but it is 9 from 9:00:00
+to 9:59:59.  Just before 9:00:00, v was 8.
+
+Note that whitespace can be anywhere and case is not important.  Note
+also that scales must be specified either in long form (year, month,
+week, etc.) or in code form (yr, mo, wk, etc.).  Scale forms may be
+mixed in a period statement.
+
+Furthermore, when using letters to specify ranges, only the first two
+for week days or the first three for months are significant.  January is
+a valid specification for jan, and Sunday is a valid specification for
+su.  Sun is also valid for su.
+
+
+PERIOD EXAMPLES
+---------------
+
+To specify a time period from Monday through Friday, 9am to 5pm, use a
+period such as
+
+     wd {Mon-Fri} hr {9am-4pm}
+
+When specifing a range by using -, it is best to think of - as meaning
+through.  It is 9am through 4pm, which is just before 5pm.
+
+To specify a time period from Monday through Friday, 9am to 5pm on
+Monday, Wednesday, and Friday, and 9am to 3pm on Tuesday and Thursday,
+use a period such as
+
+     wd {Mon Wed Fri} hr {9am-4pm}, wd{Tue Thu} hr {9am-2pm}
+
+To specify a time period that extends Mon-Fri 9am-5pm, but alternates
+weeks in a month, use a period such as
+
+     wk {1 3 5} wd {Mon Wed Fri} hr {9am-4pm}
+
+Or how about a period that specifies winter?
+
+     mo {Nov-Feb}
+
+This is equivalent to the previous example:
+
+     mo {Jan-Feb Nov-Dec}
+
+As is
+
+     mo {jan feb nov dec}
+
+And this is too:
+
+     mo {Jan Feb}, mo {Nov Dec}
+
+Wait!  So is this:
+
+     mo {Jan Feb} mo {Nov Dec}
+
+To specify a period that describes every other half-hour, use something
+like
+
+     minute { 0-29 }
+
+To specify the morning, use
+
+     hour { 12am-11am }
+
+Remember, 11am is not 11:00:00am, but rather 11:00:00am - 11:59:59am.
+
+Hmmmm, 5 second blocks could be a fun period...
+
+     sec {0-4 10-14 20-24 30-34 40-44 50-54}
+
+To specify every first half-hour on alternating week days, and the
+second half-hour the rest of the week, use the period
+
+     wd {1 3 5 7} min {0-29}, wd {2 4 6} min {30-59}
+
+
+VERSION
+=======
+
+1.20
+
+
+HISTORY
+=======
+
+     Version 1.20
+     ------------
+     	- Added the ability to specify no time period.
+
+     Version 1.13
+     ------------
+     	- Cleaned up the error checking code.
+
+     Version 1.12
+     ------------
+     	- Updated email and web space information.
+
+     Version 1.11
+     ------------
+     	- Minor bug fix in 1.10.
+
+     Version 1.10
+     ------------
+     	- Released.
+
+
+AUTHOR
+======
+
+Patrick Ryan <pgryan@geocities.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Patrick Ryan.  All rights reserved.  This Perl module
+uses the conditions given by Perl.  This module may only be distributed
+and or modified under the conditions given by Perl.
+
+
+DATE
+====
+
+August 26, 1997
+
+
+SOURCE
+======
+
+This distribution can be found at
+
+     http://www.geocities.com/SiliconValley/Lakes/8456/
+
+or
+
+     http://www.perl.com/CPAN/modules/by-module/Time/
+
+
+
+

@@ -1,0 +1,1834 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Net/POP3, Next: Net/Ping, Prev: Net/PH, Up: Module List
+
+Post Office Protocol 3 Client class (RFC1081)
+*********************************************
+
+
+
+NAME
+====
+
+Net::POP3 - Post Office Protocol 3 Client class (RFC1081)
+
+
+SYNOPSIS
+========
+
+     use Net::POP3;
+
+     # Constructors
+     $pop = Net::POP3->new('pop3host');
+     $pop = Net::POP3->new('pop3host', Timeout => 60);
+
+
+DESCRIPTION
+===========
+
+This module implements a client interface to the POP3 protocol, enabling
+a perl5 application to talk to POP3 servers. This documentation assumes
+that you are familiar with the POP3 protocol described in RFC1081.
+
+A new Net::POP3 object must be created with the new method. Once this
+has been done, all POP3 commands are accessed via method calls on the
+object.
+
+
+EXAMPLES
+========
+
+     Need some small examples in here :-)
+
+
+CONSTRUCTOR
+===========
+
+new ( [ HOST, ] [ OPTIONS ] )
+     This is the constructor for a new Net::POP3 object. `HOST' is the
+     name of the remote host to which a POP3 connection is required.
+
+     If `HOST' is not given, then the `POP3_Host' specified in
+     `Net::Config' will be used.
+
+     OPTIONS are passed in a hash like fashion, using key and value
+     pairs.  Possible options are:
+
+     *Timeout* - Maximum time, in seconds, to wait for a response from the
+     POP3 server (default: 120)
+
+     Debug - Enable debugging information
+
+
+METHODS
+=======
+
+Unless otherwise stated all methods return either a *true* or *false*
+value, with *true* meaning that the operation was a success. When a
+method states that it returns a value, failure will be returned as undef
+or an empty list.
+
+user ( USER )
+     Send the USER command.
+
+pass ( PASS )
+     Send the PASS command. Returns the number of messages in the
+     mailbox.
+
+login ( [ USER [, PASS ]] )
+     Send both the the USER and PASS commands. If PASS is not given the
+     `Net::POP3' uses `Net::Netrc' to lookup the password using the host
+     and username. If the username is not specified then the current
+     user name will be used.
+
+     Returns the number of messages in the mailbox.
+
+top ( MSGNUM [, NUMLINES ] )
+     Get the header and the first `NUMLINES' of the body for the message
+     `MSGNUM'. Returns a reference to an array which contains the lines
+     of text read from the server.
+
+list ( [ MSGNUM ] )
+     If called with an argument the list returns the size of the message
+     in octets.
+
+     If called without arguments a reference to a hash is returned. The
+     keys will be the `MSGNUM''s of all undeleted messages and the
+     values will be their size in octets.
+
+get ( MSGNUM )
+     Get the message `MSGNUM' from the remote mailbox. Returns a
+     reference to an array which contains the lines of text read from
+     the server.
+
+last ()
+     Returns the highest `MSGNUM' of all the messages accessed.
+
+popstat ()
+     Returns an array of two elements. These are the number of undeleted
+     elements and the size of the mbox in octets.
+
+delete ( MSGNUM )
+     Mark message `MSGNUM' to be deleted from the remote mailbox. All
+     messages that are marked to be deleted will be removed from the
+     remote mailbox when the server connection closed.
+
+reset ()
+     Reset the status of the remote POP3 server. This includes reseting
+     the status of all messages to not be deleted.
+
+quit ()
+     Quit and close the connection to the remote POP3 server. Any
+     messages marked as deleted will be deleted from the remote mailbox.
+
+
+NOTES
+=====
+
+If a `Net::POP3' object goes out of scope before quit method is called
+then the reset method will called before the connection is closed. This
+means that any messages marked to be deleted will not be.
+
+
+SEE ALSO
+========
+
+*Note Net/Netrc: Net/Netrc,
+*Note Net/Cmd: Net/Cmd,
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/Ping, Next: Net/SMTP, Prev: Net/POP3, Up: Module List
+
+check a remote host for reachability
+************************************
+
+
+
+NAME
+====
+
+Net::Ping - check a remote host for reachability
+
+
+SYNOPSIS
+========
+
+     use Net::Ping;
+
+     $p = Net::Ping->new();
+     print "$host is alive.\n" if $p->ping($host);
+     $p->close();
+
+     $p = Net::Ping->new("icmp");
+     foreach $host (@host_array)
+     {
+         print "$host is ";
+         print "NOT " unless $p->ping($host, 2);
+         print "reachable.\n";
+         sleep(1);
+     }
+     $p->close();
+
+     $p = Net::Ping->new("tcp", 2);
+     while ($stop_time > time())
+     {
+         print "$host not reachable ", scalar(localtime()), "\n"
+             unless $p->ping($host);
+         sleep(300);
+     }
+     undef($p);
+
+     # For backward compatibility
+     print "$host is alive.\n" if pingecho($host);
+
+
+DESCRIPTION
+===========
+
+This module contains methods to test the reachability of remote hosts on
+a network.  A ping object is first created with optional parameters, a
+variable number of hosts may be pinged multiple times and then the
+connection is closed.
+
+You may choose one of three different protocols to use for the ping.
+With the "tcp" protocol the ping() method attempts to establish a
+connection to the remote host's echo port.  If the connection is
+successfully established, the remote host is considered reachable.  No
+data is actually echoed.  This protocol does not require any special
+privileges but has higher overhead than the other two protocols.
+
+Specifying the "udp" protocol causes the ping() method to send a udp
+packet to the remote host's echo port.  If the echoed packet is received
+from the remote host and the received packet contains the same data as
+the packet that was sent, the remote host is considered reachable.  This
+protocol does not require any special privileges.
+
+If the "icmp" protocol is specified, the ping() method sends an icmp
+echo message to the remote host, which is what the UNIX ping program
+does.  If the echoed message is received from the remote host and the
+echoed information is correct, the remote host is considered reachable.
+Specifying the "icmp" protocol requires that the program be run as root
+or that the program be setuid to root.
+
+
+Functions
+---------
+
+Net::Ping->new([$proto [, $def_timeout [, $bytes]]]);
+     Create a new ping object.  All of the parameters are optional.
+     $proto specifies the protocol to use when doing a ping.  The
+     current choices are "tcp", "udp" or "icmp".  The default is "udp".
+
+     If a default timeout ($def_timeout) in seconds is provided, it is
+     used when a timeout is not given to the ping() method (below).  The
+     timeout must be greater than 0 and the default, if not specified,
+     is 5 seconds.
+
+     If the number of data bytes ($bytes) is given, that many data bytes
+     are included in the ping packet sent to the remote host. The number
+     of data bytes is ignored if the protocol is "tcp".  The minimum
+     (and default) number of data bytes is 1 if the protocol is "udp"
+     and 0 otherwise.  The maximum number of data bytes that can be
+     specified is 1024.
+
+$p->ping($host [, $timeout]);
+     Ping the remote host and wait for a response.  $host can be either
+     the hostname or the IP number of the remote host.  The optional
+     timeout must be greater than 0 seconds and defaults to whatever was
+     specified when the ping object was created.  If the hostname cannot
+     be found or there is a problem with the IP number, undef is
+     returned.  Otherwise, 1 is returned if the host is reachable and 0
+     if it is not.  For all practical purposes, undef and 0 and can be
+     treated as the same case.
+
+$p->close();
+     Close the network connection for this ping object.  The network
+     connection is also closed by "undef $p".  The network connection is
+     automatically closed if the ping object goes out of scope (e.g. $p
+     is local to a subroutine and you leave the subroutine).
+
+pingecho($host [, $timeout]);
+     To provide backward compatibility with the previous version of
+     Net::Ping, a pingecho() subroutine is available with the same
+     functionality as before.  pingecho() uses the tcp protocol.  The
+     return values and parameters are the same as described for the
+     ping() method.  This subroutine is obsolete and may be removed in a
+     future version of Net::Ping.
+
+
+WARNING
+=======
+
+pingecho() or a ping object with the tcp protocol use alarm() to
+implement the timeout.  So, don't use alarm() in your program while you
+are using pingecho() or a ping object with the tcp protocol.  The udp
+and icmp protocols do not use alarm() to implement the timeout.
+
+
+NOTES
+=====
+
+There will be less network overhead (and some efficiency in your
+program) if you specify either the udp or the icmp protocol.  The tcp
+protocol will generate 2.5 times or more traffic for each ping than
+either udp or icmp.  If many hosts are pinged frequently, you may wish
+to implement a small wait (e.g. 25ms or more) between each ping to avoid
+flooding your network with packets.
+
+The icmp protocol requires that the program be run as root or that it be
+setuid to root.  The tcp and udp protocols do not require special
+privileges, but not all network devices implement the echo protocol for
+tcp or udp.
+
+Local hosts should normally respond to pings within milliseconds.
+However, on a very congested network it may take up to 3 seconds or
+longer to receive an echo packet from the remote host.  If the timeout
+is set too low under these conditions, it will appear that the remote
+host is not reachable (which is almost the truth).
+
+Reachability doesn't necessarily mean that the remote host is actually
+functioning beyond its ability to echo packets.
+
+Because of a lack of anything better, this module uses its own routines
+to pack and unpack ICMP packets.  It would be better for a separate
+module to be written which understands all of the different kinds of
+ICMP packets.
+
+
+
+
+File: pm.info, Node: Net/SMTP, Next: Net/SNPP, Prev: Net/Ping, Up: Module List
+
+Simple Mail Transfer Protocol Client
+************************************
+
+
+
+NAME
+====
+
+Net::SMTP - Simple Mail Transfer Protocol Client
+
+
+SYNOPSIS
+========
+
+     use Net::SMTP;
+
+     # Constructors
+     $smtp = Net::SMTP->new('mailhost');
+     $smtp = Net::SMTP->new('mailhost', Timeout => 60);
+
+
+DESCRIPTION
+===========
+
+This module implements a client interface to the SMTP and ESMTP
+protocol, enabling a perl5 application to talk to SMTP servers. This
+documentation assumes that you are familiar with the concepts of the
+SMTP protocol described in RFC821.
+
+A new Net::SMTP object must be created with the new method. Once this
+has been done, all SMTP commands are accessed through this object.
+
+The Net::SMTP class is a subclass of Net::Cmd and IO::Socket::INET.
+
+
+EXAMPLES
+========
+
+This example prints the mail domain name of the SMTP server known as
+mailhost:
+
+     #!/usr/local/bin/perl -w
+
+     use Net::SMTP;
+
+     $smtp = Net::SMTP->new('mailhost');
+     print $smtp->domain,"\n";
+     $smtp->quit;
+
+This example sends a small message to the postmaster at the SMTP server
+known as mailhost:
+
+     #!/usr/local/bin/perl -w
+
+     use Net::SMTP;
+
+     $smtp = Net::SMTP->new('mailhost');
+
+     $smtp->mail($ENV{USER});
+     $smtp->to('postmaster');
+
+     $smtp->data();
+     $smtp->datasend("To: postmaster\n");
+     $smtp->datasend("\n");
+     $smtp->datasend("A simple test message\n");
+     $smtp->dataend();
+
+     $smtp->quit;
+
+
+CONSTRUCTOR
+===========
+
+new Net::SMTP [ HOST, ] [ OPTIONS ]
+     This is the constructor for a new Net::SMTP object. `HOST' is the
+     name of the remote host to which a SMTP connection is required.
+
+     If `HOST' is not given, then the `SMTP_Host' specified in
+     `Net::Config' will be used.
+
+     OPTIONS are passed in a hash like fashion, using key and value
+     pairs.  Possible options are:
+
+     *Hello* - SMTP requires that you identify yourself. This option
+     specifies a string to pass as your mail domain. If not given a
+     guess will be taken.
+
+     *Timeout* - Maximum time, in seconds, to wait for a response from the
+     SMTP server (default: 120)
+
+     Debug - Enable debugging information
+
+     Example:
+
+          $smtp = Net::SMTP->new('mailhost',
+          			   Hello => 'my.mail.domain'
+          			   Timeout => 30,
+                                 Debug   => 1,
+          			  );
+
+
+METHODS
+=======
+
+Unless otherwise stated all methods return either a *true* or *false*
+value, with *true* meaning that the operation was a success. When a
+method states that it returns a value, failure will be returned as undef
+or an empty list.
+
+domain ()
+     Returns the domain that the remote SMTP server identified itself as
+     during connection.
+
+hello ( DOMAIN )
+     Tell the remote server the mail domain which you are in using the
+     EHLO command (or HELO if EHLO fails).  Since this method is invoked
+     automatically when the Net::SMTP object is constructed the user
+     should normally not have to call it manually.
+
+mail ( ADDRESS [, OPTIONS] )
+send ( ADDRESS )
+send_or_mail ( ADDRESS )
+send_and_mail ( ADDRESS )
+     Send the appropriate command to the server MAIL, SEND, SOML or
+     SAML. `ADDRESS' is the address of the sender. This initiates the
+     sending of a message. The method recipient should be called for
+     each address that the message is to be sent to.
+
+     The mail method can some additional ESMTP OPTIONS which is passed
+     in hash like fashion, using key and value pairs.  Possible options
+     are:
+
+          Size        => <bytes>
+          Return      => <???>
+          Bits        => "7" | "8"
+          Transaction => <ADDRESS>
+          Envelope    => <ENVID>
+
+reset ()
+     Reset the status of the server. This may be called after a message
+     has been initiated, but before any data has been sent, to cancel
+     the sending of the message.
+
+recipient ( ADDRESS [, ADDRESS [ ...]] )
+     Notify the server that the current message should be sent to all of
+     the addresses given. Each address is sent as a separate command to
+     the server.  Should the sending of any address result in a failure
+     then the process is aborted and a *false* value is returned. It is
+     up to the user to call reset if they so desire.
+
+to ( ADDRESS [, ADDRESS [...]] )
+     A synonym for recipient.
+
+data ( [ DATA ] )
+     Initiate the sending of the data from the current message.
+
+     `DATA' may be a reference to a list or a list. If specified the
+     contents of `DATA' and a termination string `".\r\n"' is sent to
+     the server. And the result will be true if the data was accepted.
+
+     If `DATA' is not specified then the result will indicate that the
+     server wishes the data to be sent. The data must then be sent using
+     the datasend and dataend methods described in *Note Net/Cmd:
+     Net/Cmd,.
+
+expand ( ADDRESS )
+     Request the server to expand the given address Returns a reference
+     to an array which contains the text read from the server.
+
+verify ( ADDRESS )
+     Verify that `ADDRESS' is a legitimate mailing address.
+
+help ( [ $subject ] )
+     Request help text from the server. Returns the text or undef upon
+     failure
+
+quit ()
+     Send the QUIT command to the remote SMTP server and close the
+     socket connection.
+
+
+SEE ALSO
+========
+
+*Note Net/Cmd: Net/Cmd,
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/SNPP, Next: Net/TCP, Prev: Net/SMTP, Up: Module List
+
+Simple Network Pager Protocol Client
+************************************
+
+
+
+NAME
+====
+
+Net::SNPP - Simple Network Pager Protocol Client
+
+
+SYNOPSIS
+========
+
+     use Net::SNPP;
+
+     # Constructors
+     $snpp = Net::SNPP->new('snpphost');
+     $snpp = Net::SNPP->new('snpphost', Timeout => 60);
+
+
+NOTE
+====
+
+This module is not complete, yet !
+
+
+DESCRIPTION
+===========
+
+This module implements a client interface to the SNPP protocol, enabling
+a perl5 application to talk to SNPP servers. This documentation assumes
+that you are familiar with the SNPP protocol described in RFC1861.
+
+A new Net::SNPP object must be created with the new method. Once this
+has been done, all SNPP commands are accessed through this object.
+
+
+EXAMPLES
+========
+
+This example will send a pager message in one hour saying "Your lunch is
+ready"
+
+     #!/usr/local/bin/perl -w
+
+     use Net::SNPP;
+
+     $snpp = Net::SNPP->new('snpphost');
+
+     $snpp->send( Pager   => $some_pager_number,
+     	         Message => "Your lunch is ready",
+     	         Alert   => 1,
+     	         Hold    => time + 3600, # lunch ready in 1 hour :-)
+     	       ) || die $snpp->message;
+
+     $snpp->quit;
+
+
+CONSTRUCTOR
+===========
+
+new ( [ HOST, ] [ OPTIONS ] )
+     This is the constructor for a new Net::SNPP object. `HOST' is the
+     name of the remote host to which a SNPP connection is required.
+
+     If `HOST' is not given, then the `SNPP_Host' specified in
+     `Net::Config' will be used.
+
+     OPTIONS are passed in a hash like fashion, using key and value
+     pairs.  Possible options are:
+
+     *Timeout* - Maximum time, in seconds, to wait for a response from the
+     SNPP server (default: 120)
+
+     Debug - Enable debugging information
+
+     Example:
+
+          $snpp = Net::SNPP->new('snpphost',
+          			   Debug => 1,
+          			  );
+
+
+METHODS
+=======
+
+Unless otherwise stated all methods return either a *true* or *false*
+value, with *true* meaning that the operation was a success. When a
+method states that it returns a value, failure will be returned as undef
+or an empty list.
+
+reset ()
+help ()
+     Request help text from the server. Returns the text or undef upon
+     failure
+
+quit ()
+     Send the QUIT command to the remote SNPP server and close the
+     socket connection.
+
+
+EXPORTS
+=======
+
+`Net::SNPP' exports all that `Net::CMD' exports, plus three more
+subroutines that can bu used to compare against the result of
+status. These are :- `CMD_2WAYERROR', `CMD_2WAYOK', and
+`CMD_2WAYQUEUED'.
+
+
+SEE ALSO
+========
+
+*Note Net/Cmd: Net/Cmd,
+RFC1861
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/TCP, Next: Net/Telnet, Prev: Net/SNPP, Up: Module List
+
+TCP sockets interface module
+****************************
+
+
+
+NAME
+====
+
+Net::TCP - TCP sockets interface module
+
+
+SYNOPSIS
+========
+
+     use Socket;			# optional
+     use Net::Gen;		# optional
+     use Net::Inet;		# optional
+     use Net::TCP;
+
+
+DESCRIPTION
+===========
+
+The `Net::TCP' module provides services for TCP communications over
+sockets.  It is layered atop the `Net::Inet' and `Net::Gen' modules,
+which are part of the same distribution.
+
+
+Public Methods
+--------------
+
+The following methods are provided by the `Net::TCP' module itself,
+rather than just being inherited from `Net::Inet' or `Net::Gen'.
+
+new
+     Usage:
+
+          $obj = new Net::TCP;
+          $obj = new Net::TCP $host, $service;
+          $obj = new Net::TCP \%parameters;
+          $obj = new Net::TCP $host, $service, \%parameters;
+
+     Returns a newly-initialised object of the given class.  If called
+     for a derived class, no validation of the supplied parameters will
+     be performed.  (This is so that the derived class can add the
+     parameter validation it needs to the object before allowing the
+     validation.)  Otherwise, it will cause the parameters to be
+     validated by calling its init method, which `Net::TCP' inherits
+     from `Net::Inet'.  In particular, this means that if both a host
+     and a service are given, then an object will only be returned if a
+     connect() call was successful.
+
+Server::new
+     Usage:
+
+          $obj = new Net::TCP::Server $service;
+          $obj = new Net::TCP::Server $service, \%parameters;
+          $obj = new Net::TCP::Server $lcladdr, $service, \%parameters;
+
+     Returns a newly-initialised object of the given class.  This is
+     much like the regular new method, except that it makes it easier to
+     specify just a service name or port number, and it automatically
+     does a setsockopt() call to set `SO_REUSEADDR' to make the bind()
+     more likely to succeed.
+
+     Simple example for server setup:
+
+          $lh = new Net::TCP::Server 7788 or die;
+          while ($sh = $lh->accept) {
+          	defined($pid=fork) or die "fork: $!\n";
+          	if ($pid) {		# parent doesn't need client fh
+          	    $sh->stopio;
+          	    next;
+          	}
+          	# child doesn't need listener fh
+          	$lh->stopio;
+          	# do per-connection stuff here
+          	exit;
+          }
+
+     Note that signal-handling for the child processes is not included
+     in this example.  A sample server will be included in the final kit
+     which will show how to manage the subprocesses.
+
+
+Protected Methods
+-----------------
+
+none.
+
+
+Known Socket Options
+--------------------
+
+These are the socket options known to the `Net::TCP' module itself:
+
+@asis{}
+     
+     `TCP_NODELAY' `TCP_MAXSEG' `TCP_RPTR2RXT'
+
+
+Known Object Parameters
+-----------------------
+
+There are no object parameters registered by the `Net::TCP' module
+itself.
+
+
+TIESCALAR
+---------
+
+Tieing of scalars to a TCP handle is supported by inheritance from the
+TIESCALAR method of `Net::Gen'.  That method only succeeds if a call to
+a new method results in an object for which the isconnected method
+returns true, which is why it is mentioned in connection with this
+module.
+
+Example:
+
+     tie $x,Net::TCP,0,'finger' or die;
+     $x = "-s\n";
+     print $y while defined($y = $x);
+     untie $x;
+
+This is an expensive re-implementation of `finger -s' on many machines.
+
+Each assignment to the tied scalar is really a call to the put method
+(via the STORE method), and each read from the tied scalar is really a
+call to the getline method (via the FETCH method).
+
+
+Exports
+-------
+
+default
+     none
+
+exportable
+     `TCPOPT_EOL' `TCPOPT_MAXSEG' `TCPOPT_NOP' `TCPOPT_WINDOW'
+     `TCP_MAXSEG' `TCP_MAXWIN' `TCP_MAX_WINSHIFT' `TCP_MSS'
+     `TCP_NODELAY' `TCP_RPTR2RXT' `TH_ACK' `TH_FIN' `TH_PUSH' `TH_RST'
+     `TH_SYN' `TH_URG'
+
+tags
+     The following *:tags* are available for grouping related exportable
+     items:
+
+     :sockopts
+          `TCP_NODELAY' `TCP_MAXSEG' `TCP_RPTR2RXT'
+
+     :tcpoptions
+          `TCPOPT_EOL' `TCPOPT_MAXSEG' `TCPOPT_NOP' `TCPOPT_WINDOW'
+
+     :protocolvalues
+          `TCP_MAXWIN' `TCP_MAX_WINSHIFT' `TCP_MSS' `TH_ACK' `TH_FIN'
+          `TH_PUSH' `TH_RST' `TH_SYN' `TH_URG'
+
+     :ALL
+          All of the above exportable items.
+
+
+
+
+AUTHOR
+======
+
+Spider Boardman `<spider@Orb.Nashua.NH.US>'
+
+
+
+
+File: pm.info, Node: Net/Telnet, Next: Net/Time, Prev: Net/TCP, Up: Module List
+
+interact with TELNET port or other TCP ports
+********************************************
+
+
+
+NAME
+====
+
+Net::Telnet - interact with TELNET port or other TCP ports
+
+
+SYNOPSIS
+========
+
+     use Net::Telnet ();
+     see METHODS section below
+
+
+DESCRIPTION
+===========
+
+Net::Telnet allows you to make client connections to a TCP port and do
+network I/O, especially with a port using the TELNET protocol.  Simple
+I/O methods such as print, get, and getline are provided.  More
+sophisticated interactive features are provided because connecting to a
+TELNET port ultimately means communicating with a program designed for
+human interaction.  Some interactive features include the ability to
+specify a timeout and to wait for patterns to appear in the input
+stream, such as the prompt from a command interpreter.
+
+This example prints who's logged-on to the remote host sparky:
+
+     $sparky = new Net::Telnet (Host => "sparky",
+                                Timeout => 10,
+                                Prompt => '/[$%#>] $/');
+     $sparky->login($username, $passwd);
+     @lines = $sparky->cmd("/usr/bin/who");
+     print @lines;
+     $sparky->close;
+
+Methods *login()* and *cmd()* use the prompt setting in the object to
+determine when a login or command is complete.  If the prompt doesn't
+match, it's likely those commands will timeout.
+
+Other reasons to use this class than strictly with a TELNET port are:
+
+   * You're not familiar with sockets and you want a simple way to make
+     client connections to TCP services.
+
+   * You want to be able to specify your own time-out while connecting,
+     reading, or writing.
+
+   * You're communicating with an interactive program at the other end
+     of some socket or pipe and you want to wait for certain patterns to
+     appear.
+
+*Please note* some important differences with most other Perl I/O
+calls.  All input is buffered, while all output is flushed.  The
+output record separator for *print()* is set to *\n* by default, so
+there's no need to append all your commands with a newline.  See
+*output_record_separator()* to change the default.  In the input
+stream, each sequence of *\r\n* is converted to *\n*.  In the output
+stream, each occurrence of *\n* is converted to a sequence of
+*\r\n*.  See *binmode()* to change the default.  TCP protocols
+typically use the ASCII sequence *carriage-return* *newline* to
+designate a newline.
+
+You'll need to be running at least Perl version 5.002 to use this
+module.  This module does not require any libraries that don't already
+come with the standard Perl distribution.  If you have the IO::
+libraries then methods are inherited from the class IO::Socket::INET,
+otherwise FileHandle is used as a base class.
+
+Special methods are provided to handle errors.  Normally when an error
+or timeout is encountered using a telnet object, the program dies with
+an error message printed to standard error.  You may arrange for the
+methods to return with an undefined value instead by using
+*errmode()* or the *errmode* option to new().  See *errmode()*
+for other sophisticated error mode settings.  The error message itself
+may be obtained using the *errmsg()*.
+
+Note that eof is not considered an error while *timing-out* is.
+
+While debugging your program use *input_log()* or *dump_log()* to see
+what's actually being received and sent.
+
+Two different styles of named arguments are supported.  This document
+only shows the IO:: style:
+
+     Net::Telnet->new(Timeout => 20);
+
+however the dash-option style is also allowed:
+
+     Net::Telnet->new(-timeout => 20);
+
+For more help, see the EXAMPLES section below.
+
+This is an alpha version - meaning that the interface may change in
+future versions.  Contact me, Jay Rogers <jay@rgrs.com>, if you find any
+bugs or have suggestions for improvement.
+
+
+METHODS
+=======
+
+
+new - create a new Net::Telnet object
+-------------------------------------
+
+     $obj = Net::Telnet->new([Binmode    => $mode,]
+                             [Dump_Log   => $filename,]
+                             [Errmode    => $errmode,]
+                             [Fhopen     => $filehandle,]
+                             [Host       => $host,]
+                             [Input_log  => $file,]
+                             [Input_record_separator => $char,]
+                             [Output_log => $file,]
+                             [Output_record_separator => $char,]
+                             [Port       => $port,]
+                             [Prompt     => $matchop,]
+                             [Telnetmode => $mode,]
+                             [Timeout    => $secs,]);
+
+This is the constructor for Net::Telnet objects.  A new object is
+returned on success, the *$errmode* action is performed on failure - see
+*errmode()*.  The arguments are short-cuts to methods of the same name.
+
+If the *$host* argument is given then the object is opened by connecting
+to TCP *$port* on *$host*.  Also see *open()*.  The new object returned
+is given the following defaults in the absence of corresponding named
+arguments:
+
+   * The default host is *"localhost"*
+
+   * The default port is *23*
+
+   * The default *prompt* is *'/[$%#*>*] $/'*
+
+   * The default timeout is *10*
+
+   * The default *errmode* is *'die'*
+
+   * The default output_record_separator is *"\n"*
+
+   * The default input_record_separator is *"\n"*
+
+   * The default binmode is *0*, which means do newline translations
+
+
+binmode - turn off/on newline translation
+-----------------------------------------
+
+     $prev = $obj->binmode($mode);
+
+This method controls whether or not sequences of *\r\n* are translated.
+By default they are translated (i.e. binmode is *off*).
+
+If *$mode* is missing or 1 then binmode is *on* and newline translation
+is not done.
+
+If *$mode* is *0* then binmode is *off* and newline translation is
+done.  In the input stream, each sequence of *\r\n* is converted to
+*\n* and in the output stream, each occurrence of *\n* is converted
+to a sequence of *\r\n*.
+
+Note that input is always buffered.  Changing binmode doesn't effect
+what's already been read into the buffer.  Output is not buffered and
+changing binmode will have an immediate effect.
+
+
+break - send TELNET break character
+-----------------------------------
+
+     $ok = $obj->break;
+
+This method sends the TELNET break character.  This character is
+provided because it's a signal outside the USASCII set which is
+currently given local meaning within many systems.  It's intended to
+indicate that the Break Key or the Attention Key was hit.
+
+
+close - close object
+--------------------
+
+     $ok = $obj->close;
+
+This method closes the socket, file, or pipe associated with the object.
+
+
+cmd - issue command and retrieve output
+---------------------------------------
+
+     $ok = $obj->cmd($string);
+     $ok = $obj->cmd(String   => $string,
+                     [Output  => $ref,]
+                     [Prompt  => $match,]
+                     [Timeout => $secs,]);
+
+     @output = $obj->cmd($string);
+     @output = $obj->cmd(String  => $string,
+                         [Output  => $ref,]
+                         [Prompt  => $match,]
+                         [Timeout => $secs,]);
+
+This method sends the command *$string*, and reads the characters sent
+back by the command up until and including the matching prompt.  It's
+assumed that the program to which you're sending is some kind of command
+prompting interpreter such as a shell.
+
+In a scalar context the characters read are discarded and a boolean is
+returned indicating the success or failure of sending the command
+string and reading the prompt.  Note that in order to return on error,
+*errmode()* must not be set to die.
+
+In an array context, just the output generated by the command is
+returned, one line per element.  In other words, all the characters in
+between the echoed back command string and the prompt are returned.  If
+the command happens to return no output, an array containing one
+element, the null string is returned.  This is so the array will
+indicate *true* in a boolean context.
+
+Optional named arguments are provided to override the current settings
+of prompt and timeout.
+
+The output named argument provides an alternative method of receiving
+command output.  If you pass a scalar reference, the output is returned
+in the referenced scalar.  If you pass an array or hash reference, the
+lines of output are returned in the referenced array or hash.
+
+
+dump_log - log all I/O in dump format
+-------------------------------------
+
+     $fh = $obj->dump_log;
+
+     $fh = $obj->dump_log($fh);
+
+     $fh = $obj->dump_log($filename);
+
+This method starts or stops dump format logging of all the object's
+input and output.  The dump format shows the blocks read and written
+in a hexadecimal and printable character format.  This method is
+useful when debugging, however you might want to first try
+*input_log()* as it's more readable.
+
+If no argument is given, the current log filehandle is returned.  A null
+string indicates logging is off.
+
+To stop logging, use a null string as an argument.
+
+If an open filehandle is given, it is used for logging and returned.
+Otherwise, the argument is assumed to be the name of a file, the file is
+opened and a filehandle to it is returned.
+
+
+eof - end of file read indicator
+--------------------------------
+
+     $eof = $obj->eof;
+
+This method indicates if end of file has been read.  Because the input
+is buffered this isn't the same thing as *$obj* has closed.  In other
+words *$obj* can be closed but there still can be stuff in the buffer to
+be read.  Under this condition you can still read but you won't be able
+to write.
+
+
+errmode - set action to perform on error
+----------------------------------------
+
+     $mode = $obj->errmode;
+
+     $prev = $obj->errmode($mode);
+
+This method gets or sets the action used when errors are encountered
+using the object.  The first calling sequence returns the current error
+mode.  The second calling sequence sets it to *$mode* and returns the
+previous mode.  Valid values for *$mode* are die (the default), return,
+a *coderef*, or an *arrayref*.
+
+When mode is die then when an error is encountered using the object, the
+program dies and an error message is printed on standard error.
+
+When mode is return then the method generating the error places an error
+message in the object and returns the undefined value in a scalar
+context and a null list in list context.  The error message may be
+obtained using *errmsg()*.
+
+When mode is a *coderef*, then when an error is encountered
+*coderef* is called with the error message as its first argument.
+Using this mode you may have your own subroutine handle errors.  If
+*coderef* itself returns then the method generating the error returns
+undefined or a null list depending on context.
+
+When mode is an *arrayref*, the first element of the array must be a
+*coderef*.  Any elements that follow are the arguments to *coderef*.
+When an error is encountered, the *coderef* is called with its
+arguments.  Using this mode you may have your own subroutine handle
+errors.  If the *coderef* itself returns then the method generating the
+error returns undefined or a null list depending on context.
+
+
+errmsg - most recent error message
+----------------------------------
+
+     $msg = $obj->errmsg;
+
+     $prev = $obj->errmsg(@msgs);
+
+The first calling sequence returns the error message associated with the
+object.  The null string is returned if no error has been encountered
+yet.  The second calling sequence sets the error message for the object
+to the concatenation of *@msgs* and returns the previous error message.
+Normally, error messages are set internally by a method when an error is
+encountered.
+
+
+error - perform the error mode action
+-------------------------------------
+
+     $obj->error(@msgs);
+
+This method concatenates *@msgs* into a string and places it in the
+object as the error message.  Also see *errmsg()*.  It then performs the
+error mode.  Also see *errmode()*.
+
+If the error mode doesn't cause the program to die then the undefined
+value or a null list is returned depending on context.
+
+This method is primarily used by this class or a sub-class to perform
+the user requested action when an error is encountered.
+
+
+fhopen - use an existing open filehandle
+----------------------------------------
+
+     $ok = $obj->fhopen($fh);
+
+This method associates the open filehandle *$fh* with the object for
+further I/O.
+
+This method provides a way to use this module with a filehandle that's
+already opened.  Suppose you want to use the features of this module to
+do I/O to something other than a TCP port.  Instead of opening the
+object for I/O to a TCP port by passing a host arg to new() or invoking
+*open()*, call this method instead.
+
+
+get - read block of data
+------------------------
+
+     $data = $obj->get([Timeout => $secs,]);
+
+This method reads a block of data from the object and returns it along
+with any buffered data.  If no buffered data is available to return,
+it will wait for data to read using the timeout specified in the
+object.  You can override that timeout using *$secs*.  Also see
+*timeout()*.  If buffered data is available to return, it also checks
+for a block of data that can be immediately read.
+
+On eof an undefined value is returned.  On timeout or other errors the
+error mode action is performed.
+
+
+getline - read next line
+------------------------
+
+     $line = $obj->getline([Timeout => $secs,]);
+
+This method reads and returns the next line of data from the object.
+You can use *input_record_separator()* to change the notion of what
+separates a line.  The default is *\n*.
+
+If a line isn't immediately available, this method blocks waiting for a
+line or the timeout.  You can override the object's timeout for this
+method using *$secs*.  Also see *timeout()*.
+
+On eof an undefined value is returned.  On timeout or other errors the
+error mode action is performed.
+
+
+getlines - read next lines
+--------------------------
+
+     @lines = $obj->getlines([Timeout => $secs,]);
+
+This method reads and returns the next available lines of data from the
+object.  You can use *input_record_separator()* to change the notion of
+what separates a line.  The default is *\n*.
+
+If a line isn't immediately available, this method blocks waiting for
+one or more lines, or the timeout.  You can override the object's
+timeout for this method using *$secs*.  Also see *timeout()*.
+
+On eof a null array is returned.  On timeout or other errors the error
+mode action is performed.
+
+
+host - name of remote host
+--------------------------
+
+     $host = $obj->host;
+
+     $prev = $obj->host($host);
+
+This method designates the remote host.  With no argument this method
+returns the current host name set in the object.  With an argument it
+sets the current host name to *$host* and returns the previous host
+name.  You may indicate the remote host using either a hostname or an IP
+address.
+
+
+input_log - log all input
+-------------------------
+
+     $fh = $obj->input_log;
+
+     $fh = $obj->input_log($fh);
+
+     $fh = $obj->input_log($filename);
+
+This method starts or stops logging of input.  This is useful when
+debugging.  Also see *dump_log()*.  Because most command interpreters
+echo back commands received, its likely all your output will also be in
+this log.  Note that input logging occurs after newline translation.
+See *binmode()* for details on newline translation.
+
+If no argument is given, the log filehandle is returned.  A null string
+indicates logging is off.
+
+To stop logging, use a null string as an argument.
+
+If an open filehandle is given, it is used for logging and returned.
+Otherwise, the argument is assumed to be the name of a file, the file is
+opened for logging and a filehandle to it is returned.
+
+
+input_record_separator - input line delimiter
+---------------------------------------------
+
+     $rs = $obj->input_record_separator;
+
+     $prev = $obj->input_record_separator($rs);
+
+This method designates the line delimiter for input.  It's used with
+*getline()*, *getlines()*, and *cmd()* to determine lines in the
+input.
+
+With no argument this method returns the current input record separator
+set in the object.  With an argument it sets the input record separator
+to *$rs* and returns the previous value.
+
+
+lastline - the lastline read
+----------------------------
+
+     $line = $obj->lastline;
+
+     $prev = $obj->lastline($line);
+
+This method saves the last line read from the object.  This may be a
+useful error message when the remote side abnormally closes the
+connection.  Typically the remote side will print an error message
+before closing.
+
+With no argument this method returns the last line read from the object.
+With an argument it sets the last line read to *$line* and returns the
+previous value.  Normally, only internal methods set the last line.
+
+
+login - perform standard login
+------------------------------
+
+     $ok = $obj->login($username, $password);
+
+     $ok = $obj->login(Name     => $username,
+                       Password => $password,
+                       [Prompt  => $match,]
+                       [Timeout => $secs,]);
+
+This method performs a standard login by waiting for a login prompt and
+responding with *$username*, then waiting for the password prompt and
+responding with *$password*, and then waiting for the command
+interpreter prompt.  If any of the prompts sent don't match what's
+expected, the method will timeout - unless timeout is turned off.
+
+Login prompts must match either of the patterns:
+
+     /login[: ]*$/i
+     /username[: ]*$/i
+
+Password prompts must match the pattern:
+
+     /password[: ]*$/i
+
+The command interpreter prompt must match the current value of
+*prompt()*.
+
+Optional named arguments are provided to override the current settings
+of prompt and timeout.
+
+
+max_buffer_length - maximum size of input buffer
+------------------------------------------------
+
+     $len = $obj->max_buffer_length;
+
+     $prev = $obj->max_buffer_length($len);
+
+This method designates the maximum size of the input buffer.  An error
+is generated when a read causes the buffer to exceed this limit.  The
+default value is 1,048,576 bytes (1MB).  The input buffer can grow
+much larger than the block size when you read using *getline()* or
+*waitfor()* and the data stream contains no newlines or matching
+waitfor patterns.
+
+With no argument this method returns the current maximum buffer length
+set in the object.  With an argument it sets the maximum buffer length
+to *$len* and returns the previous value.
+
+
+open - connect to host and port
+-------------------------------
+
+     $ok = $obj->open($host);
+
+     $ok = $obj->open([Host    => $host,]
+                      [Port    => $port,]
+                      [Timeout => $secs,]);
+
+This method opens a TCP connection to *$port* on *$host*.  If either
+argument is missing then the current value of *host()* or *port()* is
+used.
+
+An optional named argument is provided to override the current setting
+of timeout.
+
+Timeouts don't work for this method on machines that don't implement
+SIGALRM.  For those machines, an error is returned when the system
+reaches its own time-out while trying to connect.
+
+A side effect of this method is to reset the alarm interval associated
+with SIGALRM.
+
+
+output_field_separator - field separator for print
+--------------------------------------------------
+
+     $ofs = $obj->output_field_separator;
+
+     $prev = $obj->output_field_separator($ofs);
+
+This method designates the output field separator for *print()*.
+Ordinarily the print method simply prints out the comma separated fields
+you specify.  Set this to specify what's printed between fields.
+
+With no argument this method returns the current output field separator
+set in the object.  With an argument it sets the output field separator
+to *$ofs* and returns the previous value.
+
+
+output_log - log all output
+---------------------------
+
+     $fh = $obj->output_log;
+
+     $fh = $obj->output_log($fh);
+
+     $fh = $obj->output_log($filename);
+
+This method starts or stops logging of output.  This is useful when
+debugging.  Also see *dump_log()*.  Because most command interpreters
+echo back commands received, its likely all your output would also be in
+an input log.  See *input_log()*.  Note that output logging occurs
+before newline translation.  See *binmode()* for details on newline
+translation.
+
+If no argument is given, the log filehandle is returned.  A null string
+indicates logging is off.
+
+To stop logging, use a null string as an argument.
+
+If an open filehandle is given, it is used for logging and returned.
+Otherwise, the argument is assumed to be the name of a file, the file is
+opened for logging and a filehandle to it is returned.
+
+
+output_record_separator - output line delimiter
+-----------------------------------------------
+
+     $ors = $obj->output_record_separator;
+
+     $prev = $obj->output_record_separator($ors);
+
+This method designates the output record separator for *print()*.
+Ordinarily the print operator simply prints out the comma separated
+fields you specify, with no trailing newline or record separator
+assumed.  Set this variable to specify what's printed at the end of the
+print.
+
+Note: the output record separator is set to *\n* by default, so there's
+no need to append all your commands with a newline.
+
+With no argument this method returns the current output record separator
+set in the object.  With an argument it sets the output record separator
+to *$ors* and returns the previous value.
+
+
+port - remote port
+------------------
+
+     $port = $obj->port;
+
+     $prev = $obj->port($port);
+
+This method designates the remote TCP port.  With no argument this
+method returns the current port number.  With an argument it sets the
+current port number to *$port* and returns the previous port.  If
+*$port* is a service name, then first it's converted to a port number
+using the perl function *getservbyname()*.
+
+
+print - write to object
+-----------------------
+
+     $ok = $obj->print(@list);
+
+This method prints a string or a comma-separated list of strings to the
+opened object and returns non-zero if all data was successfully written.
+
+By default, the *output_record_separator()* is set to *\n* in order to
+have your commands automatically end with a newline.  In most cases your
+output is being read by a command interpreter which won't accept a
+command until newline is read.  This is similar to someone typing a
+command and hitting the return key.
+
+On failure, it's possible that some data was written.  If you choose to
+try and recover from a print timing-out, use *print_length()* to
+determine how much was written before timeout occurred.
+
+
+print_length - number of bytes written by print
+-----------------------------------------------
+
+     $num = $obj->print_length;
+
+This returns the number of bytes successfully written by the most recent
+*print()*.
+
+
+prompt - pattern to match a prompt
+----------------------------------
+
+     $matchop = $obj->prompt;
+
+     $prev = $obj->prompt($matchop);
+
+This method sets the pattern used to find a prompt in the input stream.
+It must be a string representing a valid perl pattern match operator.
+The methods *login()* and *cmd()* try to read until matching the prompt.
+If the pattern chosen doesn't match what's sent, then it's likely those
+commands will timeout.
+
+With no argument this method returns the prompt set in the object.  With
+an argument it sets the prompt to *$matchop* and returns the previous
+value.
+
+The default prompt is '/[$%#>] $/'
+
+Always use single quotes to construct *$matchop* to avoid unintended
+backslash interpretation.  Using single quotes, you only need add extra
+backslashes to quote patterns containing *\'* or *\\*.
+
+
+telnetmode - turn off/on telnet command interpretation
+------------------------------------------------------
+
+     $prev = $obj->telnet($mode);
+
+This method controls whether or not telnet commands in the data stream
+are recognized and handled.  The telnet protocol uses certain character
+sequences sent in the data stream to control the session.  If the port
+you're connecting to isn't using the telnet protocol, then you should
+turn this mode off.  The default is *on*.
+
+If *$mode* is *0* then telnet mode is off.  If *$mode* is missing or 1
+then telnet mode is on.
+
+
+timed_out - timeout indicator
+-----------------------------
+
+     $boolean = $obj->timed_out;
+
+     $prev = $obj->timed_out($boolean);
+
+This method indicates if a previous read or write method timed-out.
+
+With no argument this method returns true if a previous method
+timed-out.  With an argument it sets the indicator.  Generally this is
+used by internal methods to clear it.
+
+
+timeout - I/O timeout interval
+------------------------------
+
+     $secs = $obj->timeout;
+
+     $prev = $obj->timeout($secs);
+
+This method sets the timeout interval that's used when performing I/O or
+connecting to a port.  When a method doesn't complete within the timeout
+interval then it's an error and the error mode action is performed.
+
+The timeout may be expressed as a relative or absolute value.  If
+*$secs* is greater than or equal to the time the program was started,
+as determined by $^T, then it's the absolute time when timeout occurs.
+Also see the perl function *time()*.  A relative timeout happens
+*$secs* from when the I/O method begins.
+
+If *$secs* is *0* then timeout occurs if the data cannot be immediately
+read or written.  Use the undefined value to turn off timing-out.
+
+With no argument this method returns the timeout set in the object.
+With an argument it sets the timeout to *$secs* and returns the previous
+value.
+
+
+watchfor - wait for pattern in the input
+----------------------------------------
+
+     $ok = $obj->waitfor($matchop);
+     $ok = $obj->waitfor([Match   => $matchop,]
+                         [String  => $string,]
+                         [Timeout => $secs,]);
+
+     ($prematch, $match) = $obj->waitfor($matchop);
+     ($prematch, $match) = $obj->waitfor([Match   => $matchop,]
+                                         [String  => $string,]
+                                         [Timeout => $secs,]);
+
+This method reads until a pattern match or string is found in the input
+stream.  All the characters before and including the match are removed
+from the input stream.  On eof an undefined value is returned.  On
+timeout or other errors the error mode action is performed.
+
+In an array context the characters before the match and the matched
+characters are returned in *$prematch* and *$match*.
+
+You can specify more than one pattern or string by simply providing
+multiple Match and/or String named arguments.  A *$matchop* must be a
+string representing a valid perl pattern match operator.  The *$string*
+is just a substring to find in the input stream.
+
+An optional named argument is provided to override the current setting
+of timeout.
+
+Always use single quotes to construct *$matchop* to avoid unintended
+backslash interpretation.  Using single quotes, you only need add extra
+backslashes to quote patterns containing *\'* or *\\*.
+
+
+SEE ALSO
+========
+
+   * RFC 854 - TELNET Protocol Specification
+
+   * RFC 1143 - The Q Method of Implementing TELNET Option Negotiation
+
+   * TELNET Options
+
+
+EXAMPLES
+========
+
+This example gets the current weather forecast for Brainerd, Minnesota.
+
+     use Net::Telnet ();
+     my($forecast, $t);
+
+     $t = new Net::Telnet (-host => "rainmaker.wunderground.com");
+
+     ## Wait for first prompt and "hit return".
+     $t->waitfor('/continue:.*$/');
+     $t->print("");
+
+     ## Wait for second prompt and respond with city code.
+     $t->waitfor('/city code:.*$/');
+     $t->print("BRD");
+
+     ## Read and print the first page of forecast.
+     ($forecast) = $t->waitfor('/[ \t]+press return to continue/i');
+     print $forecast;
+
+     exit;
+
+This example checks a POP server to see if you have mail.
+
+     use Net::Telnet ();
+     my($hostname, $line, $passwd, $pop, $username);
+
+     $hostname = "your_destination_host_here";
+     $username = "your_username_here";
+     $passwd = "your_password_here";
+
+     $pop = new Net::Telnet (-host => $hostname,
+     			    -port => 110,
+     			    -telnetmode => '');
+
+     ## Read connection message.
+     $line = $pop->getline;
+     die $line unless $line =~ /^\+OK/;
+
+     ## Send user name.
+     $pop->print("user $username");
+     $line = $pop->getline;
+     die $line unless $line =~ /^\+OK/;
+
+     ## Send password.
+     $pop->print("pass $passwd");
+     $line = $pop->getline;
+     die $line unless $line =~ /^\+OK/;
+
+     ## Request status of messages.
+     $pop->print("list");
+     $line = $pop->getline;
+     print $line;
+
+     exit;
+
+Here's an example you can use to down load a file of any type.  The file
+is read from the remote host's standard output using cat.  To prevent
+any output processing, the remote host's standard output is put in raw
+mode using the Bourne shell.  The Bourne shell is used because some
+shells, notably tcsh, prevent changing tty modes.  Upon completion, FTP
+style statistics are printed to stderr.
+
+     use Net::Telnet;
+     my($block, $filename, $host, $hostname, $k_per_sec, $line,
+        $num_read, $passwd, $prevblock, $prompt, $size, $size_bsd,
+        $size_sysv, $start_time, $total_time, $username);
+
+     $hostname = "your_destination_host_here";
+     $username = "your_username_here";
+     $passwd = "your_password_here";
+     $filename = "your_download_file_here";
+
+     ## Connect and login.
+     $host = new Net::Telnet (Host => $hostname,
+                              Timeout => 30,
+                              Prompt => '/[%#>] $/');
+     $host->login($username, $passwd);
+
+     ## Make sure prompt won't match anything in send data.
+     $prompt = '_funkyPrompt_';
+     $host->prompt("/$prompt\$/");
+     $host->cmd("set prompt = '$prompt'");
+
+     ## Get size of file.
+     ($line) = $host->cmd("/usr/bin/ls -l $filename");
+     ($size_bsd, $size_sysv) = (split ' ', $line)[3,4];
+     if ($size_sysv =~ /^\d+$/) {
+         $size = $size_sysv;
+     }
+     elsif ($size_bsd =~ /^\d+$/) {
+         $size = $size_bsd;
+     }
+     else {
+         die "$filename: no such file on $hostname";
+     }
+
+     ## Start sending the file.
+     binmode STDOUT;
+     $host->binmode;
+     $host->print("/usr/bin/sh -c 'stty raw; cat $filename'");
+     $host->getline;    # discard echoed back line
+
+     ## Read file a block at a time.
+     $num_read = 0;
+     $prevblock = '';
+     $start_time = time;
+     while (($block = $host->get) and ($block !~ /$prompt$/o)) {
+         if (length $block >= length $prompt) {
+             print $prevblock;
+             $num_read += length $prevblock;
+             $prevblock = $block;
+         }
+         else {
+             $prevblock .= $block;
+         }
+
+     }
+     $host->close;
+
+     ## Print last block without trailing prompt.
+     $prevblock .= $block;
+     $prevblock =~ s/$prompt$//;
+     print $prevblock;
+     $num_read += length $prevblock;
+     die "error: expected size $size, received size $num_read\n"
+         unless $num_read == $size;
+
+     ## Print totals.
+     $total_time = (time - $start_time) || 1;
+     $k_per_sec = ($size / 1024) / $total_time;
+     $k_per_sec = sprintf "%3.1f", $k_per_sec;
+     warn("$num_read bytes received in $total_time seconds ",
+          "($k_per_sec Kbytes/s)\n");
+
+     exit;
+
+Here's an example that shows how to talk to a program that must
+communicate via a terminal.  In this case we're talking to the telnet
+program via a pseudo-terminal.  We use the Comm package to start the
+telnet program and return a filehandle to the pseudo-terminal.  This
+example sends some initial commands and then allows the user to type
+commands to the telnet session.
+
+     use Net::Telnet;
+     my($comm_pty, $host, $hostname, $passwd, $pty,
+        $username, @lines);
+
+     $hostname = "your_host_here";
+     $username = "your_name_here";
+     $passwd = "your_passwd_here";
+
+     ## Start the telnet program so we can talk to it via a
+     ## pseudo-terminal.
+     {
+         local $^W = 0;  # Comm.pl isn't warning clean
+
+     require "Comm.pl";
+     &Comm::init("close_it", "interact",
+                 "open_proc", "stty_raw", "stty_sane");
+     $comm_pty = &open_proc("telnet $hostname")
+         or die "open_proc failed";
+
+     ## Unfortunately the Comm package doesn't
+     ## return us a fully qualified filehandle.  We
+     ## must keep the filehandle Comm returned for
+     ## its use and we must build another filehandle
+     ## qualified with the current package for our
+     ## use.
+     $pty = "main::" . $comm_pty;
+         }
+
+     ## Obtain a new Net::Telnet object that does I/O to the
+     ## pseudo-terminal attached to the running telnet
+     ## program.  The "Telnetmode" is "off" because we're
+     ## not talking directly to a telnet port as we normally
+     ## do, we're talking to a pseudo-terminal.  The
+     ## "Output_record_separator" is now a carriage-return
+     ## because that's what you'd normally hit when you get
+     ## done typing a line at a terminal.
+     $host = new Net::Telnet (Fhopen => $pty,
+                              Timeout => 10,
+                              Prompt => '/[%#>] $/',
+                              Telnetmode => 0,
+                              Output_record_separator => "\r");
+
+     ## Issue some commands.
+     $host->login($username, $passwd);
+     $host->cmd("setenv DISPLAY $ENV{DISPLAY}");
+     print $host->cmd("who");
+
+     ## Allow the user to interact with telnet program until
+     ## they exit.
+     {
+         no strict 'subs';  # so we can refer to STDIN
+         local $^W = 0;     # Comm.pl isn't warning clean
+
+     &stty_raw(STDIN);
+     &interact($comm_pty);
+     &stty_sane(STDIN);
+     &close_it($comm_pty);
+         }
+
+     print "Exited telnet\n";
+     exit;
+
+
+AUTHOR
+======
+
+Jay Rogers <jay@rgrs.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Jay Rogers. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+

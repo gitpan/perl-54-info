@@ -1,0 +1,1982 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: CGI/Imagemap, Next: CGI/MiniSvr, Prev: CGI/Form, Up: Module List
+
+imagemap behavior for CGI programs
+**********************************
+
+
+
+NAME
+====
+
+CGI::Imagemap.pm - imagemap behavior for CGI programs
+
+
+SYNOPSIS
+========
+
+     use CGI::Imagemap;
+ 
+     $map = new CGI::Imagemap;
+     $map->setmap(@map);
+     $action = $map->action($x,$y);
+ 
+     -- or --
+
+     use CGI::Imagemap 'action_map';
+
+     $action = action_map($x,$y,@map);
+
+
+DESCRIPTION
+===========
+
+CGI::Imagemap allows CGI programmers to place TYPE=IMAGE form fields on
+their HTML fill-out forms, with either client-side or server-side maps
+emulated.
+
+The imagemap file follows that of the NCSA imagemap program.  Each point
+is an x,y tuple.  Each line in the map consists of one of the following
+formats.  Comment lines start with "#".
+
+     circle action center edgepoint
+     rect action upperleft lowerright
+     point action point
+     poly action point1 point2 ... pointN
+     default action
+
+Using "point" and "default" in the same map makes no sense. If "point"
+is used, the action for the closest one is selected.
+
+To use CGI::Imagemap, define an image submit map on your form with
+something like:
+
+     <input type=image name=mv_todo
+          SRC="image_url">
+
+You can pass a "client-side" imagemap like this:
+
+     <input type="hidden" name="todo.map"
+     		value="rect action1 0,0 25,20">
+     <input type="hidden" name="todo.map"
+     		value="rect action2 26,0 50,20">
+     <input type="hidden" name="todo.map"
+     		value="rect action3 51,0 75,20">
+     <input type="hidden" name="todo.map"
+     		value="default action0">
+
+If the @map passed parameter contains a NUL (\0) in the first array
+position, the map is assumed to be null-separated and @map is built by
+splitting it.  This allows a null-separated todo.map with multiple
+values (parsed by a cgi-lib.pl or the like) to be referenced.
+
+All of the following examples assume the above definitions in your form.
+
+
+Static Methods
+--------------
+
+CGI::Imagemap allows the export of two routines, *action_map* and
+*map_untaint*.   If you choose to use CGI::Imagemap statically, call the
+module with:
+
+     use CGI::Imagemap qw(action_map map_untaint);
+
+action_map(x,y,map)
+     We are assuming the map definition above, with the *type=image*
+     variable named `todo', and the map in *todo.map*. You can pass the
+     map in one of two ways.  The first is compatible with the CGI.pm
+     (or CGI::*) modules, and passes the map as an array:
+
+          $query = new CGI;
+          my $x = $query->param('todo.x');
+          my $y = $query->param('todo.y');
+          my $map = $query->param('todo.map');
+          $action = action_map($x, $y, $map);
+
+     If you are using the old *cgi-lib.pl* library, which places
+     multiple instances of the same form variable in a scalar, separated
+     by null (\0) characters, you can do this:
+
+          ReadParse(*FORM);
+          my $x = $FORM{'todo.x'};
+          my $y = $FORM{'todo.y'};
+          my $map = $FORM{'todo.map'};
+          $action = action_map($x, $y, $map);
+
+map_untaint($untaint)
+     If you are running with taint checking, as is suggested for CGI
+     programs, you can use map_untaint(1) to set map untainting on a
+     global basis.  (If using class methods, each has its own instance
+     of untainting).
+
+     It ensures all characters in the action fit pattern of [-\w.+@]+,
+     meaning alphnumerics, underscores, dashes (-), periods, and the @
+     sign.  It also checks the methods (rect,poly,point,default,circle)
+     and ensures that points/tuples are only integers.  Once that is
+     done, it untaints the passed form variables.
+
+          map_untaint(1);    # Turns on untainting
+          map_untaint('yes');# Same as above
+
+          map_untaint(0);    # Disable untainting
+          map_untaint('no'); # Same as above
+  
+          $status = map_untaint(); # Get status
+
+     Default is no untainting.
+
+
+Class Methods
+-------------
+
+The class methods for CGI::Imagemap are much the same as above, with the
+exception that multiple imagemaps are then maintained by the module,
+with full independence. The following method definitions assume the
+CGI::Form module is being used, like this:
+
+     use CGI::Form;
+     use CGI::Imagemap;
+
+     $query  = new CGI::Form;
+     $map    = new CGI::Imagemap;
+
+setmap(@map)
+     This sets the map for the instance.
+
+          $map = new CGI::Imagemap;
+          $map->setmap($query->param('todo.map'));
+
+addmap(@map)
+     This adds a new map action specification *to the current map*.
+
+          $map->addmap('point action5 3,9'));
+
+action(x,y)
+     This finds the action, based on the active map and the values of x
+     and y,
+
+          $x = $query->param('todo.x');
+          $y = $query->param('todo.y');
+          $action = $map->action($x, $y);
+
+untaint()
+     Sets, unsets, or returns the taint status for the instance.
+
+          $map->untaint(1);       # Turns on untainting
+          $map->untaint('yes');   # Same as above
+          $map->untaint(1);       # Disables untainting
+          $map->untaint('yes');   # Same as above
+          $status = $map->untaint(); # Get status
+
+version()
+     Returns the version number of the module.
+
+
+EXAMPLE
+=======
+
+A couple of self-contained examples are included in the CGI::Imagemap
+package.  They are:
+
+     testmap     -  Uses the CGI::Form module
+     testmap.old -  Uses the old cgi-lib.pl
+
+
+BUGS
+====
+
+The untainting stuff is not totally independent -- threading might not
+work very well.  This can be fixed if it is important -- in the CGI
+world, I doubt it.
+
+
+AUTHOR
+======
+
+Mike Heins, Internet Robotics, <mikeh@iac.net>
+
+
+CREDITS
+=======
+
+This work is heavily kited from the Perl imagemap program originally
+written by V. Khera <khera@kciLink.com>.
+
+
+
+
+File: pm.info, Node: CGI/MiniSvr, Next: CGI/Out, Prev: CGI/Imagemap, Up: Module List
+
+Adds to CGI::Base the ability for a CGI script to become a mini http server.
+****************************************************************************
+
+
+
+NAME
+====
+
+CGI::MiniSvr - Adds to CGI::Base the ability for a CGI script to become
+a mini http server.
+
+
+SYNOPSIS
+========
+
+
+     use CGI::MiniSvr;
+	
+     $cgi = new CGI::MiniSvr;
+     $cgi = new CGI::MiniSvr $port_or_path;
+     $cgi = new CGI::MiniSvr $port_or_path, $timeout_mins;
+	
+     $cgi->port;               # return MiniSvr port number with leading colon
+
+     $cgi->spawn;              # fork/detach from httpd
+	
+     $cgi->get;                # get input
+	
+     $cgi->pass_thru($host, $port);
+     $cgi->redirect($url);
+	
+     $cgi->done;               # end 'page' and close connection (high-level)
+     $cgi->close;              # just close connection (low-level)
+
+See also the CGI::Base methods.
+
+
+DESCRIPTION
+===========
+
+This file implements the CGI::MiniSvr object. This object represents an
+alternative interface between the application and an HTTP deamon.
+
+In a typical CGI scenario the interface is just a collection of
+environment variables passed to a process which then generated some
+outout and exits. The CGI::Base class implements this standard
+interface.
+
+The CGI::MiniSvr class inherits from CGI::Base and extends it to
+implement a 'mini http daemon' which can be spawned (forked) from a CGI
+script in order to maintain state information for a client 'session'.
+
+This is very useful. It neatly side-steps many of the painful issues
+involved in writing real-world multi-screen applications using the
+standard CGI interface (namely saving and restoring state between
+screens).
+
+Another use for the MiniSvr is to allow cgi scripts to produce output
+pages with dynamically generated in-line graphics (for example). To do
+this the script would spawn a MiniSvr and refer to its port number in
+the URL's for the embedded images. The MiniSvr would then sit on the
+port, with a relatively short timeout, ready to serve the requests for
+those images.  Once all the images have been served the MiniSvr would
+simply exit.
+
+Like the CGI::Base module the CGI::MiniSvr module does not do any
+significant data parsing. Higher level query processing (forms etc) is
+performed by the CGI::Request module.
+
+Note that the implementation of these modules means that you should
+invoke `new CGI::Base;' before `new CGI::MiniSvr;'. This is the natural
+order anyway and so should not be a problem.
+
+
+WARNING!
+--------
+
+This module is *not* a good solution to many problems! It is only a good
+solution to some. It should only be used by those who understand why it
+is *not* a good solution to many problems!
+
+For those who don't see the pitfalls of the mini server approach,
+consider just this one example: what happens to your machine if new
+'sessions' start, on average, faster than abandoned ones timeout?
+
+Security and short-lifespan URL's are some of the other problems.
+
+If in doubt don't use it! If you do then don't blame me for any of the
+problems you may (will) experience. *You have been warned!*
+
+
+DIRECT ACCESS USAGE
+-------------------
+
+In this mode the MiniSvr creates an internet domain socket and returns
+to the client a page with URL's which contain the MiniSvr's own port
+number.
+
+     $q = GetRequest();      # get initial request
+     $cgi = new CGI::MiniSvr;# were going to switch to CGI::MiniSvr later
+     $port = $cgi->port;     # get our port number (as ':NNNN') for use in URL's
+     $me = "http://$SERVER_NAME$port$SCRIPT_NAME"; # build my url
+     print "Hello... <A HREF="$me?INSIDE"> Step Inside ...</A>\r\n";
+     $cgi->done(1);          # flush out page, include debugging
+     $cgi->spawn and exit 0; # fork, original cgi process exits
+     CGI::Request::Interface($cgi); # default to new interface
+
+     while($q = GetQuery() or $cgi->exit){ # await request/timeout
+        ...
+     }
+
+
+INDIRECT ACCESS USAGE
+---------------------
+
+In this mode the MiniSvr creates a unix domain socket and returns to the
+client a page with a hidden field containing the path to the socket.
+
+     $q = GetRequest(); # get initial request
+     $path = $q->param('_minisvr_socket_path');
+     if ($path) {
+         # just pass request on to our mini server
+         $q->cgi->pass_thru('', $path) or (...handle timeout...)
+         $q->cgi->done;
+     } else {
+         # launch new mini server
+         $path = "/tmp/cgi.$$";
+         $cgi = new CGI::MiniSvr $path; # unix domain socket
+         # code here mostly same as 'DIRECT ACCESS' above except that
+         # the returned page has an embedded field _minisvr_socket_path
+         # set to $path
+         ...
+     }
+
+
+SUBCLASSING THE MINISVR
+-----------------------
+
+In some cases you may wish to have more control over the behaviour of
+the mini-server, such as handling some requests at a low level without
+disturbing the application.  Subclassing the server is generally a good
+approach. Use something like this:
+
+     #   Define a specialised subclass of the MiniSvr for this application
+     {
+       package CGI::MiniSvr::FOO;
+       use CGI::MiniSvr;
+       @ISA = qw(CGI::MiniSvr);
+
+     # Default behaviour for everything except GET requests for .(gif|html|jpg)
+     # Note that we must take great care not to: a) try to pass_thru to ourselves
+     # (it would hang), or b) pass_thru to the server a request which it will
+     # try to satisfy by starting another instance of this same script!
+
+     sub method_GET {
+         my $self = shift;
+         if ($self->{SCRIPT_NAME} =~ m/\.(gif|jpg|html)$/){
+             $self->pass_thru('', $self->{ORIG_SERVER_PORT});
+             $self->done;
+             return 'NEXT';
+         }
+         1;
+     }
+     # ... other overriding methods can be defined here ...
+       }
+
+Once defined you can use your new customised mini server by changing:
+
+     $cgi = new CGI::MiniSvr;
+
+into:
+
+     $cgi = new CGI::MiniSvr::FOO;
+
+With the example code above any requests for gif, jpg or html will be
+forwarded to the server which originally invoked this script. The
+application no longer has to deal with them. *Note:* this is just an
+example usage for the mechanism, you would typically generate pages in
+which any embedded images had URL's which refer explicitly to the main
+httpd.
+
+With a slight change in the code above you can arrange for the handling
+of the pass-thru to occur in a subprocess. This frees the main process
+to handle other requests. Since the MiniSvr typically only exists for
+one process, forking off a subprocess to handle a request is only useful
+for browsers such as Netscape which make multiple parallel requests for
+inline images.
+
+     if ($self->{SCRIPT_NAME} =~ m/\.(gif|html|jpg)$/){
+         if ($self->fork == 0) {
+             $self->pass_thru('', $self->{ORIG_SERVER_PORT});
+             $self->exit;
+         }
+         $self->done;
+         return 'NEXT';
+     }
+
+Note that forking can be expensive. It might not be worth doing for
+small images.
+
+
+FEATURES
+--------
+
+Object oriented and sub-classable.
+
+Transparent low-level peer validation (no application involvement but
+extensible through subclassing).
+
+Transparent low-level pass_thru/redirecting of URL's the application is
+not interested in (no application involvement but extensible through
+subclassing).
+
+Effective timeout mechanism with default and per-call settings.
+
+Good emulation of standard CGI interface (for code portability).
+
+
+RECENT CHANGES
+--------------
+
+2.2 and 2.3
+     Slightly improved documentation. Added a basic fork() method. Fixed
+     timeout to throw an exception so it's reliable on systems which
+     restart system calls. Socket/stdio/filehandle code
+     improved. Cleaned up done/close relationship. Added experimental
+     support for optionally handling requests by forking on a
+     case-by-case basis. This is handy for serving multiple simultaneous
+     image requests from Netscape for example.  Added notes about the
+     MiniSvr, mainly from discussions with Jack Shirazi Removed old
+     explicit port searching code from _new_inet_socket().  Improved
+     SIGPIPE handling (see CGI::Base).
+
+2.1
+     Fixed (worked around) a perl/stdio bug which affected POST
+     handling.  Changed some uses of map to foreach. Slightly improved
+     debugging.  Added support for any letter case in HTTP
+     headers. Enhanced test code.
+
+2.0
+     Added more documentation and examples. The max pending connections
+     parameter for listen() can now be specified as a parameter to
+     new().  SIGPIPE now ignored by default. Simplified inet socket code
+     with ideas from Jack Shirazi. Improved server Status-Line header
+     handling. Fixed validate_peer() error handling and redirect().
+     Simplified get_vars() by splitting into get_valid_connection() and
+     read_headers(). Moved example method_GET() out of MiniSvr and into
+     the test script.
+
+     The module file can be run as a cgi script to execute a demo/test. You
+     may need to chmod +x this file and teach your httpd that it can execute
+     *.pm files.
+
+1.18
+     Added note about possible use of MiniSvr to serve dynamically
+     generated in-line images. Added optional DoubleFork mechanism to
+     spawn which might be helpful for buggy httpd's, off by default.
+
+1.17
+     Added support for an 'indirect, off-net, access' via a local UNIX
+     domain socket in the file system. Now uses strict. ORIG_* values
+     now stored within object and not exported as globals (Base CGI vars
+     remain unchanged).  See CGI::Base for some more details.
+
+
+FUTURE DEVELOPMENTS
+-------------------
+
+Full pod documentation.
+
+None of this is perfect. All suggestions welcome.
+
+Test unix domain socket mechanism.
+
+Issue/problem - the handling of headers. Who outputs them and when? We
+have a sequence of: headers, body, end, read, headers, body, end, read
+etc. The problem is that a random piece of code can't tell if the
+headers have been output yet. A good solution will probably have to wait
+till we have better tools for writing HTML and we get away from pages of
+print statements.
+
+A method for setting PATH_INFO and PATH_TRANSLATED to meaningful values
+would be handy.
+
+
+AUTHOR, COPYRIGHT and ACKNOWLEDGEMENTS
+--------------------------------------
+
+This code is Copyright (C) Tim Bunce 1995. All rights reserved.  This
+program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+This module includes ideas from Pratap Pereira
+<pereira@ee.eng.ohio-state.edu>, Jack Shirazi <js@biu.icnet.uk> and
+others.
+
+IN NO EVENT SHALL THE AUTHORS BE LIABLE TO ANY PARTY FOR DIRECT,
+INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF
+THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+LIMITED TO, LOST PROFITS) EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+SEE ALSO
+--------
+
+CGI::Base, CGI::Request, URI::URL
+
+
+SUPPORT
+-------
+
+Please use comp.infosystems.www.* and comp.lang.perl.misc for support.
+Please do _NOT_ contact the author directly. I'm sorry but I just don't
+have the time.
+
+
+
+
+File: pm.info, Node: CGI/Out, Next: CGI/Push, Prev: CGI/MiniSvr, Up: Module List
+
+buffer output when building CGI programs
+****************************************
+
+
+
+NAME
+====
+
+CGI::Out - buffer output when building CGI programs
+
+
+SYNOPSIS
+========
+
+     use CGI;
+     use CGI::Out;
+
+     $query = new CGI;
+     savequery $query;		# to reconstruct input
+
+     $CGI::Out::mailto = 'fred';	# override default of $<
+
+     out $query->header();
+     out $query->start_html(
+     	-title=>'A test',
+     	-author=>'muir@idiom.com');
+
+     croak "We're outta here!";
+     confess "It was my fault: $!";
+     carp "It was your fault!";
+     warn "I'm confused";
+     die  "I'm dying.\n";
+
+     use CGI::Out qw(carpout);
+     carpout(\*LOG);
+
+
+DESCRIPTION
+===========
+
+This is a helper routine for building CGI programs.  It buffers stdout
+until you're completed building your output.  If you should get an error
+before you are finished, then it will display a nice error message (in
+HTML), log the error, and send email about the problem.
+
+It wraps all of the functions provided by CGI::Carp and Carp.  Do not
+"use" them directly, instead just "use CGI::Out".
+
+Instead of print, use out.
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com>
+
+
+SEE ALSO
+========
+
+Carp, CGI::Carp, CGI, CGI::Wrap
+
+
+BUGS
+====
+
+No support for formats is provided by CGI::Out.
+
+
+
+
+File: pm.info, Node: CGI/Push, Next: CGI/Request, Prev: CGI/Out, Up: Module List
+
+Simple Interface to Server Push
+*******************************
+
+
+
+NAME
+====
+
+CGI::Push - Simple Interface to Server Push
+
+
+SYNOPSIS
+========
+
+     use CGI::Push qw(:standard);
+
+     do_push(-next_page=>\&next_page,
+             -last_page=>\&last_page,
+             -delay=>0.5);
+
+     sub next_page {
+         my($q,$counter) = @_;
+         return undef if $counter >= 10;
+         return start_html('Test'),
+       	       h1('Visible'),"\n",
+                "This page has been called ", strong($counter)," times",
+                end_html();
+       }
+
+     sub last_page {
+     	 my($q,$counter) = @_;
+         return start_html('Done'),
+                h1('Finished'),
+                strong($counter),' iterations.',
+                end_html;
+     }
+
+
+DESCRIPTION
+===========
+
+CGI::Push is a subclass of the CGI object created by CGI.pm.  It is
+specialized for server push operations, which allow you to create
+animated pages whose content changes at regular intervals.
+
+You provide CGI::Push with a pointer to a subroutine that will draw one
+page.  Every time your subroutine is called, it generates a new page.
+The contents of the page will be transmitted to the browser in such a
+way that it will replace what was there beforehand.  The technique will
+work with HTML pages as well as with graphics files, allowing you to
+create animated GIFs.
+
+
+USING CGI::Push
+===============
+
+CGI::Push adds one new method to the standard CGI suite, do_push().
+When you call this method, you pass it a reference to a subroutine that
+is responsible for drawing each new page, an interval delay, and an
+optional subroutine for drawing the last page.  Other optional
+parameters include most of those recognized by the CGI header() method.
+
+You may call do_push() in the object oriented manner or not, as you
+prefer:
+
+     use CGI::Push;
+     $q = new CGI::Push;
+     $q->do_push(-next_page=>\&draw_a_page);
+
+     -or-
+
+     use CGI::Push qw(:standard);
+     do_push(-next_page=>\&draw_a_page);
+
+Parameters are as follows:
+
+-next_page
+          do_push(-next_page=>\&my_draw_routine);
+
+     This required parameter points to a reference to a subroutine
+     responsible for drawing each new page.  The subroutine should
+     expect two parameters consisting of the CGI object and a counter
+     indicating the number of times the subroutine has been called.  It
+     should return the contents of the page as an array of one or more
+     items to print.  It can return a false value (or an empty array) in
+     order to abort the redrawing loop and print out the final page (if
+     any)
+
+          sub my_draw_routine {
+              my($q,$counter) = @_;
+              return undef if $counter > 100;
+              return start_html('testing'),
+                     h1('testing'),
+          	       "This page called $counter times";
+          }
+
+-last_page
+     This optional parameter points to a reference to the subroutine
+     responsible for drawing the last page of the series.  It is called
+     after the -next_page routine returns a false value.  The subroutine
+     itself should have exactly the same calling conventions as the
+     -next_page routine.
+
+-type
+     This optional parameter indicates the content type of each page.
+     It defaults to "text/html".  Currently, server push of
+     heterogeneous document types is not supported.
+
+-delay
+     This indicates the delay, in seconds, between frames.  Smaller
+     delays refresh the page faster.  Fractional values are allowed.
+
+     *If not specified, -delay will default to 1 second*
+
+-cookie, -target, -expires
+     These have the same meaning as the like-named parameters in
+     CGI::header().
+
+
+INSTALLING CGI::Push SCRIPTS
+============================
+
+Server push scripts *must* be installed as no-parsed-header (NPH)
+scripts in order to work correctly.  On Unix systems, this is most often
+accomplished by prefixing the script's name with "nph-".  Recognition of
+NPH scripts happens automatically with WebSTAR and Microsoft IIS.  Users
+of other servers should see their documentation for help.
+
+
+CAVEATS
+=======
+
+This is a new module.  It hasn't been extensively tested.
+
+
+AUTHOR INFORMATION
+==================
+
+be used and modified freely, but I do request that this copyright notice
+remain attached to the file.  You may modify this module as you wish,
+but if you redistribute a modified version, please attach a note listing
+the modifications you have made.
+
+Address bug reports and comments to: lstein@genome.wi.mit.edu
+
+
+BUGS
+====
+
+This section intentionally left blank.
+
+
+SEE ALSO
+========
+
+*Note CGI/Carp: CGI/Carp,, *Note CGI: CGI,
+
+
+
+
+File: pm.info, Node: CGI/Request, Next: CGI/Response, Prev: CGI/Push, Up: Module List
+
+Parse client request via a CGI interface
+****************************************
+
+
+
+NAME
+====
+
+CGI::Request - Parse client request via a CGI interface
+
+
+SYNOPSIS
+========
+
+
+     use CGI::Request;
+	
+     # Simple interface: (combines SendHeaders, new and import_names)
+	
+     $req = GetRequest($pkg);
+	
+     print FmtRequest();            # same as: print $req->as_string
+	
+	
+     # Full Interface:
+	
+     $req = new CGI::Request;       # fetch and parse request
+	
+     $field_value = $req->param('FieldName');
+     @selected    = $req->param('SelectMultiField');
+     @keywords    = $req->keywords; # from ISINDEX
+	
+     print $req->as_string;         # format Form and CGI variables
+	
+     # import form fields into a package as perl variables!
+     $req->import_names('R');
+     print "$R::FieldName";
+     print "@R::SelectMultiField";
+	
+     @value = $req->param_or($fieldname, $default_return_value);
+
+     # Access to CGI interface (see CGI::Base)
+
+     $cgi_obj = $req->cgi;
+     $cgi_var = $req->cgi->var("REMOTE_ADDR");
+	
+	
+     # Other Functions:
+	
+     CGI::Request::Interface($cgi);  # specify alternative CGI
+	
+     CGI::Request::Debug($level);    # log to STDERR (see CGI::Base)
+	
+	
+     # Cgi-lib compatibility functions
+     # use CGI::Request qw(:DEFAULT :cgi-lib); to import them
+	
+     &ReadParse(*input);
+     &MethGet;
+     &PrintHeader;
+     &PrintVariables(%input);
+	
+
+
+DESCRIPTION
+===========
+
+This module implements the CGI::Request object. This object represents a
+single query / request / submission from a WWW user. The CGI::Request
+class understands the concept of HTML forms and fields, specifically how
+to parse a CGI QUERY_STRING.
+
+
+SMALLEST EXAMPLE
+----------------
+
+This is the smallest useful CGI::Request script:
+
+     use CGI::Request;
+     GetRequest();
+     print FmtRequest();
+
+
+SIMPLE EXAMPLE
+--------------
+
+This example demonstrates a simple ISINDEX based query, importing
+results into a package namespace and escaping of text:
+
+     #!/usr/local/bin/perl  # add -T to test tainted behaviour
+
+     use CGI::Base;
+     use CGI::Request;
+
+     GetRequest('R');       # get and import request into R::...
+
+     # Just to make life more interesting add an ISINDEX.
+     # Try entering: "aa bb+cc dd=ee ff&gg hh<P>ii"
+     print "<ISINDEX>\r\n";
+
+     print "<B>You entered:</B> ", # print results safely
+           join(', ', CGI::Base::html_escape(@R::KEYWORDS))."\r\n";
+
+     print FmtRequest();    # show formatted version of request
+
+
+CGI
+---
+
+A CGI::Request object contains a reference to a CGI::Base object (or an
+object derived from CGI::Base). It uses the services of that object to
+get the raw request information.
+
+Note that CGI::Request does not inherit from CGI::Base it just uses an
+instance of a CGI::Base object.
+
+See the cgi method description for more information.
+
+
+FEATURES
+--------
+
+Is object oriented and sub-classable.
+
+Can export form field names as normal perl variables.
+
+Integrates with CGI::MiniSvr.
+
+
+RECENT CHANGES
+--------------
+
+2.75
+     Fixed bug in import_names().  Now works properly with both scalar
+     and array elements.
+
+2.4 through 2.74
+     Minor changes to accomodate Forms interface.
+
+2.1 thru 2.3
+     Minor enhancements to documentation and debugging. Added notes
+     about relationship with CGI and how to access CGI variables.
+
+2.0
+     Updates for changed CGI:Base export tags. No longer setting
+      @CGI::Request::QUERY_STRING. Added param_or() method.
+
+     The module file can be run as a cgi script to execute a demo/test. You
+     may need to chmod +x this file and teach your httpd that it can execute
+     *.pm files (or create a copy/symlink with another name).
+
+1.8
+     GetRequest now call SendHeaders (in CGI::Base) for you. This works
+     *much* better than the old 'print PrintHeaders;'. PrintHeaders is no
+     longer exported by default. as_string now uses the new html_escape
+     method (in CGI::Base) to safely format strings with embedded html.
+     Debugging now defaults to off. New Debug function added. Image map
+     coords are automatically recognised and stored as parameters X and
+     Y.  Added a sequence number mechanism to assist debugging MiniSvr
+     applications (does not impact/cost anything for non minisvr apps).
+
+1.7
+     Default package for import_names() removed, you must supply a
+     package name. GetRequest() won't call import_names unless a package
+     name has been given, thus GetRequest no longer defaults to
+     importing names.  Added as_string() method (which automatically
+     calls cgi->as_string).  param() will croak if called in a scalar
+     context for a multi-values field.
+
+
+FUTURE DEVELOPMENTS
+-------------------
+
+None of this is perfect. All suggestions welcome.
+
+Note that this module is *not* the place to put code which generates
+HTML.  We'll need separate modules for that (which are being developed).
+
+
+AUTHOR, COPYRIGHT and ACKNOWLEDGEMENTS
+--------------------------------------
+
+This code is Copyright (C) Tim Bunce 1995. All rights reserved.  This
+code is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+The cgi-lib functions are based on cgi-lib.pl version 1.7 which is
+Copyright 1994 Steven E. Brenner.
+
+IN NO EVENT SHALL THE AUTHORS BE LIABLE TO ANY PARTY FOR DIRECT,
+INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF
+THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+LIMITED TO, LOST PROFITS) EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+SEE ALSO
+--------
+
+CGI::Base, URI::Escape
+
+
+SUPPORT
+-------
+
+Please use comp.infosystems.www.* and comp.lang.perl.misc for support.
+Please do _NOT_ contact the author directly. I'm sorry but I just don't
+have the time.
+
+
+FUNCTIONS
+=========
+
+
+GetRequest
+----------
+
+
+     GetRequest();
+     GetRequest($package_name);
+     $req = GetRequest(...);
+
+GetRequest is the main entry point for simple (non-object oriented) use
+of the CGI::Request module. It combines output (and flushing) of the
+standard Content-Type header, request processing and optional importing
+of the resulting values into a package (see import_names).
+
+This function also enables autoflush on stdout. This has a slight
+efficiency cost but huge benefits in reduced frustration by novice users
+wondering why, for example, the output of system("foo") appears before
+their own output.
+
+See `new CGI::Request' for more details.
+
+
+FmtRequest
+----------
+
+
+     print FmtRequest();
+
+Return a HTML string which describes the last (current) client request
+parameters and the current raw CGI parameters.  Designed to be used for
+debugging purposes.
+
+
+Interface
+---------
+
+
+     $cgi = Interface();
+
+Return the default CGI interface object. Rarely used by applications.
+
+If no interface has been defined yet it will automatically create a new
+CGI::Base object, set that as the default interface and return it. This
+is the mechanism by which simple applications get to use the CGI::Base
+interface without knowing anything about it.
+
+This function can also be use to define a new default interface (such as
+CGI::MiniSvr) by passing a reference to a CGI::Base object or a object
+derived from CGI::Base.
+
+
+Debug
+-----
+
+
+     $old_level = CGI::Request::Debug();
+     $old_level = CGI::Request::Debug($new_level);
+
+Set debug level for the CGI::Request module. Debugging info is logged to
+STDERR (see CGI::Base for examples of how to redirect STDERR).
+
+
+METHODS
+=======
+
+
+new
+---
+
+
+     $req = new CGI::Request;
+     $req = new CGI::Request $cgi_interface;
+     $req = new CGI::Request $cgi_interface, $timeout_in_seconds;
+
+CGI::Request object constructor. Only the first form listed above should
+be used by most applications.
+
+Note that, unlike GetRequest, new CGI::Request does not call SendHeaders
+for you. You have the freedom to control how you send your headers and
+what headers to send.
+
+The returned $req CGI::Request object stores the request parameter
+values. Parameters can be retrieved using the param method.
+
+Index keywords (ISINDEX) are automatically recognised, parsed and stored
+as values of the 'KEYWORDS' parameter. The keywords method provides an
+easy way to retrieve the list of keywords.
+
+Image Map (ISMAP) coordinates are automatically recognised, parsed and
+stored as parameters 'X' and 'Y'.
+
+
+as_string
+---------
+
+
+     print $req->as_string;
+
+Return an HTML string containing all the query parameters and CGI
+parameters neatly and safely formatted. Very useful for debugging.
+
+
+extract_values
+--------------
+
+
+     $req->extract_values($QUERY_STRING)
+
+This method extracts parameter name/value pairs from a string (typically
+QUERY_STRING) and stores them in the objects hash.  Not normally called
+by applications, new() calls it automatically.
+
+The parameter names and values are individually unescaped using the
+uri_unescape() function in the URI::URL module.
+
+For ISINDEX keyword search requests (QUERY_STRING contains no '=' or
+'&') the string is split on /+/ and the keywords are then individually
+unescaped and stored.  Either the keywords() method (or
+param('KEYWORDS')) can be used to recover the values.
+
+
+keywords
+--------
+
+
+     @words = $req->keywords
+
+Return the keywords associated with an ISINDEX query.
+
+
+params
+------
+
+
+     @names = $req->params
+
+Return a list of all known parameter names in the order in which they're
+defined
+
+
+param
+-----
+
+
+     $value  = $req->param('field_name1');
+     @values = $req->param('field_name2');	# e.g. select multiple
+     $req->param('field_name3', $new_value);
+     $req->param('field_name4', @new_values);
+
+Returns the value(s) of a named parameter. Returns an empty list/undef
+if the parameter name is not known. Returns '' for a parameter which had
+no value.
+
+If invoked in a list context param returns the list of values in the
+same order they were returned by the client (typically from a select
+multiple form field).
+
+Warning: If invoked in a scalar context and the parameter has more than
+one value the param method will die. This catches badly constructed
+forms where a field may have been copied but its name left unchanged.
+
+If more than one argument is provided, the second and subsequent
+arguments are used to set the value of the parameter. The previous
+values, if any, are returned. Note that setting a new value has no
+external effect and is only included for completeness.
+
+Note that param does not return CGI variables (REMOTE_ADDR etc) since
+those are CGI variables and not form parameters. To access CGI variables
+see the cgi method in this module and the CGI::Base module
+documentation.
+
+
+delete
+------
+
+     $req->delete('field_name1');
+
+Remove the specified field name from the parameter list
+
+
+param_or
+--------
+
+     $value  = $req->param_or('field_name1', $default);
+     @values = $req->param_or('field_name2', @defaults);
+
+If the current request was a query (QUERY_STRING defined) then this
+method is identical to the param method with only one argument.
+
+If the current request was not a query (QUERY_STRING undefined) then
+this method simply returns its second and subsequent parameters.
+
+The method is designed to be used as a form building utility.
+
+
+import_names
+------------
+
+
+     $req->import_names('R')
+
+Convert all request parameters into perl variables in a specified
+package. This avoids the need to use $req->param('name'), you can simply
+sat $R::name ('R' is the recommended package names).
+
+Note: This is a convenience function for simple CGI scripts. It should
+*not* be used with the MiniSvr since there is no way to reset or
+unimport the values from one request before importing the values of the
+next.
+
+
+cgi
+---
+
+
+     $cgi = $req->cgi;
+
+This method returns the current CGI::Request default CGI interface
+object.  It is primarily intended as a handy shortcut for accessing
+CGI::Base methods: $req->cgi->done(), $req->cgi->var("REMOTE_ADDR");
+
+
+
+
+File: pm.info, Node: CGI/Response, Next: CGI/Switch, Prev: CGI/Request, Up: Module List
+
+Respond to CGI requests
+***********************
+
+
+
+NAME
+====
+
+*CGI::Response* - Respond to CGI requests
+
+
+SYNOPSIS
+========
+
+
+Simple Interface
+----------------
+
+     use CGI::Response qw(:Simple);
+     print ContentType;
+     print "<html><head>\n"; # .....
+
+
+Full Interface
+--------------
+
+     use CGI::Response;
+     $response = new CGI::Response;
+     $response->content_type;
+     print $response->as_string;
+     print "<html><head>\n"; # .....
+
+
+DESCRIPTION
+===========
+
+*CGI::Response* is a Perl5 module for constructing responses to Common
+Gateway Interface (CGI) requests.  It is designed to be light-weight and
+efficient for the most common tasks, and also to provide access to all
+HTTP response features for more advanced CGI applications.
+
+There are two ways to use CGI::Response.  For basic applications, the
+Simple Interface provides a number of plain functions that cover the
+most commonly-used CGI response headers.  More advanced applications may
+employ the Full Interface object methods to access any HTTP header, or
+to add experimental or non-standard headers.  Both interfaces try to
+generate reasonable defaults whenever possible.
+
+For efficiency, just the Simple Interface functions are compiled on
+start-up.  Full Interface methods are compiled only when they are
+called.  This helps to make CGI::Response usable in a variety of
+applications.  [See *Note SelfLoader: SelfLoader, for more information.]
+
+
+Simple Interface
+----------------
+
+The Simple Interface methods are *not* exported by default.  In order to
+use them, you must import them explicitly.  You can import all of the
+methods at once by saying:
+
+     use CGI::Response qw(:Simple);
+
+Or, you can import just one function by listing it by name, as in:
+
+     use CGI::Response qw(ContentType);
+
+Only one Simple Interface function should be called in a response, since
+all of these functions terminate the response header (that is, send the
+blank line denoting the end of the header) immediately upon execution.
+If you need to use a combination of headers not provided by the Simple
+Interface, use the Full Interface instead.
+
+All of the Simple Interface functions force a flush on the
+currently-selected output channel (that is, they set `$| = 1').  This is
+done to prevent a common probelm in CGI scripts, where a `system()' or
+`exec()' call causes output before the response header, and generates a
+server error.  If you do not want `$| = 1', you should either set it
+back to 0 after using the Simple Interface, or you should employ the
+Full Interface, which does not have this side effect.
+
+For reference, below is a list of the headers sent by each function, and
+the default header values, if any.  Arguments are listed in the order
+they should appear.  Square brackets ([]) indicate optional arguments;
+angled brackets (<>) indicate required arguments.
+
+     Function      Argument(s)      Header(s)      Default(s)
+     --------      -----------      ---------      ----------
+     &ContentType  [content-type]   Content-Type   text/html
+
+     &Redirect     <Location/URI>   Location       [none]
+                   [permanent?]     URI            [none]
+                                    Content-Type   text/html
+                                    Status         302 Moved Temporarily
+
+     &NoCache      [content-type]   Content-Type   text/html
+                                    Pragma         no-cache
+                                    Expires        [now]
+
+     &NoContent                     Status         204 No Content
+
+Each of these functions is documented more completely below, and
+examples for each are provided.
+
+&ContentType
+     This is the most commonly-used function.  It identifies the
+     Internet Media Type of the entity that follows.  If you call it
+     without an argument, it will send `text/html' as the content-type.
+
+          use CGI::Response qw(:Simple);
+          print &ContentType;   # defaults to text/html
+
+     Otherwise, you can specify some other content-type:
+
+          use CGI::Response qw(:Simple);
+          print &ContentType('image/gif');
+
+     This function should be called as early as possible to prevent
+     server errors (see the note on $| above).
+
+&Redirect
+     A redirect causes the user-agent to make a follow-up request for
+     some other resource.  Some user-agents will be better than others
+     at complying with a redirect, so this function tries to be as
+     explicit as possible.
+
+     You are required to give one argument, specifying the URL which the
+     user-agent should request.  A second argument is accepted as a
+     Boolean value -- if any second argument is present, the browser
+     will be told that the requested resource has moved permanently to a
+     new URL (that is, future requests for the document should be to the
+     new URL, not to the one which was first requested).
+
+          use CGI::Response qw(:Simple);
+          print &Redirect('http://www.company.com/', 'permanent');
+          # this resource has moved permanently, status 301
+
+     If no second argument is given, the redirect will be specified as
+     temporary.
+
+          use CGI::Response qw(:Simple);
+          print &Redirect('http://www.company.com/');   
+          # this resource has moved temporarily, status 302
+
+     A brief HTML page is output after the header so that users whose
+     user-agents fail to recognize the redirect will get an informative
+     message with a link to the redirect.  Use the Full Interface to
+     supply some other page or none at all.
+
+&NoCache
+     This function tries to inform user-agents and proxy servers that
+     the included resource should not be cached.  It does so by sending
+     both an `Expires' header, set for immediate expiration, and a
+     `Pragma: no-cache' header, which older user-agents and servers
+     might not recognize.
+
+     Preventing caching is important to CGI applications which produce
+     output based on some factor of the request (such as which
+     user-agent made the request).  For instance, a shopping-basket
+     application would not want to allow caching of an order information
+     page, which may contain user-specific information.
+
+     It must be noted, however, that caches prevent excess network load
+     and cache-friendly applications are always preferable to use of the
+     &NoCache function.  This function should only be used when there is
+     no other alternative.
+
+     &NoCache takes one optional argument, the content-type of the
+     entity to follow.  Therefore, its call is nearly identical to the
+     &ContentType function, and the two functions may be interchanged
+     easily.  As with &ContentType, if you call &NoCache without an
+     argument, it will send `text/html' as the content-type.
+
+          use CGI::Response qw(:Simple);
+          print &NoCache;   # defaults to text/html
+
+     Otherwise, you can specify some other content-type:
+
+          use CGI::Response qw(:Simple);
+          print &NoCache('image/gif');
+
+     As noted earlier, this function should be called as early as
+     possible to prevent server errors (see the note on $| above).
+
+&NoContent
+     &NoContent allows a script to accept input without changing the
+     current page in the user-agent's view.  This may be useful for a
+     successful form input that requires no response, or for an imagemap
+     click that does not have a defined link.
+
+     A No Content response does not reset form fields after submission.
+     HTTP/1.1 will include a `205 Reset Document' status for this
+     purpose, and a future version of this module will provide a &Reset
+     function to support this status.
+
+     This function sends only one header, `Status: 204 No Content', and
+     it takes no arguments.
+
+          use CGI::Response qw(:Simple);
+          print &NoContent;
+
+
+Full Interface
+--------------
+
+The Full Interface is still under development and is not currently
+documented.
+
+
+DEPENDENCIES
+============
+
+
+SEE ALSO
+========
+
+CGI::Base(3pm), CGI::BasePlus(3pm), CGI::Request(3pm), CGI::Lite(3pm),
+CGI(3pm), CGI::Form(3pm), LWP(3pm), SelfLoader(3pm)
+
+
+NOTES
+=====
+
+Please note that future versions are not guaranteed to be
+backwards-compatible with this version.  The interface will be frozen at
+version 0.1 (first beta release).
+
+
+VERSION
+=======
+
+     Version:      0.03 (alpha release)
+     Release date: 02 December 1995
+
+
+AUTHOR
+======
+
+     Marc Hedlund <hedlund@best.com>
+     Copyright 1995, All rights reserved
+
+
+
+
+File: pm.info, Node: CGI/Switch, Next: CGI/Wrap, Prev: CGI/Response, Up: Module List
+
+Try more than one constructors and return the first object available
+********************************************************************
+
+
+
+NAME
+====
+
+CGI::Switch - Try more than one constructors and return the first object
+available
+
+
+SYNOPSIS
+========
+
+     use CGISwitch;
+
+     -or-
+
+     use CGI::Switch This, That, CGI::XA, Foo, Bar, CGI;
+
+     my $q = new CGI::Switch;
+
+
+DESCRIPTION
+===========
+
+Per default the new() method tries to call new() in the three packages
+Apache::CGI, CGI::XA, and CGI. It returns the first CGI object it
+succeeds with.
+
+The import method allows you to set up the default order of the modules
+to be tested.
+
+
+SEE ALSO
+========
+
+perl(1), Apache(3), CGI(3), CGI::XA(3)
+
+
+AUTHOR
+======
+
+Andreas König <a.koenig@mind.de>
+
+
+
+
+File: pm.info, Node: CGI/Wrap, Next: CGI_Lite, Prev: CGI/Switch, Up: Module List
+
+buffer output when building CGI programs
+****************************************
+
+
+
+NAME
+====
+
+CGI::Wrap - buffer output when building CGI programs
+
+
+SYNOPSIS
+========
+
+     use CGI;
+     use CGI::Croak;
+     use CGI::Wrap;
+
+     $query = new CGI;
+     savequery $query;		# to reconstruct input
+     $CGI::Out::mailto = 'fred';	# override default of $<
+
+     run \&myfunc, @myargs		# a function
+     run sub { code }		# an inline function
+     run 'code'			# something to eval
+
+     sub myfunc {
+     	out $query->header();
+     	out $query->start_html(
+     		-title=>'A test',
+     		-author=>'muir@idiom.com');
+     }
+
+
+DESCRIPTION
+===========
+
+This is a helper routine for building CGI programs.  It buffers stdout
+until you're completed building your output.  If you should get an error
+before you are finished, then it will display a nice error message (in
+HTML), log the error, and send email about the problem.
+
+To use it, you must condense your program down to a single function call
+and then use CGI::Wrap::run to call it.
+
+Instead of print, use out.
+
+
+AUTHOR
+======
+
+David Muir Sharnoff <muir@idiom.com>
+
+
+SEE ALSO
+========
+
+Carp, CGI::Carp, CGI::Out, CGI
+
+
+BUGS
+====
+
+No support for formats is provided by CGI::Wrap.
+
+
+
+
+File: pm.info, Node: CGI_Lite, Next: CPAN, Prev: CGI/Wrap, Up: Module List
+
+Perl module to process and decode WWW forms and cookies.
+********************************************************
+
+
+
+NAME
+====
+
+CGI_Lite - Perl module to process and decode WWW forms and cookies.
+
+
+SYNOPSIS
+========
+
+     use CGI_Lite;
+
+     $cgi = new CGI_Lite;
+
+     $cgi->set_platform ($platform);
+
+         where $platform can be one of (case insensitive):
+         Unix, Windows, Windows95, DOS, NT, PC, Mac or Macintosh
+
+     $cgi->set_file_type ('handle' or 'file');
+     $cgi->add_timestamp (0, 1 or 2);	
+
+     where 0 = no timestamp
+           1 = timestamp all files (default)
+           2 = timestamp only if file exists
+
+     $cgi->filter_filename (\&subroutine);
+
+     $size = $cgi->set_buffer_size ($some_buffer_size);
+
+     $status = $cgi->set_directory ('/some/dir');
+     $cgi->set_directory ('/some/dir') || die "Directory doesn't exist.\n";
+
+     $cgi->close_all_files;
+
+     $cgi->add_mime_type ('application/mac-binhex40');
+     $status = $cgi->remove_mime_type ('application/mac-binhex40');
+     @list = $cgi->get_mime_types;
+
+     $form = $cgi->parse_form_data;
+     %form = $cgi->parse_form_data;
+
+     or
+
+     $form = $cgi->parse_form_data ('GET', 'HEAD' or 'POST');
+
+     $cookies = $cgi->parse_cookies;
+     %cookies = $cgi->parse_cookies;
+
+     $status  = $cgi->is_error;
+     $message = $cgi->get_error_message;
+
+     $cgi->return_error ('error 1', 'error 2', ...);
+
+     $keys = $cgi->get_ordered_keys;
+     @keys = $cgi->get_ordered_keys;
+
+     $cgi->print_data;
+
+     $cgi->print_form_data;   (deprecated as of v1.8)
+     $cgi->print_cookie_data; (deprecated as of v1.8)
+
+     $new_string = $cgi->wrap_textarea ($string, $length);
+
+     @all_values = $cgi->get_multiple_values ($reference);
+
+     $cgi->create_variables (\%form);
+     $cgi->create_variables ($form);
+
+     $escaped_string = browser_escape ($string);
+
+     $encoded_string = url_encode ($string);
+     $decoded_string = url_decode ($string);
+
+     $status = is_dangerous ($string);
+     $safe_string = escape_dangerous_chars ($string);
+
+
+DESCRIPTION
+===========
+
+You can use this module to decode form and query information, including
+file uploads, as well as cookies in a very simple manner; you need not
+concern yourself with the actual details behind the decoding process.
+
+
+METHODS
+=======
+
+Here are the methods you can use to process your forms and cookies:
+
+parse_form_data
+     This will handle the following types of requests: GET, HEAD and
+     POST.  By default, CGI_Lite uses the environment variable
+     REQUEST_METHOD to determine the manner in which the query/form
+     information should be decoded. However, as of v1.8, you are allowed
+     to pass a valid request method to this function to force CGI_Lite
+     to decode the information in a specific manner.
+
+     For multipart/form-data, uploaded files are stored in the user
+     selected directory (see set_directory). If timestamp mode is on
+     (see add_timestamp), the files are named in the following format:
+
+          timestamp__filename
+
+     where the filename is specified in the "Content-disposition" header.
+     *NOTE:*, the browser URL encodes the name of the file. This module
+     makes no effort to decode the information for security reasons.
+     However, you can do so by creating a subroutine and then using the
+     filter_filename method.
+
+     *Return Value*
+
+     Returns either a hash or a reference to the hash, which contains
+     all of the key/value pairs. For fields that contain file
+     information, the value contains either the path to the file, or the
+     filehandle (see the set_file_type method).
+
+parse_cookies
+     Decodes and parses cookies passed by the browser. This method works
+     in much the same manner as parse_form_data.
+
+is_error
+     As of v1.8, errors in parsing are handled differently. You can use
+     this method to check for any potential errors after you've called
+     either parse_form_data or parse_cookies.
+
+     *Return Value*
+
+          0 Success 1 Failure
+
+get_error_message
+     If an error occurs when parsing form/query information or cookies,
+     you can use this method to retrieve the error message. Remember,
+     you can check for errors by calling the is_error method.
+
+     *Return Value*
+
+     The error message.
+
+return_error
+     You can use this method to return errors to the browser and exit.
+
+set_platform
+     You can use this method to set the platform on which your Web
+     server is running. CGI_Lite uses this information to translate
+     end-of-line (EOL) characters for uploaded files (see the
+     add_mime_type and remove_mime_type methods) so that they display
+     properly on that platform.
+
+     You can specify either (case insensitive):
+
+          Unix                                  EOL: \012      = \n
+          Windows, Windows95, DOS, NT, PC       EOL: \015\012  = \r\n
+          Mac or Macintosh                      EOL: \015      = \r
+
+     "Unix" is the default.
+
+set_directory
+     Used to set the directory where the uploaded files will be stored
+     (only applies to the *multipart/form-data* encoding scheme).
+
+     This function should be called *before* you call parse_form_data,
+     or else the directory defaults to "/tmp". If the application cannot
+     write to the directory for whatever reason, an error status is
+     returned.
+
+     *Return Value*
+
+          0 Failure 1 Success
+
+close_all_files
+     All uploaded files that are opened as a result of calling
+     set_file_type with the "handle" argument can be closed in one shot
+     by calling this method.
+
+add_mime_type
+     By default, EOL characters are translated for all uploaded files
+     with specific MIME types (i.e text/plain, text/html, etc.). You can
+     use this method to add to the list of MIME types. For example, if
+     you want CGI_Lite to translate EOL characters for uploaded files of
+     *application/mac-binhex40*, then you would do this:
+
+          $cgi->add_mime_type ('application/mac-binhex40');
+
+remove_mime_type
+     This method is the converse of add_mime_type. It allows you to
+     remove a particular MIME type. For example, if you do not want
+     CGI_Lite to translate EOL characters for uploaded files of
+     *text/html*, then you would do this:
+
+          $cgi->remove_mime_type ('text/html');
+
+     *Return Value*
+
+          0 Failure 1 Success
+
+get_mime_types
+     Returns the list, either as a reference or an actual list, of the
+     MIME types for which EOL translation is performed.
+
+set_file_type
+     The *names* of uploaded files are returned by default, when you
+     call the parse_form_data method. But, if pass the string "handle"
+     to this method, the handles to the files are returned. However, the
+     name of the handle corresponds to the filename.
+
+     This function should be called *before* you call parse_form_data,
+     or else it will not work.
+
+add_timestamp
+     By default, a timestamp is added to the front of uploaded files.
+     However, you have the option of completely turning off timestamp
+     mode (value 0), or adding a timestamp only for existing files
+     (value 2).
+
+filter_filename
+     You can use this method to change the manner in which uploaded
+     files are named. For example, if you want uploaded filenames to be
+     all upper case, you can use the following code:
+
+          $cgi->filter_filename (\&make_uppercase);
+          $cgi->parse_form_data;
+
+          .
+          .
+          .
+
+          sub make_uppercase
+          {
+              my $file = shift;
+
+          $file =~ tr/a-z/A-Z/;
+          return $file;
+              }
+
+set_buffer_size
+     This method allows you to set the buffer size when dealing with
+     multipart form data. However, the *actual* buffer size that the
+     algorithm uses can be up to 3x the value you specify. This ensures
+     that boundary strings are not "split" between multiple reads. So,
+     take this into consideration when setting the buffer size.
+
+     You cannot set a buffer size below 256 bytes and above the total
+     amount of multipart form data. The default value is 1024 bytes.
+
+     *Return Value*
+
+     The buffer size.
+
+get_ordered_keys
+     Returns either a reference to an array or an array itself
+     consisting of the form fields/cookies in the order they were
+     parsed.
+
+     *Return Value*
+
+     Ordered keys.
+
+print_data
+     Displays all the key/value pairs (either form data or cookie
+     information) in a ordered fashion. The methods print_form_data and
+     print_cookie_data are deprecated as of version v1.8, and will be
+     removed in future versions.
+
+print_form_data
+     Deprecated as of v1.8, see print_data.
+
+print_cookie_data (deprecated as of v1.8)
+     Deprecated as of v1.8, see print_data.
+
+wrap_textarea
+     You can use this function to "wrap" a long string into one that is
+     separated by a combination of carriage return and newline (see
+     set_platform) at fixed lengths.  The two arguments that you need to
+     pass to this method are the string and the length at which you want
+     the line separator added.
+
+     *Return Value*
+
+     The modified string.
+
+get_multiple_values
+     One of the major changes to this module as of v1.7 is that multiple
+     values for a single key are returned as an reference to an array, and 
+     *not* as a string delimited by the null character ("\0"). You can use 
+     this function to return the actual array. And if you pass a scalar
+     value to this method, it will simply return that value.
+
+     There was no way I could make this backward compatible with
+     versions older than 1.7. I apologize!
+
+     *Return Value*
+
+     Array consisting of the multiple values.
+
+create_variables
+     Sometimes, it is convenient to have scalar variables that represent
+     the various keys in a hash. You can use this method to do just
+     that.  Say you have a hash like the following:
+
+          %form = ('name'   => 'shishir gundavaram',
+          	     'sport'  => 'track and field',
+          	     'events' => '100m');
+
+     If you call this method in the following manner:
+
+          $cgi->create_variables (\%hash);
+
+     it will create three scalar variables: $name, $sport and $events.
+     Convenient, huh?
+
+browser_escape
+     Certain characters have special significance to the browser. These
+     characters include: "<" and ">". If you want to display these
+     "special" characters, you need to escape them using the following
+     notation:
+
+          &#ascii;
+
+     This method does just that.
+
+     *Return Value*
+
+     Escaped string.
+
+url_encode
+     This method will URL encode a string that you pass it. You can use
+     this to encode any data that you wish to pass as a query string to
+     a CGI application.
+
+     *Return Value*
+
+     URL encoded string.
+
+url_decode
+     You can use this method to URL decode a string.
+
+     *Return Value*
+
+     URL decoded string.
+
+is_dangerous
+     This method checks for the existence of dangerous meta-characters.
+
+     *Return Value*
+
+          0 Safe 1 Dangerous
+
+escape_dangerous_chars
+     You can use this method to "escape" any dangerous meta-characters.
+
+     *Return Value*
+
+     Escaped string.
+
+
+SEE ALSO
+========
+
+If you're looking for more comprehensive CGI modules, you can either use
+the CGI::* modules or CGI.pm. Both are maintained by Dr. Lincoln Stein
+*(lstein@genome.wi.mit.edu)* and can be found at your local CPAN mirror
+and at his Web site:
+
+*http://www-genome.wi.mit.edu/WWW/tools/scripting*
+
+
+ACKNOWLEDGMENTS
+===============
+
+I'd like to thank the following for finding bugs and offering
+suggestions:
+
+Eric D. Friedman (friedman@uci.edu)
+Thomas Winzig (tsw@pvo.com)
+Len Charest (len@cogent.net)
+Achim Bohnet (ach@rosat.mpe-garching.mpg.de)
+John E. Townsend (John.E.Townsend@BST.BLS.com)
+Andrew McRae (mcrae@internet.com)
+Dennis Grant (dg50@chrysler.com)
+Scott Neufeld (scott.neufeld@mis.ussurg.com)
+Raul Almquist (imrs@ShadowMAC.org)
+and many others!
+
+COPYRIGHT INFORMATION
+=====================
+
+     Copyright (c) 1995, 1996, 1997 by Shishir Gundavaram
+                     All Rights Reserved
+
+     Permission to use, copy, and  distribute  is  hereby granted,
+     providing that the above copyright notice and this permission
+     appear in all copies and in supporting documentation.
+
+
+
+

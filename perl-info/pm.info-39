@@ -1,0 +1,1716 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Net/Ident, Next: Net/Inet, Prev: Net/Gen, Up: Module List
+
+lookup the username on the remote end of a TCP/IP connection
+************************************************************
+
+
+
+NAME
+====
+
+Net::Ident - lookup the username on the remote end of a TCP/IP
+connection
+
+
+SYNOPSIS
+========
+
+     use Net::Ident;
+
+     $username = SOCKET->ident_lookup($timeout);
+     ($username, $opsys, $error) = SOCKET->ident_lookup($timeout);
+
+     $obj = Net::Ident->initconnect(SOCKET, $timeout);
+     $fh = $obj->getfh;
+     $obj->query;
+     $status = $obj->ready;
+     $username = $obj->username;
+     ($username, $opsys, $error) = $obj->username;
+
+     use Net::Ident 'lookup';
+
+     $username = lookup(SOCKET, $timeout);
+     ($username, $opsys, $error) = lookup(SOCKET, $timeout);
+
+
+OVERVIEW
+========
+
+*Net::Ident* is a module that looks up the username on the remote
+side of a TCP/IP connection through the ident (auth/tap) protocol
+described in RFC1413 (which supersedes RFC931). Note that this requires
+the remote site to run a daemon (often called *identd*) to provide the
+requested information, so it is not always available for all TCP/IP
+connections.
+
+
+DESCRIPTION
+===========
+
+You can either use the simple interface, which does one ident lookup at
+a time, or use the asynchronous interface to perform (possibly) many
+simultaneous lookups, or simply continue serving other things while the
+lookup is proceeding.
+
+
+Simple Interface
+----------------
+
+The simple interface comes in two varieties. An object oriented method
+call of a FileHandle object, and as a simple subroutine call. Other than
+the calling method, these routines behave exactly the same.
+
+`ident_lookup SOCKET' [`$timeout']
+     The *Net::Ident* module extends the FileHandle module with one
+     extra method call, `ident_lookup'. It assumes that the object (a
+     FileHandle) it is operating on, is a connected TCP/IP socket,
+     ie. something which is either connect()ed or accept()ed. This
+     method takes one optional parameter: a timeout value in seconds.
+     If you don't specify a timeout, or an undef timeout, there will be
+     no timeout. It's that simple.
+
+`Net::Ident::lookup (SOCKET' [`, $timeout']`)'
+     *Net::Ident::lookup* is an exportable function (through EXPORT_OK,
+     so you'll have to explicitly ask for it if you want the function
+     lookup to be callable from your program). You can pass the socket
+     using either a string, which doesn't have to be qualified with a
+     package name, or using the more modern FileHandle calling styles:
+     as a glob or preferably a reference to a glob. As in the method
+     call, the Socket has to be a connected TCP/IP socket, and the
+     timeout is optional.
+
+What these functions return depends on the context:
+
+scalar context
+     In scalar context, these functions return the remote username on
+     success, or undef on error. "Error" is rather broad, it might mean:
+     some network error occurred, my arguments are invalid, the remote
+     site is not responding (in time) or is not running an ident daemon,
+     or the remote site ident daemon says there's no user connected with
+     that particular connection.
+
+array context
+     In array context, these functions return: `($username, $opsys,
+     $error)'.  The *$username* is the remote username, as returned in
+     the scalar context, or undef on error.
+
+     The *$opsys* is the remote operating system as reported by the
+     remote ident daemon, or undef on a network error, or *"ERROR"* when
+     the remote ident daemon reported an error. This could also contain
+     the character set of the returned username. See RFC1413.
+
+     The *$error* is the error message, either the error reported by the
+     remote ident daemon (in which case *$opsys* is *"ERROR"*), or the
+     internal message from the *Net::Ident* module, which includes the
+     system errno $! whenever possible. A likely candidate is
+     *"Connection refused"* when the remote site isn't running an ident
+     daemon, or *"Connection timed out"* when the remote site isn't
+     answering our connection request.
+
+     When *$username* has a value, *$error* is always undef, and vice
+     versa.
+
+
+EXAMPLE
+-------
+
+The following code is a complete example, implementing a server that
+waits for a connection on a port, tells you who you are and what time it
+is, and closes the connection again. The majority of the code will look
+very familiar if you just read *Note Perlipc: (perl.info)perlipc,.
+
+Excersize this server by telnetting to it, preferably from a machine
+that has a suitable ident daemon installed.
+
+     #!/usr/bin/perl -w
+
+     use Net::Ident;
+     # uncomment the below line if you want lots of debugging info
+     # $Net::Ident::DEBUG = 2;
+     use Socket;
+     use strict;
+
+     sub logmsg { print "$0 $$: @_ at ", scalar localtime, "\n" }
+
+     my $port = shift || 2345;
+     my $proto = getprotobyname('tcp');
+     socket(Server, PF_INET, SOCK_STREAM, $proto) or die "socket: $!";
+     setsockopt(Server, SOL_SOCKET, SO_REUSEADDR, pack("l", 1)) or
+       die "setsockopt: $!";
+     bind(Server, sockaddr_in($port, INADDR_ANY)) or die "bind: $!";
+     listen(Server,SOMAXCONN) or die "listen: $!";
+
+     logmsg "server started on port $port";
+
+     my $paddr;
+
+     for ( ; $paddr = accept(Client,Server); close Client) {
+     	my($port,$iaddr) = sockaddr_in($paddr);
+     	my $name = gethostbyaddr($iaddr,AF_INET) || inet_ntoa($iaddr);
+     	logmsg "connection from $name [" . inet_ntoa($iaddr) .
+     	  "] at port $port";
+   
+     	my $username = Client->ident_lookup(30) || "~unknown";
+     	logmsg "User at $name:$port is $username";
+    
+     	print Client "Hello there, $username\@$name, it's now ",
+     	   scalar localtime, "\n";
+     }
+
+
+Asynchronous Interface
+----------------------
+
+The asynchronous interface is meant for those who know the ins and outs
+of the `select()' call (the 4-argument version of `select()', but I
+didn't need saying that, did I?). This interface is completely object
+oriented. The following methods are available:
+
+`initconnect Net::Ident SOCKET, $timeout'
+     This class method initiates the connection to the remote ident
+     daemon, and returns an object representing the connection. This is
+     actually a constructor, but it isn't called "new" for a change. The
+     parameters are the same as described above for the
+     *Net::Ident::lookup* subroutine. This method returns immediately,
+     the supplied *$timeout* is only stored in the object and used in
+     future methods.
+
+     If you want to implement your own timeout, that's fine. Simply
+     throw away the object when you don't want it anymore.
+
+     Returns undef on error, like when the SOCKET isn't a TCP/IP
+     connected socket. Actually, in a list context, will return a list
+     where the error message is the second element of the list.
+
+     The timeout is *not* implemented using `alarm()'. In fact you can
+     use `alarm()' completely independant of this library, they do not
+     interfere.
+
+`query $obj'
+     This object method queries the remote rfc931 deamon, and blocks
+     until the connection to the ident daemon is writable, if necessary
+     (but you are supposed to make sure it is, of course). Returns true
+     on success (or rather it returns the *$obj* itself), or undef on
+     error.
+
+`ready $obj' [`$blocking']
+     This object method returns whether the data received from the
+     remote daemon is complete (true or false). Returns undef on
+     error. Reads any data from the connection.  If *$blocking* is true,
+     it blocks and waits until all data is received (it never returns
+     false when blocking is true, only true or undef). If *$blocking* is
+     not true, it doesn't block at all (unless... see below).
+
+     If you didn't call `query $obj' yet, this method calls it for you,
+     which means it can block, regardless of the value of *$blocking*,
+     depending on whether the connection to the ident is writable.
+
+     Obviously, you are supposed to call this routine whenever you see
+     that the connection to the ident daemon is readable, and act
+     appropriately when this returns true.
+
+     Note that once *ready* returns true, there are no longer checks on
+     timeout (because the networking part of the lookup is over anyway).
+     This means that even `ready $obj' can return true way after the
+     timeout has expired, provided it returned true at least once before
+     the timeout expired. This is to be construed as a feature.
+
+`username $obj'
+     This object method parses the return from the remote ident daemon, and
+     blocks until the query is complete, if necessary (it effectively calls
+     `ready $obj 1' for you if you didn't do it yourself). Returns the
+     parsed username on success, or undef on error. In an array context,
+     the return values are the same as described for the
+     *Net::Ident::lookup* subroutine.
+
+`getfh $obj'
+     This object method returns the internal FileHandle used for the
+     connection to the remote ident daemon. Invaluable if you want it to
+     dance in your select() ring.
+
+`geterror $obj'
+     This object method returns the error message in case there was an
+     error. undef when there was no error.
+
+An asynchronous example implementing the above server in a
+multi-threaded way via select, is left as an excersize for the
+interested reader.
+
+
+DISCLAIMER
+==========
+
+I make NO WARRANTY or representation, either express or implied, with
+respect to this software, its quality, accuracy, merchantability, or
+fitness for a particular purpose.  This software is provided "AS IS",
+and you, its user, assume the entire risk as to its quality and
+accuracy.
+
+
+AUTHOR
+======
+
+Jan-Pieter Cornet, <johnpc@xs4all.nl>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995, 1997 Jan-Pieter Cornet. All rights reserved. You can
+distribute and use this program under the same terms as Perl itself.
+
+
+REVISION HISTORY
+================
+
+V1.10
+     Jan 11th, 1997. Complete rewrite for perl5. Requires perl5.002 or
+     up.
+
+V1.02
+     Jan 20th, 1995. Quite a big bugfix: "connection refused" to the
+     ident port would kill the perl process with a SIGPIPE if the
+     connect didn't immediately signal it (ie. almost always on remote
+     machines). Also recognises the perl5 package separator :: now on
+     fully qualified descriptors. This is still perl4-compatible, a
+     perl5- only version would require a rewrite to make it neater.
+     Fixed the constants normally found in .ph files (but you shouldn't
+     use those anyway).
+
+     [this release wasn't called *Net::Ident*, of course, it was called
+     *rfc931.pl*]
+
+V1.01
+     Around November 1994. Removed a spurious *perl5 -w*
+     complaint. First public release.  Has been tested against
+     *perl 5.000* and *perl 4.036*.
+
+V1.00
+     Dunno, somewhere 1994. First neat collection of dusty routines put
+     in a package.
+
+
+SEE ALSO
+========
+
+*Note Socket: Socket,
+RFC1413, RFC931
+
+
+
+
+File: pm.info, Node: Net/Inet, Next: Net/NNTP, Prev: Net/Ident, Up: Module List
+
+Internet socket interface module
+********************************
+
+
+
+NAME
+====
+
+Net::Inet - Internet socket interface module
+
+
+SYNOPSIS
+========
+
+     use Net::Gen;		# optional
+     use Net::Inet;
+
+
+DESCRIPTION
+===========
+
+The `Net::Inet' module provides basic services for handling socket-based
+communications for the Internet protocol family.  It inherits from
+`Net::Gen', and is a base for `Net::TCP' and `Net::UDP'.
+
+
+Public Methods
+--------------
+
+new
+     Usage:
+
+          $obj = new Net::Inet;
+          $obj = new Net::Inet $host, $service;
+          $obj = new Net::Inet \%parameters;
+          $obj = new Net::Inet $host, $service, \%parameters;
+
+     Returns a newly-initialised object of the given class.  If called
+     for a derived class, no validation of the supplied parameters will
+     be performed.  (This is so that the derived class can set up the
+     parameter validation it needs in the object before allowing the
+     validation.)  Otherwise, it will cause the parameters to be
+     validated by calling its init method.  In particular, this means
+     that if both a host and a service are given, then an object will
+     only be returned if a connect() call was successful.
+
+init
+     Usage:
+
+          return undef unless $self->init;
+          return undef unless $self->init(\%parameters);
+          return undef unless $self->init($host, $service);
+          return undef unless $self->init($host, $service, \%parameters);
+
+     Verifies that all previous parameter assignments are valid (via
+     checkparams).  Returns the incoming object on success, and undef on
+     failure.  Usually called only via a derived class's init method or
+     its own new call.
+
+bind
+     Usage:
+
+          $ok = $obj->bind;
+          $ok = $obj->bind($host, $service);
+          $ok = $obj->bind($host, $service, \%parameters);
+
+     Sets up the srcaddrlist object parameter with the specified $host
+     and $service arguments if supplied (via the thishost and thisport
+     object parameters), and then returns the value from the inherited
+     bind method.  Changing of parameters is also allowed, mainly for
+     setting debug status or timeouts.
+
+     Example:
+
+          $ok = $obj->bind(0, 'echo(7)'); # attach to the local TCP echo port
+
+unbind
+     Usage:
+
+          $obj->unbind;
+
+     Deletes the thishost and thisport object parameters, and then
+     (assuming that succeeds, which it should) returns the value from
+     the inherited unbind method.
+
+connect
+     Usage:
+
+          $ok = $obj->connect;
+          $ok = $obj->connect($host, $service);
+          $ok = $obj->connect($host, $service, \%parameters);
+
+     Attempts to establish a connection for the object.  If the $host or
+     $service arguments are specified, they will be used to set the
+     desthost and destservice/destport object parameters, with
+     side-effects of setting up the dstaddrlist object parameter.  Then,
+     the result of a call to the inherited connect method will be
+     returned.  Changing of parameters is also allowed, mainly for
+     setting debug status or timeouts.
+
+format_addr
+     Usage:
+
+          $string = $obj->format_addr($sockaddr);
+          $string = $obj->format_addr($sockaddr, $numeric_only);
+          $string = format_addr Module $sockaddr;
+          $string = format_addr Module $sockaddr, $numeric_only;
+
+     Returns a formatted representation of the address.  This is a
+     method so that it can be overridden by derived classes.  It is used
+     to implement ``pretty-printing'' methods for source and destination
+     addresses.  If the $numeric_only argument is true, the address and
+     port number will be used even if they can be resolved to names.
+     Otherwise, the resolved hostname and service name will be used if
+     possible.
+
+format_local_addr
+     Usage:
+
+          $string = $obj->format_local_addr;
+          $string = $obj->format_local_addr($numeric_only);
+
+     Returns a formatted representation of the local socket address
+     associated with the object.  A sugar-coated way of calling the
+     format_addr method for the srcaddr object parameter.
+
+format_remote_addr
+     Usage:
+
+          $string = $obj->format_remote_addr;
+
+     Returns a formatted representation of the remote socket address
+     associated with the object.  A sugar-coated way of calling the
+     format_addr method for the dstaddr object parameter.
+
+getsockinfo
+     An augmented form of `Net::Gen::getsockinfo'.  Aside from updating
+     more object parameters, it behaves the same as that in the base
+     class.  The additional object parameters which get set are lcladdr,
+     lclhost, lclport, lclservice, remaddr, remhost, remport, and
+     remservice.  (They are described in `' in this node below.)
+
+
+Protected Methods
+-----------------
+
+[See the note in `"Protected Methods"', *Note Net/Gen: Net/Gen, about my
+definition of protected methods in Perl.]
+
+None.
+
+
+Known Socket Options
+--------------------
+
+These are the socket options known to the `Net::Inet' module itself:
+
+@asis{}
+     
+     `IP_HDRINCL' `IP_RECVDSTADDR' `IP_RECVOPTS' `IP_RECVRETOPTS'
+     `IP_TOS' `IP_TTL' `IP_ADD_MEMBERSHIP' `IP_DROP_MEMBERSHIP'
+     `IP_MULTICAST_IF' `IP_MULTICAST_LOOP' `IP_MULTICAST_TTL'
+     `IP_OPTIONS' `IP_RETOPTS'
+
+
+Known Object Parameters
+-----------------------
+
+These are the object parameters registered by the `Net::Inet' module
+itself:
+
+IPproto
+     The name of the Internet protocol in use on the socket associated
+     with the object.  Set as a side-effect of setting the proto object
+     parameter, and vice versa.
+
+proto
+     Used the same way as with `Net::Gen', but has a handler attached to
+     keep it in sync with IPproto.
+
+thishost
+     The source host name or address to use for the bind method.  When
+     used in conjunction with the thisservice or thisport object
+     parameter, causes the srcaddrlist object parameter to be set, which
+     is how it affects the bind() action.  This parameter is validated,
+     and must be either a valid internet address or a hostname for which
+     an address can be found.  If a hostname is given, and multiple
+     addresses are found for it, then each address will be entered into
+     the srcaddrlist array reference.
+
+desthost
+     The destination host name or address to use for the connect method.
+     When used in conjunction with the destservice or destport object
+     parameter, causes the dstaddrlist object parameter to be set, which
+     is how it affects the connect() action.  This parameter is
+     validated, and must be either a valid internet address or a
+     hostname for which an address can be found.  If a hostname is
+     given, and multiple addresses are found for it, then each address
+     will be entered into the dstaddrlist array reference, in order.
+     This allows the connect method to attempt a connection to each
+     address, as per RFC 1123.
+
+thisservice
+     The source service name (or number) to use for the bind method.  An
+     attempt will be made to translate the supplied service name with
+     getservbyname().  If that succeeds, or if it fails but the supplied
+     value was strictly numeric, the port number will be set in the
+     thisport object parameter.  If the supplied value is not numeric
+     and can't be translated, the attempt to set the value will fail.
+     Otherwise, this causes the srcaddrlist object parameter to be
+     updated, in preparation for an invocation of the bind method
+     (possibly implicitly from the connect method).
+
+thisport
+     The source service number (or name) to use for the bind method.  An
+     attempt will be made to translate the supplied service name with
+     getservbyname() if it is not strictly numeric.  If that succeeds,
+     the given name will be set in the thisservice parameter, and the
+     resolved port number will be set in the thisport object parameter.
+     If the supplied value is strictly numeric, and a call to
+     getservbyport can resolve a name for the service, the thisservice
+     parameter will be updated appropriately.  If the supplied value is
+     not numeric and can't be translated, the attempt to set the value
+     will fail.  Otherwise, this causes the srcaddrlist object parameter
+     to be updated, in preparation for an invocation of the bind method
+     (possibly implicitly from the connect method).
+
+destservice
+     The destination service name (or number) to use for the connect
+     method.  An attempt will be made to translate the supplied service
+     name with getservbyname().  If that succeeds, or if it fails but
+     the supplied value was strictly numeric, the port number will be
+     set in the destport object parameter.  If the supplied value is not
+     numeric and can't be translated, the attempt to set the value will
+     fail.  Otherwise, if the desthost parameter has a defined value,
+     this causes the dstaddrlist object parameter to be updated, in
+     preparation for an invocation of the connect method.
+
+destport
+     The destination service number (or name) to use for the connect
+     method.  An attempt will be made to translate the supplied service
+     name with getservbyname() if it is not strictly numeric.  If that
+     succeeds, the given name will be set in the destservice parameter,
+     and the resolved port number will be set in the destport parameter.
+     If the supplied value is strictly numeric, and a call to
+     getservbyport can resolve a name for the service, the destservice
+     parameter will be updated appropriately.  If the supplied value is
+     not numeric and can't be translated, the attempt to set the value
+     will fail.  Otherwise, if the desthost parameter has a defined
+     value, this causes the dstaddrlist object parameter to be updated,
+     in preparation for an invocation of the connect method.
+
+lcladdr
+     The local IP address stashed by the getsockinfo method after a
+     successful bind() or connect() call.
+
+lclhost
+     The local hostname stashed by the getsockinfo method after a
+     successful bind() or connect(), as resolved from the lcladdr object
+     parameter.
+
+lclport
+     The local port number stashed by the getsockinfo method after a
+     successful bind() or connect() call.
+
+lclservice
+     The local service name stashed by the getsockinfo method after a
+     successful bind() or connect(), as resolved from the lclport object
+     parameter.
+
+remaddr
+     The remote IP address stashed by the getsockinfo method after a
+     successful bind() or connect() call.
+
+remhost
+     The remote hostname stashed by the getsockinfo method after a
+     successful bind() or connect(), as resolved from the remaddr object
+     parameter.
+
+remport
+     The remote port number stashed by the getsockinfo method after a
+     successful bind() or connect() call.
+
+remservice
+     The remote service name stashed by the getsockinfo method after a
+     successful bind() or connect(), as resolved from the remport object
+     parameter.
+
+
+Non-Method Subroutines
+----------------------
+
+inet_aton
+     Usage:
+
+          $in_addr = inet_aton('192.0.2.1');
+
+     Returns the packed `AF_INET' address in network order, if it is
+     validly formed, or undef on error.  This used to be a separate
+     implementation in this package, but is now inherited from the
+     Socket module.
+
+inet_addr
+     A synonym for inet_aton() (for old fogeys like me who forget about
+     the new name).  (Yes, I know it's different in C, but in Perl
+     there's no need to propagate the old inet_addr() braindamage, so I
+     didn't.)
+
+inet_ntoa
+     Usage:
+
+          $addr_string = inet_ntoa($in_addr);
+
+     Returns the ASCII representation of the `AF_INET' address provided
+     (if possible), or undef on error.  This used to be a separate
+     implementation in this package, but is now inherited from the
+     Socket module.
+
+htonl
+htons
+ntohl
+ntohs
+     As you'd expect, I think.
+
+pack_sockaddr_in
+     Usage:
+
+          $connect_address = pack_sockaddr_in($family, $port, $in_addr);
+          $connect_address = pack_sockaddr_in($port, $in_addr);
+
+     Returns the packed `struct sockaddr_in' corresponding to the
+     provided $family, $port, and $in_addr arguments.  The $family and
+     $port arguments must be numbers, and the $in_addr argument must be
+     a packed `struct in_addr' such as the trailing elements from perl's
+     gethostent() return list.  This differs from the implementation in
+     the Socket module in that the `$family' argument is available
+     (though optional).
+
+unpack_sockaddr_in
+     Usage:
+
+          ($family, $port, $in_addr) = unpack_sockaddr_in($connected_address);
+
+     Returns the address family, port, and packed `struct in_addr' from
+     the supplied packed `struct sockaddr_in'.  This is the inverse of
+     pack_sockaddr_in().  This differs from the implementation in the
+     Socket module in that the `$family' value from the socket address
+     is returned.
+
+INADDR_UNSPEC_GROUP
+INADDR_ALLHOSTS_GROUP
+INADDR_ALLRTRS_GROUP
+INADDR_MAX_LOCAL_GROUP
+     Constant routines returning the `unspecified local', `all hosts',
+     `all routers', or the maximum possible local IP multicast group
+     address, respectively.  These routines return results in the form
+     of a packed `struct inaddr' much like INADDR_ANY results described
+     in `INADDR_ANY', *Note Socket: Socket,.
+
+IN_CLASSA
+IN_CLASSB
+IN_CLASSC
+IN_CLASSD
+IN_MULTICAST
+IN_EXPERIMENTAL
+IN_BADCLASS
+     Usage:
+
+          $boolean = IN_EXPERIMENTAL(INADDR_ALLHOSTS_GROUP);
+          $boolean = IN_CLASSA(0x7f000001);
+
+     These routines return the *network class* information for the
+     supplied IP address.  Of these, only IN_BADCLASS() and
+     IN_MULTICAST() are really useful in today's Internet, since the
+     advent of CIDR (classless Internet domain routing).  In particular,
+     IN_EXPERIMENTAL() is at the mercy of your vendor's definition.  The
+     first example above will be true only on older systems, which
+     almost certainly don't support IP multicast anyway.  The argument
+     to any of these functions can be either a packed `struct inaddr'
+     such as that returned by inet_ntoa() or unpack_sockaddr_in(), or an
+     integer (or integer expression) giving an IP address in host byte
+     order.
+
+IPOPT_CLASS
+IPOPT_COPIED
+IPOPT_NUMBER
+     Usage:
+
+          $optnum = IPOPT_NUMBER($option);
+
+     These routines extract information from IP option numbers, as per
+     the information on IP options in RFC 791.
+
+...
+     Other constants which relate to parts of IP or ICMP headers or
+     vendor-defined socket options, as listed in `' in this node below.
+
+
+Exports
+-------
+
+default
+     INADDR_ALLHOSTS_GROUP INADDR_ALLRTRS_GROUP INADDR_ANY
+     INADDR_BROADCAST INADDR_LOOPBACK INADDR_MAX_LOCAL_GROUP INADDR_NONE
+     INADDR_UNSPEC_GROUP `IPPORT_RESERVED' `IPPORT_USERRESERVED'
+     `IPPROTO_EGP' `IPPROTO_EON' `IPPROTO_GGP' `IPPROTO_HELLO'
+     `IPPROTO_ICMP' `IPPROTO_IDP' `IPPROTO_IGMP' `IPPROTO_IP'
+     `IPPROTO_IPIP' `IPPROTO_MAX' `IPPROTO_PUP' `IPPROTO_RAW'
+     `IPPROTO_RSVP' `IPPROTO_TCP' `IPPROTO_TP' `IPPROTO_UDP' htonl htons
+     inet_addr inet_aton inet_ntoa ntohl ntohs
+
+exportable
+     `DEFTTL' `ICMP_ADVLENMIN' `ICMP_ECHO' `ICMP_ECHOREPLY'
+     `ICMP_INFOTYPE' `ICMP_IREQ' `ICMP_IREQREPLY' `ICMP_MASKLEN'
+     `ICMP_MASKREPLY' `ICMP_MASKREQ' `ICMP_MAXTYPE' `ICMP_MINLEN'
+     `ICMP_PARAMPROB' `ICMP_REDIRECT' `ICMP_REDIRECT_HOST'
+     `ICMP_REDIRECT_NET' `ICMP_REDIRECT_TOSHOST' `ICMP_REDIRECT_TOSNET'
+     `ICMP_SOURCEQUENCH' `ICMP_TIMXCEED' `ICMP_TIMXCEED_INTRANS'
+     `ICMP_TIMXCEED_REASS' `ICMP_TSLEN' `ICMP_TSTAMP' `ICMP_TSTAMPREPLY'
+     `ICMP_UNREACH' `ICMP_UNREACH_HOST' `ICMP_UNREACH_NEEDFRAG'
+     `ICMP_UNREACH_NET' `ICMP_UNREACH_PORT' `ICMP_UNREACH_PROTOCOL'
+     `ICMP_UNREACH_SRCFAIL' IN_BADCLASS IN_CLASSA `IN_CLASSA_HOST'
+     `IN_CLASSA_MAX' `IN_CLASSA_NET' `IN_CLASSA_NSHIFT'
+     `IN_CLASSA_SUBHOST' `IN_CLASSA_SUBNET' `IN_CLASSA_SUBNSHIFT'
+     IN_CLASSB `IN_CLASSB_HOST' `IN_CLASSB_MAX' `IN_CLASSB_NET'
+     `IN_CLASSB_NSHIFT' `IN_CLASSB_SUBHOST' `IN_CLASSB_SUBNET'
+     `IN_CLASSB_SUBNSHIFT' IN_CLASSC `IN_CLASSC_HOST' `IN_CLASSC_MAX'
+     `IN_CLASSC_NET' `IN_CLASSC_NSHIFT' IN_CLASSD `IN_CLASSD_HOST'
+     `IN_CLASSD_NET' `IN_CLASSD_NSHIFT' IN_EXPERIMENTAL `IN_LOOPBACKNET'
+     IN_MULTICAST `IPFRAGTTL' `IPOPT_CIPSO' IPOPT_CLASS `IPOPT_CONTROL'
+     IPOPT_COPIED `IPOPT_DEBMEAS' `IPOPT_EOL' `IPOPT_LSRR'
+     `IPOPT_MINOFF' `IPOPT_NOP' IPOPT_NUMBER `IPOPT_OFFSET' `IPOPT_OLEN'
+     `IPOPT_OPTVAL' `IPOPT_RESERVED1' `IPOPT_RESERVED2'
+     `IPOPT_RIPSO_AUX' `IPOPT_RR' `IPOPT_SATID' `IPOPT_SECURITY'
+     `IPOPT_SECUR_CONFID' `IPOPT_SECUR_EFTO' `IPOPT_SECUR_MMMM'
+     `IPOPT_SECUR_RESTR' `IPOPT_SECUR_SECRET' `IPOPT_SECUR_TOPSECRET'
+     `IPOPT_SECUR_UNCLASS' `IPOPT_SSRR' `IPOPT_TS' `IPOPT_TS_PRESPEC'
+     `IPOPT_TS_TSANDADDR' `IPOPT_TS_TSONLY' `IPPORT_TIMESERVER'
+     `IPTOS_LOWDELAY' `IPTOS_PREC_CRITIC_ECP' `IPTOS_PREC_FLASH'
+     `IPTOS_PREC_FLASHOVERRIDE' `IPTOS_PREC_IMMEDIATE'
+     `IPTOS_PREC_INTERNETCONTROL' `IPTOS_PREC_NETCONTROL'
+     `IPTOS_PREC_PRIORITY' `IPTOS_PREC_ROUTINE' `IPTOS_RELIABILITY'
+     `IPTOS_THROUGHPUT' `IPTTLDEC' `IPVERSION' `IP_ADD_MEMBERSHIP'
+     `IP_DEFAULT_MULTICAST_LOOP' `IP_DEFAULT_MULTICAST_TTL' `IP_DF'
+     `IP_DROP_MEMBERSHIP' `IP_HDRINCL' `IP_MAXPACKET'
+     `IP_MAX_MEMBERSHIPS' `IP_MF' `IP_MSS' `IP_MULTICAST_IF'
+     `IP_MULTICAST_LOOP' `IP_MULTICAST_TTL' `IP_OPTIONS'
+     `IP_RECVDSTADDR' `IP_RECVOPTS' `IP_RECVRETOPTS' `IP_RETOPTS'
+     `IP_TOS' `IP_TTL' `MAXTTL' `MAX_IPOPTLEN' `MINTTL' `SUBNETSHIFT'
+     pack_sockaddr_in unpack_sockaddr_in
+
+tags
+     The following :tags are in `%EXPORT_TAGS', with the associated
+     exportable values as listed:
+
+     :sockopts
+          `IP_HDRINCL' `IP_RECVDSTADDR' `IP_RECVOPTS' `IP_RECVRETOPTS'
+          `IP_TOS' `IP_TTL' `IP_ADD_MEMBERSHIP' `IP_DROP_MEMBERSHIP'
+          `IP_MULTICAST_IF' `IP_MULTICAST_LOOP' `IP_MULTICAST_TTL'
+          `IP_OPTIONS' `IP_RETOPTS'
+
+     :routines
+          pack_sockaddr_in unpack_sockaddr_in inet_ntoa inet_aton
+          inet_addr htonl ntohl htons ntohs `ICMP_INFOTYPE' IN_BADCLASS
+          IN_EXPERIMENTAL IN_MULTICAST IPOPT_CLASS IPOPT_COPIED
+          IPOPT_NUMBER
+
+     :icmpvalues
+          `ICMP_ADVLENMIN' `ICMP_ECHO' `ICMP_ECHOREPLY' `ICMP_IREQ'
+          `ICMP_IREQREPLY' `ICMP_MASKLEN' `ICMP_MASKREPLY'
+          `ICMP_MASKREQ' `ICMP_MAXTYPE' `ICMP_MINLEN' `ICMP_PARAMPROB'
+          `ICMP_REDIRECT' `ICMP_REDIRECT_HOST' `ICMP_REDIRECT_NET'
+          `ICMP_REDIRECT_TOSHOST' `ICMP_REDIRECT_TOSNET'
+          `ICMP_SOURCEQUENCH' `ICMP_TIMXCEED' `ICMP_TIMXCEED_INTRANS'
+          `ICMP_TIMXCEED_REASS' `ICMP_TSLEN' `ICMP_TSTAMP'
+          `ICMP_TSTAMPREPLY' `ICMP_UNREACH' `ICMP_UNREACH_HOST'
+          `ICMP_UNREACH_NEEDFRAG' `ICMP_UNREACH_NET' `ICMP_UNREACH_PORT'
+          `ICMP_UNREACH_PROTOCOL' `ICMP_UNREACH_SRCFAIL'
+
+     :ipoptions
+          `IPOPT_CIPSO' `IPOPT_CONTROL' `IPOPT_DEBMEAS' `IPOPT_EOL'
+          `IPOPT_LSRR' `IPOPT_MINOFF' `IPOPT_NOP' `IPOPT_OFFSET'
+          `IPOPT_OLEN' `IPOPT_OPTVAL' `IPOPT_RESERVED1'
+          `IPOPT_RESERVED2' `IPOPT_RIPSO_AUX' `IPOPT_RR' `IPOPT_SATID'
+          `IPOPT_SECURITY' `IPOPT_SECUR_CONFID' `IPOPT_SECUR_EFTO'
+          `IPOPT_SECUR_MMMM' `IPOPT_SECUR_RESTR' `IPOPT_SECUR_SECRET'
+          `IPOPT_SECUR_TOPSECRET' `IPOPT_SECUR_UNCLASS' `IPOPT_SSRR'
+          `IPOPT_TS' `IPOPT_TS_PRESPEC' `IPOPT_TS_TSANDADDR'
+          `IPOPT_TS_TSONLY' `MAX_IPOPTLEN'
+
+     :iptosvalues
+          `IPTOS_LOWDELAY' `IPTOS_PREC_CRITIC_ECP' `IPTOS_PREC_FLASH'
+          `IPTOS_PREC_FLASHOVERRIDE' `IPTOS_PREC_IMMEDIATE'
+          `IPTOS_PREC_INTERNETCONTROL' `IPTOS_PREC_NETCONTROL'
+          `IPTOS_PREC_PRIORITY' `IPTOS_PREC_ROUTINE' `IPTOS_RELIABILITY'
+          `IPTOS_THROUGHPUT'
+
+     :protocolvalues
+          `DEFTTL' INADDR_ALLHOSTS_GROUP INADDR_ALLRTRS_GROUP INADDR_ANY
+          INADDR_BROADCAST INADDR_LOOPBACK INADDR_MAX_LOCAL_GROUP
+          INADDR_NONE INADDR_UNSPEC_GROUP `IN_LOOPBACKNET'
+          `IPPORT_RESERVED' `IPPORT_USERRESERVED' `IPPROTO_EGP'
+          `IPPROTO_EON' `IPPROTO_GGP' `IPPROTO_HELLO' `IPPROTO_ICMP'
+          `IPPROTO_IDP' `IPPROTO_IGMP' `IPPROTO_IP' `IPPROTO_IPIP'
+          `IPPROTO_MAX' `IPPROTO_PUP' `IPPROTO_RAW' `IPPROTO_RSVP'
+          `IPPROTO_TCP' `IPPROTO_TP' `IPPROTO_UDP' `IPFRAGTTL'
+          `IPTTLDEC' `IPVERSION' `IP_DF' `IP_MAXPACKET' `IP_MF' `IP_MSS'
+          `MAXTTL' `MAX_IPOPTLEN' `MINTTL'
+
+     :ipmulticast
+          `IP_ADD_MEMBERSHIP' `IP_DEFAULT_MULTICAST_LOOP'
+          `IP_DEFAULT_MULTICAST_TTL' `IP_DROP_MEMBERSHIP'
+          `IP_MAX_MEMBERSHIPS' `IP_MULTICAST_IF' `IP_MULTICAST_LOOP'
+          `IP_MULTICAST_TTL'
+
+     :deprecated
+          `IN_CLASSA_HOST' `IN_CLASSA_MAX' `IN_CLASSA_NET'
+          `IN_CLASSA_NSHIFT' `IN_CLASSA_SUBHOST' `IN_CLASSA_SUBNET'
+          `IN_CLASSA_SUBNSHIFT' `IN_CLASSB_HOST' `IN_CLASSB_MAX'
+          `IN_CLASSB_NET' `IN_CLASSB_NSHIFT' `IN_CLASSB_SUBHOST'
+          `IN_CLASSB_SUBNET' `IN_CLASSB_SUBNSHIFT' `IN_CLASSC_HOST'
+          `IN_CLASSC_MAX' `IN_CLASSC_NET' `IN_CLASSC_NSHIFT'
+          `IN_CLASSD_HOST' `IN_CLASSD_NET' `IN_CLASSD_NSHIFT' IN_CLASSA
+          IN_CLASSB IN_CLASSC IN_CLASSD `IPPORT_TIMESERVER'
+          `SUBNETSHIFT'
+
+     :ALL
+          All of the above exportable items.
+
+
+
+
+NOTES
+=====
+
+Anywhere a service or port argument is used above, the allowed syntax is
+either a service name, a port number, or a service name with a
+caller-supplied default port number.  Examples are `'echo'', 7, and
+`'echo(7)'', respectively.  For a service argument, a bare port number
+must be translatable into a service name with getservbyport() or an
+error will result.  A service name must be translatable into a port with
+getservbyname() or an error will result.  However, a service name with a
+default port number will succeed (by using the supplied default) even if
+the translation with getservbyname() fails.
+
+
+NYI
+===
+
+This is still missing a way to pretty-print the connection information
+after a successful connect() or accept().  [Not strictly still true, but
+the following yet holds.]  This is largely because I'm not satisfied
+with any of the obvious ways to do it.  Now taking suggestions.
+Proposals so far:
+
+     ($peerproto, $peername, $peeraddr, $peerport, $peerservice) =
+     	$obj->getsockinfo;
+     @conninfo = $obj->getsockinfo($sockaddr_in);
+     # the above pair are a single proposal
+
+     %conninfo = $obj->getsockinfo;
+     %conninfo = $obj->getsockinfo($sockaddr_in);
+     # for these, the keys would be qw(proto hostname address port service)
+
+Of course, it's probably better to return references rather than actual
+arrays, but you get the idea.
+
+
+AUTHOR
+======
+
+Spider Boardman `<spider@Orb.Nashua.NH.US>'
+
+
+
+
+File: pm.info, Node: Net/NNTP, Next: Net/Netrc, Prev: Net/Inet, Up: Module List
+
+NNTP Client class
+*****************
+
+
+
+NAME
+====
+
+Net::NNTP - NNTP Client class
+
+
+SYNOPSIS
+========
+
+     use Net::NNTP;
+
+     $nntp = Net::NNTP->new("some.host.name");
+     $nntp->quit;
+
+
+DESCRIPTION
+===========
+
+`Net::NNTP' is a class implementing a simple NNTP client in Perl as
+described in RFC977. `Net::NNTP' inherits its communication methods from
+`Net::Cmd'
+
+
+CONSTRUCTOR
+===========
+
+new ( [ HOST ] [, OPTIONS ])
+     This is the constructor for a new Net::NNTP object. `HOST' is the
+     name of the remote host to which a NNTP connection is required. If
+     not given two environment variables are checked, first `NNTPSERVER'
+     then `NEWSHOST', then `Net::Config' is checked, and if a host is
+     not found then `news' is used.
+
+     OPTIONS are passed in a hash like fashion, using key and value
+     pairs.  Possible options are:
+
+     *Timeout* - Maximum time, in seconds, to wait for a response from the
+     NNTP server, a value of zero will cause all IO operations to block.
+     (default: 120)
+
+     Debug - Enable the printing of debugging information to STDERR
+
+
+METHODS
+=======
+
+Unless otherwise stated all methods return either a *true* or *false*
+value, with *true* meaning that the operation was a success. When a
+method states that it returns a value, failure will be returned as undef
+or an empty list.
+
+article ( [ MSGID|MSGNUM ] )
+     Retrieve the header, a blank line, then the body (text) of the
+     specified article.
+
+     If no arguments are passed then the current article in the current
+     newsgroup is returned.
+
+     `MSGNUM' is a numeric id of an article in the current newsgroup,
+     and will change the current article pointer.  `MSGID' is the
+     message id of an article as shown in that article's header.  It is
+     anticipated that the client will obtain the `MSGID' from a list
+     provided by the newnews command, from references contained within
+     another article, or from the message-id provided in the response to
+     some other commands.
+
+     Returns a reference to an array containing the article.
+
+body ( [ MSGID|MSGNUM ] )
+     Retrieve the body (text) of the specified article.
+
+     Takes the same arguments as article
+
+     Returns a reference to an array containing the body of the article.
+
+head ( [ MSGID|MSGNUM ] )
+     Retrieve the header of the specified article.
+
+     Takes the same arguments as article
+
+     Returns a reference to an array containing the header of the
+     article.
+
+nntpstat ( [ MSGID|MSGNUM ] )
+     The nntpstat command is similar to the article command except that
+     no text is returned.  When selecting by message number within a
+     group, the nntpstat command serves to set the "current article
+     pointer" without sending text.
+
+     Using the nntpstat command to select by message-id is valid but of
+     questionable value, since a selection by message-id does *not*
+     alter the "current article pointer".
+
+     Returns the message-id of the "current article".
+
+group ( [ GROUP ] )
+     Set and/or get the current group. If `GROUP' is not given then
+     information is returned on the current group.
+
+     In a scalar context it returns the group name.
+
+     In an array context the return value is a list containing, the
+     number of articles in the group, the number of the first article,
+     the number of the last article and the group name.
+
+ihave ( MSGID [, MESSAGE ])
+     The ihave command informs the server that the client has an article
+     whose id is `MSGID'.  If the server desires a copy of that article,
+     and `MESSAGE' has been given the it will be sent.
+
+     Returns *true* if the server desires the article and `MESSAGE' was
+     successfully sent,if specified.
+
+     If `MESSAGE' is not specified then the message must be sent using
+     the datasend and dataend methods from *Note Net/Cmd: Net/Cmd,
+
+     `MESSAGE' can be either an array of lines or a reference to an
+     array.
+
+last ()
+     Set the "current article pointer" to the previous article in the
+     current newsgroup.
+
+     Returns the message-id of the article.
+
+date ()
+     Returns the date on the remote server. This date will be in a UNIX
+     time format (seconds since 1970)
+
+postok ()
+     postok will return *true* if the servers initial response indicated
+     that it will allow posting.
+
+authinfo ( USER, PASS )
+list ()
+     Obtain information about all the active newsgroups. The results is
+     a reference to a hash where the key is a group name and each value
+     is a reference to an array. The elements in this array are:- the
+     first article number in the group, the last article number in the
+     group and any information flags about the group.
+
+newgroups ( SINCE [, DISTRIBUTIONS ])
+     `SINCE' is a time value and `DISTRIBUTIONS' is either a
+     distribution pattern or a reference to a list of distribution
+     patterns.  The result is the same as list, but the groups return
+     will be limited to those created after `SINCE' and, if specified,
+     in one of the distribution areas in `DISTRIBUTIONS'.
+
+newnews ( SINCE [, GROUPS [, DISTRIBUTIONS ]])
+     `SINCE' is a time value. `GROUPS' is either a group pattern or a
+     reference to a list of group patterns. `DISTRIBUTIONS' is either a
+     distribution pattern or a reference to a list of distribution
+     patterns.
+
+     Returns a reference to a list which contains the message-ids of all
+     news posted after `SINCE', that are in a groups which matched
+     `GROUPS' and a distribution which matches `DISTRIBUTIONS'.
+
+next ()
+     Set the "current article pointer" to the next article in the
+     current newsgroup.
+
+     Returns the message-id of the article.
+
+post ( [ MESSAGE ] )
+     Post a new article to the news server. If `MESSAGE' is specified
+     and posting is allowed then the message will be sent.
+
+     If `MESSAGE' is not specified then the message must be sent using
+     the datasend and dataend methods from *Note Net/Cmd: Net/Cmd,
+
+     `MESSAGE' can be either an array of lines or a reference to an
+     array.
+
+slave ()
+     Tell the remote server that I am not a user client, but probably
+     another news server.
+
+quit ()
+     Quit the remote server and close the socket connection.
+
+
+Extension methods
+-----------------
+
+These methods use commands that are not part of the RFC977
+documentation. Some servers may not support all of them.
+
+newsgroups ( [ PATTERN ] )
+     Returns a reference to a hash where the keys are all the group
+     names which match PATTERN, or all of the groups if no pattern is
+     specified, and each value contains the description text for the
+     group.
+
+distributions ()
+     Returns a reference to a hash where the keys are all the possible
+     distribution names and the values are the distribution
+     descriptions.
+
+subscriptions ()
+     Returns a reference to a list which contains a list of groups which
+     are recommended for a new user to subscribe to.
+
+overview_fmt ()
+     Returns a reference to an array which contain the names of the
+     fields returned by xover.
+
+active_times ()
+     Returns a reference to a hash where the keys are the group names
+     and each value is a reference to an array containing the time the
+     groups was created and an identifier, possibly an Email address, of
+     the creator.
+
+active ( [ PATTERN ] )
+     Similar to list but only active groups that match the pattern are
+     returned.  PATTERN can be a group pattern.
+
+xgtitle ( PATTERN )
+     Returns a reference to a hash where the keys are all the group
+     names which match PATTERN and each value is the description text
+     for the group.
+
+xhdr ( HEADER, MESSAGE-SPEC )
+     Obtain the header field `HEADER' for all the messages specified.
+
+     The return value will be a reference to a hash where the keys are
+     the message numbers and each value contains the text of the
+     requested header for that message.
+
+xover ( MESSAGE-SPEC )
+     The return value will be a reference to a hash where the keys are
+     the message numbers and each value contains a reference to an array
+     which contains the overview fields for that message.
+
+     The names of the fields can be obtained by calling overview_fmt.
+
+xpath ( MESSAGE-ID )
+     Returns the path name to the file on the server which contains the
+     specified message.
+
+xpat ( HEADER, PATTERN, MESSAGE-SPEC)
+     The result is the same as xhdr except the is will be restricted to
+     headers where the text of the header matches PATTERN
+
+xrover
+     The XROVER command returns reference information for the article(s)
+     specified.
+
+     Returns a reference to a HASH where the keys are the message
+     numbers and the values are the References: lines from the articles
+
+listgroup
+reader
+
+UNSUPPORTED
+===========
+
+The following NNTP command are unsupported by the package, and there are
+no plans to do so.
+
+     AUTHINFO GENERIC
+     XTHREAD
+     XSEARCH
+     XINDEX
+
+
+DEFINITIONS
+===========
+
+MESSAGE-SPEC
+     `MESSAGE-SPEC' is either a single message-id, a single message
+     number, or a reference to a list of two message numbers.
+
+     If `MESSAGE-SPEC' is a reference to a list of two message numbers
+     and the second number in a range is less than or equal to the first
+     then the range represents all messages in the group after the first
+     message number.
+
+     NOTE For compatibility reasons only with earlier versions of
+     Net::NNTP a message spec can be passed as a list of two numbers,
+     this is depreciated and a reference to the list should now be
+     passed
+
+PATTERN
+     The `NNTP' protocol uses the `WILDMAT' format for patterns.  The
+     WILDMAT format was first developed by Rich Salz based on the format
+     used in the UNIX "find" command to articulate file names. It was
+     developed to provide a uniform mechanism for matching patterns in
+     the same manner that the UNIX shell matches filenames.
+
+     Patterns are implicitly anchored at the beginning and end of each
+     string when testing for a match.
+
+     There are five pattern matching operations other than a strict
+     one-to-one match between the pattern and the source to be checked
+     for a match.
+
+     The first is an asterisk * to match any sequence of zero or more
+     characters.
+
+     The second is a question mark `?' to match any single
+     character. The third specifies a specific set of characters.
+
+     The set is specified as a list of characters, or as a range of
+     characters where the beginning and end of the range are separated
+     by a minus (or dash) character, or as any combination of lists and
+     ranges. The dash can also be included in the set as a character it
+     if is the beginning or end of the set. This set is enclosed in
+     square brackets. The close square bracket `]' may be used in a set
+     if it is the first character in the set.
+
+     The fourth operation is the same as the logical not of the third
+     operation and is specified the same way as the third with the
+     addition of a caret character `^' at the beginning of the test
+     string just inside the open square bracket.
+
+     The final operation uses the backslash character to invalidate the
+     special meaning of the a open square bracket `[', the asterisk,
+     backslash or the question mark. Two backslashes in sequence will
+     result in the evaluation of the backslash as a character with no
+     special meaning.
+
+     Examples
+     `[^]-]'
+          matches any single character other than a close square bracket
+          or a minus sign/dash.
+
+     @asis{}
+     
+          matches any string that ends with the string "bdc" including
+          the string "bdc" (without quotes).
+
+     `[0-9a-zA-Z]'
+          matches any single printable alphanumeric ASCII character.
+
+     `a??d'
+          matches any four character string which begins with a and ends
+          with d.
+
+
+SEE ALSO
+========
+
+*Note Net/Cmd: Net/Cmd,
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/Netrc, Next: Net/PH, Prev: Net/NNTP, Up: Module List
+
+OO interface to users netrc file
+********************************
+
+
+
+NAME
+====
+
+Net::Netrc - OO interface to users netrc file
+
+
+SYNOPSIS
+========
+
+     use Net::Netrc;
+
+     $mach = Net::Netrc->lookup('some.machine');
+     $login = $mach->login;
+     ($login, $password, $account) = $mach->lpa;
+
+
+DESCRIPTION
+===========
+
+`Net::Netrc' is a class implementing a simple interface to the .netrc
+file used as by the ftp program.
+
+`Net::Netrc' also implements security checks just like the ftp program,
+these checks are, first that the .netrc file must be owned by the user
+and second the ownership permissions should be such that only the owner
+has read and write access. If these conditions are not met then a
+warning is output and the .netrc file is not read.
+
+
+THE .netrc FILE
+===============
+
+The .netrc file contains login and initialization information used by
+the auto-login process.  It resides in the user's home directory.  The
+following tokens are recognized; they may be separated by spaces, tabs,
+or new-lines:
+
+machine name
+     Identify a remote machine name. The auto-login process searches the
+     .netrc file for a machine token that matches the remote machine
+     specified.  Once a match is made, the subsequent .netrc tokens are
+     processed, stopping when the end of file is reached or an- other
+     machine or a default token is encountered.
+
+default
+     This is the same as machine name except that default matches any
+     name.  There can be only one default token, and it must be after
+     all machine tokens.  This is normally used as:
+
+          default login anonymous password user@site
+
+     thereby giving the user automatic anonymous login to machines not
+     specified in .netrc.
+
+login name
+     Identify a user on the remote machine.  If this token is present,
+     the auto-login process will initiate a login using the specified
+     name.
+
+password string
+     Supply a password.  If this token is present, the auto-login
+     process will supply the specified string if the remote server
+     requires a password as part of the login process.
+
+account string
+     Supply an additional account password.  If this token is present,
+     the auto-login process will supply the specified string if the
+     remote server requires an additional account password.
+
+macdef name
+     Define a macro. `Net::Netrc' only parses this field to be
+     compatible with *ftp*.
+
+
+CONSTRUCTOR
+===========
+
+The constructor for a `Net::Netrc' object is not called new as it does
+not really create a new object. But instead is called lookup as this is
+essentially what it does.
+
+lookup ( MACHINE [, LOGIN ])
+     Lookup and return a reference to the entry for `MACHINE'. If
+     `LOGIN' is given then the entry returned will have the given
+     login. If `LOGIN' is not given then the first entry in the .netrc
+     file for `MACHINE' will be returned.
+
+     If a matching entry cannot be found, and a default entry exists,
+     then a reference to the default entry is returned.
+
+
+METHODS
+=======
+
+login ()
+     Return the login id for the netrc entry
+
+password ()
+     Return the password for the netrc entry
+
+account ()
+     Return the account information for the netrc entry
+
+lpa ()
+     Return a list of login, password and account information fir the
+     netrc entry
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+SEE ALSO
+========
+
+*Note Net/Netrc: Net/Netrc,
+*Note Net/Cmd: Net/Cmd,
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/PH, Next: Net/POP3, Prev: Net/Netrc, Up: Module List
+
+CCSO Nameserver Client class
+****************************
+
+
+
+NAME
+====
+
+Net::PH - CCSO Nameserver Client class
+
+
+SYNOPSIS
+========
+
+     use Net::PH;
+
+     $ph = Net::PH->new("some.host.name",
+                        Port    => 105,
+                        Timeout => 120,
+                        Debug   => 0);
+
+     if($ph) {
+         $q = $ph->query({ field1 => "value1" },
+                         [qw(name address pobox)]);
+
+         if($q) {
+         }
+     }
+
+     # Alternative syntax
+
+     if($ph) {
+         $q = $ph->query('field1=value1',
+                         'name address pobox');
+
+         if($q) {
+         }
+     }
+
+
+DESCRIPTION
+===========
+
+`Net::PH' is a class implementing a simple Nameserver/PH client in Perl
+as described in the CCSO Nameserver -- Server-Client Protocol. Like
+other modules in the Net:: family the `Net::PH' object inherits methods
+from `Net::Cmd'.
+
+
+CONSTRUCTOR
+===========
+
+new ( [ HOST ] [, OPTIONS ])
+          $ph = Net::PH->new("some.host.name",
+                             Port    => 105,
+                             Timeout => 120,
+                             Debug   => 0
+                            );
+
+     This is the constructor for a new Net::PH object. `HOST' is the
+     name of the remote host to which a PH connection is required.
+
+     If `HOST' is not given, then the `SNPP_Host' specified in
+     `Net::Config' will be used.
+
+     OPTIONS is an optional list of named options which are passed in a
+     hash like fashion, using key and value pairs. Possible options
+     are:-
+
+     Port - Port number to connect to on remote host.
+
+     *Timeout* - Maximum time, in seconds, to wait for a response from the
+     Nameserver, a value of zero will cause all IO operations to block.
+     (default: 120)
+
+     Debug - Enable the printing of debugging information to STDERR
+
+
+METHODS
+=======
+
+Unless otherwise stated all methods return either a *true* or *false*
+value, with *true* meaning that the operation was a success. When a
+method states that it returns a value, failure will be returned as undef
+or an empty list.
+
+query( SEARCH [, RETURN ] )
+          $q = $ph->query({ name => $myname },
+          		    [qw(name email schedule)]);
+
+          foreach $handle (@{$q}) {
+          	foreach $field (keys %{$handle}) {
+                  $c = ${$handle}{$field}->code;
+                  $v = ${$handle}{$field}->value;
+                  $f = ${$handle}{$field}->field;
+                  $t = ${$handle}{$field}->text;
+                  print "field:[$field] [$c][$v][$f][$t]\n" ;
+          	}
+          }
+
+
+     Search the database and return fields from all matching entries.
+
+     The `SEARCH' argument is a reference to a HASH which contains
+     field/value pairs which will be passed to the Nameserver as the
+     search criteria.
+
+     RETURN is optional, but if given it should be a reference to a list
+     which contains field names to be returned.
+
+     The alternative syntax is to pass strings instead of references,
+     for example
+
+          $q = $ph->query('name=myname',
+          		    'name email schedule');
+
+     The `SEARCH' argument is a string that is passed to the Nameserver
+     as the search criteria.
+
+     RETURN is optional, but if given it should be a string which will
+     contain field names to be returned.
+
+     Each match from the server will be returned as a HASH where the keys are the
+     field names and the values are `Net::PH:Result' objects (code, value, 
+     *field*, text).
+
+     Returns a reference to an ARRAY which contains references to HASHs,
+     one per match from the server.
+
+change( SEARCH , MAKE )
+          $r = $ph->change({ email => "*.domain.name" },
+                           { schedule => "busy");
+
+     Change field values for matching entries.
+
+     The `SEARCH' argument is a reference to a HASH which contains
+     field/value pairs which will be passed to the Nameserver as the
+     search criteria.
+
+     The `MAKE' argument is a reference to a HASH which contains
+     field/value pairs which will be passed to the Nameserver that will
+     set new values to designated fields.
+
+     The alternative syntax is to pass strings instead of references,
+     for example
+
+          $r = $ph->change('email="*.domain.name"',
+                           'schedule="busy"');
+
+     The `SEARCH' argument is a string to be passed to the Nameserver as
+     the search criteria.
+
+     The `MAKE' argument is a string to be passed to the Nameserver that
+     will set new values to designated fields.
+
+     Upon success all entries that match the search criteria will have
+     the field values, given in the Make argument, changed.
+
+login( USER, PASS [, ENCRYPT ])
+          $r = $ph->login('username','password',1);
+
+     Enter login mode using USER and PASS. If `ENCRYPT' is given and is
+     *true* then the password will be used to encrypt a challenge text
+     string provided by the server, and the encrypted string will be
+     sent back to the server. If `ENCRYPT' is not given, or *false* the
+     the password will be sent in clear text (*this is not recommended*)
+
+logout()
+          $r = $ph->logout();
+
+     Exit login mode and return to anonymous mode.
+
+fields( [ FIELD_LIST ] )
+          $fields = $ph->fields();
+          foreach $field (keys %{$fields}) {
+              $c = ${$fields}{$field}->code;
+              $v = ${$fields}{$field}->value;
+              $f = ${$fields}{$field}->field;
+              $t = ${$fields}{$field}->text;
+              print "field:[$field] [$c][$v][$f][$t]\n";
+          }
+
+     Returns a reference to a HASH. The keys of the HASH are the field
+     names and the values are `Net::PH:Result' objects (code, value,
+     *field*, text).
+
+     `FIELD_LIST' is a string that lists the fields for which info will
+     be returned.
+
+add( FIELD_VALUES )
+          $r = $ph->add( { name => $name, phone => $phone });
+
+     This method is used to add new entries to the Nameserver
+     database. You must successfully call `login' in this node before
+     this method can be used.
+
+     Note that this method adds new entries to the database. To modify
+     an existing entry use `change' in this node.
+
+     `FIELD_VALUES' is a reference to a HASH which contains field/value
+     pairs which will be passed to the Nameserver and will be used to
+     initialize the new entry.
+
+     The alternative syntax is to pass a string instead of a reference,
+     for example
+
+          $r = $ph->add('name=myname phone=myphone');
+
+     `FIELD_VALUES' is a string that consists of field/value pairs which
+     the new entry will contain.
+
+delete( FIELD_VALUES )
+          $r = $ph->delete('name=myname phone=myphone');
+
+     This method is used to delete existing entries from the Nameserver
+     database.  You must successfully call `login' in this node before
+     this method can be used.
+
+     Note that this method deletes entries to the database. To modify an
+     existing entry use `change' in this node.
+
+     `FIELD_VALUES' is a string that serves as the search criteria for
+     the records to be deleted. Any entry in the database which matches
+     this search criteria will be deleted.
+
+id( [ ID ] )
+          $r = $ph->id('709');
+
+     Sends `ID' to the Nameserver, which will enter this into its
+     logs. If `ID' is not given then the UID of the user running the
+     process will be sent.
+
+status()
+     Returns the current status of the Nameserver.
+
+siteinfo()
+          $siteinfo = $ph->siteinfo();
+          foreach $field (keys %{$siteinfo}) {
+              $c = ${$siteinfo}{$field}->code;
+              $v = ${$siteinfo}{$field}->value;
+              $f = ${$siteinfo}{$field}->field;
+              $t = ${$siteinfo}{$field}->text;
+              print "field:[$field] [$c][$v][$f][$t]\n";
+          }
+
+     Returns a reference to a HASH containing information about the
+     server's site. The keys of the HASH are the field names and values
+     are `Net::PH:Result' objects (code, value, *field*, text).
+
+quit()
+          $r = $ph->quit();
+
+     Quit the connection
+
+
+Q&A
+===
+
+How do I get the values of a Net::PH::Result object?
+
+     foreach $handle (@{$q}) {
+         foreach $field (keys %{$handle}) {
+             $my_code  = ${$q}{$field}->code;
+             $my_value = ${$q}{$field}->value;
+             $my_field = ${$q}{$field}->field;
+             $my_text  = ${$q}{$field}->text;
+         }
+     }
+
+How do I get a count of the returned matches to my query?
+
+     $my_count = scalar(@{$query_result});
+
+How do I get the status code and message of the last `$ph' command?
+
+     $status_code    = $ph->code;
+     $status_message = $ph->message;
+
+
+SEE ALSO
+========
+
+*Note Net/Cmd: Net/Cmd,
+
+
+AUTHORS
+=======
+
+Graham Barr <gbarr@ti.com> Alex Hristov <hristov@slb.com>
+
+
+ACKNOWLEDGMENTS
+===============
+
+Password encryption code ported to perl by Broc Seib <bseib@purdue.edu>,
+Purdue University Computing Center.
+
+Otis Gospodnetic <otisg@panther.middlebury.edu> suggested passing
+parameters as string constants. Some queries cannot be executed when
+passing parameters as string references.
+
+     Example: query first_name last_name email="*.domain"
+
+
+COPYRIGHT
+=========
+
+The encryption code is based upon cryptit.c, Copyright (C) 1988 by
+Steven Dorner and the University of Illinois Board of Trustees, and by
+CSNET.
+
+All other code is Copyright (c) 1996-1997 Graham Barr <gbarr@ti.com> and
+Alex Hristov <hristov@slb.com>. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+

@@ -1,0 +1,71 @@
+Info file: perl.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigperl.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+settitle perl
+
+
+
+Indirect:
+perl.info-1: 169
+perl.info-2: 71033
+perl.info-3: 146848
+perl.info-4: 215245
+perl.info-5: 321716
+perl.info-6: 385108
+perl.info-7: 443120
+perl.info-8: 499635
+perl.info-9: 558360
+perl.info-10: 627653
+perl.info-11: 702035
+perl.info-12: 778188
+perl.info-13: 933125
+perl.info-14: 995611
+perl.info-15: 1057611
+perl.info-16: 1118455
+perl.info-17: 1244661
+
+Tag table:
+(Indirect)
+Node: Top171
+Node: perldelta12319
+Node: perlxs71035
+Node: perlembed111767
+Node: perlipc146850
+Node: perlsyn195253
+Node: perldiag215247
+Node: perlfaq321718
+Node: perlsec328219
+Node: perllol344186
+Node: perlapio353297
+Node: perldata361203
+Node: perllocale385110
+Node: perlvar417798
+Node: perlcall443122
+Node: perldebug499637
+Node: perlref537489
+Node: perltoot558362
+Node: perlmodlib627655
+Node: perlform659616
+Node: perltie673308
+Node: perlre702037
+Node: perlbook726616
+Node: perlrun728026
+Node: perldsc751430
+Node: perlfunc778190
+Node: perltrap933127
+Node: perlpod971589
+Node: perlmod980149
+Node: perlop995613
+Node: perlbot1044673
+Node: perlobj1057613
+Node: perlstyle1074611
+Node: perlsub1082750
+Node: perlxstut1118457
+Node: perlguts1145651
+Node: Function Index1244663
+Node: Predefined Variable Index1257504
+Node: Diagnostics Index1261635
+
+End tag table

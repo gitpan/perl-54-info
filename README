@@ -1,0 +1,8 @@
+This contains just the .info files (I must have lost my copies of the original
+.texi files) from the pod files in 5.004_04.  I'm still trying to find time to
+rewrite the pod to texinfo converter, but in the interim, I'll try to put the
+info files out as the new non-development perl versions become available.
+
+Enjoy,
+Krishna Sethuraman
+krishpl@shamu.engr.sgi.com 

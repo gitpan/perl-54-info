@@ -1,0 +1,2022 @@
+Info file: perl.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigperl.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+settitle perl
+
+
+
+File: perl.info, Node: perltrap, Next: perlstyle, Prev: perlsec, Up: Top
+
+Perl traps for the unwary
+*************************
+
+
+
+NAME
+====
+
+perltrap - Perl traps for the unwary
+
+
+DESCRIPTION
+===========
+
+The biggest trap of all is forgetting to use the -w switch; see
+*Note Perlrun: perlrun,.  The second biggest trap is not making your entire program
+runnable under `use strict'.  The third biggest trap is not reading the
+list of changes in this version of Perl; see *Note Perldelta:
+perldelta,.
+
+
+Awk Traps
+---------
+
+Accustomed *awk* users should take special note of the following:
+
+   * The English module, loaded via
+
+          use English;
+
+     allows you to refer to special variables (like $/) with names (like
+     $RS), as though they were in *awk*; see *Note Perlvar: perlvar, for
+     details.
+
+   * Semicolons are required after all simple statements in Perl (except
+     at the end of a block).  Newline is not a statement delimiter.
+
+   * Curly brackets are required on `if's and `while's.
+
+   * Variables begin with "$" or "@" in Perl.
+
+   * Arrays index from 0.  Likewise string positions in substr() and
+     index().
+
+   * You have to decide whether your array has numeric or string
+     indices.
+
+   * Hash values do not spring into existence upon mere reference.
+
+   * You have to decide whether you want to use string or numeric
+     comparisons.
+
+   * Reading an input line does not split it for you.  You get to split
+     it to an array yourself.  And the split() operator has different
+     arguments than *awk*'s.
+
+   * The current input line is normally in $_, not $0.  It generally
+     does not have the newline stripped.  ($0 is the name of the program
+     executed.)  See *Note Perlvar: perlvar,.
+
+   * $<*digit*> does not refer to fields--it refers to substrings
+     matched by the last match pattern.
+
+   * The print() statement does not add field and record separators
+     unless you set $, and $\.  You can set $OFS and $ORS if you're
+     using the English module.
+
+   * You must open your files before you print to them.
+
+   * The range operator is "..", not comma.  The comma operator works as
+     in C.
+
+   * The match operator is "=~", not "~".  ("~" is the one's complement
+     operator, as in C.)
+
+   * The exponentiation operator is "**", not "^".  "^" is the XOR
+     operator, as in C.  (You know, one could get the feeling that *awk*
+     is basically incompatible with C.)
+
+   * The concatenation operator is ".", not the null string.  (Using the
+     null string would render `/pat/ /pat/' unparsable, because the
+     third slash would be interpreted as a division operator--the
+     tokenizer is in fact slightly context sensitive for operators like
+     "/", "?", and ">".  And in fact, "." itself can be the beginning of
+     a number.)
+
+   * The next, exit, and continue keywords work differently.
+
+   * The following variables work differently:
+
+          Awk	Perl
+          ARGC	$#ARGV or scalar @ARGV
+          ARGV[0]	$0
+          FILENAME	$ARGV
+          FNR	$. - something
+          FS	(whatever you like)
+          NF	$#Fld, or some such
+          NR	$.
+          OFMT	$#
+          OFS	$,
+          ORS	$\
+          RLENGTH	length($&)
+          RS	$/
+          RSTART	length($`)
+          SUBSEP	$;
+
+   * You cannot set $RS to a pattern, only a string.
+
+   * When in doubt, run the *awk* construct through a2p and see what it
+     gives you.
+
+
+C Traps
+-------
+
+Cerebral C programmers should take note of the following:
+
+   * Curly brackets are required on `if''s and `while''s.
+
+   * You must use `elsif' rather than `else if'.
+
+   * The `break' and continue keywords from C become in Perl last and
+     next, respectively.  Unlike in C, these do *NOT* work within a `do
+     { } while' construct.
+
+   * There's no switch statement.  (But it's easy to build one on the
+     fly.)
+
+   * Variables begin with "$" or "@" in Perl.
+
+   * `printf()' does not implement the "*" format for interpolating
+     field widths, but it's trivial to use interpolation of
+     double-quoted strings to achieve the same effect.
+
+   * Comments begin with "#", not "/*".
+
+   * You can't take the address of anything, although a similar operator
+     in Perl is the backslash, which creates a reference.
+
+   * `ARGV' must be capitalized.  `$ARGV[0]' is C's `argv[1]', and
+     `argv[0]' ends up in $0.
+
+   * System calls such as link(), unlink(), rename(), etc. return
+     nonzero for success, not 0.
+
+   * Signal handlers deal with signal names, not numbers.  Use `kill -l'
+     to find their names on your system.
+
+
+Sed Traps
+---------
+
+Seasoned *sed* programmers should take note of the following:
+
+   * Backreferences in substitutions use "$" rather than "\".
+
+   * The pattern matching metacharacters "(", ")", and "|" do not have
+     backslashes in front.
+
+   * The range operator is ..., rather than comma.
+
+
+Shell Traps
+-----------
+
+Sharp shell programmers should take note of the following:
+
+   * The backtick operator does variable interpolation without regard to
+     the presence of single quotes in the command.
+
+   * The backtick operator does no translation of the return value,
+     unlike *csh*.
+
+   * Shells (especially *csh*) do several levels of substitution on each
+     command line.  Perl does substitution in only certain constructs
+     such as double quotes, backticks, angle brackets, and search
+     patterns.
+
+   * Shells interpret scripts a little bit at a time.  Perl compiles the
+     entire program before executing it (except for BEGIN blocks, which
+     execute at compile time).
+
+   * The arguments are available via @ARGV, not $1, $2, etc.
+
+   * The environment is not automatically made available as separate
+     scalar variables.
+
+
+Perl Traps
+----------
+
+Practicing Perl Programmers should take note of the following:
+
+   * Remember that many operations behave differently in a list context
+     than they do in a scalar one.  See *Note Perldata: perldata, for
+     details.
+
+   * Avoid barewords if you can, especially all lowercase ones.  You
+     can't tell by just looking at it whether a bareword is a function
+     or a string.  By using quotes on strings and parentheses on
+     function calls, you won't ever get them confused.
+
+   * You cannot discern from mere inspection which builtins are unary
+     operators (like chop() and chdir()) and which are list operators
+     (like print() and unlink()).  (User-defined subroutines can be
+     *only* list operators, never unary ones.)  See *Note Perlop:
+     perlop,.
+
+   * People have a hard time remembering that some functions default to
+     $_, or @ARGV, or whatever, but that others which you might expect
+     to do not.
+
+   * The <FH> construct is not the name of the filehandle, it is a
+     readline operation on that handle.  The data read is assigned to $_
+     only if the file read is the sole condition in a while loop:
+
+          while (<FH>)      { }
+          while (defined($_ = <FH>)) { }..
+          <FH>;  # data discarded!
+
+   * Remember not to use "=" when you need "`=~'"; these two constructs
+     are quite different:
+
+          $x =  /foo/;
+          $x =~ /foo/;
+
+   * The `do {}' construct isn't a real loop that you can use loop
+     control on.
+
+   * Use my() for local variables whenever you can get away with it (but
+     see *Note Perlform: perlform, for where you can't).  Using
+     `local()' actually gives a local value to a global variable, which
+     leaves you open to unforeseen side-effects of dynamic scoping.
+
+   * If you localize an exported variable in a module, its exported
+     value will not change.  The local name becomes an alias to a new
+     value but the external name is still an alias for the original.
+
+
+Perl4 to Perl5 Traps
+--------------------
+
+Practicing Perl4 Programmers should take note of the following
+Perl4-to-Perl5 specific traps.
+
+They're crudely ordered according to the following list:
+
+Discontinuance, Deprecation, and BugFix traps
+     Anything that's been fixed as a perl4 bug, removed as a perl4
+     feature or deprecated as a perl4 feature with the intent to
+     encourage usage of some other perl5 feature.
+
+Parsing Traps
+     Traps that appear to stem from the new parser.
+
+Numerical Traps
+     Traps having to do with numerical or mathematical operators.
+
+General data type traps
+     Traps involving perl standard data types.
+
+Context Traps - scalar, list contexts
+     Traps related to context within lists, scalar
+     statements/declarations.
+
+Precedence Traps
+     Traps related to the precedence of parsing, evaluation, and
+     execution of code.
+
+General Regular Expression Traps using s///, etc.
+     Traps related to the use of pattern matching.
+
+Subroutine, Signal, Sorting Traps
+     Traps related to the use of signals and signal handlers, general
+     subroutines, and sorting, along with sorting subroutines.
+
+OS Traps
+     OS-specific traps.
+
+DBM Traps
+     Traps specific to the use of `dbmopen()', and specific dbm
+     implementations.
+
+Unclassified Traps
+     Everything else.
+
+If you find an example of a conversion trap that is not listed here,
+please submit it to Bill Middleton <`wjm@best.com'> for inclusion.  Also
+note that at least some of these can be caught with -w.
+
+
+Discontinuance, Deprecation, and BugFix traps
+---------------------------------------------
+
+Anything that has been discontinued, deprecated, or fixed as a bug from
+perl4.
+
+   * Discontinuance
+
+     Symbols starting with "_" are no longer forced into package main,
+     except for $_ itself (and `@_', etc.).
+
+          package test;
+          $_legacy = 1;
+
+          package main;
+          print "\$_legacy is ",$_legacy,"\n";
+
+          # perl4 prints: $_legacy is 1
+          # perl5 prints: $_legacy is
+
+   * Deprecation
+
+     Double-colon is now a valid package separator in a variable name.
+     Thus these behave differently in perl4 vs. perl5, because the
+     packages don't exist.
+
+          $a=1;$b=2;$c=3;$var=4;
+          print "$a::$b::$c ";
+          print "$var::abc::xyz\n";
+ 
+          # perl4 prints: 1::2::3 4::abc::xyz
+          # perl5 prints: 3
+
+     Given that `::' is now the preferred package delimiter, it is
+     debatable whether this should be classed as a bug or not.  (The
+     older package delimiter, ' ,is used here)
+
+          $x = 10 ;
+          print "x=${'x}\n" ;
+
+          # perl4 prints: x=10
+          # perl5 prints: Can't find string terminator "'" anywhere before EOF
+
+     You can avoid this problem, and remain compatible with perl4, if
+     you always explicitly include the package name:
+
+          $x = 10 ;
+          print "x=${main'x}\n" ;
+
+     Also see precedence traps, for parsing $:.
+
+   * BugFix
+
+     The second and third arguments of `splice()' are now evaluated in
+     scalar context (as the Camel says) rather than list context.
+
+          sub sub1{return(0,2) }          # return a 2-elem array
+          sub sub2{ return(1,2,3)}        # return a 3-elem array
+          @a1 = ("a","b","c","d","e");
+          @a2 = splice(@a1,&sub1,&sub2);
+          print join(' ',@a2),"\n";
+
+          # perl4 prints: a b
+          # perl5 prints: c d e
+
+   * Discontinuance
+
+     You can't do a goto into a block that is optimized away.  Darn.
+
+          goto marker1;
+
+          for(1){
+          marker1:
+              print "Here I is!\n";
+          }
+
+          # perl4 prints: Here I is!
+          # perl5 dumps core (SEGV)
+
+   * Discontinuance
+
+     It is no longer syntactically legal to use whitespace as the name
+     of a variable, or as a delimiter for any kind of quote construct.
+     Double darn.
+
+          $a = ("foo bar");
+          $b = q baz ;
+          print "a is $a, b is $b\n";
+
+          # perl4 prints: a is foo bar, b is baz
+          # perl5 errors: Bareword found where operator expected
+
+   * Discontinuance
+
+     The archaic while/if BLOCK BLOCK syntax is no longer supported.
+
+          if { 1 } {
+              print "True!";
+          }
+          else {
+              print "False!";
+          }
+
+          # perl4 prints: True!
+          # perl5 errors: syntax error at test.pl line 1, near "if {"
+
+   * BugFix
+
+     The `**' operator now binds more tightly than unary minus.  It was
+     documented to work this way before, but didn't.
+
+          print -4**2,"\n";
+
+          # perl4 prints: 16
+          # perl5 prints: -16
+
+   * Discontinuance
+
+     The meaning of `foreach{}' has changed slightly when it is
+     iterating over a list which is not an array.  This used to assign
+     the list to a temporary array, but no longer does so (for
+     efficiency).  This means that you'll now be iterating over the
+     actual values, not over copies of the values.  Modifications to the
+     loop variable can change the original values.
+
+          @list = ('ab','abc','bcd','def');
+          foreach $var (grep(/ab/,@list)){
+              $var = 1;
+          }
+          print (join(':',@list));
+
+          # perl4 prints: ab:abc:bcd:def
+          # perl5 prints: 1:1:bcd:def
+
+     To retain Perl4 semantics you need to assign your list explicitly
+     to a temporary array and then iterate over that.  For example, you
+     might need to change
+
+          foreach $var (grep(/ab/,@list)){
+
+     to
+
+          foreach $var (@tmp = grep(/ab/,@list)){
+
+     Otherwise changing $var will clobber the values of @list.  (This
+     most often happens when you use $_ for the loop variable, and call
+     subroutines in the loop that don't properly localize $_.)
+
+   * Discontinuance
+
+     split with no arguments now behaves like `split ' '' (which doesn't
+     return an initial null field if $_ starts with whitespace), it used
+     to behave like `split /\s+/' (which does).
+
+          $_ = ' hi mom';
+          print join(':', split);
+
+          # perl4 prints: :hi:mom
+          # perl5 prints: hi:mom
+
+   * BugFix
+
+     Perl 4 would ignore any text which was attached to an -e switch,
+     always taking the code snippet from the following arg.
+     Additionally, it would silently accept an -e switch without a
+     following arg.  Both of these behaviors have been fixed.
+
+          perl -e'print "attached to -e"' 'print "separate arg"'
+
+          # perl4 prints: separate arg
+          # perl5 prints: attached to -e
+
+          perl -e
+
+          # perl4 prints:
+          # perl5 dies: No code specified for -e.
+
+   * Discontinuance
+
+     In Perl 4 the return value of push was undocumented, but it was
+     actually the last value being pushed onto the target list.  In Perl
+     5 the return value of push is documented, but has changed, it is
+     the number of elements in the resulting list.
+
+          @x = ('existing');
+          print push(@x, 'first new', 'second new');
+
+          # perl4 prints: second new
+          # perl5 prints: 3
+
+   * Discontinuance
+
+     In Perl 4 (and versions of Perl 5 before 5.004), `'\r'' characters
+     in Perl code were silently allowed, although they could cause
+     (mysterious!)  failures in certain constructs, particularly here
+     documents.  Now, `'\r'' characters cause an immediate fatal error.
+     (Note: In this example, the notation *\015* represents the
+     incorrect line ending. Depending upon your text viewer, it will
+     look different.)
+
+          print "foo";\015
+          print "bar";
+
+          # perl4     prints: foobar
+          # perl5.003 prints: foobar
+          # perl5.004 dies: Illegal character \015 (carriage return)
+
+     See *Note Perldiag: perldiag, for full details.
+
+   * Deprecation
+
+     Some error messages will be different.
+
+   * Discontinuance
+
+     Some bugs may have been inadvertently removed.  :-)
+
+
+Parsing Traps
+-------------
+
+Perl4-to-Perl5 traps from having to do with parsing.
+
+   * Parsing
+
+     Note the space between . and =
+
+          $string . = "more string";
+          print $string;
+
+          # perl4 prints: more string
+          # perl5 prints: syntax error at - line 1, near ". ="
+
+   * Parsing
+
+     Better parsing in perl 5
+
+          sub foo {}
+          &foo
+          print("hello, world\n");
+
+          # perl4 prints: hello, world
+          # perl5 prints: syntax error
+
+   * Parsing
+
+     "if it looks like a function, it is a function" rule.
+
+          print
+            ($foo == 1) ? "is one\n" : "is zero\n";
+
+          # perl4 prints: is zero
+          # perl5 warns: "Useless use of a constant in void context" if using -w
+
+
+Numerical Traps
+---------------
+
+Perl4-to-Perl5 traps having to do with numerical operators, operands, or
+output from same.
+
+   * Numerical
+
+     Formatted output and significant digits
+
+          print 7.373504 - 0, "\n";
+          printf "%20.18f\n", 7.373504 - 0;
+
+          # Perl4 prints:
+          7.375039999999996141
+          7.37503999999999614
+
+          # Perl5 prints:
+          7.373504
+          7.37503999999999614
+
+   * Numerical
+
+     This specific item has been deleted.  It demonstrated how the
+     auto-increment operator would not catch when a number went over the
+     signed int limit.  Fixed in version 5.003_04.  But always be wary
+     when using large integers.  If in doubt:
+
+          use Math::BigInt;
+
+   * Numerical
+
+     Assignment of return values from numeric equality tests does not
+     work in perl5 when the test evaluates to false (0).  Logical tests
+     now return an null, instead of 0
+
+          $p = ($test == 1);
+          print $p,"\n";
+
+          # perl4 prints: 0
+          # perl5 prints:
+
+     Also see `"General Regular Expression Traps using s' in this node
+     for another example of this new feature...
+
+
+General data type traps
+-----------------------
+
+Perl4-to-Perl5 traps involving most data-types, and their usage within
+certain expressions and/or context.
+
+   * (Arrays)
+
+     Negative array subscripts now count from the end of the array.
+
+          @a = (1, 2, 3, 4, 5);
+          print "The third element of the array is $a[3] also expressed as $a[-2] \n";
+
+          # perl4 prints: The third element of the array is 4 also expressed as
+          # perl5 prints: The third element of the array is 4 also expressed as 4
+
+   * (Arrays)
+
+     Setting `$#array' lower now discards array elements, and makes them
+     impossible to recover.
+
+          @a = (a,b,c,d,e);
+          print "Before: ",join('',@a);
+          $#a =1;
+          print ", After: ",join('',@a);
+          $#a =3;
+          print ", Recovered: ",join('',@a),"\n";
+
+          # perl4 prints: Before: abcde, After: ab, Recovered: abcd
+          # perl5 prints: Before: abcde, After: ab, Recovered: ab
+
+   * (Hashes)
+
+     Hashes get defined before use
+
+          local($s,@a,%h);
+          die "scalar \$s defined" if defined($s);
+          die "array \@a defined" if defined(@a);
+          die "hash \%h defined" if defined(%h);
+
+          # perl4 prints:
+          # perl5 dies: hash %h defined
+
+   * (Globs)
+
+     glob assignment from variable to variable will fail if the assigned
+     variable is localized subsequent to the assignment
+
+          @a = ("This is Perl 4");
+          *b = *a;
+          local(@a);
+          print @b,"\n";
+
+          # perl4 prints: This is Perl 4
+          # perl5 prints:
+
+          # Another example
+
+          *fred = *barney; # fred is aliased to barney
+          @barney = (1, 2, 4);
+          # @fred;
+          print "@fred";  # should print "1, 2, 4"
+
+          # perl4 prints: 1 2 4
+          # perl5 prints: In string, @fred now must be written as \@fred
+
+   * (Scalar String)
+
+     Changes in unary negation (of strings) This change effects both the
+     return value and what it does to auto(magic)increment.
+
+          $x = "aaa";
+          print ++$x," : ";
+          print -$x," : ";
+          print ++$x,"\n";
+
+          # perl4 prints: aab : -0 : 1
+          # perl5 prints: aab : -aab : aac
+
+   * (Constants)
+
+     perl 4 lets you modify constants:
+
+          $foo = "x";
+          &mod($foo);
+          for ($x = 0; $x < 3; $x++) {
+              &mod("a");
+          }
+          sub mod {
+              print "before: $_[0]";
+              $_[0] = "m";
+              print "  after: $_[0]\n";
+          }
+
+          # perl4:
+          # before: x  after: m
+          # before: a  after: m
+          # before: m  after: m
+          # before: m  after: m
+
+          # Perl5:
+          # before: x  after: m
+          # Modification of a read-only value attempted at foo.pl line 12.
+          # before: a
+
+   * (Scalars)
+
+     The behavior is slightly different for:
+
+          print "$x", defined $x
+
+          # perl 4: 1
+          # perl 5: <no output, $x is not called into existence>
+
+   * (Variable Suicide)
+
+     Variable suicide behavior is more consistent under Perl 5.  Perl5
+     exhibits the same behavior for hashes and scalars, that perl4
+     exhibits for only scalars.
+
+          $aGlobal{ "aKey" } = "global value";
+          print "MAIN:", $aGlobal{"aKey"}, "\n";
+          $GlobalLevel = 0;
+          &test( *aGlobal );
+
+          sub test {
+              local( *theArgument ) = @_;
+              local( %aNewLocal ); # perl 4 != 5.001l,m
+              $aNewLocal{"aKey"} = "this should never appear";
+              print "SUB: ", $theArgument{"aKey"}, "\n";
+              $aNewLocal{"aKey"} = "level $GlobalLevel";   # what should print
+              $GlobalLevel++;
+              if( $GlobalLevel<4 ) {
+                  &test( *aNewLocal );
+              }
+          }
+
+          # Perl4:
+          # MAIN:global value
+          # SUB: global value
+          # SUB: level 0
+          # SUB: level 1
+          # SUB: level 2
+
+          # Perl5:
+          # MAIN:global value
+          # SUB: global value
+          # SUB: this should never appear
+          # SUB: this should never appear
+          # SUB: this should never appear
+
+
+Context Traps - scalar, list contexts
+-------------------------------------
+
+   * (list context)
+
+     The elements of argument lists for formats are now evaluated in
+     list context.  This means you can interpolate list values now.
+
+          @fmt = ("foo","bar","baz");
+          format STDOUT=
+          @<<<<< @||||| @>>>>>
+          @fmt;
+          .
+          write;
+
+          # perl4 errors:  Please use commas to separate fields in file
+          # perl5 prints: foo     bar      baz
+
+   * (scalar context)
+
+     The `caller()' function now returns a false value in a scalar
+     context if there is no caller.  This lets library files determine
+     if they're being required.
+
+          caller() ? (print "You rang?\n") : (print "Got a 0\n");
+
+          # perl4 errors: There is no caller
+          # perl5 prints: Got a 0
+
+   * (scalar context)
+
+     The comma operator in a scalar context is now guaranteed to give a
+     scalar context to its arguments.
+
+          @y= ('a','b','c');
+          $x = (1, 2, @y);
+          print "x = $x\n";
+
+          # Perl4 prints:  x = c   # Thinks list context interpolates list
+          # Perl5 prints:  x = 3   # Knows scalar uses length of list
+
+   * (list, builtin)
+
+     `sprintf()' funkiness (array argument converted to scalar array
+     count) This test could be added to t/op/sprintf.t
+
+          @z = ('%s%s', 'foo', 'bar');
+          $x = sprintf(@z);
+          if ($x eq 'foobar') {print "ok 2\n";} else {print "not ok 2 '$x'\n";}
+
+          # perl4 prints: ok 2
+          # perl5 prints: not ok 2
+
+     `printf()' works fine, though:
+
+          printf STDOUT (@z);
+          print "\n";
+
+          # perl4 prints: foobar
+          # perl5 prints: foobar
+
+     Probably a bug.
+
+
+Precedence Traps
+----------------
+
+Perl4-to-Perl5 traps involving precedence order.
+
+   * Precedence
+
+     LHS vs. RHS of any assignment operator.  LHS is evaluated first in
+     perl4, second in perl5; this can affect the relationship between
+     side-effects in sub-expressions.
+
+          @arr = ( 'left', 'right' );
+          $a{shift @arr} = shift @arr;
+          print join( ' ', keys %a );
+
+          # perl4 prints: left
+          # perl5 prints: right
+
+   * Precedence
+
+     These are now semantic errors because of precedence:
+
+          @list = (1,2,3,4,5);
+          %map = ("a",1,"b",2,"c",3,"d",4);
+          $n = shift @list + 2;   # first item in list plus 2
+          print "n is $n, ";
+          $m = keys %map + 2;     # number of items in hash plus 2
+          print "m is $m\n";
+
+          # perl4 prints: n is 3, m is 6
+          # perl5 errors and fails to compile
+
+   * Precedence
+
+     The precedence of assignment operators is now the same as the
+     precedence of assignment.  Perl 4 mistakenly gave them the
+     precedence of the associated operator.  So you now must
+     parenthesize them in expressions like
+
+          /foo/ ? ($a += 2) : ($a -= 2);
+
+     Otherwise
+
+          /foo/ ? $a += 2 : $a -= 2
+
+     would be erroneously parsed as
+
+          (/foo/ ? $a += 2 : $a) -= 2;
+
+     On the other hand,
+
+          $a += /foo/ ? 1 : 2;
+
+     now works as a C programmer would expect.
+
+   * Precedence
+          open FOO || die;
+
+
+     is now incorrect.  You need parentheses around the filehandle.
+     Otherwise, perl5 leaves the statement as its default precedence:
+
+          open(FOO || die);
+
+          # perl4 opens or dies
+          # perl5 errors: Precedence problem: open FOO should be open(FOO)
+
+   * Precedence
+
+     perl4 gives the special variable, $: precedence, where perl5 treats
+     `$::' as main package
+
+          $a = "x"; print "$::a";
+
+          # perl 4 prints: -:a
+          # perl 5 prints: x
+
+   * Precedence
+
+     concatenation precedence over filetest operator?
+
+          -e $foo .= "q"
+
+          # perl4 prints: no output
+          # perl5 prints: Can't modify -e in concatenation
+
+
+General Regular Expression Traps using s///, etc.
+-------------------------------------------------
+
+All types of RE traps.
+
+   * Regular Expression
+
+     `s'$lhs'$rhs'' now does no interpolation on either side.  It used
+     to interpolate `$lhs' but not `$rhs'.  (And still does not match a
+     literal '$' in string)
+
+          $a=1;$b=2;
+          $string = '1 2 $a $b';
+          $string =~ s'$a'$b';
+          print $string,"\n";
+
+          # perl4 prints: $b 2 $a $b
+          # perl5 prints: 1 2 $a $b
+
+   * Regular Expression
+
+     `m//g' now attaches its state to the searched string rather than
+     the regular expression.  (Once the scope of a block is left for the
+     sub, the state of the searched string is lost)
+
+          $_ = "ababab";
+          while(m/ab/g){
+              &doit("blah");
+          }
+          sub doit{local($_) = shift; print "Got $_ "}
+
+          # perl4 prints: blah blah blah
+          # perl5 prints: infinite loop blah...
+
+   * Regular Expression
+
+     Currently, if you use the `m//o' qualifier on a regular expression
+     within an anonymous sub, all closures generated from that anonymous
+     sub will use the regular expression as it was compiled when it was
+     used the very first time in any such closure.  For instance, if you
+     say
+
+          sub build_match {
+              my($left,$right) = @_;
+              return sub { $_[0] =~ /$left stuff $right/o; };
+          }
+
+     build_match() will always return a sub which matches the contents
+     of `$left' and `$right' as they were the *first* time that
+     build_match() was called, not as they are in the current call.
+
+     This is probably a bug, and may change in future versions of Perl.
+
+   * Regular Expression
+
+     If no parentheses are used in a match, Perl4 sets $+ to the whole
+     match, just like $&. Perl5 does not.
+
+          "abcdef" =~ /b.*e/;
+          print "\$+ = $+\n";
+
+          # perl4 prints: bcde
+          # perl5 prints:
+
+   * Regular Expression
+
+     substitution now returns the null string if it fails
+
+          $string = "test";
+          $value = ($string =~ s/foo//);
+          print $value, "\n";
+
+          # perl4 prints: 0
+          # perl5 prints:
+
+     Also see `Numerical Traps' in this node for another example of this
+     new feature.
+
+   * Regular Expression
+
+     `s`lhs`rhs`' (using backticks) is now a normal substitution, with
+     no backtick expansion
+
+          $string = "";
+          $string =~ s`^`hostname`;
+          print $string, "\n";
+
+          # perl4 prints: <the local hostname>
+          # perl5 prints: hostname
+
+   * Regular Expression
+
+     Stricter parsing of variables used in regular expressions
+
+          s/^([^$grpc]*$grpc[$opt$plus$rep]?)//o;
+
+          # perl4: compiles w/o error
+          # perl5: with Scalar found where operator expected ..., near "$opt$plus"
+
+     an added component of this example, apparently from the same
+     script, is the actual value of the s'd string after the
+     substitution.  `[$opt]' is a character class in perl4 and an array
+     subscript in perl5
+
+          $grpc = 'a';
+          $opt  = 'r';
+          $_ = 'bar';
+          s/^([^$grpc]*$grpc[$opt]?)/foo/;
+          print ;
+
+          # perl4 prints: foo
+          # perl5 prints: foobar
+
+   * Regular Expression
+
+     Under perl5, `m?x?' matches only once, like `?x?'. Under perl4, it
+     matched repeatedly, like `/x/' or `m!x!'.
+
+          $test = "once";
+          sub match { $test =~ m?once?; }
+          &match();
+          if( &match() ) {
+              # m?x? matches more then once
+              print "perl4\n";
+          } else {
+              # m?x? matches only once
+              print "perl5\n";
+          }
+
+          # perl4 prints: perl4
+          # perl5 prints: perl5
+
+   * Regular Expression
+
+     Under perl4 and upto version 5.003, a failed `m//g' match used to
+     reset the internal iterator, so that subsequent `m//g' match
+     attempts began from the beginning of the string.  In perl version
+     5.004 and later, failed `m//g' matches do not reset the iterator
+     position (which can be found using the `pos()' function--see `pos',
+     *Note Perlfunc: perlfunc,).
+
+          $test = "foop";
+          for (1..3) {
+              print $1 while ($test =~ /(o)/g);
+              # pos $test = 0;     # to get old behavior
+          }
+
+          # perl4     prints: oooooo
+          # perl5.004 prints: oo
+
+     You may always reset the iterator yourself as shown in the
+     commented line to get the old behavior.
+
+
+Subroutine, Signal, Sorting Traps
+---------------------------------
+
+The general group of Perl4-to-Perl5 traps having to do with Signals,
+Sorting, and their related subroutines, as well as general subroutine
+traps.  Includes some OS-Specific traps.
+
+   * (Signals)
+
+     Barewords that used to look like strings to Perl will now look like
+     subroutine calls if a subroutine by that name is defined before the
+     compiler sees them.
+
+          sub SeeYa { warn"Hasta la vista, baby!" }
+          $SIG{'TERM'} = SeeYa;
+          print "SIGTERM is now $SIG{'TERM'}\n";
+
+          # perl4 prints: SIGTERM is main'SeeYa
+          # perl5 prints: SIGTERM is now main::1
+
+     Use -w to catch this one
+
+   * (Sort Subroutine)
+
+     reverse is no longer allowed as the name of a sort subroutine.
+
+          sub reverse{ print "yup "; $a <=> $b }
+          print sort reverse a,b,c;
+
+          # perl4 prints: yup yup yup yup abc
+          # perl5 prints: abc
+
+   * warn() won't let you specify a filehandle.
+
+     Although it _always_ printed to STDERR, warn() would let you
+     specify a filehandle in perl4.  With perl5 it does not.
+
+          warn STDERR "Foo!";
+
+          # perl4 prints: Foo!
+          # perl5 prints: String found where operator expected
+
+
+OS Traps
+--------
+
+   * (SysV)
+
+     Under HPUX, and some other SysV OSes, one had to reset any signal
+     handler, within the signal handler function, each time a signal was
+     handled with perl4.  With perl5, the reset is now done correctly.
+     Any code relying on the handler _not_ being reset will have to be
+     reworked.
+
+     Since version 5.002, Perl uses sigaction() under SysV.
+
+          sub gotit {
+              print "Got @_... ";
+          }
+          $SIG{'INT'} = 'gotit';
+
+          $| = 1;
+          $pid = fork;
+          if ($pid) {
+              kill('INT', $pid);
+              sleep(1);
+              kill('INT', $pid);
+          } else {
+              while (1) {sleep(10);}
+          }
+
+          # perl4 (HPUX) prints: Got INT...
+          # perl5 (HPUX) prints: Got INT... Got INT...
+
+   * (SysV)
+
+     Under SysV OSes, `seek()' on a file opened to append `>>' now does
+     the right thing w.r.t. the fopen() manpage. e.g., - When a file is
+     opened for append, it is impossible to overwrite information
+     already in the file.
+
+          open(TEST,">>seek.test");
+          $start = tell TEST ;
+          foreach(1 .. 9){
+              print TEST "$_ ";
+          }
+          $end = tell TEST ;
+          seek(TEST,$start,0);
+          print TEST "18 characters here";
+
+          # perl4 (solaris) seek.test has: 18 characters here
+          # perl5 (solaris) seek.test has: 1 2 3 4 5 6 7 8 9 18 characters here
+
+
+Interpolation Traps
+-------------------
+
+Perl4-to-Perl5 traps having to do with how things get interpolated
+within certain expressions, statements, contexts, or whatever.
+
+   * Interpolation
+
+     @ now always interpolates an array in double-quotish strings.
+
+          print "To: someone@somewhere.com\n";
+
+          # perl4 prints: To:someone@somewhere.com
+          # perl5 errors : In string, @somewhere now must be written as \@somewhere
+
+   * Interpolation
+
+     Double-quoted strings may no longer end with an unescaped $ or @.
+
+          $foo = "foo$";
+          $bar = "bar@";
+          print "foo is $foo, bar is $bar\n";
+
+          # perl4 prints: foo is foo$, bar is bar@
+          # perl5 errors: Final $ should be \$ or $name
+
+     Note: perl5 DOES NOT error on the terminating @ in $bar
+
+   * Interpolation
+
+     Perl now sometimes evaluates arbitrary expressions inside braces
+     that occur within double quotes (usually when the opening brace is
+     preceded by `$' or `@').
+
+          @www = "buz";
+          $foo = "foo";
+          $bar = "bar";
+          sub foo { return "bar" };
+          print "|@{w.w.w}|${main'foo}|";
+
+          # perl4 prints: |@{w.w.w}|foo|
+          # perl5 prints: |buz|bar|
+
+     Note that you can `use strict;' to ward off such trappiness under
+     perl5.
+
+   * Interpolation
+
+     The construct "this is $$x" used to interpolate the pid at that
+     point, but now apparently tries to dereference `$x'.  $$ by itself
+     still works fine, however.
+
+          print "this is $$x\n";
+
+          # perl4 prints: this is XXXx   (XXX is the current pid)
+          # perl5 prints: this is
+
+   * Interpolation
+
+     Creation of hashes on the fly with `eval "EXPR"' now requires
+     either both `$''s to be protected in the specification of the hash
+     name, or both curlies to be protected.  If both curlies are
+     protected, the result will be compatible with perl4 and perl5.
+     This is a very common practice, and should be changed to use the
+     block form of `eval{}' if possible.
+
+          $hashname = "foobar";
+          $key = "baz";
+          $value = 1234;
+          eval "\$$hashname{'$key'} = q|$value|";
+          (defined($foobar{'baz'})) ?  (print "Yup") : (print "Nope");
+
+          # perl4 prints: Yup
+          # perl5 prints: Nope
+
+     Changing
+
+          eval "\$$hashname{'$key'} = q|$value|";
+
+     to
+
+          eval "\$\$hashname{'$key'} = q|$value|";
+
+     causes the following result:
+
+          # perl4 prints: Nope
+          # perl5 prints: Yup
+
+     or, changing to
+
+          eval "\$$hashname\{'$key'\} = q|$value|";
+
+     causes the following result:
+
+          # perl4 prints: Yup
+          # perl5 prints: Yup
+          # and is compatible for both versions
+
+   * Interpolation
+
+     perl4 programs which unconsciously rely on the bugs in earlier perl
+     versions.
+
+          perl -e '$bar=q/not/; print "This is $foo{$bar} perl5"'
+
+          # perl4 prints: This is not perl5
+          # perl5 prints: This is perl5
+
+   * Interpolation
+
+     You also have to be careful about array references.
+
+          print "$foo{"
+
+          perl 4 prints: {
+          perl 5 prints: syntax error
+
+   * Interpolation
+
+     Similarly, watch out for:
+
+          $foo = "array";
+          print "\$$foo{bar}\n";
+
+          # perl4 prints: $array{bar}
+          # perl5 prints: $
+
+     Perl 5 is looking for `$array{bar}' which doesn't exist, but perl 4
+     is happy just to expand $foo to "array" by itself.  Watch out for
+     this especially in eval's.
+
+   * Interpolation
+
+     `qq()' string passed to eval
+
+          eval qq(
+              foreach \$y (keys %\$x\) {
+                  \$count++;
+              }
+          );
+
+          # perl4 runs this ok
+          # perl5 prints: Can't find string terminator ")"
+
+
+DBM Traps
+---------
+
+General DBM traps.
+
+   * DBM
+
+     Existing dbm databases created under perl4 (or any other dbm/ndbm
+     tool) may cause the same script, run under perl5, to fail.  The
+     build of perl5 must have been linked with the same dbm/ndbm as the
+     default for `dbmopen()' to function properly without tie'ing to an
+     extension dbm implementation.
+
+          dbmopen (%dbm, "file", undef);
+          print "ok\n";
+
+          # perl4 prints: ok
+          # perl5 prints: ok (IFF linked with -ldbm or -lndbm)
+
+   * DBM
+
+     Existing dbm databases created under perl4 (or any other dbm/ndbm
+     tool) may cause the same script, run under perl5, to fail.  The
+     error generated when exceeding the limit on the key/value size will
+     cause perl5 to exit immediately.
+
+          dbmopen(DB, "testdb",0600) || die "couldn't open db! $!";
+          $DB{'trap'} = "x" x 1024;  # value too large for most dbm/ndbm
+          print "YUP\n";
+
+          # perl4 prints:
+          dbm store returned -1, errno 28, key "trap" at - line 3.
+          YUP
+
+          # perl5 prints:
+          dbm store returned -1, errno 28, key "trap" at - line 3.
+
+
+Unclassified Traps
+------------------
+
+Everything else.
+
+   * Unclassified
+
+     require/do trap using returned value
+
+     If the file doit.pl has:
+
+          sub foo {
+              $rc = do "./do.pl";
+              return 8;
+          }
+          print &foo, "\n";
+
+     And the do.pl file has the following single line:
+
+          return 3;
+
+     Running doit.pl gives the following:
+
+          # perl 4 prints: 3 (aborts the subroutine early)
+          # perl 5 prints: 8
+
+     Same behavior if you replace do with require.
+
+As always, if any of these are ever officially declared as bugs, they'll
+be fixed and removed.
+
+
+
+
+File: perl.info, Node: perlpod, Next: perlbook, Prev: perlstyle, Up: Top
+
+plain old documentation
+***********************
+
+
+
+NAME
+====
+
+perlpod - plain old documentation
+
+
+DESCRIPTION
+===========
+
+A pod-to-whatever translator reads a pod file paragraph by paragraph,
+and translates it to the appropriate output format.  There are three
+kinds of paragraphs:
+
+   * A verbatim paragraph, distinguished by being indented (that is, it
+     starts with space or tab).  It should be reproduced exactly, with
+     tabs assumed to be on 8-column boundaries.  There are no special
+     formatting escapes, so you can't italicize or anything like that.
+     A \ means \, and nothing else.
+
+   * A command.  All command paragraphs start with "=", followed by an
+     identifier, followed by arbitrary text that the command can use
+     however it pleases.  Currently recognized commands are
+
+          =head1 heading
+          =head2 heading
+          =item text
+          =over N
+          =back
+          =cut
+          =pod
+          =for X
+          =begin X
+          =end X
+
+     The "=pod" directive does nothing beyond telling the compiler to
+     lay off parsing code through the next "=cut".  It's useful for
+     adding another paragraph to the doc if you're mixing up code and
+     pod a lot.
+
+     Head1 and head2 produce first and second level headings, with the
+     text in the same paragraph as the "=headn" directive forming the
+     heading description.
+
+     Item, over, and back require a little more explanation: "=over"
+     starts a section specifically for the generation of a list using
+     "=item" commands. At the end of your list, use "=back" to end
+     it. You will probably want to give "4" as the number to "=over", as
+     some formatters will use this for indentation.  This should
+     probably be a default. Note also that there are some basic rules to
+     using =item: don't use them outside of an =over/=back block, use at
+     least one inside an =over/=back block, you don't _have_ to include
+     the =back if the list just runs off the document, and perhaps most
+     importantly, keep the items consistent: either use "=item *" for
+     all of them, to produce bullets, or use "=item 1.", "=item 2.",
+     etc., to produce numbered lists, or use "=item foo", "=item bar",
+     etc., i.e., things that looks nothing like bullets or numbers. If
+     you start with bullets or numbers, stick with them, as many
+     formatters use the first "=item" type to decide how to format the
+     list.
+
+     For, begin, and end let you include sections that are not
+     interpreted as pod text, but passed directly to particular
+     formatters. A formatter that can utilize that format will use the
+     section, otherwise it will be completely ignored.  The directive
+     "=for" specifies that the entire next paragraph is in the format
+     indicated by the first word after "=for", like this:
+
+          =for html <br>
+           <p> This is a raw HTML paragraph </p>
+
+     The paired commands "=begin" and "=end" work very similarly to
+     "=for", but instead of only accepting a single paragraph, all text
+     from "=begin" to a paragraph with a matching "=end" are treated as
+     a particular format.
+
+     Here are some examples of how to use these:
+
+          =begin html
+
+          <br>Figure 1.<IMG SRC="figure1.png"><br>
+
+          =end html
+
+          =begin text
+
+          ---------------
+          |  foo        |
+          |        bar  |
+          ---------------
+
+          ^^^^ Figure 1. ^^^^
+
+          =end text
+
+     Some format names that formatters currently are known to accept
+     include "roff", "man", "latex", "tex", "text", and "html". (Some
+     formatters will treat some of these as synonyms.)
+
+     And don't forget, when using any command, that the command lasts up
+     until the end of the *paragraph*, not the line. Hence in the
+     examples below, you can see the empty lines after each command to
+     end its paragraph.
+
+     Some examples of lists include:
+
+          =over 4
+
+          =item *
+
+          First item
+
+          =item *
+
+          Second item
+
+          =back
+
+          =over 4
+
+          =item Foo()
+
+          Description of Foo function
+
+          =item Bar()
+
+          Description of Bar function
+
+          =back
+
+   * An ordinary block of text.  It will be filled, and maybe even
+     justified.  Certain interior sequences are recognized both here and
+     in commands:
+
+          I<text>     italicize text, used for emphasis or variables
+          B<text>     embolden text, used for switches and programs
+          S<text>     text contains non-breaking spaces
+          C<code>	literal code
+          L<name>     A link (cross reference) to name
+          		    L<name>		manual page
+          		    L<name/ident>	item in manual page
+          		    L<name/"sec">	section in other manual page
+          		    L<"sec">		section in this manual page
+          					(the quotes are optional)
+          		    L</"sec">		ditto
+          F<file>	Used for filenames
+          X<index>	An index entry
+          Z<>		A zero-width character
+          E<escape>   A named character (very similar to HTML escapes)
+          		    Less_Than_Special_Sequence		A literal <
+          		    Greater_Than_Special_Sequence		A literal >
+          		    (these are optional except in other interior
+          		     sequences and when preceded by a capital letter)
+          		    E<n>		Character number n (probably in ASCII)
+          	    	    E<html>		Some non-numeric HTML entity, such
+          					as E<Agrave>
+
+That's it.  The intent is simplicity, not power.  I wanted paragraphs to
+look like paragraphs (block format), so that they stand out visually,
+and so that I could run them through fmt easily to reformat them (that's
+F7 in my version of *vi*).  I wanted the translator (and not me) to
+worry about whether " or ' is a left quote or a right quote within
+filled text, and I wanted it to leave the quotes alone, dammit, in
+verbatim mode, so I could slurp in a working program, shift it over 4
+spaces, and have it print out, er, verbatim.  And presumably in a
+constant width font.
+
+In particular, you can leave things like this verbatim in your text:
+
+     Perl
+     FILEHANDLE
+     $variable
+     function()
+     manpage(3r)
+
+Doubtless a few other commands or sequences will need to be added along
+the way, but I've gotten along surprisingly well with just these.
+
+Note that I'm not at all claiming this to be sufficient for producing a
+book.  I'm just trying to make an idiot-proof common source for nroff,
+TeX, and other markup languages, as used for online documentation.
+Translators exist for pod2man (that's for nroff(1) and troff(1)),
+pod2html, *pod2latex*, and *pod2fm*.
+
+
+Embedding Pods in Perl Modules
+==============================
+
+You can embed pod documentation in your Perl scripts.  Start your
+documentation with a "=head1" command at the beginning, and end it with
+a "=cut" command.  Perl will ignore the pod text.  See any of the
+supplied library modules for examples.  If you're going to put your pods
+at the end of the file, and you're using an __END__ or __DATA__ cut
+mark, make sure to put an empty line there before the first pod
+directive.
+
+     __END__
+
+     =head1 NAME
+
+     modern - I am a modern module
+
+If you had not had that empty line there, then the translators wouldn't
+have seen it.
+
+
+Common Pod Pitfalls
+===================
+
+   * Pod translators usually will require paragraphs to be separated by
+     completely empty lines.  If you have an apparently empty line with
+     some spaces on it, this can cause odd formatting.
+
+   * Translators will mostly add wording around a L<> link, so that
+     `L<foo(1)>' becomes "the foo(1) manpage", for example (see pod2man
+     for details).  Thus, you shouldn't write things like `the L<foo>
+     manpage', if you want the translated document to read sensibly.
+
+   * The script `pod/checkpods.PL' in the Perl source distribution
+     provides skeletal checking for lines that look empty but aren't
+     *only*, but is there as a placeholder until someone writes
+     Pod::Checker.  The best way to check your pod is to pass it through
+     one or more translators and proofread the result, or print out the
+     result and proofread that.  Some of the problems found may be bugs
+     in the translators, which you may or may not wish to work around.
+
+
+SEE ALSO
+========
+
+`pod2man' in this node and `"PODs: Embedded Documentation"', *Note
+Perlsyn: perlsyn,
+
+
+AUTHOR
+======
+
+Larry Wall
+
+
+
+
+File: perl.info, Node: perlmod, Next: perlmodlib, Prev: perlsub, Up: Top
+
+Perl modules (packages and symbol tables)
+*****************************************
+
+
+
+NAME
+====
+
+perlmod - Perl modules (packages and symbol tables)
+
+
+DESCRIPTION
+===========
+
+
+Packages
+--------
+
+Perl provides a mechanism for alternative namespaces to protect packages
+from stomping on each other's variables.  In fact, apart from certain
+magical variables, there's really no such thing as a global variable
+in Perl.  The package statement declares the compilation unit as
+being in the given namespace.  The scope of the package declaration
+is from the declaration itself through the end of the enclosing block,
+eval, sub, or end of file, whichever comes first (the same scope
+as the my() and local() operators).  All further unqualified dynamic
+identifiers will be in this namespace.  A package statement affects
+only dynamic variables--including those you've used local() on--but
+*not* lexical variables created with my().  Typically it would be
+the first declaration in a file to be included by the require or use
+operator.  You can switch into a package in more than one place; it
+influences merely which symbol table is used by the compiler for the
+rest of that block.  You can refer to variables and filehandles in other
+packages by prefixing the identifier with the package name and a double
+colon: `$Package::Variable'.  If the package name is null, the `main'
+package is assumed.  That is, `$::sail' is equivalent to `$main::sail'.
+
+(The old package delimiter was a single quote, but double colon is now
+the preferred delimiter, in part because it's more readable to humans,
+and in part because it's more readable to *emacs* macros.  It also makes
+C++ programmers feel like they know what's going on.)
+
+Packages may be nested inside other packages: `$OUTER::INNER::var'.
+This implies nothing about the order of name lookups, however.  All
+symbols are either local to the current package, or must be fully
+qualified from the outer package name down.  For instance, there is
+nowhere within package `OUTER' that `$INNER::var' refers to
+`$OUTER::INNER::var'.  It would treat package `INNER' as a totally
+separate global package.
+
+Only identifiers starting with letters (or underscore) are stored in a
+package's symbol table.  All other symbols are kept in package `main',
+including all of the punctuation variables like $_.  In addition, the
+identifiers STDIN, STDOUT, STDERR, ARGV, ARGVOUT, ENV, INC, and SIG are
+forced to be in package `main', even when used for other purposes than
+their builtin one.  Note also that, if you have a package called m, s,
+or `y', then you can't use the qualified form of an identifier because
+it will be interpreted instead as a pattern match, a substitution, or a
+translation.
+
+(Variables beginning with underscore used to be forced into package
+main, but we decided it was more useful for package writers to be able
+to use leading underscore to indicate private variables and method
+names.  $_ is still global though.)
+
+Eval()ed strings are compiled in the package in which the eval() was
+compiled.  (Assignments to `$SIG{}', however, assume the signal handler
+specified is in the `main' package.  Qualify the signal handler name if
+you wish to have a signal handler in a package.)  For an example,
+examine `perldb.pl' in the Perl library.  It initially switches to the
+`DB' package so that the debugger doesn't interfere with variables in
+the script you are trying to debug.  At various points, however, it
+temporarily switches back to the `main' package to evaluate various
+expressions in the context of the `main' package (or wherever you came
+from).  See *Note Perldebug: perldebug,.
+
+The special symbol __PACKAGE__ contains the current package, but cannot
+(easily) be used to construct variables.
+
+See *Note Perlsub: perlsub, for other scoping issues related to my() and
+local(), and *Note Perlref: perlref, regarding closures.
+
+
+Symbol Tables
+-------------
+
+The symbol table for a package happens to be stored in the hash of that
+name with two colons appended.  The main symbol table's name is thus
+`%main::', or `%::' for short.  Likewise symbol table for the nested
+package mentioned earlier is named `%OUTER::INNER::'.
+
+The value in each entry of the hash is what you are referring to when
+you use the `*name' typeglob notation.  In fact, the following have the
+same effect, though the first is more efficient because it does the
+symbol table lookups at compile time:
+
+     local *main::foo    = *main::bar;
+     local $main::{foo}  = $main::{bar};
+
+You can use this to print out all the variables in a package, for
+instance.  Here is `dumpvar.pl' from the Perl library:
+
+     package dumpvar;
+     sub main::dumpvar {
+         ($package) = @_;
+         local(*stab) = eval("*${package}::");
+         while (($key,$val) = each(%stab)) {
+     	   local(*entry) = $val;
+     	   if (defined $entry) {
+     	       print "\$$key = '$entry'\n";
+     	   }
+
+     if (defined @entry) {
+         print "\@$key = (\n";
+         foreach $num ($[ .. $#entry) {
+     		   print "  $num\t'",$entry[$num],"'\n";
+         }
+         print ")\n";
+     }
+
+     if ($key ne "${package}::" && defined %entry) {
+         print "\%$key = (\n";
+         foreach $key (sort keys(%entry)) {
+     		   print "  $key\t'",$entry{$key},"'\n";
+         }
+         print ")\n";
+     }
+            }
+        }
+
+Note that even though the subroutine is compiled in package `dumpvar',
+the name of the subroutine is qualified so that its name is inserted
+into package `main'.  While popular many years ago, this is now
+considered very poor style; in general, you should be writing modules
+and using the normal export mechanism instead of hammering someone
+else's namespace, even main's.
+
+Assignment to a typeglob performs an aliasing operation, i.e.,
+
+     *dick = *richard;
+
+causes variables, subroutines, and file handles accessible via the
+identifier `richard' to also be accessible via the identifier `dick'.
+If you want to alias only a particular variable or subroutine, you can
+assign a reference instead:
+
+     *dick = \$richard;
+
+makes $richard and $dick the same variable, but leaves
+ @richard and @dick as separate arrays.  Tricky, eh?
+
+This mechanism may be used to pass and return cheap references into or
+from subroutines if you won't want to copy the whole thing.
+
+     %some_hash = ();
+     *some_hash = fn( \%another_hash );
+     sub fn {
+     	local *hashsym = shift;
+     	# now use %hashsym normally, and you
+     	# will affect the caller's %another_hash
+     	my %nhash = (); # do what you want
+     	return \%nhash;
+     }
+
+On return, the reference will overwrite the hash slot in the symbol
+table specified by the *some_hash typeglob.  This is a somewhat tricky
+way of passing around references cheaply when you won't want to have to
+remember to dereference variables explicitly.
+
+Another use of symbol tables is for making "constant" scalars.
+
+     *PI = \3.14159265358979;
+
+Now you cannot alter $PI, which is probably a good thing all in all.
+This isn't the same as a constant subroutine (one prototyped to take no
+arguments and to return a constant expression), which is subject to
+optimization at compile-time.  This isn't.  See *Note Perlsub: perlsub,
+for details on these.
+
+You can say `*foo{PACKAGE}' and `*foo{NAME}' to find out what name and
+package the *foo symbol table entry comes from.  This may be useful in a
+subroutine which is passed typeglobs as arguments
+
+     sub identify_typeglob {
+         my $glob = shift;
+         print 'You gave me ', *{$glob}{PACKAGE}, '::', *{$glob}{NAME}, "\n";
+     }
+     identify_typeglob *foo;
+     identify_typeglob *bar::baz;
+
+This prints
+
+     You gave me main::foo
+     You gave me bar::baz
+
+The *foo{THING} notation can also be used to obtain references to the
+individual elements of *foo, see *Note Perlref: perlref,.
+
+
+Package Constructors and Destructors
+------------------------------------
+
+There are two special subroutine definitions that function as package
+constructors and destructors.  These are the BEGIN and END routines.
+The sub is optional for these routines.
+
+A BEGIN subroutine is executed as soon as possible, that is, the moment
+it is completely defined, even before the rest of the containing file is
+parsed.  You may have multiple BEGIN blocks within a file--they will
+execute in order of definition.  Because a BEGIN block executes
+immediately, it can pull in definitions of subroutines and such from
+other files in time to be visible to the rest of the file.  Once a BEGIN
+has run, it is immediately undefined and any code it used is returned to
+Perl's memory pool.  This means you can't ever explicitly call a BEGIN.
+
+An END subroutine is executed as late as possible, that is, when the
+interpreter is being exited, even if it is exiting as a result of a
+die() function.  (But not if it's is being blown out of the water by a
+signal--you have to trap that yourself (if you can).)  You may have
+multiple END blocks within a file--they will execute in reverse order of
+definition; that is: last in, first out (LIFO).
+
+Inside an END subroutine $? contains the value that the script is going
+to pass to `exit()'.  You can modify $? to change the exit value of the
+script.  Beware of changing $? by accident (e.g. by running something
+via system).
+
+Note that when you use the -n and -p switches to Perl, BEGIN and END
+work just as they do in *awk*, as a degenerate case.
+
+
+Perl Classes
+------------
+
+There is no special class syntax in Perl, but a package may function as
+a class if it provides subroutines that function as methods.  Such a
+package may also derive some of its methods from another class package
+by listing the other package name in its @ISA array.
+
+For more on this, see *Note Perltoot: perltoot, and *Note Perlobj:
+perlobj,.
+
+
+Perl Modules
+------------
+
+A module is just a package that is defined in a library file of the same
+name, and is designed to be reusable.  It may do this by providing a
+mechanism for exporting some of its symbols into the symbol table of any
+package using it.  Or it may function as a class definition and make its
+semantics available implicitly through method calls on the class and its
+objects, without explicit exportation of any symbols.  Or it can do a
+little of both.
+
+For example, to start a normal module called Some::Module, create a file
+called Some/Module.pm and start with this template:
+
+     package Some::Module;  # assumes Some/Module.pm
+
+     use strict;
+
+     BEGIN {
+         use Exporter   ();
+         use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+
+     # set the version for version checking
+     $VERSION     = 1.00;
+     # if using RCS/CVS, this may be preferred
+     $VERSION = do { my @r = (q$Revision: 2.21 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r }; # must be all one line, for MakeMaker
+
+     @ISA         = qw(Exporter);
+     @EXPORT      = qw(&func1 &func2 &func4);
+     %EXPORT_TAGS = ( );     # eg: TAG => [ qw!name1 name2! ],
+
+     # your exported package globals go here,
+     # as well as any optionally exported functions
+     @EXPORT_OK   = qw($Var1 %Hashit &func3);
+         }
+         use vars      @EXPORT_OK;
+
+     # non-exported package globals go here
+     use vars      qw(@more $stuff);
+
+     # initalize package globals, first exported ones
+     $Var1   = '';
+     %Hashit = ();
+
+     # then the others (which are still accessible as $Some::Module::stuff)
+     $stuff  = '';
+     @more   = ();
+
+     # all file-scoped lexicals must be created before
+     # the functions below that use them.
+
+     # file-private lexicals go here
+     my $priv_var    = '';
+     my %secret_hash = ();
+
+     # here's a file-private function as a closure,
+     # callable as &$priv_func;  it cannot be prototyped.
+     my $priv_func = sub {
+         # stuff goes here.
+     };
+
+     # make all your functions, whether exported or not;
+     # remember to put something interesting in the {} stubs
+     sub func1      {}    # no prototype
+     sub func2()    {}    # proto'd void
+     sub func3($$)  {}    # proto'd to 2 scalars
+
+     # this one isn't exported, but could be called!
+     sub func4(\%)  {}    # proto'd to 1 hash ref
+
+     END { }       # module clean-up code here (global destructor)
+
+Then go on to declare and use your variables in functions without any
+qualifications.  See *Note Exporter: (pm.info)Exporter, and the *Note
+Perlmodlib: perlmodlib, for details on mechanics and style issues in
+module creation.
+
+Perl modules are included into your program by saying
+
+     use Module;
+
+or
+
+     use Module LIST;
+
+This is exactly equivalent to
+
+     BEGIN { require "Module.pm"; import Module; }
+
+or
+
+     BEGIN { require "Module.pm"; import Module LIST; }
+
+As a special case
+
+     use Module ();
+
+is exactly equivalent to
+
+     BEGIN { require "Module.pm"; }
+
+All Perl module files have the extension `.pm'.  use assumes this so
+that you don't have to spell out "`Module.pm'" in quotes.  This also
+helps to differentiate new modules from old `.pl' and `.ph' files.
+Module names are also capitalized unless they're functioning as pragmas,
+"Pragmas" are in effect compiler directives, and are sometimes called
+"pragmatic modules" (or even "pragmata" if you're a classicist).
+
+Because the use statement implies a BEGIN block, the importation of
+semantics happens at the moment the use statement is compiled, before
+the rest of the file is compiled.  This is how it is able to function as
+a pragma mechanism, and also how modules are able to declare subroutines
+that are then visible as list operators for the rest of the current
+file.  This will not work if you use require instead of use.  With
+require you can get into this problem:
+
+     require Cwd;		# make Cwd:: accessible
+     $here = Cwd::getcwd();
+
+     use Cwd;			# import names from Cwd::
+     $here = getcwd();
+
+     require Cwd;	    	# make Cwd:: accessible
+     $here = getcwd(); 		# oops! no main::getcwd()
+
+In general `use Module ();' is recommended over `require Module;'.
+
+Perl packages may be nested inside other package names, so we can have
+package names containing `::'.  But if we used that package name
+directly as a filename it would makes for unwieldy or impossible
+filenames on some systems.  Therefore, if a module's name is, say,
+Text::Soundex, then its definition is actually found in the library file
+`Text/Soundex.pm'.
+
+Perl modules always have a `.pm' file, but there may also be dynamically
+linked executables or autoloaded subroutine definitions associated with
+the module.  If so, these will be entirely transparent to the user of
+the module.  It is the responsibility of the `.pm' file to load (or
+arrange to autoload) any additional functionality.  The POSIX module
+happens to do both dynamic loading and autoloading, but the user can say
+just `use POSIX' to get it all.
+
+For more information on writing extension modules, see *Note Perlxstut:
+perlxstut, and *Note Perlguts: perlguts,.
+
+
+SEE ALSO
+========
+
+See *Note Perlmodlib: perlmodlib, for general style issues related to building Perl
+modules and classes as well as descriptions of the standard library and
+CPAN, *Note Exporter: (pm.info)Exporter, for how Perl's standard import/export mechanism works,
+*Note Perltoot: perltoot, for an in-depth tutorial on creating classes, *Note Perlobj: perlobj,
+for a hard-core reference document on objects, and *Note Perlsub:
+perlsub, for an explanation of functions and scoping.
+
+
+

@@ -1,0 +1,1705 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Include, Next: InformixTest, Prev: Image/Size, Up: Module List
+
+allow use #defines from C header files
+**************************************
+
+
+
+NAME
+====
+
+Include - allow use #defines from C header files
+
+
+SYNOPSIS
+========
+
+     use Include qw(-I /some/path/of/mine);
+     use Include q<sys/types.h>;
+     use Include q<sys/types.h> "/[A-Z]/";
+
+
+DESCRIPTION
+===========
+
+The Include module implements a method of using #define constants from C
+header files. It does this by putting an extra level of indirection on
+the use operator.
+
+To enhance performance a cache scheme is used. When a new module is
+required the cache is checked first, if the package is not found then it
+will be generated from the C header files.
+
+Include can be configured to place any generated packages into the cache
+automatically, for security reasons this is turned off by default.
+
+There are three ways in which the `use Include' statement can be used.
+
+     use Include qw(-I /some/path/of/mine);
+
+Will unshift the directory */some/path/of/mine* onto the search path
+used so that subsequent searches for .h header files will search the
+given directories first.
+
+     use Include q<sys/types.h>;
+     use Include q<sys/types.h> "/[A-Z]/";
+
+Both of these will define all the constants found in <sys/types.h> and
+any header files included by it. The first will export all of these into
+the calling package, but the second will only export defined macros that
+contain an unppercase character.
+
+
+Subroutines
+-----------
+
+Under normal use the Include package is only used via the use/import
+interface.  But there are some routines that are defined.
+
+CacheOn
+     This subroutine will cause the Include module to save any generated
+     packages into the cache.
+
+Generate( @headers )
+     This subroutine will force the generation of the given header
+     files, and any files included in them, reguardless of whether they
+     are currently in the cache. If cache writing is turned on then the
+     cache files will be overwritten.
+
+Search( @dirs )
+     This subroutine will unshift the given directories onto the search
+     path used for locating the header files.
+
+
+NOTE
+====
+
+Having the cache writing turned on by default if a potential security
+risk as all users will need write rights to the cache directory
+
+
+AUTHOR
+======
+
+Graham Barr <Graham.Barr@tiuk.ti.com>
+
+
+REVISION
+========
+
+$Revision: 1.2 $
+
+
+BUGS
+====
+
+None known
+
+
+COPYRIGHT
+=========
+
+Parsing code is based on the h2ph program which comes with the perl
+distribution. All other code is Copyright (c) 1995 Graham Barr. All
+rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: InformixTest, Next: Ingperl, Prev: Include, Up: Module List
+
+Test Harness for DBD::Informix
+******************************
+
+
+
+NAME
+====
+
+DBD::InformixTest - Test Harness for DBD::Informix
+
+
+SYNOPSIS
+========
+
+     use DBD::InformixTest;
+
+
+DESCRIPTION
+===========
+
+This document describes DBD::InformixTest for DBD::Informix version 0.25
+and later.  This is pure Perl code which exploits DBI and DBD::Informix
+to make it easier to write tests.  Most notably, it provides a simple
+mechanism to connect to the user's chosen test database and a uniform
+set of reporting mechanisms.
+
+
+Loading DBD::InformixTest
+-------------------------
+
+To use the DBD::InformixTest software, you need to load the DBI software
+and then install the Informix driver:
+
+     use DBD::InformixTest;
+
+
+Connecting to test database
+---------------------------
+
+     $dbh = &connect_to_test_database;
+
+This gives you a reference to the database connection handle, aka the
+database handle.  If the load fails, your program stops immediately.
+The functionality available from this handle is documented in the
+DBD::Informix manual page.  This function does not report success when
+it succeeds because the test scripts for blobs, for example, need to
+know whether they are working with an OnLine system before reporting how
+many tests will be run.
+
+This code exploits 4 environment variables:
+
+     DBD_INFORMIX_DATABASE
+     DBD_INFORMIX_SERVER
+     DBD_INFORMIX_USERNAME
+     DBD_INFORMIX_PASSWORD
+
+The database variable can be simply the name of the database, or it can
+be 'database@server', or it can be one of the SE notations such as
+'/opt/dbase' or '//hostname/dbase'.  If the database name does not
+contain either slashes or at-signs, then the value in the server
+variable, which defaults to $INFORMIXSERVER (which must be set for 6.00
+and later Informix database systems) is appended to the database name
+after an at-sign.  If INFORMIXSERVER is not set, then you had better be
+on a 5.0x system as otherwise the connection will fail.  With 6.00 and
+above, you can optionally specify a user name and password in the
+environment.  This is horribly insecure -- do not use it for production
+work.  The test scripts do not print the password.
+
+
+Using stmt_test
+---------------
+
+Once you have a database connection, you can execute simple statements
+(those which do not return any data) using &stmt_test():
+
+     &stmt_test($dbh, $stmt, $flag, $tag);
+
+The first argument is the database handle.  The second is a string
+containing the statement to be executed.  The third is optional and is a
+boolean.  If it is 0, then the statement must execute without causing an
+error or the test will terminate.  If it is set to 1, then the statement
+may fail and the error will be reported but the test will continue.  The
+fourth argument is an optional string which will be used as a tag before
+the statement when it is printed.  If omitted, it defaults to "Test".
+
+
+Using stmt_retest
+-----------------
+
+The &stmt_retest() function takes three arguments, which have the same
+meaning as the first three arguments of &stmt_test():
+
+     &stmt_retest($dbh, $stmt, $flag);
+
+It calls:
+
+     &stmt_test($dbh, $stmt, 0, "Retest");
+
+
+Using print_sqlca
+-----------------
+
+The &print_sqlca() function takes a single argument which can be either
+a statement handle or a database handle and prints out the current
+values of the SQLCA record.
+
+     &print_sqlca($dbh);
+     &print_sqlca($sth);
+
+
+Using all_ok
+------------
+
+The &all_ok() function can be used at the end of a test script to report
+that everything was OK.  It exits with status 0.
+
+     &all_ok();
+
+
+Using stmt_ok
+-------------
+
+This routine adds 'ok N' to the end of a line.  The N increments
+automatically each time &stmt_ok() or &stmt_fail() is called.  If called
+with a non-false argument, it prints the contents of DBI::errstr as a
+warning message too.  This routine is used internally by stmt_test() but
+is also available for your use.
+
+     &stmt_ok(0);
+
+
+Using stmt_fail
+---------------
+
+This routine adds 'not ok N' to the end of a line, then reports the
+error message in DBI::errstr, and then dies.  The N is incremented
+automatically, as with &stmt_ok().  This routine is used internally by
+stmt_test() but is also available for your use.
+
+     &stmt_fail();
+
+
+Using stmt_err
+--------------
+
+This routines prints a caption (defaulting to 'Error Message') and the
+contents of DBI::errstr, ensuring that each line is prefixed by "# ".
+This routine is used internally by the InformixTest module, but is also
+available for your use.
+
+     &stmt_err('Warning Message');
+
+
+Using stmt_note
+---------------
+
+This routine writes a string (without any newline unless you include
+it).  This routine is used internally by stmt_test() but is also
+available for your use.
+
+     &stmt_note("Some string or other");
+
+
+Using select_some_data
+----------------------
+
+This routine takes three arguments:
+
+     &select_some_data($dbh, $nrows, $stmt);
+
+The first argument is the database handle.  The second is the number of
+rows that should be returned.  The third is a string containing the
+SELECT statement to be executed.  It prints all the data returned with a
+'#' preceding the first field and two colons separating the fields.  It
+reports OK if the select succeeds and the correct number of rows are
+returned; it fails otherwise.
+
+
+Using select_zero_data
+----------------------
+
+This routine takes a database handle and a SELECT statement and invokes
+&select_some_data with 0 rows expected.
+
+     &select_zero_data($dbh, $stmt);
+
+
+Note
+----
+
+All these routines can also be used without parentheses or the &, so
+that the following is also valid:
+
+     select_zero_data $dbh, $stmt;
+
+
+AUTHOR
+======
+
+   * Jonathan Leffler (johnl@informix.com)
+
+SEE ALSO
+========
+
+
+perl(1), DBD::Informix
+
+
+
+
+File: pm.info, Node: Ingperl, Next: IniConf, Prev: InformixTest, Up: Module List
+
+Perl access to Ingres databases for old ingperl scripts
+*******************************************************
+
+
+
+NAME
+====
+
+Ingperl - Perl access to Ingres databases for old ingperl scripts
+
+
+SYNOPSIS
+========
+
+     &sql('...');
+     &sql_exec('...');
+     @values = &sql_fetch;
+     &sql_close;
+
+     @types = &sql_types;
+     @ingtypes = &sql_ingtypes;
+     @lengths = &sql_lengths;
+     @nullable = &sql_nullable;
+     @names = &sql_names;
+
+     $sql_version
+     $sql_error
+     $sql_sqlcode
+     $sql_rowcount
+     $sql_readonly
+     $sql_showerrors
+     $sql_debug
+
+     @row1 = &sql_eval_row1('select ...');
+     @col1 = &sql_eval_col1('select ...');
+
+
+DESCRIPTION
+===========
+
+Ingperl is an extension to Perl which allows access to Ingres databases.
+
+The functions that make up the interface are described in the following
+sections.
+
+All functions return false or undefined (in the Perl sense) to indicate
+failure.
+
+The text in this document is largely unchanged from the original Perl4
+ingperl documentation written by Tim Bunce (timbo@ig.co.uk).  Any
+comments specific to the DBD::Ingres Ingperl emulation are prefixed by
+*DBD:*.
+
+
+IngPerl Functions
+-----------------
+
+Ingperl function, that access data.
+
+   * sql
+          &sql('...');
+
+
+     This functions should be used to
+
+     connect to a database:
+               &sql("connect database_name [-sqloptions]");
+
+               where sqloptions are the options defined in the manual
+               for the sql command.
+
+          For example:
+
+               &sql("connect database_name identified by username -xw -Rrole -Ggroup -l");
+
+          Returns true else undef on error.
+
+     disconnect from a database:
+               &sql("disconnect");
+
+          Note that ingperl will complain if a transaction is active.
+
+          You should &sql_exec 'commit' or 'rollback' before disconnect.
+
+          Returns true else undef on error (unlikely!).
+
+          Note that an ingres bug means that $sql_error will contain an
+          error message (E_LQ002E query issued outside of a session) even
+          though the disconnect worked ok.
+          *DBD:* *Must check if this is still the case...*
+
+     prepare a statement:
+               &sql("select ...");
+
+          Returns true else undef on error.
+
+          If a non-select statement is prepared it will be executed at
+          once.
+
+          *DBD:* A non-select statement return rowcount ("0E0", 1, 2, ..),
+          while a select statement returns 0. This is the same value as
+          sqlca.sqlerrd[2].
+
+          This function cannot be used to prepare the following
+          statements:
+
+               call,
+               get dbevent,
+               inquire_sql,
+               execute immediate,
+               execute procedure,
+               execute,
+               prepare to commit,
+               prepare,
+               set.
+
+          Some of these can be performmed by the &sql_exec() function.
+
+          *DBD:* This is no longer true! There is no difference between the
+          SQL-statements that `&sql' and `&sql_exec' can execute. `&sql'
+          hands off all non-select statements to `&sql_exec'.
+
+     item * sql_exec
+
+          &sql_exec('...');
+
+     Execute an sql statement immediately. This function should be used
+     to issue Commit, Rollback, Insert, Delete and Update statements.
+
+     Returns true else undef on error.
+
+     *DBD:* A non-select statement return rowcount ("0E0", 1, 2, ..),
+     while a select statement returns 0. This is the same value as
+     sqlca.sqlerrd[2].
+
+     It is also often used to execute 'set' commands. For example:
+
+          &sql_exec('set autocommit on');
+          &sql_exec('set session with on_error=rollback transaction');
+          &sql_exec('set lockmode readlock=nolock');
+          &sql_exec('set qep');
+
+     This function cannot be used to prepare the following statements:
+
+          call,
+          get dbevent,
+          inquire_sql,
+          prepare to commit.
+
+   * sql_fetch
+          @values = &sql_fetch;
+
+
+     Fetch the next record of data returned from the last prepared
+     select statement. When all records have been returned &sql_fetch
+     will close the select statement cursor and return an empty array.
+
+     For example:
+
+          &sql('select * from iitables') || die $sql_error;
+          while(@values = &sql_fetch){
+              ...
+          }
+
+     Null values are returned as undef elements of the array.
+
+     *DBD:* `&sql_fetch' can also be expressed as either
+     `&sql("fetch")' or `&sql_exec("fetch")' - to cater for Ingperl 1.0
+     scripts!
+
+   * sql_close
+          &sql_close;
+
+
+     This function needs to be called *only* if you do not use
+     `&sql_fetch' to fetch *all* the records *and* you wish to close the
+     cursor as soon as possible (to release locks etc).  Otherwise
+     ignore it. Always returns true.
+
+IngPerl Functions to describe the currently prepared statement.  These
+functions all return an array with one element for each field in the
+query result.
+
+   * sql_types
+          @types = &sql_types;
+
+
+     Returns a list of sprintf type letters to indicate the generic type
+     if each field: 'd' (int), 'f' (float), or 's' (string).
+
+   * sql_ingtypes
+          @ingtypes = &sql_ingtypes;
+
+
+     Returns a list of specific ingres type numbers:
+          3 - date
+          5 - money
+         30 - integer
+         31 - float
+         20 - char
+         21 - varchar
+
+   * sql_lengths
+          @lengths = &sql_lengths;
+
+
+     Returns a list if ingres data type lengths.  For strings the length
+     is the maximum width of the field.  For numbers it is the number of
+     bytes used to store the binary representation of the value, 1, 2, 4
+     or 8.
+
+   * sql_nullable
+          @nullable = &sql_nullable;
+
+
+     Returns a list of boolean values (0 or 1's). A 1 indicates that the
+     corresponding field may return a null value.
+
+   * sql_names
+          @names = &sql_names;
+
+
+     Returns a list of field names.
+
+
+IngPerl Variables
+-----------------
+
+   * $sql_version (read only)
+
+     A constant string compiled into ingperl containing the major and
+     minor version numbers of ingperl, the patchlevel and the date that
+     the ingperl binary was built.
+
+     For example:
+         ingperl 2.0 pl0 (built Apr 8 1994 13:17:03)
+
+     *DBD:* The variable gives a similar output now, including the
+     Ingperl version and the DBD::Ingres version.
+
+   * $sql_error (read only)
+
+     Contains the error message text of the current ingres error.
+
+     Is empty if last statement succedded.
+
+     For example:
+         print "$sql_error\n" if $sql_error;
+
+   * $sql_sqlcode (read only)
+
+     The current value of sqlda.sqlcode. Only of interest in more
+     sophisticated applications.
+
+     Typically 0, <0 on error, 100=no more rows, 700=message,
+     710=dbevent.
+
+   * $sql_rowcount (read only)
+
+     After a successful Insert, Delete, Update, Select, Modify, Create
+     Index, Create Table As Select or Copy this variable holds the
+     number of rows affected.
+
+   * $sql_readonly (default 1)
+
+     If true then prepared sql statements are given read only cursors
+     this is generally a considerable performance gain.
+
+     *DBD:* Not implemented. All cursors are readonly - there is no way to
+     modify the value of a cursor element, therefore no reason not to
+     make the cursors readonly. The value of this variable was ignored
+     already in Ingperl 2.0.
+
+   * $sql_showerrors (default 0)
+
+     If true then ingres error and warning messages are printed by
+     ingperl as they happen. Very useful for testing.
+
+     *DBD:* Not yet implemented. (Does anybody need it?)
+
+   * $sql_debug (default 0)
+
+     If ingperl has been compiled with -DINGPERL_DEBUG then setting this
+     variable true will enable debugging messages from ingperl
+     internals.
+
+     *DBD:* Not implemented. Setting the variable `$debugdbi' to 3
+     or greater results in debug information from DBI and DBD::Ingres
+
+   * $sql_drh
+
+     *DBD:* This variable is the DBI-internal driver handle for the
+     DBD::Ingres driver. It is of little or no use at present especially
+     as there is no provision for multiple connects yet).
+
+   * $sql_dbh
+
+     *DBD:* This variable is the DBI database handle. It can be used to
+     add DBI/DBD statements to an old Ingperl script.
+
+   * $sql_sth
+
+     *DBD:* This is the DBI statement handle for the current SELECT-statement
+     (if any).
+
+IngPerl Library Functions
+
+   * sql_eval_row1
+          @row1 = &sql_eval_row1('select ...');
+
+
+     Execute a select statement and return the first row.
+
+   * sql_eval_col1
+          @col1 = &sql_eval_col1('select ...');
+
+
+     Execute a select statement and return the first column.
+
+
+NOTES
+=====
+
+The DBD::Ingres module has been modelled closely on Tim Bunce's
+DBD::Oracle module and warnings that apply to DBD::Oracle and the
+Oraperl emulation interface may also apply to the Ingperl emulation
+interface.
+
+Your mileage may vary.
+
+
+WARNINGS
+========
+
+IngPerl comes with no warranty - it works for me - it may not work for
+you. If it trashes your database I am not responsible!
+
+This file should be included in all applications using ingperl in order
+to help ensure that scripts will remain compatible with new releases of
+ingperl.
+
+*DBD:* The following warning is taken (almost) verbatim from the
+oraperl emulation module, but is also valid for Ingres.
+
+The Ingperl emulation software shares no code with the original ingperl.
+It is built on top the the new Perl5 DBI and DBD::Ingres modules. These
+modules are still evolving. (One of the goals of the Ingperl emulation
+software is to allow useful work to be done with the DBI and DBD::Ingres
+modules whilst insulation users from the ongoing changes in their
+interfaces.)
+
+It is quite possible, indeed probable, that some differences in
+behaviour will exist. This should be confined to error handling.
+
+*All* differences in behaviour which are not documented here should
+be reported to ht@datani.dk and CC'd to dbi-users@fugue.com.
+
+
+SEE ALSO
+========
+
+Ingres Documentation
+     SQL Reference Guide
+
+Books Programming Perl by Larry Wall, Randal Schwartz and Tom Christiansen. Learning Perl by Randal Schwartz.
+Manual Pages
+     perl(1)
+
+
+AUTHORS
+=======
+
+Formerly sqlperl by Ted Lemon.
+
+Perl4 version developed and maintained by Tim Bunce,
+<Tim.Bunce@ig.co.uk> Copyright 1994 Tim Bunce and Ted Lemon
+
+Ingperl emulation using DBD::Ingres by Henrik Tougaard <ht@datani.dk>
+
+Perl by Larry Wall <lwall@netlabs.com>.
+
+
+
+
+File: pm.info, Node: IniConf, Next: LWP, Prev: Ingperl, Up: Module List
+
+A Module for reading .ini-style configuration files
+***************************************************
+
+
+
+NAME
+====
+
+IniConf - A Module for reading .ini-style configuration files
+
+
+SYNOPSIS
+========
+
+     use IniConf;
+
+
+DESCRIPTION
+===========
+
+IniConf provides a way to have readable configuration files outside your
+Perl script.  The configuration can be safely reloaded upon receipt of a
+signal.
+
+
+USAGE
+=====
+
+Get a new IniConf object with the new method:
+
+     $cfg = IniConf->new( -file => "/path/configfile.ini" );
+     $cfg = new IniConf -file => "/path/configfile.ini";
+
+Optional named parameters may be specified after the configuration file
+name.  See the new in the METHODS section, below.
+
+INI files consist of a number of sections, each preceeded with the
+section name in square brackets.  Parameters are specified in each
+section as Name=Value.  Any spaces around the equals sign will be
+ignored, and the value extends to the end of the line
+
+     [section]
+     Parameter=Value
+
+Both the hash mark (#) and the semicolon (;) are comment characters.
+Lines that begin with either of these characters will be ignored.  Any
+amount of whitespace may preceed the comment character.
+
+Multiline or multivalued fields may also be defined ala UNIX "here
+document" syntax:
+
+     Parameter=<<EOT
+     value/line 1
+     value/line 2
+     EOT
+
+You may use any string you want in place of "EOT".  Note that what
+follows the "<<" and what appears at the end of the text MUST match
+exactly, including any trailing whitespace.
+
+See the METHODS section, below, for settable options.
+
+Values from the config file are fetched with the val method:
+
+     $value = $cfg->val('Section', 'Parameter');
+
+If you want a multi-line/value field returned as an array, just specify
+an array as the receiver:
+
+     @values = $cfg->val('Section', 'Parameter');
+
+
+METHODS
+=======
+
+
+new (-file=>$filename, [-option=>value ...] )
+---------------------------------------------
+
+Returns a new configuration object (or "undef" if the configuration file
+has an error).  One IniConf object is required per configuration file.
+The following named parameters are available:
+
+*-default* section
+     Specifies a section is used for default values.  For example, if
+     you look up the "permissions" parameter in the "users" section, but
+     there is none, IniConf will look to your default section for a
+     "permissions" value before returning undef.
+
+*-reloadsig* signame
+     You may specify a signal (such as SIGHUP) that will cause the
+     configuration file to be read.  This is useful for static daemons
+     where a full restart in order to realize a configuration change
+     would be undesirable.  Note that your application must be tolerant
+     of the signal you choose.  If a signal handler was already in place
+     before the IniConf object is created, it will be called after the
+     configuration file is reread.  The signal handler will not be
+     re-enabled until after the configuration file is reread any the
+     previous signal handler returns.
+
+*-reloadwarn* 0|1
+     Set -reloadwarn => 1 to enable a warning message (output to STDERR)
+     whenever the config file is reloaded.  The reload message is of the
+     form:
+
+          PID <PID> reloading config file <file> at YYYY.MM.DD HH:MM:SS
+
+     See your system documentation for information on valid signals.
+
+*-nocase* 0|1
+     Set -nocase => 1 to handle the config file in a case-insensitive
+     manner (case in values is preserved, however).  By default, config
+     files are case-sensitive (i.e., a section named 'Test' is not the
+     same as a section named 'test').  Note that there is an added
+     overhead for turning off case sensitivity.
+
+
+val ($section, $parameter)
+--------------------------
+
+Returns the value of the specified parameter in section $section.
+
+
+setval ($section, $parameter, $value, [ $value2, ... ])
+-------------------------------------------------------
+
+Sets the value of parameter $section in section $section to $value (or
+to a set of values).  See below for methods to write the new
+configuration back out to a file.
+
+You may not set a parameter that didn't exist in the original
+configuration file.  *setval* will return undef if this is attempted.
+Otherwise, it returns 1.
+
+
+ReadConfig
+----------
+
+Forces the config file to be re-read.  Also see the *-reloadsig* option
+to the new method for a way to connect this method to a signal (such as
+SIGHUP).
+
+
+Sections
+--------
+
+Returns an array containing section names in the configuration file.  If
+the *nocase* option was turned on when the config object was created,
+the section names will be returned in lowercase.
+
+
+Parameters ($sectionname)
+-------------------------
+
+Returns an array containing the parameters contained in the specified
+section.
+
+
+GroupMembers ($group)
+---------------------
+
+Returns an array containing the members of specified $group.  Groups are
+specified in the config file as new sections of the form
+
+     [GroupName MemberName]
+
+This is useful for building up lists.  Note that parameters within a
+"member" section are referenced normally (i.e., the section name is
+still "Groupname Membername", including the space).
+
+
+WriteConfig ($filename)
+-----------------------
+
+Writes out a new copy of the configuration file.  A temporary file
+(ending in .new) is written out and then renamed to the specified
+filename.  Also see BUGS below.
+
+
+RewriteConfig
+-------------
+
+Same as WriteConfig, but specifies that the original configuration file
+should be rewritten.
+
+
+DIAGNOSTICS
+===========
+
+
+@IniConf::errors
+----------------
+
+Contains a list of errors encountered while parsing the configuration
+file.  If the new method returns undef, check the value of this to find
+out what's wrong.  This value is reset each time a config file is read.
+
+
+BUGS
+====
+
+   * IniConf won't know if you change the signal handler that it's using
+     for config reloads.
+
+   * The signal handling stuff is almost guaranteed not to work on
+     non-UNIX systems.
+
+   * The output from [Re]WriteConfig/OutputConfig might not be as pretty
+     as it can be.  Comments are tied to whatever was immediately below
+     them.
+
+   * No locking is done by [Re]WriteConfig.  When writing servers, take
+     care that only the parent ever calls this, and consider making your
+     own backup.
+
+   * The Windows INI specification (if there is one) probably isn't
+     followed exactly.  First and foremost, IniConf is for making
+     easy-to-maintain (and read) configuration files.
+
+
+VERSION
+=======
+
+Version 0.9 (beta)
+
+
+AUTHOR
+======
+
+     Scott Hutton
+       E-Mail:        shutton@pobox.com
+       WWW Home Page: http://www.pobox.com/~shutton/
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996,1997 Scott Hutton. All rights reserved. This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: LWP, Next: LWP/Debug, Prev: IniConf, Up: Module List
+
+Library for WWW access in Perl
+******************************
+
+
+
+NAME
+====
+
+LWP - Library for WWW access in Perl
+
+
+SYNOPSIS
+========
+
+     use LWP;
+     print "This is libwww-perl-$LWP::VERSION\n";
+
+
+DESCRIPTION
+===========
+
+Libwww-perl is a collection of Perl modules which provides a simple and
+consistent programming interface (API) to the World-Wide Web.  The main
+focus of the library is to provide classes and functions that allow you
+to write WWW clients, thus libwww-perl said to be a WWW client
+library. The library also contain modules that are of more general use.
+
+The main architecture of the library is object oriented.  The user
+agent, requests sent and responses received from the WWW server are all
+represented by objects.  This makes a simple and powerful interface to
+these services.  The interface should be easy to extend and customize
+for your needs.
+
+The main features of the library are:
+
+   * Contains various reusable components (modules) that can be used
+     separately or together.
+
+   * Provides an object oriented model of HTTP-style communication.
+     Within this framework we currently support access to http, gopher,
+     ftp, news, file, and mailto resources.
+
+   * The library be used through the full object oriented interface or
+     through a very simple procedural interface.
+
+   * Support the basic and digest authorization schemes.
+
+   * Transparent redirect handling.
+
+   * Supports access through proxy servers.
+
+   * URL handling (both absolute and relative URLs are supported).
+
+   * A parser for `robots.txt' files and a framework for constructing
+     robots.
+
+   * An experimental HTML parser and formatters (for PostScript and
+     plain text).
+
+   * The library can cooperate with Tk.  A simple Tk-based GUI browser
+     called 'tkweb' is distributed with the Tk extension for perl.
+
+   * An implementation of the HTTP content negotiation algorithm that
+     can be used both in protocol modules and in server scripts (like
+     CGI scripts).
+
+   * A simple command line client application called `lwp-request'.
+
+
+HTTP STYLE COMMUNICATION
+========================
+
+The libwww-perl library is based on HTTP style communication. This
+section try to describe what that means.
+
+Let us start with this quote from the HTTP specification document
+<URL:http://www.w3.org/pub/WWW/Protocols/>:
+
+@asis{}
+     
+     The HTTP protocol is based on a request/response paradigm. A client
+     establishes a connection with a server and sends a request to the
+     server in the form of a request method, URI, and protocol version,
+     followed by a MIME-like message containing request modifiers,
+     client information, and possible body content. The server responds
+     with a status line, including the message's protocol version and a
+     success or error code, followed by a MIME-like message containing
+     server information, entity meta-information, and possible body
+     content.
+
+What this means to libwww-perl is that communication always take place
+through these steps: First a request object is created and
+configured. This object is then passed to a server and we get a response
+object in return that we can examine. A request is always independent of
+any previous requests, i.e. the service is stateless.  The same simple
+model is used for any kind of service we want to access.
+
+For example, if we want to fetch a document from a remote file server,
+then we send it a request that contains a name for that document and the
+response will contain the document itself.  If we access a search
+engine, then the content of the request will contain the query
+parameters and the response will contain the query result.  If we want
+to send a mail message to somebody then we send a request object which
+contains our message to the mail server and the response object will
+contain an acknowledgment that tells us that the message has been
+accepted and will be forwarded to the recipient(s).
+
+It is as simple as that!
+
+
+The Request Object
+------------------
+
+The request object has the class name HTTP::Request in libwww-perl. The
+fact that the class name use `HTTP::' as a name prefix only implies that
+we use the HTTP model of communication. It does not limit the kind of
+services we can try to pass this request to.  For instance, we will send
+HTTP::Requests both to ftp and gopher servers, as well as to the local
+file system.
+
+The main attributes of the request objects are:
+
+   * The method is a short string that tells what kind of request this
+     is.  The most used methods are GET, PUT, POST and HEAD.
+
+   * The url is a string denoting the protocol, server and the name of
+     the "document" we want to access.  The url might also encode
+     various other parameters.
+
+   * The *headers* contain additional information about the request and
+     can also used to describe the content.  The headers is a set of
+     keyword/value pairs.
+
+   * The *content* is an arbitrary amount of data.
+
+
+The Response Object
+-------------------
+
+The request object has the class name `HTTP::Response' in libwww-perl.
+The main attributes of objects of this class are:
+
+   * The code is a numerical value that encode the overall outcome of
+     the request.
+
+   * The message is a short (human readable) string that corresponds to
+     the code.
+
+   * The *headers* contain additional information about the response and
+     they also describe the content.
+
+   * The *content* is an arbitrary amount of data.
+
+Since we don't want to handle all possible code values directly in our
+programs, the libwww-perl response object have methods that can be used
+to query what kind of response this is.  The most commonly used response
+classification methods are:
+
+is_success()
+     The request was was successfully received, understood or accepted.
+
+is_error()
+     The request failed.  The server or the resource might not be
+     available, access to the resource might be denied or other things
+     might have failed for some reason.
+
+
+The User Agent
+--------------
+
+Let us assume that we have created a request object. What do we actually
+do with it in order to receive a response?
+
+The answer is that you pass it on to a *user agent* object and this
+object will take care of all the things that need to be done (low-level
+communication and error handling). The user agent will give you back a
+response object. The user agent represents your application on the
+network and it provides you with an interface that can accept *requests*
+and will return *responses*.
+
+You should think about the user agent as an interface layer between your
+application code and the network.  Through this interface you are able
+to access the various servers on the network.
+
+The libwww-perl class name for the user agent is `LWP::UserAgent'. Every
+libwww-perl application that wants to communicate should create at least
+one object of this kind. The main method provided by this object is
+request(). This method takes an HTTP::Request object as argument and
+will (eventually) return a `HTTP::Response' object.
+
+The user agent has many other attributes that lets you configure how it
+will interact with the network and with your application code.
+
+   * The timeout specify how much time we give remote servers in
+     creating responses before the library disconnect and creates an
+     internal timeout response.
+
+   * The *agent* specify the name that your application should use when
+     it presents itself on the network.
+
+   * The from attribute can be set to the e-mail address of the person
+     responsible for running the application.  If this is set, then the
+     address will be sent to the servers with every request.
+
+   * The *use_alarm* specify if it is OK for the user agent to use the
+     alarm(2) system to implement timeouts.
+
+   * The *use_eval* specify if the agent should raise an exception (die
+     in perl) if an error condition occur.
+
+   * The *parse_head* specify whether we should initialize response
+     headers from the <head> section of HTML documents.
+
+   * The *proxy* and *no_proxy* specify if and when communication should
+     go through a proxy server. <URL:http://www.w3.org/pub/WWW/Proxies/>
+
+   * The *credentials* provide a way to set up user names and passwords
+     that is needed to access certain services.
+
+Many applications would want even more control over how they interact
+with the network and they get this by specializing the `LWP::UserAgent'
+by sub-classing.  The library provide a specialization called
+LWP::RobotUA that is used by robot applications.
+
+
+An Example
+----------
+
+This example shows how the user agent, a request and a response are
+represented in actual perl code:
+
+     # Create a user agent object
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+     $ua->agent("AgentName/0.1 " . $ua->agent);
+
+     # Create a request
+     my $req = new HTTP::Request POST => 'http://www.perl.com/cgi-bin/BugGlimpse';
+     $req->content_type('application/x-www-form-urlencoded');
+     $req->content('match=www&errors=0');
+
+     # Pass request to the user agent and get a response back
+     my $res = $ua->request($req);
+
+     # Check the outcome of the response
+     if ($res->is_success) {
+         print $res->content;
+     } else {
+         print "Bad luck this time\n";
+     }
+
+The $ua is created once when the application starts up.  New request
+objects are normally created for each request sent.
+
+
+NETWORK SUPPORT
+===============
+
+This section goes through the various protocol schemes and describe the
+HTTP style methods that are supported and the headers that might have
+any effect.
+
+For all requests, a "User-Agent" header is added and initialized from
+the $ua->agent value before the request is handed to the network layer.
+In the same way, a "From" header is initialized from the $ua->from
+value.
+
+For all responses, the library will add a header called "Client-Date".
+This header will encode the time when the response was received by your
+application.  This format and semantics of the header is just like the
+server created "Date" header.
+
+
+HTTP Requests
+-------------
+
+HTTP request are really just handed off to an HTTP server and it will
+decide what happens.  Few servers implement methods beside the usual
+"GET", "HEAD", "POST" and "PUT" but CGI-scripts can really implement any
+method they like.
+
+If the server is not available then the library will generate an
+internal error response.
+
+The library automatically adds a "Host" and a "Content-Length" header to
+the HTTP request before it is sent over the network.
+
+For GET request you might want to add the "If-Modified-Since" header to
+make the request conditional.
+
+For POST request you should add the "Content-Type" header.  When you try
+to emulate HTML <FORM> handling you should usually let the value of the
+"Content-Type" header be "application/x-www-form-urlencoded".  See *Note
+Lwpcook: lwpcook, for examples of this.
+
+The libwww-perl HTTP implementation currently support the HTTP/1.0
+protocol.  HTTP/0.9 servers are also handled correctly.
+
+The library allows you to access proxy server through HTTP.  This means
+that you can set up the library to forward all types of request through
+the HTTP protocol module.  See *Note LWP/UserAgent: LWP/UserAgent, for
+documentation of this.
+
+
+FTP Requests
+------------
+
+The library currently support GET, HEAD and PUT requests.  GET will
+retrieve a file or a directory listing from an FTP server.  PUT will
+store a file on a ftp server.
+
+You can specify a ftp account for servers that want this in addition
+user name and password.  This is specified by passing an "Account"
+header in the request.
+
+User name/password can be specified using basic authorization or be
+encoded in the URL.  Bad logins return an UNAUTHORIZED response with
+"WWW-Authenticate: Basic" and can be treated as basic authorization for
+HTTP.
+
+The library support ftp ASCII transfer mode by specifying the "type=a"
+parameter in the URL.
+
+Directory listings are by default returned unprocessed (as returned from
+the ftp server) with the content media type reported to be
+"text/ftp-dir-listing". The `File::Listing' module provide functionality
+for parsing of these directory listing.
+
+The ftp module is also able to convert directory listings to HTML and
+this can be requested via the standard HTTP content negotiation
+mechanisms (add an "Accept: text/html" header in the request if you want
+this).
+
+The normal file retrievals, the "Content-Type" is guessed based on the
+file name suffix. See *Note LWP/MediaTypes: LWP/MediaTypes,.
+
+The "If-Modified-Since" header is not honored yet.
+
+Example:
+
+     $req = HTTP::Request->new(GET => 'ftp://me:passwd@ftp.some.where.com/');
+     $req->header(Accept => "text/html, */*;q=0.1");
+
+
+News Requests
+-------------
+
+Access to the USENET News system is implemented through the NNTP
+protocol.  The name of the news server is obtained from the NNTP_SERVER
+environment variable and defaults to "news".  It is not possible to
+specify the hostname of the NNTP server in the news:-URLs.
+
+The library support GET and HEAD to retrieve news articles through the
+NNTP protocol.  You can also post articles to newsgroups by using
+(surprise!) the POST method.
+
+GET on newsgroups is not implemented yet.
+
+Examples:
+
+     $req = HTTP::Request->new(GET => 'news:abc1234@a.sn.no');
+
+     $req = HTTP::Request->new(POST => 'news:comp.lang.perl.test');
+     $req->header(Subject => 'This is a test',
+                  From    => 'me@some.where.org');
+     $req->content(<<EOT);
+     This is the content of the message that we are sending to
+     the world.
+     EOT
+
+
+Gopher Request
+--------------
+
+The library supports the GET and HEAD method for gopher request.  All
+request header values are ignored.  HEAD cheats and will return a
+response without even talking to server.
+
+Gopher menus are always converted to HTML.
+
+The response "Content-Type" is generated from the document type encoded
+(as the first letter) in the request URL path itself.
+
+Example:
+
+     $req = HTTP::Request->new('GET', 'gopher://gopher.sn.no/');
+
+
+File Request
+------------
+
+The library supports GET and HEAD methods for file requests.  The
+"If-Modified-Since" header is supported.  All other headers are ignored.
+The host component of the file URL must be empty or set to "localhost".
+Any other host value will be treated as an error.
+
+Directories are always converted to an HTML document.  For normal files,
+the "Content-Type" and "Content-Encoding" in the response are guessed
+based on the file suffix.
+
+Example:
+
+     $req = HTTP::Request->new(GET => 'file:/etc/passwd');
+
+
+Mailto Request
+--------------
+
+You can send (aka "POST") mail messages using the library.  All headers
+specified for the request are passed on to the mail system.  The "To"
+header is initialized from the mail address in the URL.
+
+Example:
+
+     $req = HTTP::Request->new(POST => 'mailto:libwww-perl-request@ics.uci.edu');
+     $req->header("Subject", "subscribe");
+     $req->content("Please subscribe me to the libwww-perl mailing list!\n");
+
+
+OVERVIEW OF CLASSES AND PACKAGES
+================================
+
+This table should give you a quick overview of the classes provided by
+the library. Indentation shows class inheritance.
+
+     LWP::MemberMixin   -- Access to member variables of Perl5 classes
+       LWP::UserAgent   -- WWW user agent class
+         LWP::RobotUA   -- When developing a robot applications
+       LWP::Protocol          -- Interface to various protocol schemes
+         LWP::Protocol::http  -- http:// access
+         LWP::Protocol::file  -- file:// access
+         LWP::Protocol::ftp   -- ftp:// access
+         ...
+
+     LWP::Socket        -- Socket creation and IO
+
+     HTTP::Headers      -- MIME/RFC822 style header (used by HTTP::Message)
+     HTTP::Message      -- HTTP style message
+       HTTP::Request    -- HTTP request
+       HTTP::Response   -- HTTP response
+     HTTP::Daemon       -- A HTTP server class
+
+     URI::URL           -- Uniform Resource Locators
+
+     WWW::RobotRules    -- Parse robots.txt files
+       WWW::RobotRules::AnyDBM_File -- Persistent RobotRules
+
+     HTML::Parser       -- Parse HTML documents
+       HTML::TreeBuilder-- Build a HTML syntax tree
+       HTML::HeadParser -- Parse the <HEAD> section of a HTML document
+       HTML::LinkExtor  -- Extract links from a HTML document
+     HTML::Element      -- Building block for the HTML::TreeBuilder
+     HTML::Formatter    -- Convert HTML syntax trees to readable formats
+       HTML::FormatText -- Output is plain text
+       HTML::FormatPS   -- Output is PostScript
+
+The following modules provide various functions and definitions.
+
+     LWP                -- This file.  Library version number and documentation.
+     LWP::MediaTypes    -- MIME types configuration (text/html etc.)
+     LWP::Debug         -- Debug logging module
+     LWP::Simple        -- Simplified procedural interface for common functions
+     HTTP::Status       -- HTTP status code (200 OK etc)
+     HTTP::Date         -- Date parsing module for HTTP date formats
+     HTTP::Negotiate    -- HTTP content negotiation calculation
+     HTML::Entities     -- Expand or unexpand entities in HTML text
+     File::Listing      -- Parse directory listings
+
+HTTP use the Base64 encoding at some places.  The QuotedPrint module is
+just included to make the MIME:: collection more complete.
+
+     MIME::Base64       -- Base64 encoding/decoding routines
+     MIME::QuotedPrint  -- Quoted Printable encoding/decoding routines
+
+The following modules does not have much to do with the World Wide Web,
+but are included just because I am lazy and did not bother to make
+separate distributions for them.  Regard them as bonus, provided free
+for your pleasure.
+
+     Font::AFM          -- Parse Adobe Font Metric files
+     File::CounterFile  -- Persistent counter class
+
+
+MORE DOCUMENTATION
+==================
+
+All modules contain detailed information on the interfaces they provide.
+The *Note Lwpcook: lwpcook, is the libwww-perl cookbook that contain
+examples of typical usage of the library.  You might want to take a look
+at how the scripts `lwp-request', `lwp-rget' and `lwp-mirror' are
+implemented.
+
+
+BUGS
+====
+
+The library can not handle multiple simultaneous requests yet.  The
+HTML:: modules are still experimental.  Also, check out what's left in
+the TODO file.
+
+
+ACKNOWLEDGEMENTS
+================
+
+This package owes a lot in motivation, design, and code, to the
+libwww-perl library for Perl 4, maintained by Roy Fielding
+<fielding@ics.uci.edu>.
+
+That package used work from Alberto Accomazzi, James Casey, Brooks
+Cutter, Martijn Koster, Oscar Nierstrasz, Mel Melchner, Gertjan van
+Oosten, Jared Rhine, Jack Shirazi, Gene Spafford, Marc VanHeyningen,
+Steven E. Brenner, Marion Hakanson, Waldemar Kebsch, Tony Sanders, and
+Larry Wall; see the libwww-perl-0.40 library for details.
+
+The primary architect for this Perl 5 library is Martijn Koster and
+Gisle Aas, with lots of help from Graham Barr, Tim Bunce, Andreas
+Koenig, Jared Rhine, and Jack Shirazi.
+
+
+COPYRIGHT
+=========
+
+     Copyright 1995-1997, Gisle Aas
+     Copyright 1995, Martijn Koster
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AVAILABILITY
+============
+
+The latest version of this library is likely to be available from:
+
+     http://www.sn.no/libwww-perl/
+
+The best place to discuss this code is on the <libwww-perl@ics.uci.edu>
+mailing list.
+
+
+
+
+File: pm.info, Node: LWP/Debug, Next: LWP/IO, Prev: LWP, Up: Module List
+
+debug routines for the libwww-perl library
+******************************************
+
+
+
+NAME
+====
+
+LWP::Debug - debug routines for the libwww-perl library
+
+
+SYNOPSIS
+========
+
+     use LWP::Debug qw(+ -conns);
+
+     # Used internally in the library
+     LWP::Debug::trace('send()');
+     LWP::Debug::debug('url ok');
+     LWP::Debug::conns("read $n bytes: $data");
+
+
+DESCRIPTION
+===========
+
+LWP::Debug provides tracing facilities. The trace(), debug() and conns()
+function are called within the library and they log information at
+increasing levels of detail. Which level of detail is actually printed
+is controlled with the `level()' function.
+
+
+FUNCTIONS
+=========
+
+
+level(...)
+----------
+
+The `level()' function controls the level of detail being
+logged. Passing '+' or '-' indicates full and no logging
+respectively. Inidividual levels can switched on and of by passing the
+name of the level with a '+' or '-' prepended.  The levels are:
+
+     trace   : trace function calls
+     debug   : print debug messages
+     conns   : show all data transfered over the connections
+
+The LWP::Debug module provide a special import() method that allows you
+to pass the level() arguments with initial use statement.  If a use
+argument start with '+' or '-' then it is passed to the level function,
+else the name is exported as usual.  The following two statements are
+thus equivalent (if you ignore that the second pollutes your namespace):
+
+     use LWP::Debug qw(+);
+     use LWP::Debug qw(level); level('+');
+
+
+trace($msg)
+-----------
+
+The `trace()' function is used for tracing function calls. The package
+and calling subroutine name is printed along with the passed
+argument. This should be called at the start of every major function.
+
+
+debug($msg)
+-----------
+
+The `debug()' function is used for high-granularity reporting of state
+in functions.
+
+
+conns($msg)
+-----------
+
+The `conns()' function is used to show data being transferred over the
+connections. This may generate considerable output.
+
+
+
+
+File: pm.info, Node: LWP/IO, Next: LWP/MediaTypes, Prev: LWP/Debug, Up: Module List
+
+Low level I/O capability
+************************
+
+
+
+NAME
+====
+
+LWP::IO - Low level I/O capability
+
+
+SYNOPSIS
+========
+
+     use LWP::IO ();
+
+
+DESCRIPTION
+===========
+
+
+LWP::IO::read($fd, $data, $size, $offset, $timeout)
+---------------------------------------------------
+
+
+LWP::IO::write($fd, $data, $timeout)
+------------------------------------
+
+These routines provide low level I/O with timeout capability for the LWP
+library.  These routines will only be installed if they are not already
+defined.  This fact can be used by programs that need to override these
+functions.  Just provide replacement functions before you require
+LWP. See also *Note LWP/TkIO: LWP/TkIO,.
+
+
+
+
+File: pm.info, Node: LWP/MediaTypes, Next: LWP/MemberMixin, Prev: LWP/IO, Up: Module List
+
+guess media type for a file or a URL.
+*************************************
+
+
+
+NAME
+====
+
+guess_media_type - guess media type for a file or a URL.
+
+media_suffix - returns file extentions for a media type
+
+
+SYNOPSIS
+========
+
+     use LWP::MediaTypes qw(guess_media_type);
+     $type = guess_media_type("/tmp/foo.gif");
+
+
+DESCRIPTION
+===========
+
+This module provides functions for handling of media (also known as
+MIME) types and encodings.  The mapping from file extentions to media
+types is defined by the `media.types' file.  If the `~/.media.types'
+file exist it is used as a replacement.
+
+For backwards compatability we will also look for `~/.mime.types'.
+
+
+FUNCTIONS
+=========
+
+
+guess_media_type($filename_or_url, [$header_to_modify])
+-------------------------------------------------------
+
+This function tries to guess media type and encoding for given file.  In
+scalar context it returns only the content-type.  In array context it
+returns an array consisting of content-type followed by any
+content-encodings applied.
+
+The guess_media_type function also accepts a URI::URL object as
+argument.
+
+If the type can not be deduced from looking at the file name only,
+then guess_media_type() will take a look at the actual file using the
+-T perl operator in order to determine if this is a text file
+(text/plain).  If this does not work it will return
+*application/octet-stream* as the type.
+
+The optional second argument should be a reference to a HTTP::Headers
+object (or some HTTP::Message object).  When present this function will
+set the value of the 'Content-Type' and 'Content-Encoding' for this
+header.
+
+
+media_suffix($type,...)
+-----------------------
+
+This function will return all suffixes that can be used to denote the
+specified media type(s).  Wildcard types can be used.  In scalar context
+it will return the first suffix found.
+
+Examples:
+
+     @suffixes = media_suffix('image/*', 'audio/basic');
+     $suffix = media_suffix('text/html');
+
+
+
+

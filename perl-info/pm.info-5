@@ -1,0 +1,1755 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Bit/ShiftReg, Next: Bit/Vector, Prev: Bib/Text/Bib, Up: Module List
+
+Bit Shift Registers with Rotate / Shift Operations
+**************************************************
+
+
+
+NAME
+====
+
+Bit::ShiftReg - Bit Shift Registers with Rotate / Shift Operations
+
+Implements rotate left, rotate right, shift left and shift right
+operations with carry flag for all C integer types
+
+
+SYNOPSIS
+========
+
+   * `use Bit::ShiftReg qw( bits_of_byte bits_of_short bits_of_int
+     bits_of_long' `LSB_byte MSB_byte LSB_short MSB_short LSB_int
+     MSB_int LSB_long MSB_long' `ROL_byte ROR_byte SHL_byte SHR_byte
+     ROL_short ROR_short SHL_short SHR_short' `ROL_int ROR_int SHL_int
+     SHR_int ROL_long ROR_long SHL_long SHR_long );'
+
+     imports all (or some, by leaving some out) of the available
+     operations and functions
+
+   * `use Bit::ShiftReg qw(:all);'
+
+     imports all available operations and functions
+
+   * `$version = Bit::ShiftReg::Version();'
+
+     returns the module's version number
+
+   * `$bits = bits_of_byte();'
+
+     returns the number of bits in a byte (unsigned char) on your
+     machine
+
+   * `$bits = bits_of_short();'
+
+     returns the number of bits in an unsigned short on your machine
+
+   * `$bits = bits_of_int();'
+
+     returns the number of bits in an unsigned int on your machine
+
+   * `$bits = bits_of_long();'
+
+     returns the number of bits in an unsigned long on your machine
+
+   * `$lsb = LSB_byte($value);'
+
+     returns the least significant bit (LSB) of a byte (unsigned char)
+
+   * `$msb = MSB_byte($value);'
+
+     returns the most significant bit (MSB) of a byte (unsigned char)
+
+   * `$lsb = LSB_short($value);'
+
+     returns the least significant bit (LSB) of an unsigned short
+
+   * `$msb = MSB_short($value);'
+
+     returns the most significant bit (MSB) of an unsigned short
+
+   * `$lsb = LSB_int($value);'
+
+     returns the least significant bit (LSB) of an unsigned int
+
+   * `$msb = MSB_int($value);'
+
+     returns the most significant bit (MSB) of an unsigned int
+
+   * `$lsb = LSB_long($value);'
+
+     returns the least significant bit (LSB) of an unsigned long
+
+   * `$msb = MSB_long($value);'
+
+     returns the most significant bit (MSB) of an unsigned long
+
+   * `$carry = ROL_byte($value);'
+
+   * `$carry = ROR_byte($value);'
+
+   * `$carry_out = SHL_byte($value,$carry_in);'
+
+   * `$carry_out = SHR_byte($value,$carry_in);'
+
+   * `$carry = ROL_short($value);'
+
+   * `$carry = ROR_short($value);'
+
+   * `$carry_out = SHL_short($value,$carry_in);'
+
+   * `$carry_out = SHR_short($value,$carry_in);'
+
+   * `$carry = ROL_int($value);'
+
+   * `$carry = ROR_int($value);'
+
+   * `$carry_out = SHL_int($value,$carry_in);'
+
+   * `$carry_out = SHR_int($value,$carry_in);'
+
+   * `$carry = ROL_long($value);'
+
+   * `$carry = ROR_long($value);'
+
+   * `$carry_out = SHL_long($value,$carry_in);'
+
+   * `$carry_out = SHR_long($value,$carry_in);'
+
+*Note that "$value" must be a variable in the calls of the functions*
+*ROL, ROR, SHL and SHR, and that the contents of this variable are*
+*altered IMPLICITLY by these functions!*
+
+*Note also that the "carry" input value is always truncated to the least*
+*significant bit, i.e., input values for "carry" must be either 0 or 1!*
+
+*Finally, note that the return values of the functions LSB, MSB, ROL, ROR,*
+*SHL and SHR are always either 0 or 1!*
+
+
+DESCRIPTION
+===========
+
+This module implements rotate left, rotate right, shift left and shift
+right operations with carry flag for all C integer types.
+
+The results depend on the number of bits that the integer types unsigned
+char, unsigned short, unsigned int and unsigned long have on your
+machine.
+
+The module automatically determines the number of bits of each integer
+type and adjusts its internal constants accordingly.
+
+How the operations work:
+
+ROL
+     Rotate Left:
+
+          carry:                           value:
+
+          +---+            +---+---+---+---     ---+---+---+---+
+          | 1 |  <---+---  | 1 | 0 | 0 | 1  ...  1 | 0 | 1 | 1 |  <---+
+          +---+      |     +---+---+---+---     ---+---+---+---+      |
+                     |                                                |
+                     +------------------------------------------------+
+
+ROR
+     Rotate Right:
+
+          value:                          carry:
+
+          +---+---+---+---     ---+---+---+---+           +---+
+           +--->  | 1 | 0 | 0 | 1  ...  1 | 0 | 1 | 1 |  ---+---> | 1 |
+           |      +---+---+---+---     ---+---+---+---+     |     +---+
+           |                                                |
+           +------------------------------------------------+
+
+SHL
+     Shift Left:
+
+          carry                        value:                       carry
+           out:                                                      in:
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+          | 1 |  <---  | 1 | 0 | 0 | 1  ...  1 | 0 | 1 | 1 |  <---  | 1 |
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+
+SHR
+     Shift Right:
+
+          carry                        value:                       carry
+           in:                                                       out:
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+          | 1 |  --->  | 1 | 0 | 0 | 1  ...  1 | 0 | 1 | 1 |  --->  | 1 |
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+
+
+EXAMPLE
+=======
+
+Suppose you want to implement shift registers in a machine-independent
+way.
+
+The only C integer type whose length in bits you can be pretty sure
+about is probably a byte, since the C standard only prescribes minimum
+lengths for char, short, int and long and that `sizeof(char)' `<='
+`sizeof(short)' `<=' `sizeof(int)' `<=' `sizeof(long)'.
+
+How to implement a 4-byte shift register and the 4 operations ROL, ROR,
+SHL and SHR on it:
+
+First, you need to define 4 byte registers:
+
+     $byte0 = 0;
+     $byte1 = 0;
+     $byte2 = 0;
+     $byte3 = 0;
+
+Then proceed as follows:
+
+ROL
+     Rotate left:
+
+          $carry = SHL_byte($byte3, SHL_byte($byte2, SHL_byte($byte1,
+                   SHL_byte($byte0, MSB_byte($byte3)))));
+
+ROR
+     Rotate right:
+
+          $carry = SHR_byte($byte0, SHR_byte($byte1, SHR_byte($byte2,
+                   SHR_byte($byte3, LSB_byte($byte0)))));
+
+SHL
+     Shift left:
+
+          $carry_out = SHL_byte($byte3, SHL_byte($byte2, SHL_byte($byte1,
+                       SHL_byte($byte0, $carry_in))));
+
+SHR
+     Shift right:
+
+          $carry_out = SHR_byte($byte0, SHR_byte($byte1, SHR_byte($byte2,
+                       SHR_byte($byte3, $carry_in))));
+
+
+SEE ALSO
+========
+
+perl(1), perlsub(1), perlmod(1), perlxs(1), perlxstut(1), perlguts(1).
+
+
+VERSION
+=======
+
+This man page documents Bit::ShiftReg version 2.0.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE AGREEMENT
+=================
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Bit/Vector, Next: Bundle/Apache, Prev: Bit/ShiftReg, Up: Module List
+
+bit vectors of arbitrary length (base class)
+********************************************
+
+
+
+NAME
+====
+
+Bit::Vector - bit vectors of arbitrary length (base class)
+
+Versatile implementation of bit vectors of arbitrary length with
+efficient and easy-to-use methods for various applications, especially
+sets.
+
+Base class for all applications and classes using bit vectors as their
+underlying data type.
+
+Provides overloaded arithmetic and relational operators for maximum
+comfort.
+
+For an analysis of the time complexity of the methods implemented in
+this module, please refer to the file "COMPLEXITY" in the "Bit::Vector"
+distribution directory!
+
+
+SYNOPSIS
+========
+
+
+METHODS IMPLEMENTED IN C (fastest)
+----------------------------------
+
+     Version
+         $version = Bit::Vector::Version(); # version of "Vector.xs"
+
+     new
+         $vector = new Bit::Vector($elements);
+         $vector = Bit::Vector->new($elements);
+         $vector = $any_vector->new($elements);
+
+     Resize
+         $vector->Resize($elements);
+
+     Size
+         $elements = $vector->Size();
+
+     Empty
+         $vector->Empty();
+
+     Fill
+         $vector->Fill();
+
+     Flip
+         $vector->Flip();
+
+     Interval_Empty
+         $vector->Interval_Empty($min,$max);
+
+     Interval_Fill
+         $vector->Interval_Fill($min,$max);
+
+     Interval_Flip
+         $vector->Interval_Flip($min,$max);
+
+     Interval_Scan_inc
+         while (($min,$max) = $vector->Interval_Scan_inc($start))
+
+     Interval_Scan_dec
+         while (($min,$max) = $vector->Interval_Scan_dec($start))
+
+     Bit_Off
+         $vector->Bit_Off($index);
+         $vector->Delete($index);           # (deprecated)
+
+     Bit_On
+         $vector->Bit_On($index);
+         $vector->Insert($index);           # (deprecated)
+
+     bit_flip
+         $bit = $vector->bit_flip($index);
+         if ($vector->bit_flip($index))
+         $bit = $vector->flip($index);      # (deprecated)
+         if ($vector->flip($index))         # (deprecated)
+
+     bit_test
+         $bit = $vector->bit_test($index);
+         if ($vector->bit_test($index))
+         $bit = $vector->contains($index);
+         if ($vector->contains($index))
+         $bit = $vector->in($index);        # (deprecated)
+         if ($vector->in($index))           # (deprecated)
+
+     is_empty
+         if ($vector->is_empty())
+
+     is_full
+         if ($vector->is_full())
+
+     equal
+         if ($vector1->equal($vector2))
+
+     lexorder
+         if ($vector1->lexorder($vector2))
+
+     Compare
+         $cmp = $vector1->Compare($vector2);
+
+     Copy
+         $vector1->Copy($vector2);
+
+     rotate_left
+         $carry_out = $vector->rotate_left();
+
+     rotate_right
+         $carry_out = $vector->rotate_right();
+
+     shift_left
+         $carry_out = $vector->shift_left($carry_in);
+
+     shift_right
+         $carry_out = $vector->shift_right($carry_in);
+
+     Move_Left
+         $vector->Move_Left($bits);
+
+     Move_Right
+         $vector->Move_Right($bits);
+
+     increment
+         $carry = $vector->increment();
+
+     decrement
+         $carry = $vector->decrement();
+
+     to_String
+         $string = $vector->to_String();    # e.g., "A08A28AC"
+
+     from_string
+         $ok = $vector->from_string($string);
+
+     Union
+         $set1->Union($set2,$set3);         # in-place is possible!
+
+     Intersection
+         $set1->Intersection($set2,$set3);  # in-place is possible!
+
+     Difference
+         $set1->Difference($set2,$set3);    # in-place is possible!
+
+     ExclusiveOr
+         $set1->ExclusiveOr($set2,$set3);   # in-place is possible!
+
+     Complement
+         $set1->Complement($set2);          # in-place is possible!
+
+     subset
+         if ($set1->subset($set2))
+         if ($set1->inclusion($set2))       # (deprecated)
+
+     Norm
+         $norm = $set->Norm();
+
+     Min
+         $min = $set->Min();
+
+     Max
+         $max = $set->Max();
+
+     Multiplication
+         $matrix1->Multiplication($rows1,$cols1,
+         $matrix2,$rows2,$cols2,
+         $matrix3,$rows3,$cols3);
+
+     Closure
+         $matrix->Closure($rows,$cols);
+
+
+METHODS IMPLEMENTED IN PERL
+---------------------------
+
+     Version
+         $version = $Bit::Vector::VERSION;  # version of "Vector.pm"
+
+     Shadow
+         $other_vector = $some_vector->Shadow();
+
+     Clone
+         $twin_vector = $some_vector->Clone();
+
+     new_from_String
+         eval { $vector = Bit::Vector->new_from_String($string); };
+
+     to_ASCII
+         $string = $vector->to_ASCII();     # e.g., "2,3,5-7,11,13-19"
+
+     from_ASCII
+         eval { $vector->from_ASCII($string); };
+
+
+OVERLOADED OPERATORS (slowest)
+------------------------------
+
+     # "$index" is a number or a Perl scalar variable containing a
+     # number which represents the set containing only that element:
+
+     Emptyness
+         if ($vector) # if not empty
+         if (! $vector) # if empty
+         unless ($vector) # if empty
+
+     Equality
+         if ($vector1 == $vector2)
+         if ($vector1 != $vector2)
+         if ($vector == $index)
+         if ($vector != $index)
+
+     Lexical Comparison
+         $cmp = $vector1 cmp $vector2;
+         if ($vector1 lt $vector2)
+         if ($vector1 le $vector2)
+         if ($vector1 gt $vector2)
+         if ($vector1 ge $vector2)
+         if ($vector1 eq $vector2)
+         if ($vector1 ne $vector2)
+         $cmp = $vector cmp $index;
+         if ($vector lt $index)
+         if ($vector le $index)
+         if ($vector gt $index)
+         if ($vector ge $index)
+         if ($vector eq $index)
+         if ($vector ne $index)
+
+     Move Left
+         $vector1 = $vector2 << $bits;
+         $vector <<= $bits;
+
+     Move Right
+         $vector1 = $vector2 >> $bits;
+         $vector >>= $bits;
+
+     Increment
+         ++$vector;
+         $vector++;
+
+     Decrement
+         --$vector;
+         $vector--;
+
+     String Conversion
+         $string = "$vector";
+         print "\$vector = '$vector'\n";
+
+     Union
+         $set1 = $set2 + $set3;
+         $set1 += $set2;
+         $set1 = $set2 | $set3;
+         $set1 |= $set2;
+         $vector1 = $vector2 + $index;
+         $vector += $index;
+         $vector1 = $vector2 | $index;
+         $vector |= $index;
+
+     Intersection
+         $set1 = $set2 * $set3;
+         $set1 *= $set2;
+         $set1 = $set2 & $set3;
+         $set1 &= $set2;
+         $vector1 = $vector2 * $index;
+         $vector *= $index;
+         $vector1 = $vector2 & $index;
+         $vector &= $index;
+
+     Difference
+         $set1 = $set2 - $set3;
+         $set1 -= $set2;
+         $set1 = $set2 - $set1;
+         $vector1 = $vector2 - $index;
+         $vector1 = $index - $vector2;
+         $vector -= $index;
+
+     ExclusiveOr
+         $set1 = $set2 ^ $set3;
+         $set1 ^= $set2;
+         $vector1 = $vector2 ^ $index;
+         $vector ^= $index;
+
+     Complement
+         $set1 = -$set2;
+         $set1 = ~$set2;
+         $set = -$set;
+         $set = ~$set;
+
+     Subset Relationship
+         if ($set1 <= $set2)
+
+     True Subset Relationship
+         if ($set1 < $set2)
+
+     Superset Relationship
+         if ($set1 >= $set2)
+
+     True Superset Relationship
+         if ($set1 > $set2)
+
+     Norm
+         $norm = abs($set);
+
+
+IMPORTANT NOTES
+===============
+
+
+GENERAL HINTS
+-------------
+
+   * Method naming convention
+
+     Method names completely in lower case indicate a boolean return
+     value!
+
+     (Except for method "new()", of course.)
+
+   * Boolean return values
+
+     Boolean return values in this class are always a numerical (!)
+     zero ("0") for "false" and a numerical (!) one ("1") for "true".
+
+     This means that you can use the methods of this class with boolean
+     return values as the conditional expression in "if", "unless" and
+     "while" statements.
+
+   * Version
+
+     The function "`Bit::Vector::Version()'" (the version of the
+     "Vector.xs" file) should always return the same version number as
+     contained in the variable "`$Bit::Vector::VERSION'" (the version of
+     the "Vector.pm" file).
+
+
+METHODS IMPLEMENTED IN C
+------------------------
+
+   * `$vector = Bit::Vector->new($elements);'
+
+     This is the bit vector constructor method.
+
+     Call this method to create a new bit vector containing "$elements"
+     bits (with indices from `0' to `$elements - 1').
+
+     The method returns a reference to the new bit vector.
+
+     A new bit vector is always initialized so that all bits are cleared
+     (turned off).
+
+     An exception will be raised if the method is unable to allocate the
+     necessary memory.
+
+     An exception will also be raised if you try to create a bit vector
+     with zero elements (i.e., with length zero).
+
+     Note that if you specify a negative number for "$elements" it will
+     be interpreted as a large positive number due to its internal 2's
+     complement binary representation!
+
+     In such a case, the bit vector constructor method will obediently
+     attempt to create a bit vector of that size, probably resulting in
+     an exception, as explained above.
+
+   * `$vector->Resize($elements);'
+
+     Changes the size of the given vector to the specified number of
+     bits.
+
+     This method allows you to change the size of an existing bit vector
+     or set, preserving as many bits from the old vector as will fit
+     into the new one (i.e., all bits with indices smaller than the
+     minimum of the sizes of the two vectors, old and new).
+
+     If the number of machine words needed to store the new vector is
+     smaller than or equal to the number of words needed to store the
+     old vector, the memory allocated for the old vector is reused for
+     the new one, and only the relevant book-keeping information is
+     adjusted accordingly.
+
+     This means that even if the number of bits increases, new memory is
+     not necessarily being allocated (i.e., if the old and the new
+     number of bits fit into the same number of machine words)!
+
+     If the number of machine words needed to store the new vector is
+     greater than the number of words needed to store the old vector,
+     new memory is allocated for the new vector, the old vector is
+     copied to the new one, the remaining bits in the new vector are
+     cleared (turned off) and the old vector is deleted, i.e., the
+     memory that was allocated for it is released.
+
+     This also means that if you decrease the size of a given vector so
+     that it will use fewer machine words, and increase it again later
+     so that it will use more words than before but still less than the
+     original vector, new memory will be allocated anyway because the
+     information about the size of the original vector is lost when you
+     downsize it.
+
+     Note also that if you specify a negative number for "$elements" it
+     will be interpreted as a large positive number due to its internal
+     2's complement binary representation!
+
+     In such a case, "Resize()" will obediently attempt to create a bit
+     vector of that size, probably resulting in an exception, as
+     explained above (see method "new()").
+
+     Finally, note that resizing a bit vector to a size of zero elements
+     (length zero) is disallowed; an exception will be raised if you try
+     to do so.
+
+   * `$elements = $vector->Size();'
+
+     Returns the size (number of bits) the given vector was created with
+     (or "`Resize()'"d to).
+
+   * `$vector->Empty();'
+
+     Clears all bits in the given vector.
+
+   * `$vector->Fill();'
+
+     Sets all bits in the given vector.
+
+   * `$vector->Flip();'
+
+     Flips (i.e., complements) all bits in the given vector.
+
+   * `$vector->Interval_Empty($min,$max);'
+
+     Clears all bits in the interval `[$min..$max]' (including both
+     limits) in the given vector.
+
+     "`$min'" and "`$max'" may have the same value; this is the same as
+     clearing a single bit with "`Bit_Off()'" (but less efficient).
+
+     Note that `$vector->Interval_Empty(0,$vector->Size()-1);' is the
+     same as `$vector->Empty();' (but less efficient).
+
+   * `$vector->Interval_Fill($min,$max);'
+
+     Sets all bits in the interval `[$min..$max]' (including both
+     limits) in the given vector.
+
+     "`$min'" and "`$max'" may have the same value; this is the same as
+     setting a single bit with "`Bit_On()'" (but less efficient).
+
+     Note that `$vector->Interval_Fill(0,$vector->Size()-1);' is the
+     same as `$vector->Fill();' (but less efficient).
+
+   * `$vector->Interval_Flip($min,$max);'
+
+     Flips (i.e., complements) all bits in the interval `[$min..$max]'
+     (including both limits) in the given vector.
+
+     "`$min'" and "`$max'" may have the same value; this is the same as
+     flipping a single bit with "`bit_flip()'" (but less efficient).
+
+     Note that `$vector->Interval_Flip(0,$vector->Size()-1);' is the
+     same as `$vector->Flip();' and `$vector->Complement($vector);' (but
+     less efficient).
+
+   * `($min,$max) = $vector->Interval_Scan_inc($start)'
+
+     Returns the minimum and maximum indices of the next contiguous
+     block of set bits (i.e., bits in the "on" state).
+
+     The search starts at index "$start" (i.e., `"$min" >= "$start"')
+     and proceeds upwards (i.e., `"$max" >= "$min"'), thus repeatedly
+     increments the search pointer "$start" (internally).
+
+     Note though that the contents of the variable (or scalar literal
+     value) "$start" is not altered! I.e., you have to set it to the
+     desired value yourself prior to each call to "Interval_Scan_inc()"!
+     (See also the example given below!)
+
+     Actually, the bit vector is not searched bit by bit, but one
+     machine word at a time, in order to speed up execution (this means
+     that this method is quite efficient!).
+
+     An empty list is returned if no such block can be found.
+
+     Note that a single set bit (surrounded by cleared bits) is a valid
+     block by this definition. In that case the return values for "$min"
+     and "$max" are the same.
+
+     Typical use:
+
+          $start = 0;
+          while (($start < $vector->Size()) &&
+              (($min,$max) = $vector->Interval_Scan_inc($start)))
+          {
+              $start = $max + 2;
+
+          # do something with $min and $max
+              }
+
+   * `($min,$max) = $vector->Interval_Scan_dec($start)'
+
+     Returns the minimum and maximum indices of the next contiguous
+     block of set bits (i.e., bits in the "on" state).
+
+     The search starts at index "$start" (i.e., `"$max" <= "$start"')
+     and proceeds downwards (i.e., `"$min" <= "$max"'), thus repeatedly
+     decrements the search pointer "$start" (internally).
+
+     Note though that the contents of the variable (or scalar literal
+     value) "$start" is not altered! I.e., you have to set it to the
+     desired value yourself prior to each call to "Interval_Scan_dec()"!
+     (See also the example given below!)
+
+     Actually, the bit vector is not searched bit by bit, but one
+     machine word at a time, in order to speed up execution (this means
+     that this method is quite efficient!).
+
+     An empty list is returned if no such block can be found.
+
+     Note that a single set bit (surrounded by cleared bits) is a valid
+     block by this definition. In that case the return values for "$min"
+     and "$max" are the same.
+
+     Typical use:
+
+          $start = $vector->Size() - 1;
+          while (($start >= 0) &&
+              (($min,$max) = $vector->Interval_Scan_dec($start)))
+          {
+              $start = $min - 2;
+
+          # do something with $min and $max
+              }
+
+   * `$vector->Bit_Off($index);'
+
+     Clears the bit with index "$index" in the given vector.
+
+     This is equivalent to removing the element "$index" from the given
+     set.
+
+     Note that if you specify a negative number for "$index" it will be
+     interpreted as a large positive number due to its internal 2's
+     complement binary representation!
+
+     An exception is raised if "$index" lies outside the permitted range
+     from "`0'" to "`$vector->Size()-1'".
+
+   * `$vector->Bit_On($index);'
+
+     Sets the bit with index "$index" in the given vector.
+
+     This is equivalent to adding the element "$index" to the given set.
+
+     Note that if you specify a negative number for "$index" it will be
+     interpreted as a large positive number due to its internal 2's
+     complement binary representation!
+
+     An exception is raised if "$index" lies outside the permitted range
+     from "`0'" to "`$vector->Size()-1'".
+
+   * `$vector->bit_flip($index)'
+
+     Flips (i.e., complements) the bit with index "$index" in the given
+     vector.
+
+     This is equivalent to adding the element "$index" to the given set
+     if it is NOT contained yet and removing it if it IS contained.
+
+     Also returns the NEW state of the specified bit, i.e., returns "0"
+     if it is cleared (in the "off" state) or "1" if it is set (in the
+     "on" state).
+
+     In other words it returns "true" if the specified element is
+     contained in the given set and "false" otherwise.
+
+     Note that if you specify a negative number for "$index" it will be
+     interpreted as a large positive number due to its internal 2's
+     complement binary representation!
+
+     An exception is raised if "$index" lies outside the permitted range
+     from "`0'" to "`$vector->Size()-1'".
+
+   * `$vector->bit_test($index)'
+
+     Returns the current state of the bit with index "$index" in the
+     given vector, i.e., returns "0" if it is cleared (in the "off"
+     state) or "1" if it is set (in the "on" state).
+
+     In other words it returns "true" if the specified element is
+     contained in the given set and "false" otherwise.
+
+     Note that if you specify a negative number for "$index" it will be
+     interpreted as a large positive number due to its internal 2's
+     complement binary representation!
+
+     An exception is raised if "$index" lies outside the permitted range
+     from "`0'" to "`$vector->Size()-1'".
+
+   * `$vector->is_empty()'
+
+     Tests wether the given bit vector is empty, i.e., wether ALL of its
+     bits are cleared (in the "off" state).
+
+     Returns "true" ("1") if the bit vector is empty and "false" ("0")
+     otherwise.
+
+   * `$vector->is_full()'
+
+     Tests wether the given bit vector is full, i.e., wether ALL of its
+     bits are set (in the "on" state).
+
+     Returns "true" ("1") if the bit vector is full and "false" ("0")
+     otherwise.
+
+   * `$vector1->equal($vector2)'
+
+     Tests the two given bit vectors for equality.
+
+     Returns "true" ("1") if the two bit vectors are exact copies of one
+     another and "false" ("0") otherwise.
+
+     An exception is raised if the two bit vectors have different sizes,
+     i.e., if `$vector1->Size()' `!=' `$vector2->Size()'.
+
+   * `$vector1->lexorder($vector2)'
+
+     Tests the lexical order of the two given bit vectors.
+
+     I.e., the two bit vectors are regarded as two large (positive)
+     numbers in binary representation which are compared.
+
+     The least significant bit (LSB) of this binary number is the bit
+     with index "`0'", the most significant bit (MSB) is the bit with
+     index "`$vector->Size()-1'".
+
+     Returns "true" ("1") if the first bit vector is less than or equal
+     to the second bit vector and "false" ("0") otherwise.
+
+     An exception is raised if the two bit vectors have different sizes,
+     i.e., if `$vector1->Size()' `!=' `$vector2->Size()'.
+
+   * `$vector1->Compare($vector2)'
+
+     Compares the two given bit vectors.
+
+     I.e., the two bit vectors are regarded as two large (positive)
+     numbers in binary representation which are compared.
+
+     The least significant bit (LSB) of this binary number is the bit
+     with index "`0'", the most significant bit (MSB) is the bit with
+     index "`$vector->Size()-1'".
+
+     Returns "-1" if the first bit vector is less than the second bit
+     vector, "0" if the two bit vectors are exact copies of one another
+     and "1" if the first bit vector is greater than the second bit
+     vector.
+
+     An exception is raised if the two bit vectors have different sizes,
+     i.e., if `$vector1->Size()' `!=' `$vector2->Size()'.
+
+   * `$vector1->Copy($vector2);'
+
+     Copies the contents of bit vector "$vector2" to bit vector
+     "$vector1".
+
+     The previous contents of bit vector "$vector1" get overwritten,
+     i.e., are lost.
+
+     Both vectors must exist beforehand, i.e., this method does not
+     CREATE any new bit vector object!
+
+     An exception is raised if the two bit vectors have different sizes,
+     i.e., if `$vector1->Size()' `!=' `$vector2->Size()'.
+
+   * `$carry_out = $vector->rotate_left();'
+
+          carry             MSB           vector:           LSB
+           out:
+          +---+            +---+---+---+---     ---+---+---+---+
+          |   |  <---+---  |   |   |   |    ...    |   |   |   |  <---+
+          +---+      |     +---+---+---+---     ---+---+---+---+      |
+                     |                                                |
+                     +------------------------------------------------+
+
+     The least significant bit (LSB) is the bit with index "`0'", the
+     most significant bit (MSB) is the bit with index
+     "`$vector->Size()-1'".
+
+   * `$carry_out = $vector->rotate_right();'
+
+          MSB           vector:           LSB            carry
+                                                          out:
+                   +---+---+---+---     ---+---+---+---+           +---+
+            +--->  |   |   |   |    ...    |   |   |   |  ---+---> |   |
+            |      +---+---+---+---     ---+---+---+---+     |     +---+
+            |                                                |
+            +------------------------------------------------+
+
+     The least significant bit (LSB) is the bit with index "`0'", the
+     most significant bit (MSB) is the bit with index
+     "`$vector->Size()-1'".
+
+   * `$carry_out = $vector->shift_left($carry_in);'
+
+          carry         MSB           vector:           LSB         carry
+           out:                                                      in:
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+          |   |  <---  |   |   |   |    ...    |   |   |   |  <---  |   |
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+
+     The least significant bit (LSB) is the bit with index "`0'", the
+     most significant bit (MSB) is the bit with index
+     "`$vector->Size()-1'".
+
+   * `$carry_out = $vector->shift_right($carry_in);'
+
+          carry         MSB           vector:           LSB         carry
+           in:                                                       out:
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+          |   |  --->  |   |   |   |    ...    |   |   |   |  --->  |   |
+          +---+        +---+---+---+---     ---+---+---+---+        +---+
+
+     The least significant bit (LSB) is the bit with index "`0'", the
+     most significant bit (MSB) is the bit with index
+     "`$vector->Size()-1'".
+
+   * `$vector->Move_Left($bits);'
+
+     Shifts the given bit vector left by "$bits" bits, i.e., inserts
+     "$bits" new bits at the lower end (least significant bit) of the
+     bit vector, moving all other bits up by "$bits" places, thereby
+     losing the "$bits" most significant bits.
+
+     The inserted new bits are all cleared (set to the "off" state).
+
+     This method does nothing if "$bits" is equal to zero.
+
+     Beware that the whole bit vector is cleared WITHOUT WARNING if
+     "$bits" is greater than or equal to the size of the given bit
+     vector!
+
+     Beware also that if you specify a negative number for "$bits", it
+     will be interpreted as a large positive number due to its internal
+     2's complement binary representation, which will probably empty
+     your bit vector!
+
+     In fact this method is equivalent to
+
+          for ( $i = 0; $i < $bits; $i++ ) { $vector->shift_left(0); }
+
+     except that it is much more efficient (for "$bits" greater than or
+     equal to the number of bits in a machine word on your system) than
+     this straightforward approach.
+
+   * `$vector->Move_Right($bits);'
+
+     Shifts the given bit vector right by "$bits" bits, i.e., deletes
+     the "$bits" least significant bits of the bit vector, moving all
+     other bits down by "$bits" places, thereby creating "$bits" new
+     bits at the upper end (most significant bit) of the bit vector.
+
+     These new bits are all cleared (set to the "off" state).
+
+     This method does nothing if "$bits" is equal to zero.
+
+     Beware that the whole bit vector is cleared WITHOUT WARNING if
+     "$bits" is greater than or equal to the size of the given bit
+     vector!
+
+     Beware also that if you specify a negative number for "$bits", it
+     will be interpreted as a large positive number due to its internal
+     2's complement binary representation, which will probably empty
+     your bit vector!
+
+     In fact this method is equivalent to
+
+          for ( $i = 0; $i < $bits; $i++ ) { $vector->shift_right(0); }
+
+     except that it is much more efficient (for "$bits" greater than or
+     equal to the number of bits in a machine word on your system) than
+     this straightforward approach.
+
+   * `$carry = $vector->increment();'
+
+     This method is crucial for generating all possible patterns of set
+     and cleared bits for a given bit vector in an ordered fashion, a
+     feature needed in many applications to cycle through all possible
+     values a bit vector of the given length can assume.
+
+     The method increments the given bit vector as though it was a large
+     (positive) number in binary representation.
+
+     The least significant bit (LSB) of this binary number is the bit
+     with index "`0'", the most significant bit (MSB) is the bit with
+     index "`$vector->Size()-1'".
+
+     This method returns "true" ("1") if a carry-over occurred, i.e., if
+     the bit vector was completely filled with set bits before this
+     operation took place (the bit vector will contain only cleared bits
+     after this operation in that case) and "false" ("0") otherwise.
+
+     This can be used as the terminating condition in a "while" loop,
+     for instance.
+
+   * `$carry = $vector->decrement();'
+
+     This method is crucial for generating all possible patterns of set
+     and cleared bits for a given bit vector in an ordered fashion, a
+     feature needed in many applications to cycle through all possible
+     values a bit vector of the given length can assume.
+
+     The method decrements the given bit vector as though it was a large
+     (positive) number in binary representation.
+
+     The least significant bit (LSB) of this binary number is the bit
+     with index "`0'", the most significant bit (MSB) is the bit with
+     index "`$vector->Size()-1'".
+
+     This method returns "true" ("1") if a carry-over occurred, i.e., if
+     the bit vector was completely filled with cleared bits before this
+     operation took place (the bit vector will contain only set bits
+     after this operation in that case) and "false" ("0") otherwise.
+
+     This can be used as the terminating condition in a "while" loop,
+     for instance.
+
+   * `$string = $vector->to_String();'
+
+     Returns a hexadecimal string representing the given bit vector.
+
+     Note that this representation is quite compact, in that it only
+     needs twice the number of bytes needed to store the bit vector
+     itself, internally!
+
+     The rightmost hexadecimal digit in this string represents the four
+     least significant bits of the given bit vector (i.e., the bits with
+     indices "3", "2", "1" and "0").
+
+     The leftmost hexadecimal digit(s) in the string represent(s) the
+     most significant and/or unused bits - this is due to the fact that
+     this class uses machine words as its basic storage unit (to
+     increase efficiency).
+
+     Since a hexadecimal digit is always worth four bits, the length of
+     the string always corresponds to a multiple of four bits anyway.
+
+     To spare extra overhead, the most significant machine word is
+     always completely converted into hexadecimal characters - which may
+     produce some (innocuous) leading hexadecimal zeros at the left end
+     of the string representing the unused bits of that bit vector.
+
+   * `$vector->from_string($string)'
+
+     Allows to read in the contents of a bit vector from a hexadecimal
+     string, such as returned by the method "to_String()" (described
+     immediately above), for instance.
+
+     The string is read from right to left (!), and the bits
+     corresponding to each hexadecimal digit are assigned to the bits in
+     the given bit vector in ascending order of their indices, i.e., the
+     rightmost hexadecimal digit is assigned to the bits with indices
+     "0", "1", "2" and "3", the second rightmost hexadecimal digit is
+     assigned to the bits with indices "4", "5", "6" and "7", and so on.
+
+     If the given string contains less hexadecimal digits than are
+     needed to completely fill the given bit vector, the remaining bits
+     are all cleared.
+
+     In other words, even if the given string does not contain enough
+     digits to completely fill the given bit vector, the previous
+     contents of the bit vector are erased completely.
+
+     If the given string is longer than it needs to fill the given bit
+     vector, the superfluous characters are simply ignored.
+
+     (In fact they are ignored completely - they are not even checked
+     for proper syntax! See also immediately below.)
+
+     This behaviour is intentional so that you may read in the string
+     representing one bit vector into another bit vector of different
+     size, i.e., as much of it as will fit!
+
+     If during the process of reading the given string any character is
+     encountered which is not a hexadecimal digit, an error ensues.
+
+     In such a case the bit vector is filled up with zeros starting at
+     the point of the error and the method returns "false" ("0").
+
+     If all goes well the method returns "true" ("1").
+
+   * `$set1->Union($set2,$set3);'
+
+     This method calculates the union of "$set2" and "$set3" and stores
+     the result in "$set1".
+
+     This is usually written as "`$set1 = $set2 u $set3'" in set theory
+     (where "u" is the "cup" operator).
+
+     (On systems where the "cup" character is unavailable this operator
+     is often denoted by a plus sign "+".)
+
+     In-place calculation is also possible, i.e., "$set1" may be
+     identical with "$set2" or "$set3" or both.
+
+     An exception is raised if the sizes of the three sets do not match.
+
+   * `$set1->Intersection($set2,$set3);'
+
+     This method calculates the intersection of "$set2" and "$set3" and
+     stores the result in "$set1".
+
+     This is usually written as "`$set1 = $set2 n $set3'" in set theory
+     (where "n" is the "cap" operator).
+
+     (On systems where the "cap" character is unavailable this operator
+     is often denoted by an asterisk "*".)
+
+     In-place calculation is also possible, i.e., "$set1" may be
+     identical with "$set2" or "$set3" or both.
+
+     An exception is raised if the sizes of the three sets do not match.
+
+   * `$set1->Difference($set2,$set3);'
+
+     This method calculates the difference of "$set2" less "$set3" and
+     stores the result in "$set1".
+
+     This is usually written as "`$set1 = $set2 \ $set3'" in set theory
+     (where "\" is the "less" operator).
+
+     In-place calculation is also possible, i.e., "$set1" may be
+     identical with "$set2" or "$set3" or both.
+
+     An exception is raised if the sizes of the three sets do not match.
+
+   * `$set1->ExclusiveOr($set2,$set3);'
+
+     This method calculates the symmetric difference of "$set2" and
+     "$set3" and stores the result in "$set1".
+
+     This can be written as "`($vec2 u $vec3) \ ($vec2 n $vec3)'" in set
+     theory (the union of the two sets less their intersection).
+
+     When sets are implemented as bit vectors then the above formula is
+     equivalent to the exclusive-or between corresponding bits of the
+     two bit vectors (hence the name of this method).
+
+     Note that this method is also much more efficient than evaluating
+     the above formula explicitly since it uses a built-in machine
+     language instruction internally.
+
+     In-place calculation is also possible, i.e., "$set1" may be
+     identical with "$set2" or "$set3" or both.
+
+     An exception is raised if the sizes of the three sets do not match.
+
+   * `$set1->Complement($set2);'
+
+     This method calculates the complement of "$set2" and stores the
+     result in "$set1".
+
+     In-place calculation is also possible, i.e., "$set1" may be
+     identical with "$set2".
+
+     An exception is raised if the sizes of the two sets do not match.
+
+   * `$set1->subset($set2)'
+
+     Returns "true" ("1") if "$set1" is a subset of "$set2" (i.e.,
+     completely contained in "$set2") and "false" ("0") otherwise.
+
+     Note that by definition, if two sets are identical they are also
+     subsets (and also supersets) of each other.
+
+     An exception is raised if the sizes of the two sets do not match.
+
+   * `$norm = $set->Norm();'
+
+     Returns the norm (number of bits which are set) of the given
+     vector.
+
+     This is equivalent to the number of elements contained in the given
+     set.
+
+   * `$min = $set->Min();'
+
+     Returns the minimum of the given set.
+
+     If the set is empty, plus infinity (represented by the constant
+     "MAX_LONG" on your system) is returned.
+
+   * `$max = $set->Max();'
+
+     Returns the maximum of the given set.
+
+     If the set is empty, minus infinity (represented by the constant
+     "MIN_LONG" on your system) is returned.
+
+   * `$m1->Multiplication($r1,$c1,$m2,$r2,$c2,$m3,$r3,$c3,);'
+
+     This method multiplies two boolean matrices (stored as bit vectors)
+     "$m2" and "$m3" and stores the result in matrix "$m1".
+
+     An exception is raised if the product of the number of rows and
+     columns of any of the three matrices differs from the size of the
+     corresponding bit vector.
+
+     An exception is also raised if the numbers of rows and columns of
+     the three matrices do not harmonize in the required manner:
+
+          rows1 == rows2
+          cols1 == cols3
+          cols2 == rows3
+
+     This method is used by the "Math::MatrixBool" application class
+     (see also `Math::MatrixBool(3)' in this node).
+
+   * `$matrix->Closure($rows,$cols);'
+
+     This method calculates the reflexive transitive closure of the
+     given boolean matrix (stored as a bit vector) using Kleene's
+     algoritm.
+
+     (See `Math::Kleene(3)' in this node for a brief introduction into
+     the theory behind Kleene's algorithm.)
+
+     The reflexive transitive closure answers the question wether a path
+     exists between any two vortices of a graph whose edges are given as
+     a matrix:
+
+     If a (directed) edge exists going from vortex "i" to vortex "j",
+     then the element in the matrix with coordinates (i,j) is set to "1"
+     (otherwise it remains set to "0").
+
+     If the edges are undirected the resulting matrix is symmetric,
+     i.e., elements (i,j) and (j,i) always contain the same value.
+
+     The matrix representing the edges of the graph only answers the
+     question wether an EDGE (!) exists between any two vortices of the
+     graph or not, whereas the reflexive transitive closure answers the
+     question wether a PATH (a series of adjacent edges) exists between
+     any two vortices of the graph!
+
+     Note that the contents of the given matrix are modified by this
+     method, so make a copy of the initial matrix in time if you are
+     going to need it again later!
+
+     An exception is raised if the given matrix is not quadratic, i.e.,
+     if the number of rows and columns of the given matrix is not
+     identical.
+
+     An exception is also raised if the product of the number of rows
+     and columns of the given matrix differs from the size of its
+     underlying bit vector.
+
+     This method is used by the "Math::MatrixBool" application class
+     (see also `Math::MatrixBool(3)' in this node).
+
+
+METHODS IMPLEMENTED IN PERL
+---------------------------
+
+   * `$other_vector = $some_vector->Shadow();'
+
+     Creates a NEW bit vector of the SAME SIZE as "$some_vector" which
+     is EMPTY.
+
+     Just like a shadow that has the same shape as the object it
+     originates from, but is flat and has no volume, i.e., contains
+     nothing.
+
+   * `$twin_vector = $some_vector->Clone();'
+
+     Creates a NEW bit vector of the SAME SIZE as "$some_vector" which
+     is an EXACT COPY of "$some_vector".
+
+   * `$vector = Bit::Vector->new_from_String($string);'
+
+     Creates a new bit vector of the size `4 * length($string)' and
+     tries to fill it with the contents of "$string" which must consist
+     entirely of hexadecimal characters.
+
+     Example:
+
+          $vector = Bit::Vector->new_from_String("20208828828208A20A08A28AC");
+
+     (Fills "$vector" with all prime numbers below 100.)
+
+     Hexadecimal characters "A" through "F" may be in lower or upper
+     case indiscriminately.
+
+     An exception is raised if the string contains other than
+     hexadecimal characters.
+
+     An exception is also raised if the string is empty because bit
+     vectors of zero elements (length zero) are not permitted in this
+     class.
+
+     Finally, an exception is also raised if the necessary memory for
+     the bit vector cannot be allocated.
+
+   * `$string = $vector->to_ASCII();'
+
+     Converts the given bit vector or set into an enumeration of single
+     indices and ranges of indices ("newsrc" style), representing the
+     bits that are set (i.e., in the "on" state) in the bit vector.
+
+     Example:
+
+          $vector = Bit::Vector->new(20);
+          $vector->Bit_On(2);
+          $vector->Bit_On(3);
+          $vector->Bit_On(11);
+          $vector->Interval_Fill(5,7);
+          $vector->Interval_Fill(13,19);
+          print $vector->to_ASCII(), "\n";
+
+     which prints "2,3,5-7,11,13-19".
+
+     If the given bit vector is empty the resulting string will also be
+     empty.
+
+   * `$vector->from_ASCII($string);'
+
+     First empties the given vector and then tries to set the bits and
+     ranges of bits specified in the given string.
+
+     The string "$string" must contain positive integers or ranges (two
+     positive integers separated by a dash "-") separated by commas.
+
+     All other characters are disallowed (including white space).
+
+     An exception will be raised if the string does not obey this
+     syntax.
+
+     In each range the first integer must always be less than or equal
+     to the second one, otherwise an exception is raised.
+
+     An exception is also raised if any of the integers exceeds the
+     range of permitted indices in the given string, i.e., if any
+     integer is greater than or equal to `$vector->Size()'.
+
+     Example:
+
+          eval { $vector->from_ASCII("2,3,5-7,11,13-19"); };
+
+     Note that the order of the indices and ranges is irrelevant, i.e.,
+
+          eval { $vector->from_ASCII("11,5-7,3,13-19,2"); };
+
+     results in the same vector as in the example above.
+
+     Ranges and indices may also overlap.
+
+     This is because each (single) index in the string is passed to the
+     method "Bit_On()" and each range to the method "Interval_Fill()"
+     internally.
+
+     So the resulting vector (or set) is just the union of all the
+     specified elements and ranges.
+
+
+OVERLOADED OPERATORS
+--------------------
+
+   * Emptyness
+
+     Note that the method for determining emptyness is quite efficient:
+
+     The method stops searching the given bit vector as soon as it finds
+     the first non-zero machine word.
+
+   * Equality
+
+     The method for determining equality is also quite efficient:
+
+     It stops at the first differing machine word it finds.
+
+   * Lexical Comparison
+
+     Using the overloaded operator "cmp" to compare two bit vectors as
+     in "`$vector1 cmp $vector2'" is essentially the same as comparing
+     the two corresponding hexadecimal strings returned by the
+     "to_String()" method, i.e., "`$vector1->to_String() cmp
+     $vector2->to_String()'".
+
+     The result is exactly the same (provided that both bit vectors have
+     the same size!), but using the overloaded operator "cmp" is much
+     more efficient since the additional overhead of converting both bit
+     vectors into strings is avoided.
+
+     Moreover, with the overloaded operator "cmp", the two bit vectors
+     are compared one machine word (usually 32 or 64 bits) at a time,
+     which is much faster than comparing one hexadecimal character (4
+     bits worth!) at a time in a string comparison.
+
+     This comparison ends as soon as two differing words are found,
+     i.e., in many cases the operator doesn't even need to look at the
+     entire bit vector!
+
+     Again, since the operator looks at more bits at a time, the search
+     ends much earlier than in a string comparison.
+
+   * Move Left
+
+     In its first form, `$vector1 = $vector2 << $bits;', creates a new
+     vector of the same size as "$vector2", copies the contents of
+     "$vector2" to it, then shifts this new vector left by the indicated
+     number of bits and finally returns a reference to this new vector.
+
+     Note that an exception will be raised if you swap the two arguments
+     of this operator.
+
+     In its second form, `$vector <<= $bits;', shifts the given vector
+     "$vector" left by the indicated number of bits.
+
+   * Move Right
+
+     In its first form, `$vector1 = $vector2 >> $bits;', creates a new
+     vector of the same size as "$vector2", copies the contents of
+     "$vector2" to it, then shifts this new vector right by the
+     indicated number of bits and finally returns a reference to this
+     new vector.
+
+     Note that an exception will be raised if you swap the two arguments
+     of this operator.
+
+     In its second form, `$vector >>= $bits;', shifts the given vector
+     "$vector" right by the indicated number of bits.
+
+   * String Conversion
+
+     Currently, converting a bit vector into a string using the
+     overloaded operator `""' is performed using the method "to_ASCII()"
+     internally, which is probably the preferred behaviour.
+
+     If you think that this operator should rather convert any given bit
+     vector into a hexadecimal string using the method "to_String()",
+     then you should edit the file "Vector.pm" in this distribution as
+     follows:
+
+     Locate the method "sub _string" and change the line
+
+          return( $object->to_ASCII() );
+
+     to
+
+          return( $object->to_String() );
+
+   * Union
+
+     Since there is no "cup" character in the ASCII alphabet, the plus
+     sign "+" is used here to denote the union operator from set theory.
+
+     The pipe symbol (or "vertical bar") "|" may be used as an alias for
+     the plus sign "+".
+
+   * Intersection
+
+     Since there is no "cap" character in the ASCII alphabet, the
+     asterisk "*" is used here to denote the intersection operator from
+     set theory.
+
+     The ampersand "&" may be used as an alias for the asterisk "*".
+
+   * Difference
+
+     Since the backslash "\" is not an (overloadable) operator in Perl
+     (and a very special character anyway) the minus sign "-" is used
+     here to denote the "less" operator from set theory.
+
+   * ExclusiveOr
+
+     Since there is no widely accepted symbol to denote the symmetric
+     difference in set theory (at least not to my knowledge - unless it
+     is the dotted minus sign, which alas is also a character
+     unavailable in the ASCII alphabet), the caret "^" (which is the
+     "exclusive-or" operator anyway) is simply used here to express the
+     symmetric difference of two sets.
+
+   * Complement
+
+     The tilde "~" as well as the unary minus "-" are used here
+     (interchangeably!) to denote the complement of a set.
+
+   * Subset Relationship
+
+     Since there is no "contained in or equal" sign in the ASCII
+     alphabet, the usual operator "<=" is used instead to denote subset
+     relationship.
+
+   * True Subset Relationship
+
+     Since there is no "contained in" sign in the ASCII alphabet, the
+     usual operator "<" is used instead to denote (true) subset
+     relationship.
+
+   * Superset Relationship
+
+     Since there is no "superset of or equal" sign in the ASCII
+     alphabet, the usual operator ">=" is used instead to denote
+     superset relationship.
+
+   * True Superset Relationship
+
+     Since there is no "superset of" sign in the ASCII alphabet, the
+     usual operator ">" is used instead to denote (true) superset
+     relationship.
+
+   * Norm
+
+     The function "abs()" can be used to return the number of elements
+     in a given set.
+
+
+DESCRIPTION
+===========
+
+This class allows you to create bit vectors and sets of arbitrary size
+(only limited by the size of a machine word and available memory on your
+system) with indices (= elements) in the range from zero to some
+positive integer, to dynamically change the size of such bit vectors or
+sets and to perform a broad range of basic operations on them, like
+
+-
+     adding or removing elements (setting and clearing single bits),
+
+-
+     testing the presence of a certain element (testing a single bit),
+
+-
+     setting or clearing contiguous ranges of bits,
+
+-
+     detecting contiguous ranges of set bits,
+
+-
+     copying bit vectors,
+
+-
+     converting a bit vector into either a compact (hexadecimal) or a
+     human-readable string representation (allowing you to store bit
+     vectors in a file, for instance),
+
+-
+     reading in the contents of a bit vector from a string,
+
+-
+     comparing two bit vectors for equality and lexical order,
+
+-
+     performing bitwise shift and rotation operations,
+
+-
+     computing the union, intersection, difference, symmetric difference
+     or complement of sets,
+
+-
+     testing two sets for equality or inclusion (subset relationship),
+
+-
+     computing the minimum, the maximum and the norm (number of
+     elements) of a set,
+
+and more.
+
+Note also that it is very easy to implement sets of arbitrary intervals
+of integers using this module (negative indices are no obstacle),
+despite the fact that only intervals of positive integers (from zero to
+some positive integer) are supported directly.
+
+Please refer to the "Set::IntegerRange" module (also contained in this
+distribution) and `Set::IntegerRange(3)' in this node to see how this
+can be done!
+
+The "Bit::Vector" module is mainly intended for mathematical or
+algorithmical computations. There are also a number of efficient
+algorithms that rely on sets (and bit vectors).
+
+An example of such an efficient algorithm (which uses a different
+representation for sets, however, not bit vectors) is Kruskal's
+algorithm for minimal spanning trees in graphs.
+
+(See the module "Graph::Kruskal" and `Graph::Kruskal(3)' in this node in
+this distribution.)
+
+Another famous algorithm using bit vectors is the "Sieve of
+Erathostenes" for calculating prime numbers, which is included here as a
+demo program (see the file "primes.pl" in this distribution).
+
+An important field of application is the computation of "first",
+"follow" and "look-ahead" character sets for the construction of LL,
+SLR, LR and LALR parsers for compilers (or a compiler-compiler, like
+"yacc", for instance).
+
+(That's what the C library in this package was initially written for.)
+
+(See Aho, Hopcroft, Ullman, "The Design and Analysis of Computer
+Algorithms" for an excellent book on efficient algorithms and the famous
+"Dragon Book" on how to build compilers by Aho, Sethi, Ullman.)
+
+Therefore, this module is primarily designed for efficiency, which is
+the reason why most of its methods are implemented in C.
+
+To increase execution speed, the module doesn't use bytes as its basic
+storage unit, it rather uses machine words, assuming that a machine word
+is the most efficiently handled size of all scalar types on any machine
+(that's what the ANSI C standard proposes and assumes anyway).
+
+In order to achieve this, it automatically determines the number of bits
+in a machine word on your system and then adjusts its internal
+configuration constants accordingly.
+
+The greater the size of this basic storage unit, the better the
+complexity (= execution speed) of the methods in this module (but also
+the greater the average waste of unused bits in the last word).
+
+Note that the C library of this package ("BitVector.c") is designed in
+such a way that it can be used independently from Perl and this Perl
+extension module. (!)
+
+For this, you can use the file "BitVector.o" exactly as it is produced
+when building this module! It contains no references to Perl, and it
+doesn't need any Perl header files in order to compile. (It only needs
+"Definitions.h" and some system header files.)
+
+Note however that this C library does not perform any bounds checking
+whatsoever! (This is your application's duty!)
+
+(See the respective explanation in the file "BitVector.c" for more
+details and the file "Vector.xs" for an example of how this can be
+done!)
+
+In this module, all bounds and type checking (which should be absolutely
+fool-proof, BTW!) is done in the XSUB routines (in C).
+
+For more details about the modules in this distribution, please refer to
+their respective man pages!
+
+
+SEE ALSO
+========
+
+Set::IntegerFast(3), Set::IntegerRange(3), Math::MatrixBool(3),
+Math::MatrixReal(3), DFA::Kleene(3), Math::Kleene(3), Graph::Kruskal(3).
+
+perl(1), perlsub(1), perlmod(1), perlref(1), perlobj(1), perlbot(1),
+perltoot(1), perlxs(1), perlxstut(1), perlguts(1), overload(3).
+
+
+VERSION
+=======
+
+This man page documents "Bit::Vector" version 4.2.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995, 1996, 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE
+=======
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+

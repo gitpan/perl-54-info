@@ -1,0 +1,2286 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Mail/Folder/Mbox, Next: Mail/Folder/NNTP, Prev: Mail/Folder/Maildir, Up: Module List
+
+A Unix mbox interface for Mail::Folder.
+***************************************
+
+
+
+NAME
+====
+
+Mail::Folder::Mbox - A Unix mbox interface for Mail::Folder.
+
+*WARNING: This code is in alpha release. Expect the interface to
+change.*
+
+
+SYNOPSIS
+========
+
+`use Mail::Folder::Mbox;'
+
+
+DESCRIPTION
+===========
+
+This module provides an interface to unix mbox folders.
+
+The mbox folder format is the standard monolithic folder structure
+prevalent on Unix.  A single folder is contained within a single file.
+Each message starts with a line matching `/^From /' and ends with a
+blank line.
+
+The folder architecture does not provide any persistantly stored current
+message variable, so the current message in this folder interface
+defaults to 1 and is not retained between opens of a folder.
+
+If the `Timeout' option is specified when the object is created, that
+value will be used to determine the timeout for attempting to aquire a
+folder lock.  The default is 10 seconds.
+
+If the `DotLock' option is specified when the object is created, that
+value will be used to determine whether or not to use '`.lock'' style
+folder locking.  The default value is 1.
+
+If the `Flock' option is specified when the object is created, that
+value will be used to determined whether or not to use flock style
+folder locking.  By default, the option is not set.
+
+If the `NFSLock' option is specified when the object is created, that
+value will be used to determine whether or not special measures are
+taken when doing `DotLock'ing.  These special measures consist of
+constructing the lock file in a special manner that is more immune to
+atomicity problems with NFS when creating a folder lock file.  By
+default, the option is not set.  This option necessitates the ability to
+use long filenames.
+
+It is currently a fatal error to have both `DotLock' and `Flock'
+disabled.
+
+**NOTE** flock locking is currently disabled until I can sift out the
+'right way'. **NOTE**
+
+
+METHODS
+=======
+
+
+open($folder_name)
+------------------
+
+   * Call the superclass open method.
+   * Check to see if it is a valid mbox folder.
+   * Mark it as readonly if the folder is not writable.
+   * Lock the folder.
+   * Split the folder into individual messages in a temporary working directory.
+   * Unlock the folder.
+   * Cache all the headers.
+   * Update the appropriate labels with information in the `Status' fields.
+   * Set current_message to 1.
+
+close
+-----
+
+
+Deletes the internal working copy of the folder and calls the superclass
+close method.
+
+
+sync
+----
+
+   * Call the superclass sync method.
+   * Lock the folder.
+   * Extract into the temporary working directory any new messages that have been appended to the folder since the last time the folder was either opened or synced.
+   * Create a new copy of the folder and populate it with the messages in the working copy that are not flagged for deletion and update the `Status' fields appropriately.
+   * Move the original folder to a temp location
+   * Move the new folder into place
+   * Delete the old original folder
+   * Unlock the folder
+
+pack
+----
+
+
+Calls the superclass pack method.
+
+Renames the message list to that there are no gaps in the numbering
+sequence.
+
+It also tweaks the current_message accordingly.
+
+get_message ($msg_number)
+     Calls the superclass get_message method.
+
+     Retrieves the given mail message file into a *Mail::Internet*
+     object reference, sets the '`seen'' label, and returns the
+     reference.
+
+     If the 'Content-Length' option is not set, then get_message will
+     unescape 'From ' lines in the body of the message.
+
+get_message_file ($msg_number)
+     Calls the superclass get_message_file method.
+
+     Retrieves the given mail message file and returns the name of the
+     file.
+
+     Returns undef on failure.
+
+     This method does NOT currently do any 'From ' unescaping.
+
+
+get_header($msg_number)
+-----------------------
+
+If the particular header has never been retrieved then `get_header'
+loads (in a manner similar to get_message) the header of the given mail
+message into `$self->{Messages}{$msg_number}{Header}' and returns the
+object reference.
+
+If the header for the given mail message has already been retrieved in a
+prior call to `get_header', then the cached entry is returned.
+
+It also calls the superclass `get_header' method.
+
+
+append_message($mref)
+---------------------
+
+Calls the superclass `append_message' method.
+
+Creates a new mail message file, in the temporary working directory,
+with the contents of the mail message contained in `$mref'.  It will
+synthesize a 'From ' line if one is not present in `$mref'.
+
+If the 'Content-Length' option is not set, then get_message will escape
+'From ' lines in the body of the message.
+
+
+update_message($msg_number, $mref)
+----------------------------------
+
+Calls the superclass `update_message' method.
+
+Replaces the message pointed to by `$msg_number' with the contents of
+the `Mail::Internet' object reference `$mref'.
+
+It will synthesize a 'From ' line if one is not present in $mref.
+
+If the 'Content-Length' option is not set, then get_message will escape
+'From ' lines in the body of the message.
+
+
+init
+----
+
+Initializes various items specific to *Mbox*.
+
+   * Determines an appropriate temporary directory.  If the TMPDIR environment variable is set, it uses that, otherwise it uses `/tmp'.  The working directory will be a subdirectory in that directory.
+   * Bumps a sequence number used for unique temporary filenames.
+   * Initializes `$self->{WorkingDir}' to the name of a directory that will be used to hold the working copies of the messages in the folder.
+
+is_valid_folder_format($foldername)
+-----------------------------------
+
+
+Returns 1 if the folder is a plain file and starts with the string
+'`From '', otherwise it returns `0'.
+
+Returns 1 if the folder is a zero-length file and the
+`$Mail::Format::DefaultEmptyFileFormat' class variable is set to 'mbox'.
+
+Otherwise it returns `0'.
+
+
+create($foldername)
+-------------------
+
+Creates a new folder named `$foldername'.  Returns `0' if the folder
+already exists, otherwise returns 1.
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996-1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Folder/NNTP, Next: Mail/Header, Prev: Mail/Folder/Mbox, Up: Module List
+
+An NNTP folder interface for Mail::Folder.
+******************************************
+
+
+
+NAME
+====
+
+Mail::Folder::NNTP - An NNTP folder interface for Mail::Folder.
+
+*WARNING: This code is in alpha release.  Expect the interface to change.*
+
+
+SYNOPSIS
+========
+
+`use Mail::Folder::Maildir;'
+
+
+DESCRIPTION
+===========
+
+This module provides an interface to newsgroups accessible via the NNTP
+protocol.
+
+
+METHODS
+=======
+
+
+open($foldername)
+-----------------
+
+Populates the `Mail::Folder' object with information about the folder.
+
+The given foldername can be given one of two formats.  Either
+`news://NEWSHOST/NEWSGROUP' where `NEWSHOST' is the nntp host and
+`NEWSGROUP' is the news group of interest, or `#news:NEWSGROUP' in which
+case the `NNTPSERVER' environment variable is referenced to determine
+the news host to connect to.
+
+Please note that it opens an NNTP connection for each open NNTP folder.
+
+If no `Timeout' option is specified, it defaults to a timeout of 120
+seconds.
+
+   * Call the superclass open method.
+   * Make sure it is a valid NNTP foldername.
+   * Connect to the NNTP server referenced in $foldername.
+   * Perform an NNTP group command to determine quantity and range of articles available.
+   * Loop through available article numbers, retrieve and cache the headers.
+   * Set current_message to first_message.
+
+close
+-----
+
+
+Calls the superclass get_message method and shuts down the connection to
+the NNTP server.
+
+
+sync
+----
+
+Currently a no-op and returns `0'.
+
+Eventually will expunge articles marked as seen, look for new articles,
+update the `.newsrc' (or equivalent) file, and return the number of new
+articles found.
+
+
+pack
+----
+
+Since the association between article and article number is determined
+by the server, this method is a no-op.
+
+It return 1.
+
+
+get_message($msg_number)
+------------------------
+
+Calls the superclass get_message method.
+
+Retrieves the contents of the news article pointed to by the given
+`$msg_number' into a *Mail::Internet* object reference, caches the
+header, marks the message as '`seen'', and returns the reference.
+
+It returns undef on failure.
+
+
+get_message_file($msg_number)
+-----------------------------
+
+Not currently implemented.  Returns undef.
+
+
+get_header($msg_number)
+-----------------------
+
+If the particular header has never been retrieved then `get_header'
+retrieves the header for the given news article from the news server,
+converts it into a `Mail::Header' object and returns a reference to the
+object.
+
+If the header has already been retrieved in a prior call to
+`get_header', then the cached entry is returned.
+
+It returns undef on failure.
+
+
+append_message($mref)
+---------------------
+
+Not currently implemented.  Returns `0'.
+
+
+update_message($msg_number, $mref)
+----------------------------------
+
+Not currently implemented.  Returns `0'.
+
+
+is_valid_folder_format($foldername)
+-----------------------------------
+
+Returns 1 if the foldername either starts with the string '`news://'' or
+starts with the string '`#news:'' and the `NNTPSERVER' environment
+variable is set, otherwise return 0;
+
+
+create($foldername)
+-------------------
+
+Not currently implemented.  Returns `0'.
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Header, Next: Mail/Internet, Prev: Mail/Folder/NNTP, Up: Module List
+
+manipulate mail RFC822 compliant headers
+****************************************
+
+
+
+NAME
+====
+
+Mail::Header - manipulate mail RFC822 compliant headers
+
+
+SYNOPSIS
+========
+
+     use Mail::Header;
+
+     $head = new Mail::Header;
+     $head = new Mail::Header \*STDIN;
+     $head = new Mail::Header [<>], Modify => 0;
+
+
+DESCRIPTION
+===========
+
+This package provides a class object which can be used for reading,
+creating, manipulating and writing RFC822 compliant headers.
+
+
+CONSTRUCTOR
+===========
+
+new ( [ ARG ], [ OPTIONS ] )
+     `ARG' may be either a file descriptor (reference to a GLOB) or a
+     reference to an array. If given the new object will be initialized
+     with headers either from the array of read from the file
+     descriptor.
+
+     OPTIONS is a list of options given in the form of key-value pairs,
+     just like a hash table. Valid options are
+
+     Modify
+          If this value is *true* then the headers will be re-formatted,
+          otherwise the format of the header lines will remain
+          unchanged.
+
+     MailFrom
+          This option specifies what to do when a header in the form
+          `From ' is encountered. Valid values are `IGNORE' - ignore and
+          discard the header, `ERROR' - invoke an error (call die),
+          `COERCE' - rename them as Mail-From and `KEEP' - keep them.
+
+     FoldLength
+          The default length of line to be used when folding header
+          lines
+
+
+METHODS
+=======
+
+modify ( [ VALUE ] )
+     If `VALUE' is *false* then `Mail::Header' will not do any automatic
+     reformatting of the headers, other than to ensure that the line
+     starts with the tags given.
+
+mail_from ( OPTION )
+     `OPTION' specifies what to do when a ``From '' line is encountered.
+     Valid values are `IGNORE' - ignore and discard the header, `ERROR'
+     - invoke an error (call die), `COERCE' - rename them as Mail-From
+     and `KEEP' - keep them.
+
+fold ( [ LENGTH ] )
+     Fold the header. If `LENGTH' is not given then `Mail::Header' uses
+     the following rules to determine what length to fold a line.
+
+     The fold length for the tag that is begin processed
+
+     The default fold length for the tag that is being processed
+
+     The default fold length for the object
+
+extract ( ARRAY_REF )
+     Extract a header from the given array. extract *will modify* this
+     array.  Returns the object that the method was called on.
+
+read ( FD )
+     Read a header from the given file descriptor.
+
+empty ()
+     Empty the `Mail::Header' object of all lines.
+
+header ( [ ARRAY_REF ] )
+     header does multiple operations. First it will extract a header
+     from the array, if gieven. It will the reformat the header, if
+     reformatting is permitted, and finally return a reference to an
+     array which contains the header in a printable form.
+
+add ( TAG, LINE [, INDEX ] )
+     Add a new line to the header. If `TAG' is undef the the tag will be
+     extracted from the beginning of the given line. If `INDEX' is given
+     the new line will be inserted into the header at the given point,
+     otherwise the new line will be appended to the end of the header.
+
+replace ( TAG, LINE [, INDEX ] )
+     Replace a line in the header.  If `TAG' is undef the the tag will
+     be extracted from the beginning of the given line. If `INDEX' is
+     given the new line will replace the Nth instance of that tag,
+     otherwise the first instance of the tag is replaced. If the tag
+     does not appear in the header then a new line will be appended to
+     the header.
+
+combine ( TAG [, WITH ] )
+     Combine all instances of `TAG' into one. The lines will be joined
+     togther with `WITH', or a single space if not given. The new item
+     will be positioned in the header where the first instance was, all
+     other instances of <TAG> will be removed.
+
+get ( TAG [, INDEX ] )
+     Get the text form a line. If `INDEX' is given then the text of the
+     Nth instance will be returned. If it is not given the return value
+     depends on the context in which get was called. In an array context
+     a list of all the text from all the instances of `TAG' will be
+     returned. In a scalar context the text for the first instance will
+     be returned.
+
+delete ( TAG [, INDEX ] )
+     Delete a tag from the header. If `INDEX' id given then the Nth
+     instance of the tag will be removed. If `INDEX' is not given all
+     instances of tag will be removed.
+
+count ( TAG )
+     Returns the number of times the given atg appears in the header
+
+print ( [ FD ] )
+     Print the header to the given file descriptor, or `STDOUT' if no
+     file descriptor is given.
+
+fold_length ( [ TAG ], [ LENGTH ] )
+     Set the default fold length for all tags or just one. With no
+     arguments the default fold length is returned. With two arguments
+     it sets the fold length for the given tag and returns the previous
+     value. If only `LENGTH' is given it sets the default fold length
+     for the current object.
+
+     In the two argument form fold_length may be called as a static
+     method, setting default fold lengths for tags that will be used by
+     all `Mail::Header' objects. See the fold method for a description
+     on how `Mail::Header' uses these values.
+
+tags ()
+     Retruns an array of all the tags that exist in the header. Each tag
+     will only appear in the list once. The order of the tags is not
+     specified.
+
+dup ()
+     Create a duplicate of the current object.
+
+cleanup ()
+     Remove any header line that, other than the tag, only contains
+     whitespace
+
+unfold ( [ TAG ] )
+     Unfold all instances of the given tag so that they do not spread
+     across multiple lines. IF `TAG' is not given then all lines are
+     unfolded.
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Internet, Next: Mail/Mailer, Prev: Mail/Header, Up: Module List
+
+manipulate Internet format (RFC 822) mail messages
+**************************************************
+
+
+
+NAME
+====
+
+Mail::Internet - manipulate Internet format (RFC 822) mail messages
+
+
+SYNOPSIS
+========
+
+     use Mail::Internet;
+
+
+DESCRIPTION
+===========
+
+This package provides a class object which can be used for reading,
+creating, manipulating and writing a message with RFC822 compliant
+headers.
+
+
+CONSTRUCTOR
+===========
+
+new ( [ ARG ], [ OPTIONS ] )
+     `ARG' is optiona and may be either a file descriptor (reference to
+     a GLOB) or a reference to an array. If given the new object will be
+     initialized with headers either from the array of read from the
+     file descriptor.
+
+     OPTIONS is a list of options given in the form of key-value pairs,
+     just like a hash table. Valid options are
+
+     Header
+          The value of this option should be a `Mail::Header' object. If
+          given then `Mail::Internet' will not attempt to read a mail
+          header from `ARG', if it was specified.
+
+     Body
+          The value of this option should be a reference to an array
+          which contains the lines for the body of the message. If given
+          then `Mail::Internet' will not attempt to read the body from
+          `ARG', if it was specified.
+
+     The Mail::Header options Modify, MailFrom and FoldLength may also
+     be given.
+
+
+METHODS
+=======
+
+body ()
+     Returns the body of the message. This is a reference to an array.
+     Each entry in the array represents a single line in the message.
+
+print_header ( [ FILEHANDLE ] )
+print_body ( [ FILEHANDLE ] )
+print ( [ FILEHANDLE ] )
+     Print the header, body or whole message to file descriptor *FILEHANDLE*.
+     *$fd* should be a reference to a GLOB. If *FILEHANDLE* is not given the
+     output will be sent to STDOUT.
+
+          $mail->print( \*STDOUT );  # Print message to STDOUT
+
+head ()
+     Returns the `Mail::Header' object which holds the headers for the
+     current message
+
+
+UTILITY METHODS
+===============
+
+The following methods are more a utility type than a manipulation type
+of method.
+
+remove_sig ( [ NLINES ] )
+     Attempts to remove a users signature from the body of a message. It
+     does this by looking for a line equal to `'-- '' within the last
+     `NLINES' of the message. If found then that line and all lines
+     after it will be removed. If `NLINES' is not given a default value
+     of 10 will be used. This would be of most use in auto-reply
+     scripts.
+
+tidy_body ()
+     Removes all leading and trailing lines from the body that only
+     contain white spaces.
+
+reply ()
+     Create a new object with header initialised for a reply to the
+     current object. And the body will be a copy of the current message
+     indented.
+
+add_signature ( [ FILE ] )
+     Append a signature to the message. FILE is a file which contains
+     the signature, if not given then the file "$ENV{HOME}/.signature"
+     will be checked for.
+
+smtpsend ()
+     Send a Mail::Internet message via SMTP
+
+     The message will be sent to all addresses on the To, Cc and Bcc
+     lines. The SMTP host is found by attempting connections first to
+     hosts specified in `$ENV{SMTPHOSTS}', a colon separated list, then
+     `mailhost' and `localhost'.
+
+nntppost ()
+     Post an article via NNTP, require News::NNTPClient.
+
+escape_from ()
+     It can cause problems with some applications if a message contains
+     a line starting with ``From '', in particular when attempting to
+     split a folder.  This method inserts a leading ``''> on anyline
+     starting with ``From ''
+
+unescape_from ()
+     This method will remove the escaping added bu escape_from
+
+
+SEE ALSO
+========
+
+*Note Mail/Header: Mail/Header,
+*Note Mail/Address: Mail/Address,
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Mail/Mailer, Next: Mail/POP3Client, Prev: Mail/Internet, Up: Module List
+
+Simple interface to electronic mailing mechanisms
+*************************************************
+
+
+
+NAME
+====
+
+Mail::Mailer - Simple interface to electronic mailing mechanisms
+
+
+SYNOPSIS
+========
+
+     use Mail::Mailer;
+     use Mail::Mailer qw(mail);
+
+     $mailer = new Mail::Mailer;
+
+     $mailer = new Mail::Mailer $type, @args;
+
+     $mailer->open(\%headers);
+
+     print $mailer $body;
+
+     $mailer->close;
+
+
+DESCRIPTION
+===========
+
+Sends mail using any of the built-in methods.  You can alter the
+behaviour of a method by passing `$command' to the new method.
+
+mail
+     Use the Unix system mail program to deliver the mail.  `$command'
+     is the path to mail.
+
+sendmail
+     Use the sendmail program to deliver the mail.  `$command' is the
+     path to sendmail.
+
+test
+     Used for debugging, this calls `/bin/echo' to display the data.  No
+     mail is ever sent.  `$command' is ignored.
+
+`Mail::Mailer' will search for executables in the above order. The
+default mailer will be the first one found. In the case of mail
+Mail::Mailer will search for mail, `mailx' and `Mail'.
+
+
+ARGUMENTS
+---------
+
+new can optionally be given a `$command' and $type.  $type is one
+sendmail, mail, ... given above.  The meaning of `$command' depends on
+$type.
+
+open is given a reference to a hash.  The hash consists of key and value
+pairs, the key being the name of the header field (eg, To), and the
+value being the corresponding contents of the header field.  The value
+can either be a scalar (eg, `gnat@frii.com') or a reference to an array
+of scalars (`eg, [gnat@frii.com, Tim.Bunce@ig.co.uk]').
+
+
+TO DO
+=====
+
+Assist formatting of fields in ...::rfc822:send_headers to ensure valid
+in the face of newlines and longlines etc.
+
+Secure all forms of send_headers() against hacker attack and invalid
+contents. Especially "\n~..." in ...::mail::send_headers.
+
+
+SEE ALSO
+========
+
+Mail::Send
+
+
+AUTHORS
+=======
+
+Tim Bunce <Tim.Bunce@ig.co.uk>, with a kick start from Graham Barr
+<gbarr@ti.com>. With contributions by Gerard Hickey <hickey@ctron.com>
+For support please contact comp.lang.perl.misc.  Small fix and
+documentation by Nathan Torkington <gnat@frii.com>.
+
+
+
+
+File: pm.info, Node: Mail/POP3Client, Next: Mail/Send, Prev: Mail/Mailer, Up: Module List
+
+Perl 5 module to talk to a POP3 (RFC1081) server
+************************************************
+
+
+
+NAME
+====
+
+Mail::POP3Client - Perl 5 module to talk to a POP3 (RFC1081) server
+
+
+DESCRIPTION
+===========
+
+This module implements an Object-Oriented interface to a POP3 server.
+It is based on RFC1081.
+
+
+USAGE
+=====
+
+Here is a simple example to list out the headers in your remote mailbox:
+
+     #!/usr/local/bin/perl
+
+     use Mail::POP3Client;
+
+     $pop = new Mail::POP3Client("me", "mypassword", "pop3.do.main");
+     for ($i = 1; $i <= $pop->Count; $i++) {
+     	print $pop->Head($i), "\n";
+     }
+
+
+POP3Client Commands
+-------------------
+
+These commands are intended to make writing a POP3 client easier.  They
+do not necessarily map directly to POP3 commands defined in RFC1081.
+Some commands return multiple lines as an array in an array context, but
+there may be missing places.
+
+new
+     Construct a new POP3 connection with this.  You should give it at
+     least 2 arguments: username and password.  The next 2 optional
+     arguments are the POP3 host and port number.  A final fifth
+     argument of a positive integer enables debugging on the object (to
+     STDERR).
+
+Head
+     Get the headers of the specified message.  Here is a simple Biff
+     program:
+
+          #!/usr/local/bin/perl
+
+          use Mail::POP3Client;
+
+          $pop = new Mail::POP3Client("me", "mypass", "pop3.do.main");
+          for ($i = 1; $i <= $pop->Count; $i++) {
+          	foreach ($pop->Head($i)) {
+          		/^(From|Subject): / and print $_, "\n";
+          	}
+          	print "\n";
+          }
+
+Body
+     Get the body of the specified message.
+
+HeadAndBody
+     Get the head and body of the specified message.
+
+Retrieve
+     Same as HeadAndBody.
+
+Delete
+     Mark the specified message number as DELETED.  Becomes effective
+     upon QUIT.  Can be reset with a Reset message.
+
+Connect
+     Start the connection to the POP3 server.  You can pass in the host
+     and port.
+
+Close
+     Close the connection gracefully.  POP3 says this will perform any
+     pending deletes on the server.
+
+Alive
+     Return true or false on whether the connection is active.
+
+Socket
+     Return the file descriptor for the socket.
+
+Size
+     Set/Return the size of the remote mailbox.  Set by POPStat.
+
+Count
+     Set/Return the number of remote messages.  Set during Login.
+
+Message
+     The last status message received from the server.
+
+State
+     The internal state of the connection: DEAD, AUTHORIZATION,
+     TRANSACTION.
+
+POPStat
+     Return the results of a POP3 STAT command.  Sets the size of the
+     mailbox.
+
+List
+     Return a list of sizes of each message.
+
+Last
+     Return the number of the last message, retrieved from the server.
+
+Reset
+     Tell the server to unmark any message marked for deletion.
+
+User
+     Set/Return the current user name.
+
+Pass
+     Set/Return the current user name.
+
+Login
+     Attempt to login to the server connection.
+
+Host
+     Set/Return the current host.
+
+Port
+     Set/Return the current port number.
+
+
+AUTHOR
+======
+
+Sean Dowd <ssd@mmts.eds.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995,1996 Electonic Data Systems, Inc.  All rights
+reserved.  This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+
+CREDITS
+=======
+
+Based loosely on News::NNTPClient by Rodger Anderson
+<rodger@boi.hp.com>.
+
+
+
+
+File: pm.info, Node: Mail/Send, Next: Mail/Util, Prev: Mail/POP3Client, Up: Module List
+
+Simple electronic mail interface
+********************************
+
+
+
+NAME
+====
+
+Mail::Send - Simple electronic mail interface
+
+
+SYNOPSIS
+========
+
+     require Mail::Send;
+
+     $msg = new Mail::Send;
+
+     $msg = new Mail::Send Subject=>'example subject', To=>'timbo';
+
+     $msg->to('user@host');
+     $msg->subject('user@host');
+     $msg->cc('user@host');
+     $msg->bcc('someone@else');
+
+     $msg->set($header, @values);
+     $msg->add($header, @values);
+     $msg->delete($header);
+
+     # Launch mailer and set headers. The filehandle returned
+     # by open() is an instance of the Mail::Mailer class.
+
+     $fh = $msg->open;
+
+     print $fh "Body of message";
+
+     $fh->close;         # complete the message and send it
+
+     $fh->cancel;        # not yet implemented
+
+
+DESCRIPTION
+===========
+
+
+SEE ALSO
+========
+
+Mail::Mailer
+
+
+AUTHORS
+=======
+
+Tim Bunce <Tim.Bunce@ig.co.uk>, with a kick start from Graham Barr
+<gbarr@ti.com>. With contributions by Gerard Hickey <hickey@ctron.com>
+For support please contact comp.lang.perl.misc.
+
+
+
+
+File: pm.info, Node: Mail/Util, Next: Make, Prev: Mail/Send, Up: Module List
+
+mail utility functions
+**********************
+
+
+
+NAME
+====
+
+Mail::Util - mail utility functions
+
+
+SYNOPSIS
+========
+
+use Mail::Util qw( ... );
+
+
+DESCRIPTION
+===========
+
+This package provides several mail related utility functions. Any
+function required must by explicitly listed on the use line to be
+exported into the calling package.
+
+
+read_mbox( $file )
+------------------
+
+Read $file, a binmail mailbox file, and return a list of references.
+Each reference is a reference to an array containg one message.
+
+
+maildomain()
+------------
+
+Attempt to determine the current uers mail domain string via the
+following methods
+
+     Look for a sendmail.cf file and extract DH parameter
+     Look for a smail config file and usr the first host defined in hostname(s)
+     Try an SMTP connect (if Net::SMTP exists) first to mailhost then localhost
+     Use value from Net::Domain::domainname (if Net::Domain exists)
+
+
+mailaddress()
+-------------
+
+Return a guess at the current users mail address. The user can force the
+return value by setting `$ENV{MAILADDRESS}'
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Make, Next: Math/Amoeba, Prev: Mail/Util, Up: Module List
+
+module for processing makefiles
+*******************************
+
+
+
+NAME
+====
+
+Make - module for processing makefiles
+
+
+SYNOPSIS
+========
+
+     require Make;
+     my $make = Make->new(...);
+     $make->parse($file);   
+     $make->Script(@ARGV)
+     $make->Make(@ARGV)
+     $make->Print(@ARGV)
+
+     my $targ = $make->Target($name);
+     $targ->colon([dependancy...],[command...]);
+     $targ->dolon([dependancy...],[command...]);
+     my @depends  = $targ->colon->depend;
+     my @commands = $targ->colon->command;
+
+
+DESCRIPTION
+===========
+
+Make->new creates an object if `new(Makefile => $file)' is specified
+then it is parsed. If not the usual makefile Makefile sequence is
+used. (If GNU => 1 is passed to new then GNUmakefile is look for first.)
+
+`$make->Make(target...)' 'makes' the target(s) specified (or the first
+'real' target in the makefile).
+
+`$make->Print' can be used to 'print' to current select'ed stream a form
+of the makefile with all variables expanded.
+
+`$make->Script(target...)' can be used to 'print' to current select'ed
+stream the equivalent bourne shell script that a make would perform
+i.e. the output of `make -n'.
+
+There are other methods (used by parse) which can be used to add and
+manipulate targets and their dependants. There is a hierarchy of classes
+which is still evolving. These classes and their methods will be
+documented when they are a little more stable.
+
+The syntax of makefile accepted is reasonably generic, but I have not
+re-read any documentation yet, rather I have implemented my own mental
+model of how make works (then fixed it...).
+
+In addition to traditional
+
+     .c.o : 
+     	$(CC) -c ...
+
+GNU make's 'pattern' rules e.g.
+
+     %.o : %.c 
+     	$(CC) -c ...
+
+Likewise a subset of GNU makes $(function arg...) syntax is supported.
+
+Via pmake Make has built perl/Tk from the `MakeMaker' generated
+Makefiles...
+
+
+BUGS
+====
+
+At present new must always find a makefile, and `$make->parse($file)'
+can only be used to augment that file.
+
+More attention needs to be given to using the package to write
+makefiles.
+
+The rules for matching 'dot rules' e.g. .c.o and/or pattern rules
+e.g. %.o : %.c are suspect. For example give a choice of .xs.o vs .xs.c
++ .c.o behaviour seems a little odd.
+
+Variables are probably substituted in different 'phases' of the process
+than in make(1) (or even GNU make), so 'clever' uses will probably not
+work.
+
+UNIXisms abound.
+
+
+SEE ALSO
+========
+
+`pmake' in this node
+
+
+AUTHOR
+======
+
+Nick Ing-Simmons
+
+
+
+
+File: pm.info, Node: Math/Amoeba, Next: Math/Approx, Prev: Make, Up: Module List
+
+SYNOPSIS
+========
+
+     use Math::Amoeba qw(ConstructVertices EvaluateVertices Amoeba MinimiseND);
+     my ($vertice,$y)=MinimiseND(\@guess,\@scales,\&func,$tol,$itmax);
+     my @vertices=ConstructVertices(\@vector,\@offsets);
+     my @y=EvaluateVertices(\@vertices,\&func);
+     my ($vertice,$y)=Amoeba(\@vertices,\@y,\&func,$tol,$itmax);
+
+
+DESCRIPTION
+===========
+
+This is an implimenation of the Downhill Simpex Method in
+Multidimensions (Nelder and Mead) for finding the (local) minimum of a
+function. Doing this in Perl makes it easy for that function to actually
+be the output of another program such as a simulator.
+
+Arrays and the function are passed by reference to the routines.
+
+The simplest use is the *MinimiseND* function. This takes a reference to
+an array of guess values for the parameters at the function minimum, a
+reference to an array of scales for these parameters (sensible ranges
+around the guess in which to look), a reference to the function, a
+convergence tolerence for the minimum and the maximum number of
+iterations to be taken. It returns an array consisting of a reference to
+the function parameters at the minimum and the value there.
+
+The *Amoeba* function is the actual implimentation of the Downhill
+Simpex Method in Multidimensions. It takes a reference to an array of
+references to arrays which are the initial n+1 vertices (where n is the
+number of function parameters), a reference to the function valuation at
+these vertices, a reference to the function, a convergence tolerence for
+the minimum and the maximum number of iterations to be taken. It returns
+an array consisting of a reference to the function parameters at the
+minimum and the value there.
+
+The *ConstructVertices* is used by *MinimiseND* to construct the initial
+vertices for *Amoeba* as the initial guess plus the parameter scale
+parameters as vectors along the parameter axis.
+
+The *EvaluateVertices* takes these set of vertices, calling the function
+for each one and returning the vector of results.
+
+
+EXAMPLE
+=======
+
+     use Math::Amoeba qw(MinimiseND);
+     sub afunc {
+       my ($a,$b)=@_;
+       print "$a\t$b\n";
+       return ($a-7)**2+($b+3)**2;
+     }
+     my @guess=(1,1);
+     my @scale=(1,1);
+     ($p,$y)=MinimiseND(\@guess,\@scale,\&afunc,1e-7,100);
+     print "(",join(',',@{$p}),")=$y\n";
+
+produces the output
+
+(6.99978191653352,-2.99981241563247)=1.00000008274829
+
+
+HISTORY
+=======
+
+$Log: Amoeba.pm,v $ Revision 1.2 1995/12/24 12:37:46 willijar General
+fixup. Added documentation.
+
+
+BUGS
+====
+
+If the function value converges to exactly zero then the condition for
+convergence fails and maximum iterations will be exceeded or there will
+be a divide by zero error. There is no obvious way to test for
+convergence in this case however adding 1 onto the function value gives
+expected behaviour. i.e. replace '\&afunc' with 'sub { 1+afunc(@_); }'
+when calling the routines.
+
+Let me know.
+
+
+AUTHOR
+======
+
+John A.R. Williams <J.A.R.Williams@aston.ac.uk>
+
+
+SEE ALSO
+========
+
+"Numerical Recipies: The Art of Scientific Computing" W.H. Press,
+B.P. Flannery, S.A. Teukolsky, W.T. Vetterling.  Cambridge University
+Press. ISBN 0 521 30811 9.
+
+
+
+
+File: pm.info, Node: Math/Approx, Next: Math/BigFloat, Prev: Math/Amoeba, Up: Module List
+
+Math::Approx
+************
+
+
+
+NAME
+====
+
+Math::Approx
+
+
+METHODS
+=======
+
+
+new
+---
+
+     new Math::Approx (\&poly, 5, %x);
+
+The first argument after the class name must be a reference to function
+which takes two arguments: The *degree* and the x value.
+
+For interpolation with plain polynomials *poly* can be defined as:
+
+     sub poly {
+         my($n,$x) = @_;
+
+         return $x ** $n;
+     }
+
+The second argument is the maximum degree which should be used for
+interpolation. Degrees start with *0*.
+
+The rest of the arguments are treated as pairs of x and *y* samples
+which should be approximated.
+
+The method returns a Math::Approx reference.
+
+
+approx
+------
+
+     $approximation->approx(17);
+
+The method returns the approximated *y* value for the x value given as
+argument.
+
+
+fit
+---
+
+     $approximation->fit;
+
+Returns the medim square error for the data points.
+
+
+plot
+----
+
+     $approximation->plot("tmp/app");
+
+Prints all data pairs and the corresponding approximation pairs in a
+file whichs filename is given as argument. The file should be suitable
+for usage with gnuplot(1).
+
+
+print
+-----
+
+     $approximation->print;
+
+Prints information about the approximation on *STDOUT*
+
+
+EXAMPLE
+=======
+
+     use Math::Approx;
+
+     sub poly {
+         my($n,$x) = @_;
+
+         return $x ** $n;
+     }
+
+     for (1..20) {
+         $x{$_} = sin($_/10)*cos($_/30)+0.3*rand;
+     }
+
+     $a = new Math::Approx (\&poly, 5, %x);
+     $a->print;
+     $a->plot("mist");
+     print "Fit: ", $a->fit, "\n";
+
+
+SEE ALSO
+========
+
+gnuplot(1).
+
+
+AUTHOR
+======
+
+Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+
+
+
+File: pm.info, Node: Math/BigFloat, Next: Math/BigInt, Prev: Math/Approx, Up: Module List
+
+Arbitrary length float math package
+***********************************
+
+
+
+NAME
+====
+
+Math::BigFloat - Arbitrary length float math package
+
+
+SYNOPSIS
+========
+
+     use Math::BogFloat;
+     $f = Math::BigFloat->new($string);
+
+     $f->fadd(NSTR) return NSTR            addition
+     $f->fsub(NSTR) return NSTR            subtraction
+     $f->fmul(NSTR) return NSTR            multiplication
+     $f->fdiv(NSTR[,SCALE]) returns NSTR   division to SCALE places
+     $f->fneg() return NSTR                negation
+     $f->fabs() return NSTR                absolute value
+     $f->fcmp(NSTR) return CODE            compare undef,<0,=0,>0
+     $f->fround(SCALE) return NSTR         round to SCALE digits
+     $f->ffround(SCALE) return NSTR        round at SCALEth place
+     $f->fnorm() return (NSTR)             normalize
+     $f->fsqrt([SCALE]) return NSTR        sqrt to SCALE places
+
+
+DESCRIPTION
+===========
+
+All basic math operations are overloaded if you declare your big floats
+as
+
+     $float = new Math::BigFloat "2.123123123123123123123123123123123";
+
+number format
+     canonical strings have the form /[+-]\d+E[+-]\d+/ .  Input values
+     can have inbedded whitespace.
+
+Error returns 'NaN'
+     An input parameter was "Not a Number" or divide by zero or sqrt of
+     negative number.
+
+Division is computed to
+     `max($div_scale,length(dividend)+length(divisor))' digits by
+     default.  Also used for default sqrt scale.
+
+
+BUGS
+====
+
+The current version of this module is a preliminary version of the real
+thing that is currently (as of perl5.002) under development.
+
+
+AUTHOR
+======
+
+Mark Biggar
+
+
+
+
+File: pm.info, Node: Math/BigInt, Next: Math/BigInteger, Prev: Math/BigFloat, Up: Module List
+
+Arbitrary size integer math package
+***********************************
+
+
+
+NAME
+====
+
+Math::BigInt - Arbitrary size integer math package
+
+
+SYNOPSIS
+========
+
+     use Math::BigInt;
+     $i = Math::BigInt->new($string);
+
+     $i->bneg return BINT               negation
+     $i->babs return BINT               absolute value
+     $i->bcmp(BINT) return CODE         compare numbers (undef,<0,=0,>0)
+     $i->badd(BINT) return BINT         addition
+     $i->bsub(BINT) return BINT         subtraction
+     $i->bmul(BINT) return BINT         multiplication
+     $i->bdiv(BINT) return (BINT,BINT)  division (quo,rem) just quo if scalar
+     $i->bmod(BINT) return BINT         modulus
+     $i->bgcd(BINT) return BINT         greatest common divisor
+     $i->bnorm return BINT              normalization
+
+
+DESCRIPTION
+===========
+
+All basic math operations are overloaded if you declare your big
+integers as
+
+     $i = new Math::BigInt '123 456 789 123 456 789';
+
+Canonical notation
+     Big integer value are strings of the form `/^[+-]\d+$/' with
+     leading zeros suppressed.
+
+Input
+     Input values to these routines may be strings of the form
+     `/^\s*[+-]?[\d\s]+$/'.
+
+Output
+     Output values always always in canonical form
+
+Actual math is done in an internal format consisting of an array whose
+first element is the sign (/^[+-]$/) and whose remaining elements are
+base 100000 digits with the least significant digit first.  The string
+'NaN' is used to represent the result when input arguments are not
+numbers, as well as the result of dividing by zero.
+
+
+EXAMPLES
+========
+
+     '+0'                            canonical zero value
+     '   -123 123 123'               canonical value '-123123123'
+     '1 23 456 7890'                 canonical value '+1234567890'
+
+
+BUGS
+====
+
+The current version of this module is a preliminary version of the real
+thing that is currently (as of perl5.002) under development.
+
+
+AUTHOR
+======
+
+Mark Biggar, overloaded interface by Ilya Zakharevich.
+
+
+
+
+File: pm.info, Node: Math/BigInteger, Next: Math/Brent, Prev: Math/BigInt, Up: Module List
+
+Arbitrary length integer extension module for Perl
+**************************************************
+
+
+
+NAME
+====
+
+BigInteger - Arbitrary length integer extension module for Perl
+
+
+SYNOPSIS
+========
+
+     use Math::BigInteger;
+
+
+DESCRIPTION
+===========
+
+The BigInteger extension module gives access to Eric Young's bignum
+library.  This provides a faster alternative to the Math::BigInt
+library.
+
+The basic object in this library is a BigInteger.  It is used to hold a
+single large integer.
+
+It is not intended that this package be used directly, but instead be
+used by a wrapper package, such as the Math::BigInteger class.
+
+
+FUNCTIONS
+=========
+
+Many of the following functions can be used in two styles, by calling
+the function on an object, or by calling the function explicitly; for
+example, here are two ways of assigning to $a the sum of $b and $c:
+
+     $a->add($b, $c);
+     or
+
+     BigInteger::add($a, $b, $c);
+
+
+Creation/Destruction routines.
+------------------------------
+
+new
+          my $bi = new BigInteger;	# Create a new BigInteger object.
+
+clone
+          my $b = $a->clone();
+
+     Create a new BigInteger object from another BigInteger object.
+
+copy
+          copy($a, $b);
+
+     Copy one BigInteger object to another.
+
+save
+          my $data = $bi->save();
+
+     Save a BigInteger object as a MSB-first string.
+
+restore
+          my $bi = restore BigInteger $data;
+
+     Create a new BigInteger object from a MSB-first string.
+
+
+Comparison functions
+--------------------
+
+ucmp
+          ucmp($a, $b);
+
+     Return -1 if $a is less than $b, 0 if $a and $b are the same and 1
+     is $a is greater than $b.  This is an *unsigned* comparison.
+
+cmp
+          cmp($a, $b);
+
+     Return -1 if $a is less than $b, 0 if $a and $b are the same and 1
+     is $a is greater than $b.  This is a *signed* comparison.
+
+
+Arithmetic Functions
+--------------------
+
+inc 	$bi->inc();
+     Increment $bi by one:
+
+dec 	$bi->dec();
+     Decrement $bi by one:
+
+add
+          $r->add($a, $b);
+
+     Add $a and $b and return the result in $r.
+
+mul
+          $r->mul($a, $b);
+
+     Multiply $a by $b and return the result in $r.  Note that $r must
+     not be the same object as $a or $b.
+
+div
+          div($dv, $rem, $m, $d);
+
+     Divide $m by $d and return the result in $dv and the remainder in
+     $rem.  Either of $dv or $rem can be undef, in which case that value
+     is not returned.
+
+mod
+          $rem->mod($m, $d);
+
+     Find the remainder of $m divided by $d and return it in $rem.  This
+     function is more efficient than div.
+
+lshift
+          $r->lshift($a, $n);
+
+     Shift $a left by $n bits.
+
+lshift1
+          $r->lshift1($a);
+
+     Shift $a left by 1 bit.  This form is more efficient than
+     `lshift($r, $a, 1)'.
+
+rshift
+          $r->rshift($a, $n);
+
+     Shift $a right by $n bits.
+
+rshift1
+          $r->rshift1($a);
+
+     Shift $a right by 1 bit.  This form is more efficient than
+     `rshift($r, $a, 1)'.
+
+mod_exp
+          $r->mod_exp($a, $p, $mod);
+
+     Raise $a to the $p power and return the remainder into $r when
+     divided by $m.
+
+modmul_recip
+          modmul_recip($r, $x, $y, $m, $i, $nb);
+
+     This function is used to perform an efficient `mod_mul' operation.
+     If one is going to repeatedly perform `mod_mul' with the same
+     modulus is worth calculating the reciprocal of the modulus and then
+     using this function.  This operation uses the fact that a/b == a*r
+     where r is the reciprocal of b.  On modern computers multiplication
+     is very fast and big number division is very slow.  $x is
+     multiplied by $y and then divided by $m and the remainder is
+     returned in $r.  $i is the reciprocal of $m and $nb is the number
+     of bits as returned from `reciprocal'.  This function is used in
+     mod_exp.
+
+mul_mod
+          $r->mul_mod($a, $b, $m);
+
+     Multiply $a by $b and return the remainder into $r when divided by
+     $m.
+
+reciprical
+          $r->reciprical($m);
+
+     Return the reciprocal of $m into $r.
+
+
+Miscellaneous Routines
+----------------------
+
+num_bits
+          my $size = $bi->numbits();
+
+     Return the size (in bits) of the BigInteger.
+
+gcd
+          $r->gcd($a, $b);
+
+     $r has the greatest common divisor of $a and $b.
+
+inverse_modn
+          $r->inverse_modn($a, $n);
+
+     This function creates a new BigInteger and returns it in $r.  This
+     number is the inverse mod $n of $a.  By this it is meant that the
+     returned value $r satisfies (a*r)%n == 1.  This function is used in
+     the generation of RSA keys.
+
+
+BUGS
+====
+
+Negative numbers cannot be saved or restored.  To fix this requires
+modification of Eric Young's library.
+
+The documentation.
+
+
+COPYRIGHT
+=========
+
+Systemics Ltd ( http://www.systemics.com/ ).
+
+Portions copyright Eric Young (eay@mincom.oz.au).
+
+
+
+File: pm.info, Node: Math/Brent, Next: Math/Complex, Prev: Math/BigInteger, Up: Module List
+
+SYNOPSIS
+========
+
+     use Math::Brent qw(FindMinima BracketMinimum Brent Minimise1D);
+     my ($x,$y)=Minimise1D($guess,$scale,\&func,$tol,$itmax);
+     my ($ax,$bx,$cx,$fa,$fb,$fc)=BracketMinimum($ax,$bx,$cx,\&func);
+     my ($x,$y)=Brent($ax,$bx,$cx,\&func,$tol,$itmax);
+
+
+DESCRIPTION
+===========
+
+This is an implementation of Brents method for One-Dimensional
+minimisation of a function without using derivatives. This algorithm
+cleverly uses both the Golden Section Search and parabolic
+interpolation.
+
+The main function *Brent*, given a function reference *\&func* and a
+bracketing triplet of abcissas *$ax*, *$bx*, *$cx* (such that
+*$bx* is between *$ax* and *$cx* and *func($bx)* is less than both
+*func($ax)* and *func($cx)*), isolates the minimum to a fractional
+precision of about *$tol* using Brents method. A maximum number of
+iterations *$itmax* may be specified for this search - it defaults to
+100. Returned is an array consisting of the abcissa of the minum and the
+function value there.
+
+The function *BracketMinimum*, given a function *\&func* and distinct
+initial points *$ax* and *$bx* searches in the downhill direction
+(defined by the function as evaluated at the initial points) and returns
+an array of the three points *$ax*, *$bx*, *$cx* which bracket the
+minimum of the function and the function values at those points.
+
+The function *Minimise1D* provides a simple interface to the above two
+routines. Given a function *\&func*, an initial guess for its minimum,
+and its scaling (*$guess*,*$scale*) this routine isolates the minimum to
+a fractional precision of about *$tol* using Brents method. A maximum
+number of iterations *$itmax* may be specified for this search - it
+defaults to 100. It returns an array consisting of the abcissa of the
+minum and the function value there.
+
+
+EXAMPLE
+=======
+
+     use Math::Brent qw(Minimise1D);
+     sub func {
+       my $x=shift ;
+       return $x ? sin($x)/$x: 1;
+     }
+        my ($x,$y)=Minimise1D(1,1,\&func,1e-7);
+        print "Minimum is func($x)=$y\n";
+
+produces the output
+
+     Minimum is func(5.236068)=-.165388470697432
+
+     =head1 HISTORY
+
+$Log: Brent.pm,v $ Revision 1.1 1995/12/26 10:06:36 willijar Initial
+revision
+
+
+BUGS
+====
+
+Let me know of any problems.
+
+
+AUTHOR
+======
+
+John A.R. Williams <J.A.R.Williams@aston.ac.uk>
+
+
+SEE ALSO
+========
+
+"Numerical Recipies: The Art of Scientific Computing" W.H. Press,
+B.P. Flannery, S.A. Teukolsky, W.T. Vetterling.  Cambridge University
+Press. ISBN 0 521 30811 9.
+
+
+
+
+File: pm.info, Node: Math/Complex, Next: Math/Derivative, Prev: Math/Brent, Up: Module List
+
+complex numbers and associated mathematical functions
+*****************************************************
+
+
+
+NAME
+====
+
+Math::Complex - complex numbers and associated mathematical functions
+
+
+SYNOPSIS
+========
+
+     use Math::Complex;
+
+     $z = Math::Complex->make(5, 6);
+     $t = 4 - 3*i + $z;
+     $j = cplxe(1, 2*pi/3);
+
+
+DESCRIPTION
+===========
+
+This package lets you create and manipulate complex numbers. By default,
+Perl limits itself to real numbers, but an extra use statement brings
+full complex support, along with a full set of mathematical functions
+typically associated with and/or extended to complex numbers.
+
+If you wonder what complex numbers are, they were invented to be able to
+solve the following equation:
+
+     x*x = -1
+
+and by definition, the solution is noted i (engineers use *j* instead
+since i usually denotes an intensity, but the name does not matter). The
+number i is a pure *imaginary* number.
+
+The arithmetics with pure imaginary numbers works just like you would
+expect it with real numbers... you just have to remember that
+
+     i*i = -1
+
+so you have:
+
+     5i + 7i = i * (5 + 7) = 12i
+     4i - 3i = i * (4 - 3) = i
+     4i * 2i = -8
+     6i / 2i = 3
+     1 / i = -i
+
+Complex numbers are numbers that have both a real part and an imaginary
+part, and are usually noted:
+
+     a + bi
+
+where a is the *real* part and b is the *imaginary* part. The arithmetic
+with complex numbers is straightforward. You have to keep track of the
+real and the imaginary parts, but otherwise the rules used for real
+numbers just apply:
+
+     (4 + 3i) + (5 - 2i) = (4 + 5) + i(3 - 2) = 9 + i
+     (2 + i) * (4 - i) = 2*4 + 4i -2i -i*i = 8 + 2i + 1 = 9 + 2i
+
+A graphical representation of complex numbers is possible in a plane
+(also called the *complex plane*, but it's really a 2D plane).  The
+number
+
+     z = a + bi
+
+is the point whose coordinates are (a, b). Actually, it would be the
+vector originating from (0, 0) to (a, b). It follows that the addition
+of two complex numbers is a vectorial addition.
+
+Since there is a bijection between a point in the 2D plane and a complex
+number (i.e. the mapping is unique and reciprocal), a complex number can
+also be uniquely identified with polar coordinates:
+
+     [rho, theta]
+
+where `rho' is the distance to the origin, and `theta' the angle between
+the vector and the x axis. There is a notation for this using the
+exponential form, which is:
+
+     rho * exp(i * theta)
+
+where i is the famous imaginary number introduced above. Conversion
+between this form and the cartesian form `a + bi' is immediate:
+
+     a = rho * cos(theta)
+     b = rho * sin(theta)
+
+which is also expressed by this formula:
+
+     z = rho * exp(i * theta) = rho * (cos theta + i * sin theta) 
+
+In other words, it's the projection of the vector onto the x and *y*
+axes. Mathematicians call *rho* the *norm* or *modulus* and *theta* the
+argument of the complex number. The *norm* of `z' will be noted
+`abs(z)'.
+
+The polar notation (also known as the trigonometric representation) is
+much more handy for performing multiplications and divisions of complex
+numbers, whilst the cartesian notation is better suited for additions
+and substractions. Real numbers are on the x axis, and therefore *theta*
+is zero.
+
+All the common operations that can be performed on a real number have
+been defined to work on complex numbers as well, and are merely
+*extensions* of the operations defined on real numbers. This means
+they keep their natural meaning when there is no imaginary part,
+provided the number is within their definition set.
+
+For instance, the sqrt routine which computes the square root of its
+argument is only defined for positive real numbers and yields a positive
+real number (it is an application from *R+* to *R+*).  If we allow it to
+return a complex number, then it can be extended to negative real
+numbers to become an application from R to C (the set of complex
+numbers):
+
+     sqrt(x) = x >= 0 ? sqrt(x) : sqrt(-x)*i
+
+It can also be extended to be an application from C to C, whilst its
+restriction to R behaves as defined above by using the following
+definition:
+
+     sqrt(z = [r,t]) = sqrt(r) * exp(i * t/2)
+
+Indeed, a negative real number can be noted `[x,pi]' (the modulus x is
+always positive, so `[x,pi]' is really -x, a negative number) and the
+above definition states that
+
+     sqrt([x,pi]) = sqrt(x) * exp(i*pi/2) = [sqrt(x),pi/2] = sqrt(x)*i
+
+which is exactly what we had defined for negative real numbers above.
+
+All the common mathematical functions defined on real numbers that
+are extended to complex numbers share that same property of working
+*as usual* when the imaginary part is zero (otherwise, it would not
+be called an extension, would it?).
+
+A new operation possible on a complex number that is the identity for
+real numbers is called the *conjugate*, and is noted with an horizontal
+bar above the number, or `~z' here.
+
+     z = a + bi
+     	~z = a - bi
+
+Simple... Now look:
+
+     z * ~z = (a + bi) * (a - bi) = a*a + b*b
+
+We saw that the norm of `z' was noted `abs(z)' and was defined as the
+distance to the origin, also known as:
+
+     rho = abs(z) = sqrt(a*a + b*b)
+
+so
+
+     z * ~z = abs(z) ** 2
+
+If z is a pure real number (i.e. `b == 0'), then the above yields:
+
+     a * a = abs(a) ** 2
+
+which is true (abs has the regular meaning for real number, i.e. stands
+for the absolute value). This example explains why the norm of `z' is
+noted `abs(z)': it extends the abs function to complex numbers, yet is
+the regular abs we know when the complex number actually has no
+imaginary part... This justifies *a posteriori* our use of the abs
+notation for the norm.
+
+
+OPERATIONS
+==========
+
+Given the following notations:
+
+     z1 = a + bi = r1 * exp(i * t1)
+     z2 = c + di = r2 * exp(i * t2)
+     z = <any complex or real number>
+
+the following (overloaded) operations are supported on complex numbers:
+
+     z1 + z2 = (a + c) + i(b + d)
+     z1 - z2 = (a - c) + i(b - d)
+     z1 * z2 = (r1 * r2) * exp(i * (t1 + t2))
+     z1 / z2 = (r1 / r2) * exp(i * (t1 - t2))
+     z1 ** z2 = exp(z2 * log z1)
+     ~z1 = a - bi
+     abs(z1) = r1 = sqrt(a*a + b*b)
+     sqrt(z1) = sqrt(r1) * exp(i * t1/2)
+     exp(z1) = exp(a) * exp(i * b)
+     log(z1) = log(r1) + i*t1
+     sin(z1) = 1/2i (exp(i * z1) - exp(-i * z1))
+     cos(z1) = 1/2 (exp(i * z1) + exp(-i * z1))
+     abs(z1) = r1
+     atan2(z1, z2) = atan(z1/z2)
+
+The following extra operations are supported on both real and complex
+numbers:
+
+     Re(z) = a
+     Im(z) = b
+     arg(z) = t
+
+     cbrt(z) = z ** (1/3)
+     log10(z) = log(z) / log(10)
+     logn(z, n) = log(z) / log(n)
+
+     tan(z) = sin(z) / cos(z)
+
+     csc(z) = 1 / sin(z)
+     sec(z) = 1 / cos(z)
+     cot(z) = 1 / tan(z)
+
+     asin(z) = -i * log(i*z + sqrt(1-z*z))
+     acos(z) = -i * log(z + sqrt(z*z-1))
+     atan(z) = i/2 * log((i+z) / (i-z))
+
+     acsc(z) = asin(1 / z)
+     asec(z) = acos(1 / z)
+     acot(z) = -i/2 * log((i+z) / (z-i))
+
+     sinh(z) = 1/2 (exp(z) - exp(-z))
+     cosh(z) = 1/2 (exp(z) + exp(-z))
+     tanh(z) = sinh(z) / cosh(z) = (exp(z) - exp(-z)) / (exp(z) + exp(-z))
+
+     csch(z) = 1 / sinh(z)
+     sech(z) = 1 / cosh(z)
+     coth(z) = 1 / tanh(z)
+
+     asinh(z) = log(z + sqrt(z*z+1))
+     acosh(z) = log(z + sqrt(z*z-1))
+     atanh(z) = 1/2 * log((1+z) / (1-z))
+
+     acsch(z) = asinh(1 / z)
+     asech(z) = acosh(1 / z)
+     acoth(z) = atanh(1 / z) = 1/2 * log((1+z) / (z-1))
+
+log, *csc*, *cot*, *acsc*, *acot*, *csch*, *coth*,
+*acosech*, *acotanh*, have aliases *ln*, *cosec*, *cotan*,
+*acosec*, *acotan*, *cosech*, *cotanh*, *acosech*, *acotanh*,
+respectively.
+
+The root function is available to compute all the n roots of some
+complex, where n is a strictly positive integer.  There are exactly n
+such roots, returned as a list. Getting the number mathematicians call
+`j' such that:
+
+     1 + j + j*j = 0;
+
+is a simple matter of writing:
+
+     $j = ((root(1, 3))[1];
+
+The kth root for `z = [r,t]' is given by:
+
+     (root(z, n))[k] = r**(1/n) * exp(i * (t + 2*k*pi)/n)
+
+The *spaceship* comparison operator, <=>, is also defined. In order to
+ensure its restriction to real numbers is conform to what you would
+expect, the comparison is run on the real part of the complex number
+first, and imaginary parts are compared only when the real parts match.
+
+
+CREATION
+========
+
+To create a complex number, use either:
+
+     $z = Math::Complex->make(3, 4);
+     $z = cplx(3, 4);
+
+if you know the cartesian form of the number, or
+
+     $z = 3 + 4*i;
+
+if you like. To create a number using the trigonometric form, use
+either:
+
+     $z = Math::Complex->emake(5, pi/3);
+     $x = cplxe(5, pi/3);
+
+instead. The first argument is the modulus, the second is the angle (in
+radians, the full circle is 2*pi).  (Mnmemonic: `e' is used as a
+notation for complex numbers in the trigonometric form).
+
+It is possible to write:
+
+     $x = cplxe(-3, pi/4);
+
+but that will be silently converted into `[3,-3pi/4]', since the modulus
+must be positive (it represents the distance to the origin in the
+complex plane).
+
+
+STRINGIFICATION
+===============
+
+When printed, a complex number is usually shown under its cartesian
+form *a+bi*, but there are legitimate cases where the polar format
+*[r,t]* is more appropriate.
+
+By calling the routine `Math::Complex::display_format' and supplying
+either `"polar"' or `"cartesian"', you override the default display
+format, which is `"cartesian"'. Not supplying any argument returns the
+current setting.
+
+This default can be overridden on a per-number basis by calling the
+`display_format' method instead. As before, not supplying any argument
+returns the current display format for this number. Otherwise whatever
+you specify will be the new display format for *this* particular number.
+
+For instance:
+
+     use Math::Complex;
+
+     Math::Complex::display_format('polar');
+     $j = ((root(1, 3))[1];
+     print "j = $j\n";		# Prints "j = [1,2pi/3]
+     $j->display_format('cartesian');
+     print "j = $j\n";		# Prints "j = -0.5+0.866025403784439i"
+
+The polar format attempts to emphasize arguments like *k*pi/n* (where n
+is a positive integer and k an integer within [-9,+9]).
+
+
+USAGE
+=====
+
+Thanks to overloading, the handling of arithmetics with complex numbers
+is simple and almost transparent.
+
+Here are some examples:
+
+     use Math::Complex;
+
+     $j = cplxe(1, 2*pi/3);	# $j ** 3 == 1
+     print "j = $j, j**3 = ", $j ** 3, "\n";
+     print "1 + j + j**2 = ", 1 + $j + $j**2, "\n";
+
+     $z = -16 + 0*i;			# Force it to be a complex
+     print "sqrt($z) = ", sqrt($z), "\n";
+
+     $k = exp(i * 2*pi/3);
+     print "$j - $k = ", $j - $k, "\n";
+
+
+ERRORS DUE TO DIVISION BY ZERO
+==============================
+
+The division (/) and the following functions
+
+     tan
+     sec
+     csc
+     cot
+     asec
+     acsc
+     atan
+     acot
+     tanh
+     sech
+     csch
+     coth
+     atanh
+     asech
+     acsch
+     acoth
+
+cannot be computed for all arguments because that would mean dividing by
+zero. These situations cause fatal runtime errors looking like this
+
+     cot(0): Division by zero.
+     (Because in the definition of cot(0), the divisor sin(0) is 0)
+     Died at ...
+
+For the `csc', `cot', `asec', `acsc', `csch', `coth', `asech', `acsch',
+the argument cannot be `0' (zero). For the `atanh', `acoth', the
+argument cannot be 1 (one). For the atan, `acot', the argument cannot be
+i (the imaginary unit).  For the tan, `sec', tanh, `sech', the argument
+cannot be *pi/2 + k * pi*, where k is any integer.
+
+
+BUGS
+====
+
+Saying `use Math::Complex;' exports many mathematical routines in the
+caller environment and even overrides some (sin, cos, sqrt, log, exp).
+This is construed as a feature by the Authors, actually... ;-)
+
+The code is not optimized for speed, although we try to use the
+cartesian form for addition-like operators and the trigonometric form
+for all multiplication-like operators.
+
+The arg() routine does not ensure the angle is within the range
+[-pi,+pi] (a side effect caused by multiplication and division using the
+trigonometric representation).
+
+All routines expect to be given real or complex numbers. Don't attempt
+to use BigFloat, since Perl has currently no rule to disambiguate a '+'
+operation (for instance) between two overloaded entities.
+
+
+AUTHORS
+=======
+
+Raphael Manfredi <`Raphael_Manfredi@grenoble.hp.com'> and Jarkko
+Hietaniemi <`jhi@iki.fi'>.
+
+
+
+

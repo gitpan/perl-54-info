@@ -1,0 +1,1811 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: HTML/Parse, Next: HTML/Parser, Prev: HTML/LinkExtor, Up: Module List
+
+Parse HTML text
+***************
+
+
+
+NAME
+====
+
+parse_html - Parse HTML text
+
+parse_htmlfile - Parse HTML text from file
+
+
+SYNOPSIS
+========
+
+     use HTML::Parse;
+     $h = parse_htmlfile("test.html");
+     print $h->dump;
+     $h = parse_html("<p>Some more <i>italic</i> text", $h);
+     $h->delete;
+
+     print parse_htmlfile("index.html")->as_HTML;  # tidy up markup in a file
+
+
+DESCRIPTION
+===========
+
+*Disclaimer: This module is provided for backwards compatibility with
+earlier versions of this library.  New code will probably prefer to use
+the HTML::Parser and HTML::TreeBuilder modules directly.*
+
+The HTML::Parse module provides functions to parse HTML documents.
+There are two functions exported by this module:
+
+parse_html($html, [$obj])
+     This function is really just a synonym for $obj->parse($html) and $obj
+     is assumed to be a subclass of `HTML::Parser'.  Refer to
+     *Note HTML/Parser: HTML/Parser, for more documentation.
+
+     The $obj will default to a internally created `HTML::TreeBuilder'
+     object.  This class implements a parser that builds (and is) a HTML
+     syntax tree with HTML::Element objects as nodes.
+
+     The return value from parse_html() is $obj.
+
+parse_htmlfile($file, [$obj])
+     Same as parse_html(), but obtains HTML text from the named file.
+
+     Returns undef if the file could not be opened, or $obj otherwise.
+
+When a `HTML::TreeBuilder' object is created, the following variables
+control how parsing takes place:
+
+$HTML::Parse::IMPLICIT_TAGS
+     Setting this variable to true will instruct the parser to try to
+     deduce implicit elements and implicit end tags.  If this variable
+     is false you get a parse tree that just reflects the text as it
+     stands.  Might be useful for quick & dirty parsing.  Default is
+     true.
+
+     Implicit elements have the implicit() attribute set.
+
+$HTML::Parse::IGNORE_UNKNOWN
+     This variable contols whether unknow tags should be represented as
+     elements in the parse tree.  Default is true.
+
+$HTML::Parse::IGNORE_TEXT
+     Do not represent the text content of elements.  This saves space if
+     all you want is to examine the structure of the document.  Default
+     is false.
+
+$HTML::Parse::WARN
+     Call warn() with an apropriate message for syntax errors.  Default
+     is false.
+
+
+SEE ALSO
+========
+
+*Note HTML/Parser: HTML/Parser,, *Note HTML/TreeBuilder: HTML/TreeBuilder,, *Note HTML/Element: HTML/Element,
+
+
+COPYRIGHT
+=========
+
+Copyright 1995-1996 Gisle Aas. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: HTML/Parser, Next: HTML/QuickCheck, Prev: HTML/Parse, Up: Module List
+
+SGML parser class
+*****************
+
+
+
+NAME
+====
+
+HTML::Parser - SGML parser class
+
+
+SYNOPSIS
+========
+
+     require HTML::Parser;
+     $p = HTML::Parser->new;  # should really a be subclass
+     $p->parse($chunk1);
+     $p->parse($chunk2);
+     #...
+     $p->eof;                 # signal end of document
+
+     # Parse directly from file
+     $p->parse_file("foo.html");
+     # or
+     open(F, "foo.html") || die;
+     $p->parse_file(\*F);
+
+
+DESCRIPTION
+===========
+
+The `HTML::Parser' will tokenize a HTML document when the $p->parse()
+method is called.  The document to parse can be supplied in arbitrary
+chunks.  Call $p->eof() the end of the document to flush any remaining
+text.  The return value from parse() is a reference to the parser
+object.
+
+The $p->parse_file() method can be called to parse text from a file.
+The argument can be a filename or an already opened file handle. The
+return value from parse_file() is a reference to the parser object.
+
+In order to make the parser do anything interesting, you must make a
+subclass where you override one or more of the following methods as
+appropriate:
+
+$self->declaration($decl)
+     This method is called when a *markup declaration* has been
+     recognized.  For typical HTML documents, the only declaration you
+     are likely to find is <!DOCTYPE ...>.  The initial "<!" and ending
+     ">" is not part of the string passed as argument.  Comments are
+     removed and entities have *not* been expanded yet.
+
+$self->start($tag, $attr, $attrseq, $origtext)
+     This method is called when a complete start tag has been
+     recognized.  The first argument is the tag name (in lower case) and
+     the second argument is a reference to a hash that contain all
+     attributes found within the start tag.  The attribute keys are
+     converted to lower case.  Entities found in the attribute values
+     are already expanded.  The third argument is a reference to an
+     array with the lower case attribute keys in the original order.
+     The fourth argument is the original HTML text.
+
+$self->end($tag)
+     This method is called when an end tag has been recognized.  The
+     argument is the lower case tag name.
+
+$self->text($text)
+     This method is called when plain text in the document is
+     recognized.  The text is passed on unmodified and might contain
+     multiple lines.  Note that for efficiency reasons entities in the
+     text are *not* expanded.  You should call
+     HTML::Entities::decode($text) before you process the text any
+     further.
+
+$self->comment($comment)
+     This method is called as comments are recognized.  The leading and
+     trailing "--" sequences have been stripped off the comment text.
+
+The default implementation of these methods does nothing, *i.e.,* the
+tokens are just ignored.
+
+There is really nothing in the basic parser that is HTML specific, so it
+is likely that the parser can parse many kinds of SGML documents, but
+SGML has many obscure features (not implemented by this module) that
+prevent us from renaming this module as `SGML::Parse'.
+
+
+BUGS
+====
+
+You can instruct the parser to parse comments the way Netscape does it
+by calling the netscape_buggy_comment() method with a TRUE argument.
+This means that comments will always be terminated by the first
+occurence of "-->".
+
+
+SEE ALSO
+========
+
+*Note HTML/TreeBuilder: HTML/TreeBuilder,, *Note HTML/HeadParser: HTML/HeadParser,, *Note HTML/Entities: HTML/Entities,
+
+
+COPYRIGHT
+=========
+
+Copyright 1996 Gisle Aas. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: HTML/QuickCheck, Next: HTML/Stream, Prev: HTML/Parser, Up: Module List
+
+a simple and fast HTML syntax checking package for perl 4 and perl 5
+********************************************************************
+
+
+
+NAME
+====
+
+HTMLQuickCheck.pm -- a simple and fast HTML syntax checking package for
+perl 4 and perl 5
+
+
+SYNOPSIS          require 'HTMLQuickCheck.pm';
+==============================================
+
+     &HTML'QuickCheck'OK($html_text) || die "Bad HTML: $HTML'QuickCheck'Error";
+
+     or for perl 5:
+     HTML::QuickCheck::OK($html_text) || 
+             die "Bad HTML: $HTML::QuickCheck::Error";
+
+
+DESCRIPTION
+===========
+
+The objective of the package is to provide a fast and essential HTML
+check (esp. for CGI scripts where response time is important) to prevent
+a piece of user input HTML code from messing up the rest of a file,
+i.e., to minimize and localize any possible damage created by including
+a piece of user input HTML text in a dynamic document.
+
+HTMLQuickCheck checks for unmatched < and >, unmatched tags and improper
+nesting, which could ruin the rest of the document.  Attributes and
+elements with optional end tags are not checked, as they should not
+cause disasters with any decent browsers (they should ignore any
+unrecognized tags and attributes according to the standard).  A piece of
+HTML that passes HTMLQuickCheck may not necessarily be valid HTML, but
+it would be very unlikely to screw others but itself. A valid piece of
+HTML that doesn't pass the HTMLQuickCheck is however very likely to
+screw many browsers(which are obviously broken in terms of strict
+conformance).
+
+HTMLQuickCheck currently supports HTML 1.0, 2.x (draft), 3.0 (draft) and
+netscape extensions (1.1).
+
+
+EXAMPLE
+=======
+
+     htmlchk, a simple html checker:
+
+     #!/usr/local/bin/perl
+     require 'HTMLQuickCheck.pm';
+     undef $/;
+     print &HTML'QuickCheck'OK(<>) ? "HTML OK\n" : 
+             "Bad HTML:\n", $HTML'QuickCheck'Error;
+     __END__
+
+     Usage: 
+     htmlchk [html_file]
+
+
+AUTHOR
+======
+
+Luke Y. Lu <ylu@mail.utexas.edu>
+
+
+SEE ALSO
+========
+
+HTML docs at <URL:http://www.w3.org/hypertext/WWW/MarkUp/MarkUp.html>;
+HTML validation service at <URL:http://www.halsoft.com/html/>; perlSGML
+package at <URL:http://www.oac.uci.edu/indiv/ehood/perlSGML.html>;
+weblint at <URL:http://www.khoros.unm.edu/staff/neilb/weblint.html>
+
+
+BUGS
+====
+
+Please report them to the author.
+
+
+
+
+File: pm.info, Node: HTML/Stream, Next: HTML/TreeBuilder, Prev: HTML/QuickCheck, Up: Module List
+
+HTML output stream class, and some markup utilities
+***************************************************
+
+
+
+NAME
+====
+
+HTML::Stream - HTML output stream class, and some markup utilities
+
+
+DESCRIPTION
+===========
+
+The *HTML::Stream* module provides you with an object-oriented (and
+subclassable) way of outputting HTML.  Basically, you open up an "HTML
+stream" on an existing filehandle, and then do all of your output to the
+HTML stream.  You can intermix HTML-stream-output and
+ordinary-print-output, if you like.
+
+Here's small sample of some of the non-OO ways you can use this module:
+
+     use HTML::Stream qw(:funcs);
+
+     print html_tag('A', HREF=>$link);     
+     print html_escape("<<Hello & welcome!>>");      
+
+And some of the OO ways as well:
+
+     use HTML::Stream;
+     $HTML = new HTML::Stream \*STDOUT;
+
+     # The vanilla interface...
+     $HTML->tag('A', HREF=>"$href");
+     $HTML->tag('IMG', SRC=>"logo.gif", ALT=>"LOGO");
+     $HTML->text($copyright);
+     $HTML->tag('_A');
+
+     # The chocolate interface...
+     $HTML -> A(HREF=>"$href");
+     $HTML -> IMG(SRC=>"logo.gif", ALT=>"LOGO");
+     $HTML -> t($caption);
+     $HTML -> _A;
+ 
+     # The chocolate interface, with whipped cream...
+     $HTML -> A(HREF=>"$href")
+           -> IMG(SRC=>"logo.gif", ALT=>"LOGO")
+           -> t($caption)
+           -> _A;
+
+     # The strawberry interface...
+     output $HTML [A, HREF=>"$href"], 
+                  [IMG, SRC=>"logo.gif", ALT=>"LOGO"],
+                  $caption,
+                  [_A];
+
+There's even a small built-in subclass, HTML::Stream::Latin1, which can
+handle Latin-1 input right out of the box.  But all in good time...
+
+
+INTRODUCTION (the Neapolitan dessert special)
+=============================================
+
+
+Function interface
+------------------
+
+Let's start out with the simple stuff.  This module provides a
+collection of non-OO utility functions for escaping HTML text and
+producing HTML tags, like this:
+
+     use HTML::Stream qw(:funcs);        # imports functions from @EXPORT_OK
+
+     print html_tag(A, HREF=>$url);
+     print '&copy; 1996 by', html_escape($myname), '!';
+     print html_tag('/A');
+
+By the way: that last line could be rewritten as:
+
+     print html_tag(_A);
+
+And if you need to get a parameter in your tag that doesn't have an
+associated value, supply the *undefined* value (*not* the empty
+string!):
+
+     print html_tag(TD, NOWRAP=>undef, ALIGN=>'LEFT');
+
+          <TD NOWRAP ALIGN=LEFT>
+
+     print html_tag(IMG, SRC=>'logo.gif', ALT=>'');
+
+          <IMG SRC="logo.gif" ALT="">
+
+There are also some routines for reversing the process, like:
+
+     $text = "This <i>isn't</i> &quot;fun&quot;...";    
+     print html_unmarkup($text);
+   
+          This isn't &quot;fun&quot;...
+  
+     print html_unescape($text);
+   
+          This isn't "fun"...
+
+*Yeah, yeah, yeah*, I hear you cry.  *We've seen this stuff before.*
+But wait!  There's more...
+
+
+OO interface, vanilla
+---------------------
+
+Using the function interface can be tedious... so we also provide an
+*"HTML output stream"* class.  Messages to an instance of that class
+generally tell that stream to output some HTML.  Here's the above
+example, rewritten using HTML streams:
+
+     use HTML::Stream;
+     $HTML = new HTML::Stream \*STDOUT;
+
+     $HTML->tag(A, HREF=>$url);
+     $HTML->ent('copy');
+     $HTML->text(" 1996 by $myname!");
+     $HTML->tag(_A);
+
+As you've probably guessed:
+
+     text()   Outputs some text, which will be HTML-escaped.
+
+     tag()    Outputs an ordinary tag, like <A>, possibly with parameters.
+              The parameters will all be HTML-escaped automatically.
+ 
+     ent()    Outputs an HTML entity, like the &copy; or &lt; .
+              You mostly don't need to use it; you can often just put the 
+              Latin-1 representation of the character in the text().
+
+You might prefer to use `t()' and `e()' instead of `text()' and `ent()':
+they're absolutely identical, and easier to type:
+
+     $HTML -> tag(A, HREF=>$url);
+     $HTML -> e('copy');
+     $HTML -> t(" 1996 by $myname!");
+     $HTML -> tag(_A);
+
+Now, it wouldn't be nice to give you those `text()' and `ent()'
+shortcuts without giving you one for `tag()', would it?  Of course
+not...
+
+
+OO interface, chocolate
+-----------------------
+
+The known HTML tags are even given their own *tag-methods,* compiled on
+demand.  The above code could be written even more compactly as:
+
+     $HTML -> A(HREF=>$url);
+     $HTML -> e('copy');
+     $HTML -> t(" 1996 by $myname!");
+     $HTML -> _A;
+
+As you've probably guessed:
+
+     A(HREF=>$url)   ==   tag(A, HREF=>$url)   ==   <A HREF="/the/url">
+     _A              ==   tag(_A)              ==   </A>
+
+All of the autoloaded "tag-methods" use the tagname in *all-uppercase*.
+A `"_"' prefix on any tag-method means that an end-tag is desired.  The
+`"_"' was chosen for several reasons: (1) it's short and easy to type,
+(2) it doesn't produce much visual clutter to look at, (3) `_TAG' looks
+a little like `/TAG' because of the straight line.
+
+   * *I know, I know... it looks like a private method.
+     You get used to it.  Really.*
+
+I should stress that this module will only auto-create tag methods for
+*known* HTML tags.  So you're protected from typos like this (which will
+cause a fatal exception at run-time):
+
+     $HTML -> IMGG(SRC=>$src);
+
+(You're not yet protected from illegal tag parameters, but it's a start,
+ain't it?)
+
+If you need to make a tag known (sorry, but this is currently a 
+*global* operation, and not stream-specific), do this:
+
+     accept_tag HTML::Stream 'MARQUEE'; # for you MSIE fans...
+
+*Note: there is no corresponding "reject_tag".*  I thought and thought
+about it, and could not convince myself that such a method would do
+anything more useful than cause other people's modules to suddenly stop
+working because some bozo function decided to reject the `FONT' tag.
+
+
+OO interface, with whipped cream
+--------------------------------
+
+In the grand tradition of C++, output method chaining is supported in
+both the Vanilla Interface and the Chocolate Interface.  So you can (and
+probably should) write the above code as:
+
+     $HTML -> A(HREF=>$url) 
+           -> e('copy') -> t(" 1996 by $myname!") 
+           -> _A;
+
+*But wait!  Neapolitan ice cream has one more flavor...*
+
+
+OO interface, strawberry
+------------------------
+
+I was jealous of the compact syntax of HTML::AsSubs, but I didn't want
+to worry about clogging the namespace with a lot of functions like p(),
+a(), etc. (especially when markup-functions like tr() conflict with
+existing Perl functions).  So I came up with this:
+
+     output $HTML [A, HREF=>$url], "Here's my $caption", [_A];
+
+Conceptually, arrayrefs are sent to `html_tag()', and strings to
+`html_escape()'.
+
+
+ADVANCED TOPICS
+===============
+
+
+Auto-formatting and inserting newlines
+--------------------------------------
+
+*Auto-formatting* is the name I give to the Chocolate Interface feature
+whereby newlines (and maybe, in the future, other things) are inserted
+before or after the tags you output in order to make your HTML more
+readable.  So, by default, this:
+
+     $HTML -> HTML 
+           -> HEAD  
+           -> TITLE -> t("Hello!") -> _TITLE 
+           -> _HEAD
+           -> BODY(BGCOLOR=>'#808080');
+
+Actually produces this:
+
+     <HTML><HTML>
+     <HEAD>
+     <TITLE>Hello!</TITLE>
+     </HEAD>
+     <BODY BGCOLOR="#808080">
+
+*To turn off autoformatting altogether* on a given HTML::Stream object,
+use the `auto_format()' method:
+
+     $HTML->auto_format(0);        # stop autoformatting!
+
+*To change whether a newline is automatically output* before/after the 
+begin/end form of a tag at a *global* level, use `set_tag()':
+
+     HTML::Stream->set_tag('B', Newlines=>15);   # 15 means "\n<B>\n \n</B>\n"
+     HTML::Stream->set_tag('I', Newlines=>7);    # 7 means  "\n<I>\n \n</I>  "
+
+*To change whether a newline is automatically output* before/after the 
+begin/end form of a tag *for a given stream* level, give the stream its
+own private "tag info" table, and then use `set_tag()':
+
+     $HTML->private_tags;
+     $HTML->set_tag('B', Newlines=>0);     # won't affect anyone else!
+
+*To output newlines explicitly*, just use the special nl method
+in the Chocolate Interface:
+
+     $HTML->nl;     # one newline
+     $HTML->nl(6);  # six newlines
+
+I am sometimes asked, "why don't you put more newlines in
+automatically?"  Well, mostly because...
+
+   * Sometimes you'll be outputting stuff inside a `PRE' environment.
+
+   * Sometimes you really do want to jam things (like images, or table
+     cell delimiters and the things they contain) right up against each
+     other.
+
+So I've stuck to outputting newlines in places where it's most likely to
+be harmless.
+
+
+Entities
+--------
+
+As shown above, You can use the `ent()' (or `e()') method to output an
+entity:
+
+     $HTML->t('Copyright ')->e('copy')->t(' 1996 by Me!');
+
+But this can be a pain, particularly for generating output with
+non-ASCII characters:
+
+     $HTML -> t('Copyright ') 
+           -> e('copy') 
+           -> t(' 1996 by Fran') -> e('ccedil') -> t('ois, Inc.!');
+
+Granted, Europeans can always type the 8-bit characters directly in
+their Perl code, and just have this:
+
+     $HTML -> t("Copyright \251 1996 by Fran\347ois, Inc.!');
+
+But folks without 8-bit text editors can find this kind of output
+cumbersome to generate.  Sooooooooo...
+
+
+Auto-escaping: changing the way text is escaped
+-----------------------------------------------
+
+*Auto-escaping* is the name I give to the act of taking an "unsafe"
+string (one with ">", "&", etc.), and magically outputting "safe" HTML.
+
+The default "auto-escape" behavior of an HTML stream can be a drag if
+you've got a lot character entities that you want to output, or if
+you're using the Latin-1 character set, or some other input encoding.
+Fortunately, you can use the `auto_escape()' method to change the way a
+particular HTML::Stream works at any time.
+
+First, here's a couple of special invocations:
+
+     $HTML->auto_escape('ALL');      # Default; escapes [<>"&] and 8-bit chars.
+     $HTML->auto_escape('LATIN_1');  # Like ALL, but uses Latin-1 entities
+                                     #   instead of decimal equivalents.
+     $HTML->auto_escape('NON_ENT');  # Like ALL, but leaves "&" alone.
+
+You can also install your own auto-escape function (note that you might
+very well want to install it for just a little bit only, and then
+de-install it):
+
+     sub my_auto_escape {
+         my $text = shift;
+     	HTML::Entities::encode($text);     # start with default
+         $text =~ s/\(c\)/&copy;/ig;        # (C) becomes copyright
+         $text =~ s/\\,(c)/\&$1cedil;/ig;   # \,c becomes a cedilla
+      	$text;
+     }
+
+     # Start using my auto-escape:
+     my $old_esc = $HTML->auto_escape(\&my_auto_escape);  
+
+     # Output some stuff:
+     $HTML-> IMG(SRC=>'logo.gif', ALT=>'Fran\,cois, Inc');
+     output $HTML 'Copyright (C) 1996 by Fran\,cois, Inc.!';
+
+     # Stop using my auto-escape:
+     $HTML->auto_escape($old_esc);
+
+If you find yourself in a situation where you're doing this a lot, a
+better way is to create a *subclass* of HTML::Stream which installs your
+custom function when constructed.  For an example, see the
+HTML::Stream::Latin1 subclass in this module.
+
+
+Outputting HTML to things besides filehandles
+---------------------------------------------
+
+As of Revision 1.21, you no longer need to supply new() with a
+filehandle: *any object that responds to a print() method will do*.  Of
+course, this includes *blessed* FileHandles, and IO::Handles.
+
+If you supply a GLOB reference (like `\*STDOUT') or a string (like
+`"Module::FH"'), HTML::Stream will automatically create an invisible
+object for talking to that filehandle (I don't dare bless it into a
+FileHandle, since the underlying descriptor would get closed when the
+HTML::Stream is destroyed, and you might not want that).
+
+You say you want to print to a string?  For kicks and giggles, try this:
+
+     package StringHandle;
+     sub new {
+     	my $self = '';
+     	bless \$self, shift;
+     }
+     sub print {
+         my $self = shift;
+         $$self .= join('', @_);
+     }
+
+  
+     package main;
+     use HTML::Stream;
+
+     my $SH = new StringHandle;
+     my $HTML = new HTML::Stream $SH;
+     $HTML -> H1 -> t("Hello & <<welcome>>!") -> _H1;
+     print "PRINTED STRING: ", $$SH, "\n";
+
+
+Subclassing
+-----------
+
+This is where you can make your application-specific HTML-generating code
+*much* easier to look at.  Consider this:
+
+     package MY::HTML; @ISA = qw(HTML::Stream);
+ 
+     sub Aside {
+     	$_[0] -> FONT(SIZE=>-1) -> I;
+     }
+     sub _Aside {
+     	$_[0] -> _I -> _FONT;
+     }
+
+Now, you can do this:
+
+     my $HTML = new MY::HTML \*STDOUT;
+
+     $HTML -> Aside
+           -> t("Don't drink the milk, it's spoiled... pass it on...")
+           -> _Aside;
+
+If you're defining these markup-like, chocolate-interface-style
+functions, I recommend using mixed case with a leading capital.  You
+probably shouldn't use all-uppercase, since that's what this module uses
+for real HTML tags.
+
+
+PUBLIC INTERFACE
+================
+
+
+Functions
+---------
+
+html_escape TEXT
+     Given a TEXT string, turn the text into valid HTML by escaping
+     "unsafe" characters.  Currently, the "unsafe" characters are 8-bit
+     characters plus:
+
+          <  >  =  &
+
+     *Note:* provided for convenience and backwards-compatibility only.
+     You may want to use the more-powerful *HTML::Entities::encode*
+     function instead.
+
+html_tag TAG [, PARAM=>VALUE, ...]
+     Return the text for a given TAG, possibly with parameters.  As an
+     efficiency hack, only the values are HTML-escaped currently: it is
+     assumed that the tag and parameters will already be safe.
+
+     For convenience and readability, you can say `_A' instead of `"/A"'
+     for the first tag, if you're into barewords.
+
+html_unescape TEXT
+     Remove angle-tag markup, and convert the standard ampersand-escapes
+     (lt, gt, `amp', quot, and `#ddd') into ASCII characters.
+
+     *Note:* provided for convenience and backwards-compatibility only.
+     You may want to use the more-powerful *HTML::Entities::decode*
+     function instead: unlike this function, it can collapse entities
+     like copy and `ccedil' into their Latin-1 byte values.
+
+html_unmarkup TEXT
+     Remove angle-tag markup from TEXT, but do not convert
+     ampersand-escapes.  Cheesy, but theoretically useful if you want
+     to, say, incorporate externally-provided HTML into a page you're
+     generating, and are worried that the HTML might contain undesirable
+     markup.
+
+
+Vanilla
+-------
+
+new [PRINTABLE]
+     *Class method.*
+     Create a new HTML output stream.
+
+     The PRINTABLE may be a FileHandle, a glob reference, or any object
+     that responds to a `print()' message.  If no PRINTABLE is given,
+     does a select() and uses that.
+
+auto_escape [NAME|SUBREF]
+     *Instance method.*
+     Set the auto-escape function for this HTML stream.
+
+     If the argument is a subroutine reference SUBREF, then that
+     subroutine will be used.  Declare such subroutines like this:
+
+          sub my_escape {
+          	my $text = shift;     # it's passed in the first argument
+              ...
+              $text;
+          }
+
+     If a textual NAME is given, then one of the appropriate built-in
+     functions is used.  Possible values are:
+
+     ALL
+          Default for HTML::Stream objects.  This escapes angle
+          brackets, ampersands, double-quotes, and 8-bit characters.
+          8-bit characters are escaped using decimal entity codes (like
+          `#123').
+
+     LATIN_1
+          Like `"ALL"', but uses Latin-1 entity names (like `ccedil')
+          instead of decimal entity codes to escape characters.  This
+          makes the HTML more readable but it is currently not advised,
+          as "older" browsers (like Netscape 2.0) do not recognize many
+          of the ISO-8859-1 entity names (like `deg').
+
+          Warning: If you specify this option, you'll find that it
+          attempts to "require" *HTML::Entities* at run time.  That's
+          because I didn't want to force you to have that module just to
+          use the rest of HTML::Stream.  To pick up problems at compile
+          time, you are advised to say:
+
+               use HTML::Stream;
+               use HTML::Entities;
+
+          in your source code.
+
+     NON_ENT
+          Like `"ALL"', except that ampersands (&) are *not* escaped.
+          This allows you to use &-entities in your text strings, while
+          having everything else safely escaped:
+
+               output $HTML "If A is an acute angle, then A > 90&deg;";
+
+     Returns the previously-installed function, in the manner of
+     `select()'.  No arguments just returns the currently-installed
+     function.
+
+auto_format ONOFF
+     *Instance method.*
+     Set the auto-formatting characteristics for this HTML stream.
+     Currently, all you can do is supply a single defined boolean
+     argument, which turns auto-formatting ON (1) or OFF (0).  The self
+     object is returned.
+
+     Please use no other values; they are reserved for future use.
+
+comment COMMENT
+     *Instance method.*
+     Output an HTML comment.  As of 1.29, a newline is automatically
+     appended.
+
+ent ENTITY
+     *Instance method.*
+     Output an HTML entity.  For example, here's how you'd output a
+     non-breaking space:
+
+          $html->ent('nbsp');
+
+     You may abbreviate this method name as `e':
+
+          $html->e('nbsp');
+
+     Warning: this function assumes that the entity argument is legal.
+
+io
+     Return the underlying output handle for this HTML stream.  All you
+     can depend upon is that it is some kind of object which responds to
+     a print() message:
+
+          $HTML->io->print("This is not auto-escaped or nuthin!");
+
+nl [COUNT]
+     *Instance method.*
+     Output COUNT newlines.  If undefined, COUNT defaults to 1.
+
+tag TAGNAME [, PARAM=>VALUE, ...]
+     *Instance method.*
+     Output a tag.  Returns the self object, to allow method chaining.
+     You can say `_A' instead of `"/A"', if you're into barewords.
+
+text TEXT, ..., TEXT
+     *Instance method.*
+     Output some text. Returns the self object, to allow method
+     chaining.  You may abbreviate this method name as t:
+
+          $html->t('Hi there, ', $yournamehere, '!');
+
+
+Strawberry
+----------
+
+output ITEM,...,ITEM
+     *Instance method.*
+     Go through the items.  If an item is an arrayref, treat it like the
+     array argument to html_tag() and output the result.  If an item is
+     a text string, escape the text and output the result.  Like this:
+
+          output $HTML [A, HREF=>$url], "Here's my $caption!", [_A];
+
+
+Chocolate
+---------
+
+accept_tag TAG
+     *Class method.*
+     Declares that the tag is to be accepted as valid HTML (if it isn't
+     already).  For example, this...
+
+          # Make sure methods MARQUEE and _MARQUEE are compiled on demand:
+          HTML::Stream->accept_tag('MARQUEE'); 
+
+     ...gives the Chocolate Interface permission to create (via AUTOLOAD)
+     definitions for the MARQUEE and _MARQUEE methods, so you can then
+     say:
+
+          $HTML -> MARQUEE -> t("Hi!") -> _MARQUEE;
+
+     If you want to set the default attribute of the tag as well, you
+     can do so via the set_tag() method instead; it will effectively do
+     an accept_tag() as well.
+
+          # Make sure methods MARQUEE and _MARQUEE are compiled on demand,
+          #   *and*, set the characteristics of that tag.
+          HTML::Stream->set_tag('MARQUEE', Newlines=>9);
+
+private_tags
+     *Instance method.*
+     Normally, HTML streams use a reference to a global table of tag
+     information to determine how to do such things as auto-formatting,
+     and modifications made to that table by set_tag will affect
+     everyone.
+
+     However, if you want an HTML stream to have a private copy of that
+     table to munge with, just send it this message after creating it.
+     Like this:
+
+          my $HTML = new HTML::Stream \*STDOUT;
+          $HTML->private_tags;
+
+     Then, you can say stuff like:
+
+          $HTML->set_tag('PRE',   Newlines=>0);
+          $HTML->set_tag('BLINK', Newlines=>9);
+
+     And it won't affect anyone else's *auto-formatting* (although they
+     will possibly be able to use the BLINK tag method without a fatal
+     exception `:-(' ).
+
+     Returns the self object.
+
+set_tag TAG, [TAGINFO...]
+     *Class/instance method.*
+     Accept the given TAG in the Chocolate Interface, and (if TAGINFO is
+     given) alter its characteristics when being output.
+
+        * *If invoked as a class method,* this alters the "master tag table",
+          and allows a new tag to be supported via an autoloaded method:
+
+               HTML::Stream->set_tag('MARQUEE', Newlines=>9);
+
+          Once you do this, all HTML streams you open from then on will
+          allow that tag to be output in the chocolate interface.
+
+        * *If invoked as an instance method,* this alters the "tag table" referenced
+          by that HTML stream, usually for the purpose of affecting
+          things like the auto-formatting on that HTML stream.
+
+          Warning: by default, an HTML stream just references the
+          "master tag table" (this makes new() more efficient), so *by
+          default, the instance method will behave exactly like the
+          class method.*
+
+               my $HTML = new HTML::Stream \*STDOUT;
+               $HTML->set_tag('BLINK', Newlines=>0);  # changes it for others!
+
+          If you want to diddle with *one* stream's auto-formatting
+          *only,* you'll need to give that stream its own *private* tag
+          table.  Like this:
+
+               my $HTML = new HTML::Stream \*STDOUT;
+               $HTML->private_tags;
+               $HTML->set_tag('BLINK', Newlines=>0);  # doesn't affect other streams
+
+          *Note:* this will still force an default entry for BLINK in the *master* 
+          tag table: otherwise, we'd never know that it was legal to
+          AUTOLOAD a BLINK method.  However, it will only alter the
+          *characteristics* of the BLINK tag (like auto-formatting) in
+          the *object's* tag table.
+
+     The TAGINFO, if given, is a set of key=>value pairs with the
+     following possible keys:
+
+     Newlines
+          Assumed to be a number which encodes how newlines are to be
+          output before/after a tag.  The value is the logical OR (or
+          sum) of a set of flags:
+
+               0x01    newline before <TAG>         .<TAG>.     .</TAG>.    
+               0x02    newline after <TAG>          |     |     |      |
+               0x04    newline before </TAG>        1     2     4      8
+               0x08    newline after </TAG>    
+
+          Hence, to output BLINK environments which are
+          preceded/followed by newlines:
+
+               set_tag HTML::Stream 'BLINK', Newlines=>9;
+
+     Returns the self object on success.
+
+tags
+     *Class/instance method.*
+     Returns an unsorted list of all tags in the class/instance tag
+     table (see set_tag for class/instance method differences).
+
+
+SUBCLASSES
+==========
+
+
+HTML::Stream::Latin1
+--------------------
+
+A small, public package for outputting Latin-1 markup.  Its default
+auto-escape function is LATIN_1, which tries to output the mnemonic
+entity markup (e.g., `&ccedil;') for ISO-8859-1 characters.
+
+So using HTML::Stream::Latin1 like this:
+
+     use HTML::Stream;
+
+     $HTML = new HTML::Stream::Latin1 \*STDOUT;
+     output $HTML "\253A right angle is 90\260, \277No?\273\n";
+
+Prints this:
+
+     &laquo;A right angle is 90&deg;, &iquest;No?&raquo;
+
+Instead of what HTML::Stream would print, which is this:
+
+     &#171;A right angle is 90&#176;, &#191;No?&#187;
+
+Warning: a lot of Latin-1 HTML markup is not recognized by older
+browsers (e.g., Netscape 2.0).  Consider using HTML::Stream; it will
+output the decimal entities which currently seem to be more "portable".
+
+*Note:* using this class "requires" that you have HTML::Entities.
+
+
+PERFORMANCE
+===========
+
+Slower than I'd like.  Both the output() method and the various "tag"
+methods seem to run about 5 times slower than the old
+just-hardcode-the-darn stuff approach.  That is, in general, this:
+
+     ### Approach #1...
+     tag  $HTML 'A', HREF=>"$href";
+     tag  $HTML 'IMG', SRC=>"logo.gif", ALT=>"LOGO";
+     text $HTML $caption;
+     tag  $HTML '_A';
+     text $HTML $a_lot_of_text;
+
+And this:
+
+     ### Approach #2...
+     output $HTML [A, HREF=>"$href"], 
+     	         [IMG, SRC=>"logo.gif", ALT=>"LOGO"],
+     		 $caption,
+     		 [_A];
+     output $HTML $a_lot_of_text;
+
+And this:
+
+     ### Approach #3...
+     $HTML -> A(HREF=>"$href")
+     	  -> IMG(SRC=>"logo.gif", ALT=>"LOGO")
+     	  -> t($caption)
+     	  -> _A
+           -> t($a_lot_of_text);
+
+Each run about 5x slower than this:
+
+     ### Approach #4...
+     print '<A HREF="', html_escape($href), '>',
+           '<IMG SRC="logo.gif" ALT="LOGO">',
+       	  html_escape($caption),
+           '</A>';
+     print html_escape($a_lot_of_text);
+
+Of course, I'd much rather use any of first three *(especially #3)* if I
+had to get something done right in a hurry.  Or did you not notice the
+typo in approach #4?  `;-)'
+
+(BTW, thanks to Benchmark:: for allowing me to... er... benchmark
+stuff.)
+
+
+WHY IN THE WORLD DID I WRITE THIS?
+==================================
+
+I was just mucking about with different ways of generating large HTML
+documents, seeing which ways I liked the most/least.
+
+
+CHANGE LOG
+==========
+
+Version 1.37
+     No real change; just trying to make CPAN.pm happier.
+
+Version 1.32
+     *NEW TOOL for generating Perl code which uses HTML::Stream!* 
+     Check your toolkit for *html2perlstream*.
+
+     Added built-in support for escaping 8-bit characters.
+
+     Added LATIN_1 auto-escape, which uses HTML::Entities to generate
+     mnemonic entities.  This is now the default method for
+     HTML::Stream::Latin1.
+
+     Added `auto_format(),' so you can now turn auto-formatting off/on.
+
+     Added `private_tags()', so it is now possible for HTML streams to
+     each have their own "private" copy of the %Tags table, for use by
+     `set_tag()'.
+
+     Added `set_tag()'.  The tags tables may now be modified dynamically
+     so as to change how formatting is done on-the-fly.  This will
+     hopefully not compromise the efficiency of the chocolate interface
+     (until now, the formatting was compiled into the method itself),
+     and *will* add greater flexibility for more-complex programs.
+
+     Added POD documentation for all subroutines in the public
+     interface.
+
+Version 1.29
+     Added terminating newline to comment().
+     *Thanks to John D Groenveld for the suggestion and the patch.*
+
+Version 1.27
+     Added built-in HTML::Stream::Latin1, which does a very simple
+     encoding of all characters above ASCII 127.
+
+     Fixed bug in accept_tag(), where 'my' variable was shadowing argument.
+     *Thanks to John D Groenveld for the bug report and the patch.*
+
+Version 1.26
+     Start of history.
+
+
+VERSION
+=======
+
+$Revision: 1.40 $
+
+
+ACKNOWLEDGEMENTS
+================
+
+Warmest thanks to...
+
+     John Buckman           For suggesting that I write an "html2perlstream",
+                            and inspiring me to look at supporting Latin-1.
+     Tony Cebzanov          For suggesting that I write an "html2perlstream"
+     John D Groenveld       Bug reports, patches, and suggestions
+     B. K. Oxley (binkley)  For suggesting the support of "writing to strings"
+                            which became the "printable" interface.
+
+
+AUTHOR
+======
+
+Eryq, `eryq@enteract.com' or `eryq@rhine.gsfc.nasa.gov' or thereabouts.
+
+Enjoy.
+
+
+
+
+File: pm.info, Node: HTML/TreeBuilder, Next: HTTP/Daemon, Prev: HTML/Stream, Up: Module List
+
+Parser that builds a HTML syntax tree
+*************************************
+
+
+
+NAME
+====
+
+HTML::TreeBuilder - Parser that builds a HTML syntax tree
+
+
+SYNOPSIS
+========
+
+     $h = new HTML::TreeBuilder;
+     $h->parse($document);
+     #...
+
+     print $h->as_HTML;  # or any other HTML::Element method
+
+
+DESCRIPTION
+===========
+
+This is a parser that builds (and actually itself is) a HTML syntax
+tree.
+
+Objects of this class inherit the methods of both `HTML::Parser' and
+`HTML::Element'.  After parsing has taken place it can be regarded as
+the syntax tree itself.
+
+The following method all control how parsing takes place.  You can set
+the attributes by passing a TRUE or FALSE value as argument.
+
+$p->implicit_tags
+     Setting this attribute to true will instruct the parser to try to
+     deduce implicit elements and implicit end tags.  If it is false you
+     get a parse tree that just reflects the text as it stands.  Might
+     be useful for quick & dirty parsing.  Default is true.
+
+     Implicit elements have the implicit() attribute set.
+
+$p->ignore_unknown
+     This attribute controls whether unknown tags should be represented
+     as elements in the parse tree.  Default is true.
+
+$p->ignore_text
+     Do not represent the text content of elements.  This saves space if
+     all you want is to examine the structure of the document.  Default
+     is false.
+
+$p->warn
+     Call warn() with an appropriate message for syntax errors.  Default
+     is false.
+
+
+SEE ALSO
+========
+
+*Note HTML/Parser: HTML/Parser,, *Note HTML/Element: HTML/Element,
+
+
+COPYRIGHT
+=========
+
+Copyright 1995-1996 Gisle Aas. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: HTTP/Daemon, Next: HTTP/Date, Prev: HTML/TreeBuilder, Up: Module List
+
+a simple http server class
+**************************
+
+
+
+NAME
+====
+
+HTTP::Daemon - a simple http server class
+
+
+SYNOPSIS
+========
+
+     use HTTP::Daemon;
+     use HTTP::Status;
+
+     $d = new HTTP::Daemon;
+     print "Please contact me at: <URL:", $d->url, ">\n";
+     while ($c = $d->accept) {
+         $r = $c->get_request;
+         if ($r) {
+     	  if ($r->method eq 'GET' and $r->url->path eq "/xyzzy") {
+                 # this is *not* recommened practice
+     	      $c->send_file_response("/etc/passwd");
+     	  } else {
+     	      $c->send_error(RC_FORBIDDEN)
+     	  }
+         }
+         $c = undef;  # close connection
+     }
+
+
+DESCRIPTION
+===========
+
+Instances of the *HTTP::Daemon* class are HTTP/1.1 servers that listens
+on a socket for incoming requests. The *HTTP::Daemon* is a sub-class of
+IO::Socket::INET, so you can do socket operations directly on it.
+
+The accept() method will return when a connection from a client is
+available. The returned value will be a reference to a object of the
+*HTTP::Daemon::ClientConn* class which is another IO::Socket::INET
+subclass. Calling the get_request() method on this object will read data
+from the client and return an HTTP::Request object reference.
+
+This HTTP daemon does not fork(2) for you.  Your application, i.e. the
+user of the *HTTP::Daemon* is reponsible for forking if that is
+desirable.  Also note that the user is responsible for generating
+responses that conforms to the HTTP/1.1 protocol.  The
+*HTTP::Daemon::ClientConn* provide some methods that make this easier.
+
+
+METHODS
+=======
+
+The following is a list of methods that are new (or enhanced) relative
+to the IO::Socket::INET base class.
+
+$d = new HTTP::Daemon
+     The object constructor takes the same parameters as the
+     IO::Socket::INET constructor.  It can also be called without
+     specifying any parameters. The daemon will then set up a listen
+     queue of 5 connections and allocate some random port number.  A
+     server that want to bind to some specific address on the standard
+     HTTP port will be constructed like this:
+
+          $d = new HTTP::Daemon
+                LocalAddr => 'www.someplace.com',
+                LocalPort => 80;
+
+$c = $d->accept
+     Same as *IO::Socket::accept* but will return an
+     *HTTP::Daemon::ClientConn* reference.  It will return undef if you
+     have specified a timeout and no connection is made within that
+     time.
+
+$d->url
+     Returns a URL string that can be used to access the server root.
+
+$d->product_tokens
+     Returns the name that this server will use to identify itself.
+     This is the string that is sent with the Server response header.
+
+The *HTTP::Daemon::ClientConn* is also a IO::Socket::INET
+subclass. Instances of this class are returned by the accept() method of
+the *HTTP::Daemon*.  The following additional methods are provided:
+
+$c->get_request
+     Will read data from the client and turn it into a HTTP::Request
+     object which is then returned. Will return undef if reading of the
+     request failed.  If it fails, then the *HTTP::Daemon::ClientConn*
+     object ($c) should be discarded.
+
+     The $c->get_request method support HTTP/1.1 content bodies, including
+     *chunked* transfer encoding with footer and *multipart/** types.
+
+$c->antique_client
+     Returns TRUE if the client speaks the HTTP/0.9 protocol, i.e. no
+     status code or headers should be returned.
+
+$c->send_status_line( [$code, [$mess, [$proto]]] )
+     Sends the status line back to the client.
+
+$c->send_basic_header( [$code, [$mess, [$proto]]] )
+     Sends the status line and the "Date:" and "Server:" headers back to
+     the client.
+
+$c->send_response( [$res] )
+     Takes a *HTTP::Response* object as parameter and send it back to
+     the client as the response.
+
+$c->send_redirect( $loc, [$code, [$entity_body]] )
+     Sends a redirect response back to the client.  The location ($loc)
+     can be an absolute or a relative URL. The $code must be one the
+     redirect status codes, and it defaults to "301 Moved Permanently"
+
+$c->send_error( [$code, [$error_message]] )
+     Send an error response back to the client.  If the $code is missing
+     a "Bad Request" error is reported.  The $error_message is a string
+     that is incorporated in the body of the HTML entity body.
+
+$c->send_file_response($filename)
+     Send back a response with the specified $filename as content.  If
+     the file happen to be a directory we will generate a HTML index for
+     it.
+
+$c->send_file($fd);
+     Copies the file back to the client.  The file can be a string
+     (which will be interpreted as a filename) or a reference to a glob.
+
+$c->daemon
+     Return a reference to the corresponding *HTTP::Daemon* object.
+
+
+SEE ALSO
+========
+
+*Note IO/Socket: IO/Socket,, *Note Apache: Apache,
+
+
+COPYRIGHT
+=========
+
+Copyright 1996, Gisle Aas
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: HTTP/Date, Next: HTTP/Headers, Prev: HTTP/Daemon, Up: Module List
+
+date conversion routines
+************************
+
+
+
+NAME
+====
+
+time2str, str2time - date conversion routines
+
+
+SYNOPSIS
+========
+
+     use HTTP::Date;
+
+     $stringGMT = time2str(time);   # Format as GMT ASCII time
+     $time = str2time($stringGMT);  # convert ASCII date to machine time
+
+
+DESCRIPTION
+===========
+
+This module provides two functions that deal with the HTTP date format.
+
+
+time2str([$time])
+-----------------
+
+The time2str() function converts a machine time (seconds since epoch) to
+a string.  If the function is called without an argument, it will use
+the current time.
+
+The string returned is in the format defined by the HTTP/1.0
+specification.  This is a fixed length subset of the format defined by
+RFC 1123, represented in Universal Time (GMT).  An example of this
+format is:
+
+     Thu, 03 Feb 1994 17:09:00 GMT
+
+
+str2time($str [, $zone])
+------------------------
+
+The str2time() function converts a string to machine time.  It returns
+undef if the format is unrecognized, or the year is not between 1970 and
+2038.  The function is able to parse the following formats:
+
+     "Wed, 09 Feb 1994 22:23:32 GMT"       -- HTTP format
+     "Thu Feb  3 17:03:55 GMT 1994"        -- ctime(3) format
+     "Thu Feb  3 00:00:00 1994",           -- ANSI C asctime() format
+     "Tuesday, 08-Feb-94 14:15:29 GMT"     -- old rfc850 HTTP format
+     "Tuesday, 08-Feb-1994 14:15:29 GMT"   -- broken rfc850 HTTP format
+
+     "03/Feb/1994:17:03:55 -0700"   -- common logfile format
+     "09 Feb 1994 22:23:32 GMT"     -- HTTP format (no weekday)
+     "08-Feb-94 14:15:29 GMT"       -- rfc850 format (no weekday)
+     "08-Feb-1994 14:15:29 GMT"     -- broken rfc850 format (no weekday)
+
+     "1994-02-03 14:15:29 -0100"    -- ISO 8601 format
+     "1994-02-03 14:15:29"          -- zone is optional
+     "1994-02-03"                   -- only date
+     "1994-02-03T14:15:29"          -- Use T as separator
+     "19940203T141529Z"             -- ISO 8601 compact format
+     "19940203"                     -- only date
+
+     "08-Feb-94"         -- old rfc850 HTTP format    (no weekday, no time)
+     "08-Feb-1994"       -- broken rfc850 HTTP format (no weekday, no time)
+     "09 Feb 1994"       -- proposed new HTTP format  (no weekday, no time)
+     "03/Feb/1994"       -- common logfile format     (no time, no offset)
+
+     "Feb  3  1994"      -- Unix 'ls -l' format
+     "Feb  3 17:03"      -- Unix 'ls -l' format
+
+     "11-15-96  03:52PM" -- Windows 'dir' format
+
+The parser ignores leading and trailing whitespace.  It also allow the
+seconds to be missing and the month to be numerical in most formats.
+
+The str2time() function takes an optional second argument that specifies
+the default time zone to use when converting the date.  This zone
+specification should be numerical (like "-0800" or "+0100") or "GMT".
+This parameter is ignored if the zone is specified in the date string
+itself.  It this parameter is missing, and the date string format does
+not contain any zone specification then the local time zone is assumed.
+
+If the year is missing, then we assume that the date is the first
+matching date *before* current time.
+
+
+BUGS
+====
+
+Non-numerical time zones (like MET, PST) are all treated like GMT.  Do
+not use them.  HTTP does not use them.
+
+The str2time() function has been told how to parse far too many formats.
+This makes the module name misleading. To be sure it is really
+misleading you can also import the time2iso() and time2isoz() functions.
+They work like time2str() but produce ISO-8601 formated strings
+(YYYY-MM-DD hh:mm:ss).
+
+
+COPYRIGHT
+=========
+
+Copyright 1995-1997, Gisle Aas
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: HTTP/Headers, Next: HTTP/Message, Prev: HTTP/Date, Up: Module List
+
+Class encapsulating HTTP Message headers
+****************************************
+
+
+
+NAME
+====
+
+HTTP::Headers - Class encapsulating HTTP Message headers
+
+
+SYNOPSIS
+========
+
+     require HTTP::Headers;
+     $request = new HTTP::Headers;
+
+
+DESCRIPTION
+===========
+
+The `HTTP::Headers' class encapsulates HTTP-style message headers.  The
+headers consist of attribute-value pairs, which may be repeated, and
+which are printed in a particular order.
+
+Instances of this class are usually created as member variables of the
+HTTP::Request and `HTTP::Response' classes, internal to the library.
+
+
+METHODS
+=======
+
+
+$h = new HTTP::Headers
+----------------------
+
+Constructs a new `HTTP::Headers' object.  You might pass some initial
+attribute-value pairs as parameters to the constructor.  *E.g.*:
+
+     $h = new HTTP::Headers
+         Date         => 'Thu, 03 Feb 1994 00:00:00 GMT',
+         Content_Type => 'text/html; version=3.2',
+         Content_Base => 'http://www.sn.no/';
+
+
+$h->header($field [=> $val],...)
+--------------------------------
+
+Get or set the value of a header.  The header field name is not case
+sensitive.  To make the life easier for perl users who wants to avoid
+quoting before the => operator, you can use '_' as a synonym for '-' in
+header names.
+
+The value argument may be a scalar or a reference to a list of
+scalars. If the value argument is not defined, then the header is not
+modified.
+
+The header() method accepts multiple ($field => $value) pairs.
+
+The list of previous values for the last $field is returned.  Only the
+first header value is returned in scalar context.
+
+     $header->header(MIME_Version => '1.0',
+     		 User_Agent   => 'My-Web-Client/0.01');
+     $header->header(Accept => "text/html, text/plain, image/*");
+     $header->header(Accept => [qw(text/html text/plain image/*)]);
+     @accepts = $header->header('Accept');
+
+
+$h->scan(\&doit)
+----------------
+
+Apply a subroutine to each header in turn.  The callback routine is
+called with two parameters; the name of the field and a single value.
+If the header has more than one value, then the routine is called once
+for each value.  The field name passed to the callback routine has case
+as suggested by HTTP Spec, and the headers will be visited in the
+recommended "Good Practice" order.
+
+
+$h->as_string([$endl])
+----------------------
+
+Return the header fields as a formatted MIME header.  Since it
+internally uses the scan() method to build the string, the result will
+use case as suggested by HTTP Spec, and it will follow recommended "Good
+Practice" of ordering the header fieds.  Long header values are not
+folded.
+
+The optional parameter specifies the line ending sequence to use.  The
+default is `"\n"'.  Embedded "\n" characters in the header will be
+substitued with this line ending sequence.
+
+
+$h->push_header($field, $val)
+-----------------------------
+
+Add a new field value of the specified header.  The header field name is
+not case sensitive.  The field need not already have a value. Previous
+values for the same field are retained.  The argument may be a scalar or
+a reference to a list of scalars.
+
+     $header->push_header(Accept => 'image/jpeg');
+
+
+$h->remove_header($field,...)
+-----------------------------
+
+This function removes the headers with the specified names.
+
+
+$h->clone
+---------
+
+Returns a copy of this HTTP::Headers object.
+
+
+CONVENIENCE METHODS
+===================
+
+The most frequently used headers can also be accessed through the
+following convenience methods.  These methods can both be used to read
+and to set the value of a header.  The header value is set if you pass
+an argument to the method.  The old header value is always returned.
+
+Methods that deal with dates/times always convert their value to system
+time (seconds since Jan 1, 1970) and they also expect this kind of value
+when the header value is set.
+
+
+$h->date
+--------
+
+This header represents the date and time at which the message was
+originated. *E.g.*:
+
+     $h->date(time);  # set current date
+
+
+$h->expires
+-----------
+
+This header gives the date and time after which the entity should be
+considered stale.
+
+
+$h->if_modified_since
+---------------------
+
+This header is used to make a request conditional.  If the requested
+resource has not been modified since the time specified in this field,
+then the server will return a `"304 Not Modified"' response instead of
+the document itself.
+
+
+$h->last_modified
+-----------------
+
+This header indicates the date and time at which the resource was last
+modified. *E.g.*:
+
+     # check if document is more than 1 hour old
+     if ($h->last_modified < time - 60*60) {
+     	...
+     }
+
+
+$h->content_type
+----------------
+
+The Content-Type header field indicates the media type of the message
+content. *E.g.*:
+
+     $h->content_type('text/html');
+
+The value returned will be converted to lower case, and potential
+parameters will be chopped off and returned as a separate value if in an
+array context.  This makes it safe to do the following:
+
+     if ($h->content_type eq 'text/html') {
+        # we enter this place even if the real header value happens to
+        # be 'TEXT/HTML; version=3.0'
+        ...
+     }
+
+
+$h->content_encoding
+--------------------
+
+The Content-Encoding header field is used as a modifier to the media
+type.  When present, its value indicates what additional encoding
+mechanism has been applied to the resource.
+
+
+$h->content_length
+------------------
+
+A decimal number indicating the size in bytes of the message content.
+
+
+$h->title
+---------
+
+The title of the document.  In libwww-perl this header will be
+initialized automatically from the <TITLE>...</TITLE> element of HTML
+documents.  *This header is no longer part of the HTTP standard.*
+
+
+$h->user_agent
+--------------
+
+This header field is used in request messages and contains information
+about the user agent originating the request.  *E.g.*:
+
+     $h->user_agent('Mozilla/1.2');
+
+
+$h->server
+----------
+
+The server header field contains information about the software being
+used by the originating server program handling the request.
+
+
+$h->from
+--------
+
+This header should contain an Internet e-mail address for the human user
+who controls the requesting user agent.  The address should be
+machine-usable, as defined by RFC822.  E.g.:
+
+     $h->from('Gisle Aas <aas@sn.no>');
+
+
+$h->referer
+-----------
+
+Used to specify the address (URI) of the document from which the
+requested resouce address was obtained.
+
+
+$h->www_authenticate
+--------------------
+
+This header must be included as part of a "401 Unauthorized" response.
+The field value consist of a challenge that indicates the authentication
+scheme and parameters applicable to the requested URI.
+
+
+$h->authorization
+-----------------
+
+A user agent that wishes to authenticate itself with a server, may do so
+by including this header.
+
+
+$h->authorization_basic
+-----------------------
+
+This method is used to get or set an authorization header that use the
+"Basic Authentication Scheme".  In array context it will return two
+values; the user name and the password.  In scalar context it will
+return *"uname:password"* as a single string value.
+
+When used to set the header value, it expects two arguments.  *E.g.*:
+
+     $h->authorization_basic($uname, $password);
+
+
+
+

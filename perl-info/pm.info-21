@@ -1,0 +1,2711 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: File/Tools, Next: File/lockf, Prev: File/Sync, Up: Module List
+
+This module is a wrapper for the various File moudles.
+******************************************************
+
+
+
+NAME
+====
+
+File::Tools - This module is a wrapper for the various File moudles.
+
+
+SYNOPSIS
+========
+
+     use File::Tools;
+     copy("x", *STDOUT);
+     recurse { print } "/etc";
+
+
+DESCRIPTION
+===========
+
+Provides the routines that are defined in File::Recurse and File::Copy.
+
+Other modules will be added at a later date, but File::Tools will always
+encapsulate them.
+
+
+SEE ALSO
+========
+
+*Note File/Copy: File/Copy, and *Note File/Recurse: File/Recurse,
+
+
+AUTHOR
+======
+
+Written in 1996 by Aaron Sherman
+
+
+
+File: pm.info, Node: File/lockf, Next: File/stat, Prev: File/Tools, Up: Module List
+
+Perl interface to the lockf system call
+***************************************
+
+
+
+NAME
+====
+
+File::lockf - Perl interface to the lockf system call
+
+
+SYNOPSIS
+========
+
+     use POSIX;
+     use File::lockf;
+
+     $status = File::lockf::lock(FH, size = 0);
+
+     $status = File::lockf::tlock(FH, size = 0);
+
+     $status = File::lockf::ulock(FH, size = 0);
+
+     $status = File::lockf::test(FH, size = 0);
+
+
+DESCRIPTION
+===========
+
+File-Lockf is a wrapper around the lockf system call. Perl supports the
+flock system call natively, but that does not acquire network
+locks. Perl also supports the fcntl system call, but that is somewhat
+ugly to use. There are other locking modules available for Perl, but
+none of them provided what I wanted -- a simple, clean interface to the
+lockf system call, without any bells or whistles getting in the way.
+
+File-Lockf contains four functions, which map to the four modes of
+lockf: F_LOCK, F_TLOCK, F_ULOCK, and F_TEST. Each function takes an open
+filehandle as the first argument, and optionally a size as the second
+argument.
+
+The functions return 0 (zero) on success, and the system error number
+from errno on failure. If you use the POSIX module, you can compare the
+return values symbolically:
+
+     while (File::lockf::tlock(FH) == EAGAIN) {
+     	sleep 5;
+     }
+
+Please see your system lockf man page for more details about lockf
+functionality on your system.
+
+
+AUTHOR
+======
+
+Paul Henson <henson@acm.org>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: File/stat, Next: FileCache, Prev: File/lockf, Up: Module List
+
+by-name interface to Perl's built-in stat() functions
+*****************************************************
+
+
+
+NAME
+====
+
+File::stat - by-name interface to Perl's built-in stat() functions
+
+
+SYNOPSIS
+========
+
+     use File::stat;
+     $st = stat($file) or die "No $file: $!";
+     if ( ($st->mode & 0111) && $st->nlink > 1) ) {
+         print "$file is executable with lotsa links\n";
+     } 
+
+     use File::stat qw(:FIELDS);
+     stat($file) or die "No $file: $!";
+     if ( ($st_mode & 0111) && $st_nlink > 1) ) {
+         print "$file is executable with lotsa links\n";
+     } 
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core stat() and lstat()
+functions, replacing them with versions that return "File::stat"
+objects.  This object has methods that return the similarly named
+structure field name from the stat(2) function; namely, dev, ino, mode,
+nlink, uid, gid, rdev, size, atime, mtime, ctime, blksize, and blocks.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your stat() and lstat() functions.)  Access these
+fields as variables named with a preceding `st_' in front their method
+names.  Thus, `$stat_obj->dev()' corresponds to $st_dev if you import
+the fields.
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: FileCache, Next: FileHandle, Prev: File/stat, Up: Module List
+
+keep more files open than the system permits
+********************************************
+
+
+
+NAME
+====
+
+FileCache - keep more files open than the system permits
+
+
+SYNOPSIS
+========
+
+     cacheout $path;
+     print $path @data;
+
+
+DESCRIPTION
+===========
+
+The `cacheout' function will make sure that there's a filehandle open
+for writing available as the pathname you give it.  It automatically
+closes and re-opens files if you exceed your system file descriptor
+maximum.
+
+
+BUGS
+====
+
+`sys/param.h' lies with its `NOFILE' define on some systems, so you may
+have to set $cacheout::maxopen yourself.
+
+
+
+
+File: pm.info, Node: FileHandle, Next: FileHandle/Multi, Prev: FileCache, Up: Module List
+
+supply object methods for filehandles
+*************************************
+
+
+
+NAME
+====
+
+FileHandle - supply object methods for filehandles
+
+
+SYNOPSIS
+========
+
+     use FileHandle;
+
+     $fh = new FileHandle;
+     if ($fh->open "< file") {
+         print <$fh>;
+         $fh->close;
+     }
+
+     $fh = new FileHandle "> FOO";
+     if (defined $fh) {
+         print $fh "bar\n";
+         $fh->close;
+     }
+
+     $fh = new FileHandle "file", "r";
+     if (defined $fh) {
+         print <$fh>;
+         undef $fh;       # automatically closes the file
+     }
+
+     $fh = new FileHandle "file", O_WRONLY|O_APPEND;
+     if (defined $fh) {
+         print $fh "corge\n";
+         undef $fh;       # automatically closes the file
+     }
+
+     $pos = $fh->getpos;
+     $fh->setpos($pos);
+
+     $fh->setvbuf($buffer_var, _IOLBF, 1024);
+
+     ($readfh, $writefh) = FileHandle::pipe;
+
+     autoflush STDOUT 1;
+
+
+DESCRIPTION
+===========
+
+NOTE: This class is now a front-end to the IO::* classes.
+
+`FileHandle::new' creates a FileHandle, which is a reference to a newly
+created symbol (see the Symbol package).  If it receives any parameters,
+they are passed to `FileHandle::open'; if the open fails, the FileHandle
+object is destroyed.  Otherwise, it is returned to the caller.
+
+`FileHandle::new_from_fd' creates a FileHandle like new does.  It
+requires two parameters, which are passed to `FileHandle::fdopen'; if
+the fdopen fails, the FileHandle object is destroyed.  Otherwise, it is
+returned to the caller.
+
+`FileHandle::open' accepts one parameter or two.  With one parameter, it
+is just a front end for the built-in open function.  With two
+parameters, the first parameter is a filename that may include
+whitespace or other special characters, and the second parameter is the
+open mode, optionally followed by a file permission value.
+
+If `FileHandle::open' receives a Perl mode string (">", "+<", etc.)  or
+a POSIX fopen() mode string ("w", "r+", etc.), it uses the basic Perl
+open operator.
+
+If `FileHandle::open' is given a numeric mode, it passes that mode and
+the optional permissions value to the Perl sysopen operator.  For
+convenience, `FileHandle::import' tries to import the O_XXX constants
+from the Fcntl module.  If dynamic loading is not available, this may
+fail, but the rest of FileHandle will still work.
+
+`FileHandle::fdopen' is like open except that its first parameter is not
+a filename but rather a file handle name, a FileHandle object, or a file
+descriptor number.
+
+If the C functions fgetpos() and fsetpos() are available, then
+`FileHandle::getpos' returns an opaque value that represents the current
+position of the FileHandle, and `FileHandle::setpos' uses that value to
+return to a previously visited position.
+
+If the C function setvbuf() is available, then `FileHandle::setvbuf'
+sets the buffering policy for the FileHandle.  The calling sequence for
+the Perl function is the same as its C counterpart, including the macros
+`_IOFBF', `_IOLBF', and `_IONBF', except that the buffer parameter
+specifies a scalar variable to use as a buffer.  WARNING: A variable
+used as a buffer by `FileHandle::setvbuf' must not be modified in any
+way until the FileHandle is closed or until `FileHandle::setvbuf' is
+called again, or memory corruption may result!
+
+See *Note Perlfunc: (perl.info)perlfunc, for complete descriptions of
+each of the following supported FileHandle methods, which are just front
+ends for the corresponding built-in functions:
+
+     close
+     fileno
+     getc
+     gets
+     eof
+     clearerr
+     seek
+     tell
+
+See *Note Perlvar: (perl.info)perlvar, for complete descriptions of each
+of the following supported FileHandle methods:
+
+     autoflush
+     output_field_separator
+     output_record_separator
+     input_record_separator
+     input_line_number
+     format_page_number
+     format_lines_per_page
+     format_lines_left
+     format_name
+     format_top_name
+     format_line_break_characters
+     format_formfeed
+
+Furthermore, for doing normal I/O you might need these:
+
+$fh->print
+     See `print', *Note Perlfunc: (perl.info)perlfunc,.
+
+$fh->printf
+     See `printf', *Note Perlfunc: (perl.info)perlfunc,.
+
+$fh->getline
+     This works like <$fh> described in `"I', *Note Perlop:
+     (perl.info)perlop, except that it's more readable and can be safely
+     called in an array context but still returns just one line.
+
+$fh->getlines
+     This works like <$fh> when called in an array context to read all
+     the remaining lines in a file, except that it's more readable.  It
+     will also croak() if accidentally called in a scalar context.
+
+
+SEE ALSO
+========
+
+The IO extension,
+*Note Perlfunc: (perl.info)perlfunc,, 
+`"I', *Note Perlop: (perl.info)perlop,.
+
+
+
+
+File: pm.info, Node: FileHandle/Multi, Next: Filter/Util/Call, Prev: FileHandle, Up: Module List
+
+Print to multiple filehandles with one output call
+**************************************************
+
+
+
+NAME
+====
+
+Multi - Print to multiple filehandles with one output call
+
+
+SYNOPSIS
+========
+
+     use FileHandle::Multi;
+     $mult_obj=new FileHandle::Multi;
+     $mult_obj->open('>-');
+     $mult_obj->open('>file');
+     $mult_obj->open(">$file");
+     $mult_obj->open('>>file2');
+     $mult_obj->print("This will be printed to several filehandles\n");
+     $mult_obj->printf("This will be printed to %d filehandles\n",
+         scalar @{$mult_obj->{handles}});
+     $mult_obj->autoflush();
+     @handle_refs = $mult_obj->members();
+     $mult_obj->output_field_separator(':');
+     $mult_obj->output_record_separator('\n');
+     $mult_obj->format_page_number(2);
+     $mult_obj->format_lines_per_page(66);
+     $mult_obj->format_lines_left(10);
+     $mult_obj->format_name('AN_REPORT');
+     $mult_obj->format_top_name('AN_REPORT_TOP');
+     $mult_obj->format_line_break_characters('\n');
+     $mult_obj->format_formfeed('\l');
+     $mult_obj->close();
+
+
+DESCRIPTION
+===========
+
+This module requires that the user have the FileHandle module installed
+(it comes with the perl distribution).  Create objects for each of the
+output filehandles you'll have - then call the print() and printf()
+methods to send output to ALL the filehandles associated with an object.
+
+
+EXAMPLES
+========
+
+Look at the SYNOPSIS section.  Also, here is a simple implementation of
+the unix tee(1) program (non-append mode):
+
+     #!/local/bin/perl
+     use Multi;
+     $mh=new Multi;
+     $mh->open('>-');
+     for (@ARGV) { $mh->open(">$_"); }
+     while (<STDIN>) { $mh->print($_); }
+
+
+BUGS
+====
+
+I don't think using my()s the way I am in the open() method is all that
+good.  binmode isn't supported, but I don't see anybody using that
+anyways.  In order to use fcntl(), fileno(), or flock() you'll have to
+access the filehandles yourself by calling members().  There's no
+write() yet (but I'm working on it!).  Also, any limitations to the
+FileHandle module also apply here.
+
+
+AUTHOR
+======
+
+Nem W Schlecht (nem@plains.nodak.edu).  Comments, bugs fixes, and
+suggestions welcome.
+
+
+
+File: pm.info, Node: Filter/Util/Call, Next: Filter/Util/Exec, Prev: FileHandle/Multi, Up: Module List
+
+Perl Source Filter Utility Module
+*********************************
+
+
+
+NAME
+====
+
+Filter::Util::Call - Perl Source Filter Utility Module
+
+
+DESCRIPTION
+===========
+
+This module provides you with the framework to write *Source Filters* in
+Perl.
+
+A *Perl Source Filter* is implemented as a Perl module. The structure of
+the module can take one of two broadly similar formats. To distinguish
+between them, the first will be referred to as *method filter* and the
+second as *closure filter*.
+
+Here is a skeleton for the *method filter*:
+
+     package MyFilter ;
+
+     use Filter::Util::Call ;
+
+     sub import
+     {
+         my($type, @arguments) = @_ ;
+         filter_add([]) ;
+     }
+
+     sub filter
+     {
+         my($self) = @_ ;
+         my($status) ;
+
+         $status = filter_read() ;
+         $status ;
+     }
+
+     1 ;
+
+and this is the equivalent skeleton for the *closure filter*:
+
+     package MyFilter ;
+
+     use Filter::Util::Call ;
+
+     sub import
+     {
+         my($type, @arguments) = @_ ;
+
+         filter_add(
+             sub 
+             {
+                 my($status) ;
+                 $status = filter_read() ;
+                 $status ;
+             } )
+     }
+
+     1 ;
+
+To make use of either of the two filter modules above, place the line
+below in a Perl source file.
+
+     use MyFilter; 
+
+In fact, the skeleton modules shown above are fully functional *Source
+Filters*, albeit fairly useless ones. All they does is filter the source
+stream without modifying it at all.
+
+As you can see both modules have a broadly similar structure. They both
+make use of the `Filter::Util::Call' module and both have an import
+method. The difference between them is that the *method filter*
+requires a *filter* method, whereas the *closure filter* gets the
+equivalent of a *filter* method with the anonymous sub passed to
+*filter_add*.
+
+To make proper use of the *closure filter* shown above you need to
+have a good understanding of the concept of a *closure*. See
+*Note Perlref: (perl.info)perlref, for more details on the mechanics of
+*closures*.
+
+
+use Filter::Util::Call
+----------------------
+
+The following functions are exported by `Filter::Util::Call':
+
+     filter_add()
+     filter_read()
+     filter_read_exact()
+     filter_del()
+
+
+import()
+--------
+
+The import method is used to create an instance of the filter. It is
+called indirectly by Perl when it encounters the `use MyFilter' line in
+a source file (See `import', *Note Perlfunc: (perl.info)perlfunc, for
+more details on import).
+
+It will always have at least one parameter automatically passed by Perl
+- this corresponds to the name of the package. In the example above it
+will be `"MyFilter"'.
+
+Apart from the first parameter, import can accept an optional list of
+parameters. These can be used to pass parameters to the filter. For
+example:
+
+     use MyFilter qw(a b c) ;
+
+will result in the `@_' array having the following values:
+
+     @_ [0] => "MyFilter"
+     @_ [1] => "a"
+     @_ [2] => "b"
+     @_ [3] => "c"
+
+Before terminating, the import function must explicitly install the
+filter by calling `filter_add'.
+
+*filter_add()*
+
+The function, `filter_add', actually installs the filter. It takes one
+parameter which should be a reference. The kind of reference used will
+dictate which of the two filter types will be used.
+
+If a CODE reference is used then a *closure filter* will be assumed.
+
+If a CODE reference is not used, a *method filter* will be assumed.  In
+a *method filter*, the reference can be used to store context
+information. The reference will be *blessed* into the package by
+`filter_add'.
+
+See the filters at the end of this documents for examples of using
+context information using both *method filters* and *closure filters*.
+
+
+filter() and anonymous sub
+--------------------------
+
+Both the `filter' method used with a *method filter* and the anonymous
+sub used with a *closure filter* is where the main processing for the
+filter is done.
+
+The big difference between the two types of filter is that the *method
+filter* uses the object passed to the method to store any context data,
+whereas the *closure filter* uses the lexical variables that are
+maintained by the closure.
+
+Note that the single parameter passed to the *method filter*, `$self',
+is the same reference that was passed to `filter_add' blessed into the
+filter's package. See the example filters later on for details of using
+`$self'.
+
+Here is a list of the common features of the anonymous sub and the
+`filter()' method.
+
+$_
+     Although $_ doesn't actually appear explicitly in the sample
+     filters above, it is implicitly used in a number of places.
+
+     Firstly, when either `filter' or the anonymous sub are called, a
+     local copy of $_ will automatically be created. It will always
+     contain the empty string at this point.
+
+     Next, both filter_read and `filter_read_exact' will append any
+     source data that is read to the end of $_.
+
+     Finally, when `filter' or the anonymous sub are finished
+     processing, they are expected to return the filtered source using
+     $_.
+
+     This implicit use of $_ greatly simplifies the filter.
+
+$status
+     The status value that is returned by the user's `filter' method or
+     anonymous sub and the filter_read and `read_exact' functions take
+     the same set of values, namely:
+
+          < 0  Error
+          = 0  EOF
+          > 0  OK
+
+filter_read and *filter_read_exact*
+     These functions are used by the filter to obtain either a line or
+     block from the next filter in the chain or the actual source file
+     if there aren't any other filters.
+
+     The function filter_read takes two forms:
+
+          $status = filter_read() ;
+          $status = filter_read($size) ;
+
+     The first form is used to request a *line*, the second requests a
+     *block*.
+
+     In line mode, filter_read will append the next source line to the
+     end of the $_ scalar.
+
+     In block mode, filter_read will append a block of data which is <=
+     $size to the end of the $_ scalar. It is important to emphasise
+     the that filter_read will not necessarily read a block which is
+     *precisely* $size bytes.
+
+     If you need to be able to read a block which has an exact size, you
+     can use the function `filter_read_exact'. It works identically to
+     filter_read in block mode, except it will try to read a block which
+     is exactly $size bytes in length. The only circumstances when it
+     will not return a block which is $size bytes long is on EOF or
+     error.
+
+     It is *very* important to check the value of $status after every
+     call to filter_read or `filter_read_exact'.
+
+filter_del
+     The function, filter_del, is used to disable the current filter. It
+     does not affect the running of the filter. All it does is tell Perl
+     not to call filter any more.
+
+     See `Example 4: Using filter_del' in this node for details.
+
+
+EXAMPLES
+========
+
+Here are a few examples which illustrate the key concepts - as such most
+of them are of little practical use.
+
+The `examples' sub-directory has copies of all these filters implemented
+both as *method filters* and as *closure filters*.
+
+
+Example 1: A simple filter.
+---------------------------
+
+Below is a *method filter* which is hard-wired to replace all
+occurrences of the string `"Joe"' to `"Jim"'. Not particularly useful,
+but it is the first example and I wanted to keep it simple.
+
+     package Joe2Jim ;
+
+     use Filter::Util::Call ;
+
+     sub import
+     {
+         my($type) = @_ ;
+
+         filter_add(bless []) ;
+     }
+
+     sub filter
+     {
+         my($self) = @_ ;
+         my($status) ;
+
+         s/Joe/Jim/g
+             if ($status = filter_read()) > 0 ;
+         $status ;
+     }
+
+     1 ;
+
+Here is an example of using the filter:
+
+     use Joe2Jim ;
+     print "Where is Joe?\n" ;
+
+And this is what the script above will print:
+
+     Where is Jim?
+
+
+Example 2: Using the context
+----------------------------
+
+The previous example was not particularly useful. To make it more
+general purpose we will make use of the context data and allow any
+arbitrary from and to strings to be used. This time we will use a
+*closure filter*. To reflect its enhanced role, the filter is called
+`Subst'.
+
+     package Subst ;
+ 
+     use Filter::Util::Call ;
+     use Carp ;
+ 
+     sub import
+     {
+         croak("usage: use Subst qw(from to)")
+             unless @_ == 3 ;
+         my ($self, $from, $to) = @_ ;
+         filter_add(
+             sub 
+             {
+                 my ($status) ;
+                 s/$from/$to/
+                     if ($status = filter_read()) > 0 ;
+                 $status ;
+             })
+     }
+     1 ;
+
+and is used like this:
+
+     use Subst qw(Joe Jim) ;
+     print "Where is Joe?\n" ;
+
+
+Example 3: Using the context within the filter
+----------------------------------------------
+
+Here is a filter which a variation of the `Joe2Jim' filter. As well as
+substituting all occurrences of `"Joe"' to `"Jim"' it keeps a count of
+the number of substitutions made in the context object.
+
+Once EOF is detected ($status is zero) the filter will insert an extra
+line into the source stream. When this extra line is executed it will
+print a count of the number of substitutions actually made.  Note that
+$status is set to 1 in this case.
+
+     package Count ;
+ 
+     use Filter::Util::Call ;
+ 
+     sub filter
+     {
+         my ($self) = @_ ;
+         my ($status) ;
+ 
+         if (($status = filter_read()) > 0 ) {
+             s/Joe/Jim/g ;
+     	    ++ $$self ;
+         }
+     	elsif ($$self >= 0) { # EOF
+             $_ = "print q[Made ${$self} substitutions\n]" ;
+             $status = 1 ;
+     	    $$self = -1 ;
+         }
+
+     $status ;
+         }
+ 
+         sub import
+         {
+     my ($self) = @_ ;
+     my ($count) = 0 ;
+     filter_add(\$count) ;
+         }
+ 
+         1 ;
+
+Here is a script which uses it:
+
+     use Count ;
+     print "Hello Joe\n" ;
+     print "Where is Joe\n" ;
+
+Outputs:
+
+     Hello Jim
+     Where is Jim
+     Made 2 substitutions
+
+
+Example 4: Using filter_del
+---------------------------
+
+Another variation on a theme. This time we will modify the `Subst'
+filter to allow a starting and stopping pattern to be specified as well
+as the from and to patterns. If you know the *vi* editor, it is the
+equivalent of this command:
+
+     :/start/,/stop/s/from/to/
+
+When used as a filter we want to invoke it like this:
+
+     use NewSubst qw(start stop from to) ;
+
+Here is the module.
+
+     package NewSubst ;
+ 
+     use Filter::Util::Call ;
+     use Carp ;
+ 
+     sub import
+     {
+         my ($self, $start, $stop, $from, $to) = @_ ;
+         my ($found) = 0 ;
+         croak("usage: use Subst qw(start stop from to)")
+             unless @_ == 5 ;
+ 
+         filter_add( 
+             sub 
+             {
+                 my ($status) ;
+         
+                 if (($status = filter_read()) > 0) {
+         
+                     $found = 1
+                         if $found == 0 and /$start/ ;
+         
+                     if ($found) {
+                         s/$from/$to/ ;
+                         filter_del() if /$stop/ ;
+                     }
+         
+                 }
+                 $status ;
+             } )
+
+     }
+ 
+     1 ;
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+26th January 1996
+
+
+
+
+File: pm.info, Node: Filter/Util/Exec, Next: Filter/cpp, Prev: Filter/Util/Call, Up: Module List
+
+exec source filter
+******************
+
+
+
+NAME
+====
+
+Filter::Util::Exec - exec source filter
+
+
+DESCRIPTION
+===========
+
+This module is provides the interface to allow the creation of *Source
+Filters* which use a Unix coprocess.
+
+See *Note Filter/exec: Filter/exec,, *Note Filter/cpp: Filter/cpp, and
+*Note Filter/sh: Filter/sh, for examples of the use of this module.
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+11th December 1995.
+
+
+
+
+File: pm.info, Node: Filter/cpp, Next: Filter/decrypt, Prev: Filter/Util/Exec, Up: Module List
+
+cpp source filter
+*****************
+
+
+
+NAME
+====
+
+Filter::cpp - cpp source filter
+
+
+SYNOPSIS
+========
+
+     use Filter::cpp ;
+
+
+DESCRIPTION
+===========
+
+This source filter pipes the current source file through the C
+pre-processor (cpp) if it is available.
+
+As with all source filters its scope is limited to the current source
+file only. Every file you want to be processed by the filter must have a
+
+     use Filter::cpp ;
+
+near the top.
+
+Here is an example script which uses the filter:
+
+     use Filter::cpp ;
+
+     #define FRED 1
+     $a = 2 + FRED ;
+     print "a = $a\n" ;
+     #ifdef FRED
+     print "Hello FRED\n" ;
+     #else
+     print "Where is FRED\n" ;
+     #endif
+
+And here is what it will output:
+
+     a = 3
+     Hello FRED
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+11th December 1995.
+
+
+
+
+File: pm.info, Node: Filter/decrypt, Next: Filter/exec, Prev: Filter/cpp, Up: Module List
+
+template for a decrypt source filter
+************************************
+
+
+
+NAME
+====
+
+Filter::decrypt - template for a decrypt source filter
+
+
+SYNOPSIS
+========
+
+     use Filter::decrypt ;
+
+
+DESCRIPTION
+===========
+
+This is a sample decrypting source filter.
+
+Although this is a fully functional source filter and it does implement
+a *very* simple decrypt algorithm, it is *not* intended to be used as it
+is supplied. Consider it to be a template which you can combine with a
+proper decryption algorithm to develop your own decryption filter.
+
+
+WARNING
+=======
+
+It is important to note that a decryption filter can *never* provide
+complete security against attack. At some point the parser within Perl
+needs to be able to scan the original decrypted source. That means that
+at some stage fragments of the source will exist in a memory buffer.
+
+The best you can hope to achieve by decrypting your Perl source using a
+source filter is to make it impractical to crack.
+
+Given that proviso, there are a number of things you can do to make life
+more difficult for the prospective cracker.
+
+  1. Strip the Perl binary to remove all symbols.
+
+  2. Build the decrypt extension using static linking. If the extension
+     is provided as a dynamic module, there is nothing to stop someone
+     from linking it at run time with a modified Perl binary.
+
+  3. Do not build Perl with `-DDEBUGGING'. If you do then your source
+     can be retrieved with the `-Dp' command line option.
+
+     The sample filter contains logic to detect the DEBUGGING option.
+
+  4. Do not build Perl with C debugging support enabled.
+
+  5. Do not implement the decryption filter as a sub-process (like the
+     cpp source filter). It is possible to peek into the pipe that
+     connects to the sub-process.
+
+  6. Do not use the decrypt filter as-is. The algorithm used in this
+     filter has been purposefully left simple.
+
+If you feel that the source filtering mechanism is not secure enough you
+could try using the unexec/undump method. See the Perl FAQ for further
+details.
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+19th December 1995
+
+
+
+
+File: pm.info, Node: Filter/exec, Next: Filter/sh, Prev: Filter/decrypt, Up: Module List
+
+exec source filter
+******************
+
+
+
+NAME
+====
+
+Filter::exec - exec source filter
+
+
+SYNOPSIS
+========
+
+     use Filter::exec qw(command parameters) ;
+
+
+DESCRIPTION
+===========
+
+This filter pipes the current source file through the program which
+corresponds to the command parameter.
+
+As with all source filters its scope is limited to the current source
+file only. Every file you want to be processed by the filter must have a
+
+     use Filter::exec qw(command ) ;
+
+near the top.
+
+Here is an example script which uses the filter:
+
+     use Filter::exec qw(tr XYZ PQR) ;
+     $a = 1 ;
+     print "XYZ a = $a\n" ;
+
+And here is what it will output:
+
+     PQR = 1
+
+
+WARNING
+=======
+
+You should be *very* careful when using this filter. Because of the way
+the filter is implemented it is possible to end up with deadlock.
+
+Be especially careful when stacking multiple instances of the filter in
+a single source file.
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+11th December 1995.
+
+
+
+
+File: pm.info, Node: Filter/sh, Next: Filter/tee, Prev: Filter/exec, Up: Module List
+
+sh source filter
+****************
+
+
+
+NAME
+====
+
+Filter::sh - sh source filter
+
+
+SYNOPSIS
+========
+
+     use Filter::sh 'command' ;
+
+
+DESCRIPTION
+===========
+
+This filter pipes the current source file through the program which
+corresponds to the command parameter using the Bourne shell.
+
+As with all source filters its scope is limited to the current source
+file only. Every file you want to be processed by the filter must have a
+
+     use Filter::sh 'command' ;
+
+near the top.
+
+Here is an example script which uses the filter:
+
+     use Filter::sh 'tr XYZ PQR' ;
+     $a = 1 ;
+     print "XYZ a = $a\n" ;
+
+And here is what it will output:
+
+     PQR = 1
+
+
+WARNING
+=======
+
+You should be *very* careful when using this filter. Because of the way
+the filter is implemented it is possible to end up with deadlock.
+
+Be especially careful when stacking multiple instances of the filter in
+a single source file.
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+11th December 1995.
+
+
+
+
+File: pm.info, Node: Filter/tee, Next: FindBin, Prev: Filter/sh, Up: Module List
+
+tee source filter
+*****************
+
+
+
+NAME
+====
+
+Filter::tee - tee source filter
+
+
+SYNOPSIS
+========
+
+     use Filter::tee 'filename' ;
+     use Filter::tee '>filename' ;
+     use Filter::tee '>>filename' ;
+
+
+DESCRIPTION
+===========
+
+This filter copies all text from the line after the use in the current
+source file to the file specified by the parameter filename.
+
+By default and when the filename is prefixed with a '>' the output file
+will be emptied first if it already exists.
+
+If the output filename is prefixed with '>>' it will be opened for
+appending.
+
+This filter is useful as a debugging aid when developing other source
+filters.
+
+
+AUTHOR
+======
+
+Paul Marquess
+
+
+DATE
+====
+
+20th June 1995.
+
+
+
+
+File: pm.info, Node: FindBin, Next: Font/AFM, Prev: Filter/tee, Up: Module List
+
+Locate directory of original perl script
+****************************************
+
+
+
+NAME
+====
+
+FindBin - Locate directory of original perl script
+
+
+SYNOPSIS
+========
+
+     use FindBin;
+     use lib "$FindBin::Bin/../lib";
+
+     or
+
+     use FindBin qw($Bin);
+     use lib "$Bin/../lib";
+
+
+DESCRIPTION
+===========
+
+Locates the full path to the script bin directory to allow the use of
+paths relative to the bin directory.
+
+This allows a user to setup a directory tree for some software with
+directories <root>/bin and <root>/lib and then the above example will
+allow the use of modules in the lib directory without knowing where the
+software tree is installed.
+
+If perl is invoked using the -e option or the perl script is read from
+`STDIN' then FindBin sets both `$Bin' and `$RealBin' to the current
+directory.
+
+
+EXPORTABLE VARIABLES
+====================
+
+     $Bin         - path to bin directory from where script was invoked
+     $Script      - basename of script from which perl was invoked
+     $RealBin     - $Bin with all links resolved
+     $RealScript  - $Script with all links resolved
+
+
+KNOWN BUGS
+==========
+
+if perl is invoked as
+
+     perl filename
+
+and filename does not have executable rights and a program called
+filename exists in the users `$ENV{PATH}' which satisfies both -x and -T
+then FindBin assumes that it was invoked via the `$ENV{PATH}'.
+
+Workaround is to invoke perl as
+
+     perl ./filename
+
+
+AUTHORS
+=======
+
+Graham Barr <`bodg@tiuk.ti.com'> Nick Ing-Simmons <`nik@tiuk.ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr & Nick Ing-Simmons. All rights reserved.
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+REVISION
+========
+
+$Revision: 1.4 $
+
+
+
+
+File: pm.info, Node: Font/AFM, Next: Font/TFM, Prev: FindBin, Up: Module List
+
+Interface to Adobe Font Metrics files
+*************************************
+
+
+
+NAME
+====
+
+Font::AFM - Interface to Adobe Font Metrics files
+
+
+SYNOPSIS
+========
+
+     use Font::AFM;
+     $h = new Font::AFM "Helvetica";
+     $copyright = $h->Notice;
+     $w = $h->Wx->{"aring"};
+     $w = $h->stringwidth("Gisle", 10);
+     $h->dump;  # for debugging
+
+
+DESCRIPTION
+===========
+
+This module implements the Font::AFM class. Objects of this class are
+initialised from an AFM-file and allows you to obtain information about
+the font and the metrics of the various glyphs in the font.
+
+All measurements in AFM files are given in terms of units equal to
+1/1000 of the scale factor of the font being used. To compute actual
+sizes in a document, these amounts should be multiplied by (scale factor
+of font)/1000.
+
+The following methods are available:
+
+new($fontname)
+     Object constructor. Takes the name of the font as argument. It will
+     croak if the font can not be found.
+
+latin1_wx_table()
+     Returns a 256 element array, where each element contains the width
+     of the corresponding character in the iso-8859-1 character set.
+
+stringwidth($string, [$fontsize])
+     Returns the width of the string passed as argument. The string is
+     assumed to be encoded in the iso-8859-1 character set.  A second
+     argument can be used to scale the width according to the font size.
+
+FontName
+     The name of the font as presented to the PostScript language
+     `findfont' operator, for instance "Times-Roman".
+
+FullName
+     Unique, human-readable name for an individual font, for instance
+     "Times Roman".
+
+FamilyName
+     Human-readable name for a group of fonts that are stylistic
+     variants of a single design. All fonts that are member of such a
+     group should have exactly the same FamilyName. Example of a family
+     name is "Times".
+
+Weight
+     Human-readable name for the weight, or "boldness", attribute of a
+     font.  Exampes are `Roman', `Bold', `Light'.
+
+ItalicAngle
+     Angle in degrees counterclockwise from the vertical of the dominant
+     vertical strokes of the font.
+
+IsFixedPitch
+     If the value is `true', it indicated that the font is a fixed-pitch
+     (monospaced) font.
+
+FontBBox
+     A string of four numbers giving the lower-left x, lower-left y,
+     upper-right x, and upper-right y of the font bounding box. The font
+     bounding box is the smallest rectangle enclosing the shape that
+     would result if all the characters of the font were placed with
+     their origins coincident, and then painted.
+
+UnderlinePosition
+     Recommended distance from the baseline for positioning underline
+     stokes. This number is the y coordinate of the center of the
+     stroke.
+
+UnderlineThickness
+     Recommended stroke width for underlining.
+
+Version
+     Version number of the font.
+
+Notice
+     Trademark or copyright notice, if applicable.
+
+Comment
+     Comments found in the AFM file.
+
+EncodingScheme
+     The name of the standard encoding scheme for the font. Most Adobe
+     fonts use the `AdobeStandardEncoding'. Special fonts might state
+     `FontSpecific'.
+
+CapHeight
+     Usually the y-value of the top of the capital H.
+
+XHeight
+     Typically the y-value of the top of the lowercase x.
+
+Ascender
+     Typically the y-value of the top of the lowercase d.
+
+Descender
+     Typically the y-value of the bottom of the lowercase p.
+
+Wx
+     Returns a hash table that maps from glyph names to the width of
+     that glyph.
+
+BBox
+     Returns a hash table that maps from glyph names to bounding box
+     information.  The bounding box consist of 4 numbers: llx, lly, urx,
+     ury.
+
+dump
+     Dumps the content of the Font::AFM object to STDOUT.  Might
+     sometimes be useful for debugging.
+
+The AFM specification can be found at:
+
+     ftp://ftp.adobe.com/pub/adobe/DeveloperSupport/TechNotes/PSfiles/5004.AFM_Spec.ps
+
+
+ENVIRONMENT
+===========
+
+METRICS
+     Contains the path to seach for AFM-files.  Format is as for the
+     PATH environment variable. The default path built into this library
+     is:
+
+          /usr/lib/afm:/usr/local/lib/afm:/usr/openwin/lib/fonts/afm/:.
+
+
+BUGS
+====
+
+Kerning data and composite character data is not yet parsed.  Ligature
+data is not parsed.
+
+
+COPYRIGHT
+=========
+
+Copyright 1995 Gisle Aas. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Font/TFM, Next: FreezeThaw, Prev: Font/AFM, Up: Module List
+
+read and work with TeX font metric files
+****************************************
+
+
+
+NAME
+====
+
+Font::TFM -- read and work with TeX font metric files
+
+
+SYNOPSIS
+========
+
+     use Font::TFM;  
+     ### $Font::TFM::TEXFONTSDIR = "your directories";
+
+     my $cmr = new Font::TFM "cmr10";
+     (defined $cmr) or die "Error reading font\n";
+     print "Designsize: ", $cmr->designsize(), "\n";
+     print $cmr->width("A"), ", ", $cmr->kern('Wo'), "\n";
+
+should print on the output
+
+     Designsize: 10
+     491521.25, -54613.75
+
+
+DESCRIPTION
+===========
+
+Method `Font::TFM::new' creates a new TFM object in memory, loading all
+the necessary information from the `.tfm' file. Second (optional)
+parameter means scale. You can also use `Font::TFM::new_at' and as the
+second parameter put requested size in pt.
+
+List of comma separated directories to be searched is in variable
+`$Font::TFM::TEXFONTSDIR'. These are searched for given `.tfm' file
+(extension `.tfm' is optional in the call to `Font::TFM::new').
+Variable `$Font::TFM::TEXFONTSUSELS' can be set to zero to disable using
+ls-R files. If it is kept equal to 1, once it finds file with name
+`$Font::TFM::LSFILENAME', it doesn't search through the subdirectories
+and only uses info in this file fo find the `.tfm' file.
+
+These are the methods available on the `Font::TFM' object:
+
+designsize, fontsize
+     Returns the design size and the actual size of the font in pt.
+
+width, height, depth, italic
+     Returns the requested dimension for a specified character of the
+     font.
+
+kern, lig, ligpassover
+     For a two-letter string returns kern between them, ligature formed
+     and number of characters to pass over after the ligature.
+
+expand
+     One string parameter undergoes ligature expansion and then kernings
+     are inserted. Returns array of string, kern, string, ...
+
+word_dimensions
+     Returns the width, height and depth of a word. Does the lig/kern
+     expansion, so the result is the real space it will take on output.
+
+word_width, word_height, word_depth
+     Calls word_dimensions and returns appropriate element. No caching
+     is done, so it is better to call word_dimensions yourself if you
+     will need more than one dimension of one word.
+
+param
+     Returns parameter of the font, indexed from 1.
+
+slant, x_height, em_width, quad
+space, space_stretch, space_shrink, extra_space
+     Returns the parameter of the font.
+
+name
+     Returns the name of the font.
+
+Dimensions are multiplied by `$Font::TFM::MULTIPLY' * actual size of the
+font. Value of `$Font::TFM::MULTIPLY' defaults to 65536, so the
+dimensions can be used directly when writing the `.dvi' file.
+
+Variable `$Font::TFM::DEBUG' may be set to 1 to get the processing
+messages on the standard error output.
+
+
+CHANGES
+=======
+
+0.05 Tue Aug 19 10:09:27 MET DST 1997
+     Minor bug fixes. Module made use strict clean. Tests added.
+
+0.04 Wed Apr  9 10:20:10 MET DST 1997
+     `Font::TFM::word_dimensions' added, `Font::TFM::word_width' and new
+     `Font::TFM::word_height' and `Font::TFM::word_depth' now call it.
+
+     `Font::TFM::MULTIPLY' added, still defaults do 65535.
+
+     Module made faster, also uses AUTOLOAD for many things.  Minor bug
+     fixes.
+
+0.03 Sun Feb 16 13:55:26 MET 1997
+     `Font::TFM::expand' added to provide lig/kern expansion.
+
+     `Font::TFM::word_width' added to measure width of word on output.
+
+     `Font::TFM::em_width' and `TFM::name' added.
+
+     Name `Font::TFM' set up instead of `TFM'.
+
+0.02 Thu Feb 13 20:43:38 MET 1997
+     First version released/announced on public.
+
+
+VERSION
+=======
+
+0.05
+
+
+SEE ALSO
+========
+
+TeX::DVI(3), TeX::DVI::Parse(3), perl(1).
+
+
+AUTHOR
+======
+
+(c) 1996, 1997 Jan Pazdziora, adelton@fi.muni.cz
+
+at Faculty of Informatics, Masaryk University, Brno
+
+
+
+
+File: pm.info, Node: FreezeThaw, Next: GD, Prev: Font/TFM, Up: Module List
+
+converting Perl structures to strings and back.
+***********************************************
+
+
+
+NAME
+====
+
+FreezeThaw - converting Perl structures to strings and back.
+
+
+SYNOPSIS
+========
+
+     use FreezeThaw qw(freeze thaw cmpStr safeFreeze cmpStrHard);
+     $string = freeze $data1, $data2, $data3;
+     ...
+     ($olddata1, $olddata2, $olddata3) = thaw $string;
+     if (cmpStr($olddata2,$data2) == 0) {print "OK!"}
+
+
+DESCRIPTION
+===========
+
+Converts data to/from stringified form, appropriate for
+saving-to/reading-from permanent storage.
+
+Deals with objects, circular lists, repeated appearence of the same
+refence. Does not deal with overloaded stringify operator yet.
+
+
+EXPORT
+======
+
+Default
+     None.
+
+Exportable
+     `freeze thaw cmpStr cmpStrHard safeFreeze'.
+
+
+User API
+========
+
+`cmpStr'
+     analogue of cmp for data. Takes two arguments and compares them as
+     separate entities.
+
+`cmpStrHard'
+     analogue of cmp for data. Takes two arguments and compares them
+     considered as a group.
+
+`freeze'
+     returns a string that encupsulates its arguments (considered as a
+     group). `thaw'ing this string leads to a fatal error if arguments
+     to `freeze' contained references to `GLOB's and CODEs.
+
+`safeFreeze'
+     returns a string that encupsulates its arguments (considered as a
+     group). The result is `thaw'able in the same process. `thaw'ing the
+     result in a different process should result in a fatal error if
+     arguments to `safeFreeze' contained references to `GLOB's and
+     CODEs.
+
+`thaw'
+     takes one string argument and returns an array. The elements of the
+     array are "equivalent" to arguments of the `freeze' command that
+     created the string. Can result in a fatal error (see above).
+
+
+Developer API
+=============
+
+`FreezeThaw' `freeze's and `thaw's data blessed in some package by
+calling methods `Freeze' and `Thaw' in the package. The fallback methods
+are provided by the `FreezeThaw' itself. The fallback `Freeze' freezes
+the "content" of blessed object (from Perl point of view). The fallback
+`Thaw' blesses the `thaw'ed data back into the package.
+
+So the package needs to define its own methods only if the fallback
+methods will fail (for example, for a lot of data the "content" of an
+object is an address of some C data). The methods are called like
+
+     $newcooky = $obj->Freeze($cooky);
+     $obj = Package->Thaw($content,$cooky);
+
+To save and restore the data the following method are applicable:
+
+     $cooky->FreezeScalar($data,$ignorePackage,$noduplicate);
+
+during Freeze()ing, and
+
+     $data = $cooky->ThawScalar;
+
+Two optional arguments $ignorePackage and $noduplicate regulate whether
+the freezing should not call the methods even if $data is a reference to
+a blessed object, and whether the data should not be marked as seen
+already even if it was seen before. The default methods
+
+     sub UNIVERSAL::Freeze {
+       my ($obj, $cooky) = (shift, shift);
+       $cooky->FreezeScalar($obj,1,1);
+     }
+
+     sub UNIVERSAL::Thaw {
+       my ($package, $cooky) = (shift, shift);
+       my $obj = $cooky->ThawScalar;
+       bless $obj, $package;
+     }
+
+call the `FreezeScalar' method of the $cooky since the freezing engine
+will see the data the second time during this call. Indeed, it is the
+freezing engine who calls UNIVERSAL::Freeze(), and it calls it because
+it needs to freeze $obj. The above call to $cooky->FreezeScalar()
+handles the same data back to engine, but because flags are different,
+the code does not cycle.
+
+Freezing and thawing $cooky also allows the following additional
+methods:
+
+     $cooky->isSafe;
+
+to find out whether the current freeze was initiated by `freeze' or
+`safeFreeze' command. Analogous method for thaw $cooky returns whether
+the current thaw operation is considered safe (i.e., either does not
+contain cached elsewhere data, or comes from the same application). You
+can use
+
+     $cooky->makeSafe;
+
+to prohibit cached data for the duration of the rest of freezing or
+thawing of current object.
+
+Two methods
+
+     $value = $cooky->repeatedOK;
+     $cooky->noRepeated;		# Now repeated are prohibited
+
+allow to find out/change the current setting for allowing repeated
+references.
+
+If you want to flush the cache of saved objects you can use
+
+     FreezeThaw->flushCache;
+
+this can invalidate some frozen string, so that thawing them will result
+in fatal error.
+
+
+Instantiating
+-------------
+
+Sometimes, when an object from a package is recreated in presense of
+repeated references, it is not safe to recreate the internal structure
+of an object in one step. In such a situation recreation of an object is
+carried out in two steps: in the first the object is `allocate'd, in the
+second it is `instantiate'd.
+
+The restriction is that during the *allocation* step you cannot use any
+reference to any Perl object that can be referenced from any other
+place. This restriction is applied since that object may not exist yet.
+
+Correspondingly, during *instantiation* step the previosly *allocated*
+object should be `filled', i.e., it can be changed in any way such that
+the references to this object remain valid.
+
+The methods are called like this:
+
+     $pre_object_ref = Package->Allocate($pre_pre_object_ref);
+     	# Returns reference
+     Package->Instantiate($pre_object_ref,$cooky);
+     	# Converts into reference to blessed object
+
+The reverse operations are
+
+     $object_ref->FreezeEmpty($cooky);
+     $object_ref->FreezeInstance($cooky);
+
+during these calls object can `freezeScalar' some information (in a
+usual way) that will be used during `Allocate' and `Instantiate' calls
+(via `thawScalar'). Note that the return value of `FreezeEmpty' is
+cached during the phase of creation of uninialized objects. This *must*
+be used like this: the return value is the reference to the created
+object, so it is not destructed until other objects are created, thus
+the frozen values of the different objects will not share the same
+references. Example of bad result:
+
+     $o1->FreezeEmpty($cooky)
+
+freezes `{}', and `$o2->FreezeEmpty($cooky)' makes the same. Now nobody
+guaranties that that these two copies of `{}' are different, unless a
+reference to the first one is preserved during the call to
+`$o2->FreezeEmpty($cooky)'. If `$o1->FreezeEmpty($cooky)' returns the
+value of `{}' it uses, it will be preserved by the engine.
+
+The helper function `FreezeThaw::copyContents' is provided for
+simplification of instantiation. The syntax is
+
+     FreezeThaw::copyContents $to, $from;
+
+The function copies contents the object $from point to into what the
+object $to points to (including package for blessed references). Both
+arguments should be references.
+
+The default methods are provided. They do the following:
+
+`FreezeEmpty'
+     Freezes an empty object of underlying type.
+
+`FreezeInstance'
+     Calls `Freeze'.
+
+`Allocate'
+     Thaws what was frozen by `FreezeEmpty'.
+
+`Instantiate'
+     Thaws what was frozen by `FreezeInstance', uses `copyContents' to
+     transfer this to the $pre_object.
+
+
+BUGS/FEATURES
+=============
+
+A lot of objects are blessed in some obscure packages by XSUB
+typemaps. It is not clear how to (automatically) prevent the UNIVERSAL
+methods to be called for objects in these packages.
+
+
+
+
+File: pm.info, Node: GD, Next: GIFgraph, Prev: FreezeThaw, Up: Module List
+
+Interface to Gd Graphics Library
+********************************
+
+
+
+NAME
+====
+
+GD.pm - Interface to Gd Graphics Library
+
+
+DESCRIPTION
+===========
+
+*GD.pm* is a port of Thomas Boutell's gd graphics library (see
+below).  GD allows you to create color drawings using a large number of
+graphics primitives, and emit the drawings as GIF files.
+
+GD defines the following three classes:
+
+`GD::Image'
+     An image class, which holds the image data and accepts graphic
+     primitive method calls.
+
+`GD::Font'
+     A font class, which holds static font information and used for text
+     rendering.
+
+`GD::Polygon'
+     A simple polygon object, used for storing lists of vertices prior
+     to rendering a polygon into an image.
+
+A Simple Example:
+
+     #!/usr/local/bin/perl
+
+     use GD;
+
+     # create a new image
+     $im = new GD::Image(100,100);
+
+     # allocate some colors
+     $white = $im->colorAllocate(255,255,255);
+     $black = $im->colorAllocate(0,0,0);       
+     $red = $im->colorAllocate(255,0,0);      
+     $blue = $im->colorAllocate(0,0,255);
+
+     # make the background transparent and interlaced
+     $im->transparent($white);
+     $im->interlaced('true');
+
+     # Put a black frame around the picture
+     $im->rectangle(0,0,99,99,$black);
+
+     # Draw a blue oval
+     $im->arc(50,50,95,75,0,360,$blue);
+
+     # And fill it with red
+     $im->fill(50,50,$red);
+
+     # Convert the image to GIF and print it on standard output
+     print $im->gif;
+
+Notes:
+
+  1. To create a new, empty image, send a new() message to GD::Image,
+     passing it the width and height of the image you want to create.
+     An image object will be returned.  Other class methods allow you to
+     initialize an image from a preexisting GIF, GD or XBM file.
+  2. Next you will ordinarily add colors to the image's color
+     table. colors are added using a colorAllocate() method call.  The
+     three parameters in each call are the red, green and blue (rgb)
+     triples for the desired color.  The method returns the index of
+     that color in the image's color table.  You should store these
+     indexes for later use.
+  3. Now you can do some drawing!  The various graphics primitives are
+     described below.  In this example, we do some text drawing, create
+     an oval, and create and draw a polygon.
+  4. Polygons are created with a new() message to GD::Polygon.  You can
+     add points to the returned polygon one at a time using the addPt()
+     method. The polygon can then be passed to an image for rendering.
+  5. When you're done drawing, you can convert the image into GIF format
+     by sending it a gif() message.  It will return a (potentially
+     large) scalar value containing the binary data for the image.
+     Ordinarily you will print it out at this point or write it to a
+     file.
+
+Method Calls
+============
+
+
+Creating and Saving Images
+--------------------------
+
+new
+     `GD::Image::new(width,height)' *class method*
+
+     To create a new, blank image, send a new() message to the GD::Image
+     class.  For example:
+
+          $myImage = new GD::Image(100,100) || die;
+
+     This will create an image that is 100 x 100 pixels wide.  If you
+     don't specify the dimensions, a default of 64 x 64 will be
+     chosen. If something goes wrong (e.g. insufficient memory), this
+     call will return undef.
+
+`newFromGif'
+     `GD::Image::newFromGif(FILEHANDLE)' *class method*
+
+     This will create an image from a GIF file read in through the
+     provided filehandle.  The filehandle must previously have been
+     opened on a valid GIF file or pipe.  If successful, this call will
+     return an initialized image which you can then manipulate as you
+     please.  If it fails, which usually happens if the thing at the
+     other end of the filehandle is not a valid GIF file, the call
+     returns undef.  Notice that the call doesn't automatically close
+     the filehandle for you.
+
+     To get information about the size and color usage of the
+     information, you can call the image query methods described below.
+
+          Example usage:
+
+          open (GIF,"barnswallow.gif") || die;
+          $myImage = newFromGif GD::Image(GIF) || die;
+          close GIF;
+
+`newFromXbm'
+     `GD::Image::newFromXbm(FILEHANDLE)' *class method*
+
+     This works in exactly the same way as `newFromGif', but reads the
+     contents of an X Bitmap file:
+
+          open (XBM,"coredump.xbm") || die;
+          $myImage = newFromXbm GD::Image(XBM) || die;
+          close XBM;
+
+`newFromGd'
+     `GD::Image::newFromGd(FILEHANDLE)' *class method*
+
+     This works in exactly the same way as `newFromGif', but reads the
+     contents of a GD file.  GD is Tom Boutell's disk-based storage
+     format, intended for the rare case when you need to read and write
+     the image to disk quickly.  It's not intended for regular use,
+     because, unlike GIF or JPEG, no image compression is performed and
+     these files can become *BIG*.
+
+          open (GDF,"godzilla.gd") || die;
+          $myImage = newFromGd GD::Image(GDF) || die;
+          close GDF;
+
+`gif'
+     `GD::Image::gif' *object method*
+
+     This returns the image data in GIF format.  You can then print it,
+     pipe it to a display program, or write it to a file.  Example:
+
+          $gif_data = $myImage->gif;
+          open (DISPLAY,"| display -") || die;
+          print DISPLAY $gif_data;
+          close DISPLAY;
+
+`gd'
+     `GD::Image::gd' *object method*
+
+     This returns the image data in GD format.  You can then print it,
+     pipe it to a display program, or write it to a file.  Example:
+
+          print MYOUTFILE $myImage->gd;
+
+
+Color Control
+-------------
+
+`colorAllocate'
+     `GD::Image::colorAllocate(red,green,blue)' *object method*
+
+     This allocates a color with the specified red, green and blue
+     components and returns its index in the color table, if specified.
+     The first color allocated in this way becomes the image's
+     background color.  (255,255,255) is white (all pixels on).  (0,0,0)
+     is black (all pixels off).  (255,0,0) is fully saturated red.
+     (127,127,127) is 50% gray.  You can find plenty of examples in
+     /usr/X11/lib/X11/rgb.txt.
+
+     If no colors are allocated, then this function returns -1.
+
+     Example:
+
+          $white = $myImage->colorAllocate(0,0,0); #background color
+          $black = $myImage->colorAllocate(255,255,255);
+          $peachpuff = $myImage->colorAllocate(255,218,185);
+
+`colorDeallocate'
+     `GD::Image::colorDeallocate(colorIndex)' *object method*
+
+     This marks the color at the specified index as being ripe for
+     reallocation.  The next time colorAllocate is used, this entry will
+     be replaced.  You can call this method several times to deallocate
+     multiple colors.  There's no function result from this call.
+
+     Example:
+
+          $myImage->colorDeallocate($peachpuff);
+          $peachy = $myImage->colorAllocate(255,210,185);
+
+`colorClosest'
+     `GD::Image::colorClosest(red,green,blue)' *object method*
+
+     This returns the index of the color closest in the color table to
+     the red green and blue components specified.  If no colors have yet
+     been allocated, then this call returns -1.
+
+     Example:
+
+          $apricot = $myImage->colorClosest(255,200,180);
+
+`colorExact'
+     `GD::Image::colorExact(red,green,blue)' *object method*
+
+     This returns the index of a color that exactly matches the
+     specified red green and blue components.  If such a color is not in
+     the color table, this call returns -1.
+
+          $rosey = $myImage->colorExact(255,100,80);
+          warn "Everything's coming up roses.\n" if $rosey >= 0;
+
+`colorsTotal'
+     `GD::Image::colorsTotal)' *object method*
+
+     This returns the total number of colors allocated in the object.
+
+          $maxColors = $myImage->colorsTotal;
+
+`getPixel'
+     `GD::Image::getPixel(x,y)' *object method*
+
+     This returns the color table index underneath the specified point.
+     It can be combined with rgb() to obtain the rgb color underneath
+     the pixel.
+
+     Example:
+
+          $index = $myImage->getPixel(20,100);
+          ($r,$g,$b) = $myImage->rgb($index);
+
+`rgb'
+     `GD::Image::rgb(colorIndex)' *object method*
+
+     This returns a list containing the red, green and blue components
+     of the specified color index.
+
+     Example:
+
+          @RGB = $myImage->rgb($peachy);
+
+transparent
+     `GD::Image::transparent(colorIndex)' *object method*
+
+     This marks the color at the specified index as being transparent.
+     Portions of the image drawn in this color will be invisible.  This
+     is useful for creating paintbrushes of odd shapes, as well as for
+     making GIF backgrounds transparent for displaying on the Web.  Only
+     one color can be transparent at any time. To disable transparency,
+     specify -1 for the index.
+
+     If you call this method without any parameters, it will return the
+     current index of the transparent color, or -1 if none.
+
+     Example:
+
+          open(GIF,"test.gif");
+          $im = newFromGif GD::Image(GIF);
+          $white = $im->colorClosest(255,255,255); # find white
+          $im->transparent($white);
+          print $im->gif;
+
+
+Special Colors
+--------------
+
+GD implements a number of special colors that can be used to achieve
+special effects.  They are constants defined in the GD:: namespace, but
+automatically exported into your namespace when the GD module is loaded.
+
+`setBrush'
+`gdBrushed'
+     `GD::Image::setBrush( )' and `GD::gdBrushed'
+
+     You can draw lines and shapes using a brush pattern.  Brushes are
+     just images that you can create and manipulate in the usual
+     way. When you draw with them, their contents are used for the color
+     and shape of the lines.
+
+     To make a brushed line, you must create or load the brush first,
+     then assign it to the image using `setBrush'.  You can then draw in
+     that with that brush using the `gdBrushed' special color.  It's
+     often useful to set the background of the brush to transparent so
+     that the non-colored parts don't overwrite other parts of your
+     image.
+
+     Example:
+
+          # Create a brush at an angle
+          $diagonal_brush = new GD::Image(5,5);
+          $white = $diagonal_brush->allocateColor(255,255,255);
+          $black = $diagonal_brush->allocateColor(0,0,0);
+          $diagonal_brush->transparent($white);
+          $diagonal_brush->line(0,4,4,0,$black); # NE diagonal
+
+          # Set the brush
+          $myImage->setBrush($diagonal_brush);
+
+          # Draw a circle using the brush
+          $myImage->arc(50,50,25,25,0,360,gdBrushed);
+
+`setStyle'
+`gdStyled'
+     `GD::Image::setStyle(@colors)' and `GD::gdStyled'
+
+     Styled lines consist of an arbitrary series of repeated colors and
+     are useful for generating dotted and dashed lines.  To create a
+     styled line, use `setStyle' to specify a repeating series of
+     colors.  It accepts an array consisting of one or more color
+     indexes.  Then draw using the `gdStyled' special color.  Another
+     special color, `gdTransparent' can be used to introduce holes in
+     the line, as the example shows.
+
+     Example:
+
+          # Set a style consisting of 4 pixels of yellow,
+          # 4 pixels of blue, and a 2 pixel gap
+          $myImage->setStyle($yellow,$yellow,$yellow,$yellow,
+          		   $blue,$blue,$blue,$blue,
+          		   gdTransparent,gdTransparent);
+          $myImage->arc(50,50,25,25,0,360,gdStyled);
+
+     To combine the `gdStyled' and `gdBrushed' behaviors, you can
+     specify `gdStyledBrushed'.  In this case, a pixel from the current
+     brush pattern is rendered wherever the color specified in
+     setStyle() is neither gdTransparent nor 0.
+
+`gdTiled'
+     Draw filled shapes and flood fills using a pattern.  The pattern is
+     just another image.  The image will be tiled multiple times in
+     order to fill the required space, creating wallpaper effects.  You
+     must call `setTile' in order to define the particular tile pattern
+     you'll use for drawing when you specify the gdTiled color.
+     details.
+
+`gdStyled'
+     The gdStyled color is used for creating dashed and dotted lines.  A
+     styled line can contain any series of colors and is created using
+     the `setStyled' command.
+
+
+Drawing Commands
+----------------
+
+`setPixel'
+     `GD::Image::setPixel(x,y,color)' *object method*
+
+     This sets the pixel at (x,y) to the specified color index.  No
+     value is returned from this method.  The coordinate system starts
+     at the upper left at (0,0) and gets larger as you go down and to
+     the right.  You can use a real color, or one of the special colors
+     gdBrushed, gdStyled and gdStyledBrushed can be specified.
+
+     Example:
+
+          # This assumes $peach already allocated
+          $myImage->setPixel(50,50,$peach);
+
+`line'
+     `GD::Image::line(x1,y1,x2,y2,color)' *object method*
+
+     This draws a line from (x1,y1) to (x2,y2) of the specified color.
+     You can use a real color, or one of the special colors gdBrushed,
+     gdStyled and gdStyledBrushed.
+
+     Example:
+
+          # Draw a diagonal line using the currently defind
+          # paintbrush pattern.
+          $myImage->line(0,0,150,150,gdBrushed);
+
+`dashedLine'
+     `GD::Image::dashedLine(x1,y1,x2,y2,color)' *object method*
+
+     This draws a dashed line from (x1,y1) to (x2,y2) in the specified
+     color.  A more powerful way to generate arbitrary dashed and dotted
+     lines is to use the setStyle() method described below and to draw
+     with the special color gdStyled.
+
+     Example:
+
+          $myImage->dashedLine(0,0,150,150,$blue);
+
+`rectangle'
+     `GD::Image::rectangle(x1,y1,x2,y2,color)' *object method*
+
+     This draws a rectangle with the specified color.  (x1,y1) and
+     (x2,y2) are the upper left and lower right corners respectively.
+     Both real color indexes and the special colors gdBrushed, gdStyled
+     and gdStyledBrushed are accepted.
+
+     Example:
+
+          $myImage->rectangle(10,10,100,100,$rose);
+
+`filledRectangle'
+     `GD::Image::filledRectangle(x1,y1,x2,y2,color)' *object method*
+
+     This draws a rectangle filed with the specified color.  You can use
+     a real color, or the special fill color gdTiled to fill the polygon
+     with a pattern.
+
+     Example:
+
+          # read in a fill pattern and set it
+          open(GIF,"happyface.gif") || die;
+          $tile = newFromGif GD::Image(GIF);
+          $myImage->setTile($tile); 
+
+          # draw the rectangle, filling it with the pattern
+          $myImage->filledRectangle(10,10,150,200,gdTiled);
+
+`polygon'
+     `GD::Image::polygon(polygon,color)' *object method*
+
+     This draws a polygon with the specified color.  The polygon must be
+     created first (see below).  The polygon must have at least three
+     vertices.  If the last vertex doesn't close the polygon, the method
+     will close it for you.  Both real color indexes and the special
+     colors gdBrushed, gdStyled and gdStyledBrushed can be specified.
+
+     Example:
+
+          $poly = new GD::Polygon;
+          $poly->addPt(50,0);
+          $poly->addPt(99,99);
+          $poly->addPt(0,99);
+          $myImage->polygon($poly,$blue);
+
+`filledPolygon'
+     `GD::Image::filledPolygon(poly,color)' *object method*
+
+     This draws a polygon filled with the specified color.  You can use
+     a real color, or the special fill color gdTiled to fill the polygon
+     with a pattern.
+
+     Example:
+
+          # make a polygon
+          $poly = new GD::Polygon;
+          $poly->addPt(50,0);
+          $poly->addPt(99,99);
+          $poly->addPt(0,99);
+
+          # draw the polygon, filling it with a color
+          $myImage->filledPolygon($poly,$peachpuff);
+
+`arc'
+     `GD::Image::arc(cx,cy,width,height,start,end,color)' *object
+     method*
+
+     This draws arcs and ellipses.  (cx,cy) are the center of the arc,
+     and (width,height) specify the width and height, respectively.  The
+     portion of the ellipse covered by the arc are controlled by start
+     and end, both of which are given in degrees from 0 to 360.  Zero is
+     at the top of the ellipse, and angles increase clockwise.  To
+     specify a complete ellipse, use 0 and 360 as the starting and
+     ending angles.  To draw a circle, use the same value for width and
+     height.
+
+     You can specify a normal color or one of the special colors
+     gdBrushed, gdStyled, or gdStyledBrushed.
+
+     Example:
+
+          # draw a semicircle centered at 100,100
+          $myImage->arc(100,100,50,50,0,180,$blue);
+
+`fill'
+     `GD::Image::fill(x,y,color)' *object method*
+
+     This method flood-fills regions with the specified color.  The
+     color will spread through the image, starting at point (x,y), until
+     it is stopped by a pixel of a different color from the starting
+     pixel (this is similar to the "paintbucket" in many popular drawing
+     toys).  You can specify a normal color, or the special color
+     gdTiled, to flood-fill with patterns.
+
+     Example:
+
+          # Draw a rectangle, and then make its interior blue
+          $myImage->rectangle(10,10,100,100,$black);
+          $myImage->fill(50,50,$blue);
+
+`GD::Image::fillToBorder(x,y,bordercolor,color)' *object method*
+     Like `fill', this method flood-fills regions with the specified
+     color, starting at position (x,y).  However, instead of stopping
+     when it hits a pixel of a different color than the starting pixel,
+     flooding will only stop when it hits the color specified by
+     bordercolor.  You must specify a normal indexed color for the
+     bordercolor.  However, you are free to use the gdTiled color for
+     the fill.
+
+     Example:
+
+          # This has the same effect as the previous example
+          $myImage->rectangle(10,10,100,100,$black);
+          $myImage->fillToBorder(50,50,$black,$blue);
+
+
+Image Copying Commands
+----------------------
+
+Two methods are provided for copying a rectangular region from one image
+to another.  One method copies a region without resizing it.  The other
+allows you to stretch the region during the copy operation.
+
+With either of these methods it is important to know that the routines
+will attempt to flesh out the destination image's color table to match
+the colors that are being copied from the source.  If the destination's
+color table is already full, then the routines will attempt to find the
+best match, with varying results.
+
+copy
+     `GD::Image::copy(sourceImage,dstX,dstY,srcX,srcY,width,height)'
+     *object method*
+
+     This is the simpler of the two copy operations, copying the
+     specified region from the source image to the destination image
+     (the one performing the method call).  (srcX,srcY) specify the
+     upper left corner of a rectangle in the source image, and
+     (width,height) give the width and height of the region to copy.
+     (dstX,dstY) control where in the destination image to stamp the
+     copy.  You can use the same image for both the source and the
+     destination, but the source and destination regions must not
+     overlap or strange things will happen.
+
+     Example:
+
+          $myImage = new GD::Image(100,100);
+          ... various drawing stuff ...
+          $srcImage = new GD::Image(50,50);
+          ... more drawing stuff ...
+          # copy a 25x25 pixel region from $srcImage to
+          # the rectangle starting at (10,10) in $myImage
+          $myImage->copy($srcImage,10,10,0,0,25,25);
+
+`copyResized'
+     `GD::Image::copyResized(sourceImage,dstX,dstY,srcX,srcY,destW,destH,srcW,srcH)'
+     *object method*
+
+     This method is similar to copy() but allows you to choose different
+     sizes for the source and destination rectangles.  The source and
+     destination rectangle's are specified independently by (srcW,srcH)
+     and (destW,destH) respectively.  copyResized() will stretch or
+     shrink the image to accomodate the size requirements.
+
+     Example:
+
+          $myImage = new GD::Image(100,100);
+          ... various drawing stuff ...
+          $srcImage = new GD::Image(50,50);
+          ... more drawing stuff ...
+          # copy a 25x25 pixel region from $srcImage to
+          # a larger rectangle starting at (10,10) in $myImage
+          $myImage->copyResized($srcImage,10,10,0,0,50,50,25,25);
+
+
+Character and String Drawing
+----------------------------
+
+Gd allows you to draw characters and strings, either in normal
+horizontal orientation or rotated 90 degrees.  These routines use a
+GD::Font object, described in more detail below.  There are four
+built-in fonts, available in global variables gdLargeFont,
+gdMediumBoldFont, gdSmallFont and gdTinyFont.  Currently there is no way
+of dynamically creating your own fonts.
+
+string
+     `GD::Image::string(font,x,y,string,color)' *Object Method*
+
+     This method draws a string startin at position (x,y) in the
+     specified font and color.  Your choices of fonts are gdSmallFont,
+     gdMediumBoldFont, gdTinyFont and gdLargeFont.
+
+     Example:
+
+          $myImage->string(gdSmallFont,2,10,"Peachy Keen",$peach);
+
+`stringUp'
+     `GD::Image::stringUp(font,x,y,string,color)' *Object Method*
+
+     Just like the previous call, but draws the text rotated
+     counterclockwise 90 degrees.
+
+`char'
+`charUp'
+     `GD::Image::char(font,x,y,char,color)' *Object Method*
+     `GD::Image::charUp(font,x,y,char,color)' *Object Method*
+
+     These methods draw single characters at position (x,y) in the
+     specified font and color.  They're carry-overs from the C
+     interface, where there is a distinction between characters and
+     strings.  Perl is insensible to such subtle distinctions.
+
+
+Miscellaneous Image Methods
+---------------------------
+
+interlaced
+     `GD::Image::interlaced( )' `GD::Image::interlaced(1)' *Object
+     method*
+
+     This method sets or queries the image's interlaced setting.
+     Interlace produces a cool venetian blinds effect on certain
+     viewers.  Provide a true parameter to set the interlace attribute.
+     Provide undef to disable it.  Call the method without parameters to
+     find out the current setting.
+
+c<getBounds>
+     `GD::Image::getBounds( )' *Object method*
+
+     This method will return a two-member list containing the width and
+     height of the image.  You query but not not change the size of the
+     image once it's created.
+
+
+Polygon Methods
+---------------
+
+A few primitive polygon creation and manipulation methods are provided.
+They aren't part of the Gd library, but I thought they might be handy to
+have around (they're borrowed from my qd.pl Quickdraw library).
+
+c<new>
+     `GD::Polygon::new' *class method*
+
+     Create an empty polygon with no vertices.
+
+          $poly = new GD::Polygon;
+
+`addPt'
+     `GD::Polygon::addPt(x,y)' *object method*
+
+     Add point (x,y) to the polygon.
+
+          $poly->addPt(0,0);
+          $poly->addPt(0,50);
+          $poly->addPt(25,25);
+          $myImage->fillPoly($poly,$blue);
+
+`getPt'
+     `GD::Polygon::getPt(index)' *object method*
+
+     Retrieve the point at the specified vertex.
+
+          ($x,$y) = $poly->getPt(2);
+
+`setPt'
+     `GD::Polygon::setPt(index,x,y)' *object method*
+
+     Change the value of an already existing vertex.  It is an error to
+     set a vertex that isn't already defined.
+
+          $poly->setPt(2,100,100);
+
+`deletePt'
+     `GD::Polygon:deletePt(index)' *object method*
+
+     Delete the specified vertex, returning its value.
+
+          ($x,$y) = $poly->deletePt(1); 
+
+length
+     `GD::Polygon::length' *object method*
+
+     Return the number of vertices in the polygon.
+
+          $points = $poly->length;
+
+`vertices'
+     `GD::Polygon::vertices' *object method*
+
+     Return a list of all the verticies in the polygon object.  Each
+     membver of the list is a reference to an (x,y) array.
+
+          @vertices = $poly->vertices;
+          foreach $v (@vertices)
+             print join(",",@$v),"\n";
+          }
+
+`bounds'
+     `GD::Polygon::bounds' *object method*
+
+     Return the smallest rectangle that completely encloses the polygon.
+     The return value is an array containing the (left,top,right,bottom)
+     of the rectangle.
+
+          ($left,$top,$right,$bottom) = $poly->bounds;
+
+`offset'
+     `GD::Polygon::offset(dx,dy)' *object method*
+
+     Offset all the vertices of the polygon by the specified horizontal
+     (dh) and vertical (dy) amounts.  Positive numbers move the polygon
+     down and to the right.
+
+          $poly->offset(10,30);
+
+map
+     `GD::Polygon::map(srcL,srcT,srcR,srcB,destL,dstT,dstR,dstB)'
+     *object method*
+
+     Map the polygon from a source rectangle to an equivalent position
+     in a destination rectangle, moving it and resizing it as necessary.
+     See polys.pl for an example of how this works.  Both the source and
+     destination rectangles are given in (left,top,right,bottom)
+     coordinates.  For convenience, you can use the polygon's own
+     bounding box as the source rectangle.
+
+          # Make the polygon really tall
+          $poly->map($poly->bounds,0,0,50,200);
+
+
+Font Utilities
+--------------
+
+Gd's support for fonts is minimal.  Basically you have access to
+gdSmallFont and gdLargeFont for drawing, and not much else.  However,
+for future compatibility, I've made the fonts into perl objects of type
+GD::Font that you can query and, perhaps someday manipulate.
+
+`gdSmallFont'
+     `GD::Font::gdSmallFont' *constant*
+
+     This is the basic small font, "borrowed" from a well known public
+     domain 6x12 font.
+
+`gdLargeFont'
+     `GD::Font::gdLargeFont' *constant*
+
+     This is the basic large font, "borrowed" from a well known public
+     domain 8x16 font.
+
+`gdMediumBoldFont'
+     `GD::Font::gdMediumBoldFont' *constant*
+
+     This is a bold font intermediate in size between the small and
+     large fonts, borrowed from a public domain 7x13 font;
+
+`gdTinyFont'
+     `GD::Font::gdTinyFont' *constant*
+
+     This is a tiny, almost unreadable font, 5x8 pixels wide.
+
+`nchars'
+     `GD::Font::nchars' *object method*
+
+     This returns the number of characters in the font.
+
+          print "The large font contains ",gdLargeFont->nchars," characters\n";
+
+`offset'
+     `GD::Font::offset' *object method*
+
+     This returns the ASCII value of the first character in the font
+
+`width'
+`height'
+     `GD::Font::width' `GD::Font::height' *object methods*
+
+     These return the width and height of the font.
+
+          ($w,$h) = (gdLargeFont->width,gdLargeFont->height);
+
+
+Obtaining the C-language version of gd
+======================================
+
+libgd, the C-language version of gd, can be obtained at URL
+http://www.boutell.com/gd/gd.html.  Directions for installing and using
+it can be found at that site.  Please do not contact me for help with
+libgd.
+
+
+Copyright Information
+=====================
+
+The GD.pm interface is copyright 1995, Lincoln D. Stein.  You are free
+to use it for any purpose, commercial or noncommercial, provided that if
+you redistribute the source code this statement of copyright remains
+attached. The gd library is covered separately under a 1994 copyright by
+Quest Protein Database Center, Cold Spring Harbor Labs and Thomas
+Boutell.  For usage information see the gd documentation at URL
+
+     http://www.boutell.com/gd/gd.html
+
+The latest versions of GD.pm are available at
+
+     http://www.genome.wi.mit.edu/ftp/pub/software/WWW/GD.html
+     ftp://ftp-genome.wi.mit.edu/pub/software/WWW/GD.pm.tar.gz
+
+
+
+

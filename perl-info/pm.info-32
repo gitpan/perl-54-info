@@ -1,0 +1,1840 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: MIME/Parser, Next: MIME/ParserBase, Prev: MIME/Lite, Up: Module List
+
+split MIME mail into decoded components
+***************************************
+
+
+
+NAME
+====
+
+MIME::Parser - split MIME mail into decoded components
+
+
+SYNOPSIS
+========
+
+     use MIME::Parser;
+
+     # Create a new parser object:
+     my $parser = new MIME::Parser;
+    
+     # Set up output directory for files:
+     $parser->output_dir("$ENV{HOME}/mimemail");
+
+     # Set up the prefix for files with auto-generated names:
+     $parser->output_prefix("part");
+
+     # If content length is this or below, write to in-core scalar;
+     # Else, write to a disk file (the default action):
+     $parser->output_to_core(20000);
+     
+     # Parse an input stream:
+     $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";
+
+     # Congratulations: you now have a (possibly multipart) MIME entity!
+     $entity->dump_skeleton;          # for debugging 
+
+
+DESCRIPTION
+===========
+
+A subclass of MIME::ParserHead, providing one useful way to parse MIME
+streams and obtain MIME::Entity objects.  This particular parser class
+outputs the different parts as files on disk, in the directory of your
+choice.
+
+If you don't like the way files are named... it's object-oriented and
+subclassable.  If you want to do something *really* different, perhaps
+you want to subclass MIME::ParserBase instead.
+
+
+WARNINGS
+========
+
+The organization of the `output_path()' code changed in version 1.11 of
+this module.  If you are upgrading from a previous version, and you use
+inheritance to override the `output_path()' method, please take a moment
+to familiarize yourself with the new code.  Everything *should* still
+work, but you never know...
+
+
+PUBLIC INTERFACE
+================
+
+new_body_for HEAD
+     *Instance method.*
+     Based on the HEAD of a part we are parsing, return a new body
+     object (any desirable subclass of MIME::Body) for receiving that
+     part's data.
+
+     The default behavior is to examine the HEAD for a recommended
+     filename (generating a random one if none is available), and create
+     a new MIME::Body::File on that filename in the parser's current
+     `output_dir()'.
+
+     If you use the output_to_core method (q.v.) before parsing, you can
+     force this method to output some or all or a message's parts to
+     in-core data structures, based on their size.
+
+     If you want the parser to do something else entirely, you should
+     override this method in a subclass.
+
+output_to_core [CUTOFF]
+     *Instance method.*
+     Normally, instances of this class output all their decoded body
+     data to disk files (via MIME::Body::File).  However, you can change
+     this behaviour by invoking this method before parsing:
+
+     *If CUTOFF is an integer,* then we examine the `Content-length' of 
+     each entity being parsed.  If the content-length is known to be
+     CUTOFF or below, the body data will go to an in-core data
+     structure; If the content-length is unknown or if it exceeds
+     CUTOFF, then the body data will go to a disk file.
+
+     *If the CUTOFF is the string "NONE",* then all body data goes to disk 
+     files regardless of the content-length.  This is the default
+     behaviour.
+
+     *If the CUTOFF is the string "ALL",* then all body data goes to 
+     in-core data structures regardless of the content-length.  
+     *This is very risky* (what if someone emails you an MPEG or a tar 
+     file, hmmm?) but people seem to want this bit of noose-shaped rope,
+     so I'm providing it.
+
+     Without argument, returns the current cutoff: "ALL", "NONE" (the
+     default), or a number.
+
+     See the `new_body_for()' method for more details.
+
+output_dir [DIRECTORY]
+     *Instance method.*
+     Get/set the output directory for the parsing operation.  This is
+     the directory where the extracted and decoded body parts will go.
+     The default is `"."'.
+
+     If `DIRECTORY' *is not* given, the current output directory is
+     returned.  If `DIRECTORY' *is* given, the output directory is set
+     to the new value, and the previous value is returned.
+
+     *Note:* this is used by the `output_path()' method in this class.
+     It should also be used by subclasses, but if a subclass decides to
+     output parts in some completely different manner, this method may
+     of course be completely ignored.
+
+evil_filename FILENAME
+     *Instance method.*
+     Is this an evil filename?  It is if it contains path info or
+     non-ASCII characters.  Returns true or false.
+
+     *Note:* Override this method in a subclass if you just want to change 
+     which externally-provided filenames are allowed, and which are not.
+     Like this:
+
+          package MIME::MyParser;
+
+          require 5.002;                # for SUPER
+          use package MIME::Parser;
+
+          @MIME::MyParser::ISA = ('MIME::Parser');
+
+          sub evil_filename {
+              my ($self, $name) = @_;
+              return 1 if (!defined($name) || ($name eq ''));
+              return 1 if ($name =~ m|/|);                      # Unix pathname
+              return 1 if (($name eq '.') || ($name eq '..'));  # Unix directories
+              return 1 if ($name =~ /[\s\x00-\x1f\x7f]/);       # non-printables
+              0;     # it's good!
+          }
+          1;
+
+     *Note:* My apologies to various individuals across the Atlantic
+     who have been inconvenienced by this function's rejection of
+     non-ASCII characters.  Changing the default behavior now would
+     likely cause howls of protest from folks who depend on it.  If you
+     don't like the behavior of this function, you can define your own
+     subclass of MIME::Parser and override it as shown above.
+
+     *Thanks to Andrew Pimlott for finding a real dumb bug in the original
+     version.  Thanks to Nickolay Saukh for noting that (a) evil is in
+     the eye of the beholder, and (b) 0x7F is whitespace, too.*
+
+output_path HEAD
+     *Instance method.*
+     Given a MIME head for a file to be extracted, come up with a good
+     output pathname for the extracted file.
+
+     The "directory" portion of the returned path will be the
+     `output_dir()', and the "filename" portion will be determined as
+     follows:
+
+        * If the MIME header contains a recommended filename, and it is
+          *not* judged to be "evil" (evil filenames are ones which contain
+          things like "/" or ".." or non-ASCII characters), then that
+          filename will be used.
+
+        * If the MIME header contains a recommended filename, but it
+          *is* judged to be "evil", then a warning is issued and we
+          pretend that there was no recommended filename.  In which
+          case...
+
+        * If the MIME header does not specify a recommended filename,
+          then a simple temporary file name, starting with the
+          `output_prefix()', will be used.
+
+     *Note:* If you don't like the behavior of this function, you 
+     can define your own subclass of MIME::Parser and override it there:
+
+          package MIME::MyParser;
+
+          require 5.002;                # for SUPER
+          use package MIME::Parser;
+
+          @MIME::MyParser::ISA = ('MIME::Parser');
+
+          sub output_path {
+              my ($self, $head) = @_;
+    
+              # Your code here; FOR EXAMPLE...
+              if (i_have_a_preference) {
+          	     return my_custom_path;
+              }
+          	 else {                      # return the default path:
+                  return $self->SUPER::output_path($head);
+              }
+          }
+          1;
+
+     *Note:* Nickolay Saukh pointed out that, given the subjective nature of
+     what is "evil", this function really shouldn't warn about an evil
+     filename, but maybe just issue a debug message.  I considered that,
+     but then I thought: if debugging were off, people wouldn't know why
+     (or even if) a given filename had been ignored.  In mail robots
+     that depend on externally-provided filenames, this could cause
+     hard-to-diagnose problems.  So, the message is still a warning, but
+     now *it's only output if $^W is true.*
+
+     *Thanks to Laurent Amon for pointing out problems with the original
+     implementation, and for making some good suggestions.  Thanks also
+     to Achim Bohnet for pointing out that there should be a hookless,
+     OO way of overriding the output_path.*
+
+output_path_hook SUBREF
+     *Instance method: DEPRECATED.*
+     Install a different function to generate the output filename for
+     extracted message data.  Declare it like this:
+
+          sub my_output_path_hook {
+              my $parser = shift;   # this MIME::Parser
+          	my $head = shift;     # the MIME::Head for the current message
+
+          # Your code here: it must return a path that can be 
+          # open()ed for writing.  Remember that you can ask the
+          # $parser about the output_dir, and you can ask the
+          # $head about the recommended_filename!
+              }
+
+     And install it immediately before parsing the input stream, like
+     this:
+
+          # Create a new parser object, and install my own output_path hook:
+          my $parser = new MIME::Parser;
+          $parser->output_path_hook(\&my_output_path_hook);
+
+          # NOW we can parse an input stream:
+          $entity = $parser->read(\*STDIN);
+
+     This method is intended for people who are squeamish about creating
+     subclasses.  See the `output_path()' documentation for a cleaner,
+     OOish way to do this.
+
+output_prefix [PREFIX]
+     *Instance method.*
+     Get/set the output prefix for the parsing operation.  This is a
+     short string that all filenames for extracted and decoded body
+     parts will begin with.  The default is `"msg"'.
+
+     If PREFIX *is not* given, the current output prefix is returned.
+     If PREFIX *is* given, the output directory is set to the new value,
+     and the previous value is returned.
+
+
+WRITING SUBCLASSES
+==================
+
+Authors of subclasses can consider overriding the following methods.
+They are listed in approximate order of most-to-least impact.
+
+new_body_for
+     Override this if you want to change the *entire* mechanism for
+     choosing the output destination.  You may want to use information
+     in the MIME header to determine how files are named, and whether or
+     not their data goes to a disk file or to an in-core scalar.  (You
+     have the MIME header object at your disposal.)
+
+output_path
+     Override this if you want to completely change how the output path
+     (containing both the directory and filename) is determined for
+     those parts being output to disk files.  (You have the MIME header
+     object at your disposal.)
+
+evil_filename
+     Override this if you want to change the test that determines
+     whether or not a filename obtained from the header is permissible.
+
+output_prefix
+     Override this if you want to change the mechanism for
+     getting/setting the desired output prefix (used in naming files
+     when no other names are suggested).
+
+output_dir
+     Override this if you want to change the mechanism for
+     getting/setting the desired output directory (where extracted and
+     decoded files are placed).
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+
+VERSION
+=======
+
+$Revision: 3.203 $ $Date: 1997/01/22 08:39:25 $
+
+
+
+
+File: pm.info, Node: MIME/ParserBase, Next: MIME/QuotedPrint, Prev: MIME/Parser, Up: Module List
+
+abstract class for parsing MIME mail
+************************************
+
+
+
+NAME
+====
+
+MIME::ParserBase - abstract class for parsing MIME mail
+
+
+SYNOPSIS
+========
+
+This is an *abstract* class; however, here's how one of its 
+*concrete subclasses* is used:
+
+     use MIME::Parser;
+
+     # Create a new parser object:
+     my $parser = new MIME::Parser;
+
+     # Parse an input stream:
+     $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";
+
+     # Congratulations: you now have a (possibly multipart) MIME entity!
+     $entity->dump_skeleton;          # for debugging 
+
+There are also some convenience methods:
+
+     # Parse an in-core MIME message:
+     $entity = $parser->parse_data($message)
+           || die "couldn't parse MIME message";
+
+     # Parse already-split input (as "deliver" would give it to you):
+     $entity = $parser->parse_two("msg.head", "msg.body")
+           || die "couldn't parse MIME files";
+
+In case a parse fails, it's nice to know who sent it to us.  So...
+
+     # Parse an input stream:
+     $entity = $parser->read(\*STDIN);
+     if (!$entity) {           # oops!
+     	my $decapitated = $parser->last_head;    # last top-level head
+     }
+
+You can also alter the behavior of the parser:
+
+     # Parse contained "message/rfc822" objects as nested MIME streams:
+     $parser->parse_nested_messages('REPLACE');
+ 
+     # Automatically attempt to RFC-1522-decode the MIME headers:
+     $parser->decode_headers(1);
+
+
+DESCRIPTION
+===========
+
+Where it all begins.
+
+This is the class that contains all the knowledge for *parsing* MIME
+streams.  It's an abstract class, containing no methods governing the
+output of the parsed entities: such methods belong in the concrete
+subclasses.
+
+You can inherit from this class to create your own subclasses 
+that parse MIME streams into MIME::Entity objects.  One such subclass, 
+*MIME::Parser*, is already provided in this kit.
+
+
+PUBLIC INTERFACE
+================
+
+
+Construction, and setting options
+---------------------------------
+
+new ARGS...
+     *Class method.*  Create a new parser object.  Passes any subsequent
+     arguments onto the `init()' method.
+
+     Once you create a parser object, you can then set up various
+     parameters before doing the actual parsing.  Here's an example
+     using one of our concrete subclasses:
+
+          my $parser = new MIME::Parser;
+          $parser->output_dir("/tmp");
+          $parser->output_prefix("msg1");
+          my $entity = $parser->read(\*STDIN);
+
+decode_headers ONOFF
+     *Instance method.*
+     If set true, then the parser will attempt to decode the MIME
+     headers as per RFC-1522 the moment it sees them.  This will
+     probably be of most use to those of you who expect some
+     international mail, especially mail from individuals with 8-bit
+     characters in their names.
+
+     If set false, no attempt at decoding will be done.
+
+     With no argument, just returns the current setting.
+
+     Warning: some folks already have code which assumes that no
+     decoding is done, and since this is pretty new and radical stuff, I
+     have initially made "off" the default setting for backwards
+     compatibility in 2.05.  However, I will possibly change this in
+     future releases, so *please:* if you want a particular setting,
+     declare it when you create your parser object.
+
+interface ROLE,[VALUE]
+     *Instance method.*
+     During parsing, the parser normally creates instances of certain
+     classes, like MIME::Entity.  However, you may want to create a
+     parser subclass that uses your own experimental head, entity,
+     etc. classes (for example, your "head" class may provide some
+     additional MIME-field-oriented methods).
+
+     If so, then this is the method that your subclass should invoke
+     during init.  Use it like this:
+
+          package MyParser;
+          @ISA = qw(MIME::Parser);
+          ...
+          sub init {
+          	my $self = shift;
+          	$self->SUPER::init(@_);        # do my parent's init
+              $self->interface(ENTITY_CLASS => 'MIME::MyEntity');
+          	$self->interface(HEAD_CLASS   => 'MIME::MyHead');
+          	$self;                         # return
+          }
+
+     With no VALUE, returns the VALUE currently associated with that
+     ROLE.
+
+last_head
+     *Instance method.*
+     Return the top-level MIME header of the last stream we attempted to
+     parse.  This is useful for replying to people who sent us bad MIME
+     messages.
+
+          # Parse an input stream:
+          $entity = $parser->read(\*STDIN);
+          if (!$entity) {           # oops!
+          	my $decapitated = $parser->last_head;    # last top-level head
+          }
+
+parse_nested_messages OPTION
+     *Instance method.*
+     Some MIME messages will contain a part of type `message/rfc822':
+     literally, the text of an embedded mail/news/whatever message.  The
+     normal behavior is to save such a message just as if it were a
+     `text/plain' document, without attempting to decode it.  However,
+     you can change this: before parsing, invoke this method with the
+     OPTION you want:
+
+     *If OPTION is false,* the normal behavior will be used.
+
+     *If OPTION is true,* the body of the `message/rfc822' part
+     is decoded (after all, it might be encoded!) into a temporary
+     filehandle, which is then rewound and parsed by this parser,
+     creating an entity object.  What happens then is determined by the
+     OPTION:
+
+     NEST or 1
+          The contained message becomes a "part" of the `message/rfc822'
+          entity, as though the `message/rfc822' were a special kind of
+          multipart entity.  However, the `message/rfc822' header (and
+          the content-type) *is retained.*
+
+          Warning: since it is not legal MIME for anything but multipart
+          to have a "part", the `message/rfc822' message *will appear to
+          have no content* if you simply `print()' it out.  You will
+          have to have to get at the reparsed body manually, by the
+          `MIME::Entity::parts()' method.
+
+          IMHO, this option is probably only useful if you're
+          *processing* messages, but *not* saving or re-sending them.
+          In such cases, it is best to *not* use "parse nested" at all.
+
+     REPLACE
+          The contained message replaces the `message/rfc822' entity, as
+          though the `message/rfc822' "envelope" never existed.
+
+          Warning: notice that, with this option, all the header
+          information in the `message/rfc822' header is lost.  This
+          might seriously bother you if you're dealing with a top-level
+          message, and you've just lost the sender's address and the
+          subject line.  `:-/'.
+
+     *Thanks to Andreas Koenig for suggesting this method.*
+
+
+Parsing messages
+----------------
+
+parse_data DATA
+     *Instance method.*  Parse a MIME message that's already
+     in-core.  You may supply the DATA in any of a number of ways...
+
+        * *A scalar* which holds the message.
+
+        * *A ref to a scalar* which holds the message.  This is an efficiency hack.
+
+        * *A ref to an array of scalars.*  The array elements are simply joined
+          to produce a scalar; no newlines are inserted!
+
+     Returns a MIME::Entity, which may be a single entity, or an
+     arbitrarily-nested multipart entity.  Returns undef on failure.
+
+     *Note:* where the parsed body parts are stored (e.g., in-core vs. on-disk)
+     is not determined by this class, but by the subclass you use to do
+     the actual parsing (e.g., MIME::Parser).  For efficiency, if you
+     know you'll be parsing a small amount of data, it is probably best
+     to tell the parser to store the parsed parts in core.  For example,
+     here's a short test program, using MIME::Parser:
+
+          use MIME::Parser;
+
+          my $msg = <<EOF;
+              Content-type: text/html
+              Content-transfer-encoding: 7bit
+
+          <H1>Hello, world!</H1>;
+
+          EOF
+              $parser = new MIME::Parser;
+              $parser->output_to_core('ALL');
+              $entity = $parser->parse_data($msg);
+              $entity->print(\*STDOUT);
+
+parse_two HEADFILE, BODYFILE
+     *Instance method.*
+     Convenience front-end onto `read()', intended for programs running
+     under mail-handlers like *deliver*, which splits the incoming mail
+     message into a header file and a body file.
+
+     Simply give this method the paths to the respective files.  
+     *These must be pathnames:* Perl "open-able" expressions won't
+     work, since the pathnames are shell-quoted for safety.
+
+     *WARNING:* it is assumed that, once the files are cat'ed together,
+     there will be a blank line separating the head part and the body
+     part.
+
+     Returns the parsed entity, or undef on error.
+
+read INSTREAM
+     *Instance method.*
+     Takes a MIME-stream and splits it into its component entities, each
+     of which is decoded and placed in a separate file in the splitter's
+     output_dir().
+
+     The INSTREAM can be given as a readable FileHandle, a globref'd
+     filehandle (like `\*STDIN'), or as any blessed object conforming to
+     the MIME::IO (or IO::) interface.
+
+     Returns a MIME::Entity, which may be a single entity, or an
+     arbitrarily-nested multipart entity.  Returns undef on failure.
+
+
+WRITING SUBCLASSES
+==================
+
+All you have to do to write a subclass is to provide or override the
+following methods:
+
+init ARGS...
+     *Instance method, private.*
+     Initiallize the new parser object, with any args passed to new().
+
+     You don't *need* to override this in your subclass.  If you
+     override it, however, make sure you call the inherited method to
+     init your parents!
+
+          package MyParser;
+          @ISA = qw(MIME::Parser);
+          ...
+          sub init {
+          	my $self = shift;
+          	$self->SUPER::init(@_);        # do my parent's init
+	
+          	# ...my init stuff goes here...	
+	
+          	$self;                         # return
+          }
+
+     Should return the self object on success, and undef on failure.
+
+new_body_for HEAD
+     *Abstract instance method.*
+     Based on the HEAD of a part we are parsing, return a new body
+     object (any desirable subclass of MIME::Body) for receiving that
+     part's data (both will be put into the "entity" object for that
+     part).
+
+     If you want the parser to do something other than write its parts
+     out to files, you should override this method in a subclass.  For
+     an example, see *MIME::Parser*.
+
+     *Note:* the reason that we don't use the "interface" mechanism
+     for this is that your choice of (1) which body class to use, and
+     (2) how its new() method is invoked, may be very much based on the
+     information in the header.
+
+You are of course free to override any other methods as you see fit,
+like new.
+
+
+NOTES
+=====
+
+*This is an abstract class.*
+If you actually want to parse a MIME stream, use one of the children of
+this class, like the backwards-compatible MIME::Parser.
+
+
+Under the hood
+--------------
+
+RFC-1521 gives us the following BNF grammar for the body of a multipart
+MIME message:
+
+     multipart-body  := preamble 1*encapsulation close-delimiter epilogue
+
+     encapsulation   := delimiter body-part CRLF
+
+     delimiter       := "--" boundary CRLF 
+                                  ; taken from Content-Type field.
+                                  ; There must be no space between "--" 
+                                  ; and boundary.
+
+     close-delimiter := "--" boundary "--" CRLF 
+                                  ; Again, no space by "--"
+
+     preamble        := discard-text   
+                                  ; to be ignored upon receipt.
+
+     epilogue        := discard-text   
+                                  ; to be ignored upon receipt.
+
+     discard-text    := *(*text CRLF)
+
+     body-part       := <"message" as defined in RFC 822, with all 
+                         header fields optional, and with the specified 
+                         delimiter not occurring anywhere in the message 
+                         body, either on a line by itself or as a substring 
+                         anywhere.  Note that the semantics of a part 
+                         differ from the semantics of a message, as 
+                         described in the text.>
+
+From this we glean the following algorithm for parsing a MIME stream:
+
+     PROCEDURE parse
+     INPUT
+         A FILEHANDLE for the stream.
+         An optional end-of-stream OUTER_BOUND (for a nested multipart message).
+
+     RETURNS
+         The (possibly-multipart) ENTITY that was parsed.
+         A STATE indicating how we left things: "END" or "ERROR".
+
+     BEGIN   
+         LET OUTER_DELIM = "--OUTER_BOUND".
+         LET OUTER_CLOSE = "--OUTER_BOUND--".
+
+         LET ENTITY = a new MIME entity object.
+         LET STATE  = "OK".
+
+         Parse the (possibly empty) header, up to and including the
+         blank line that terminates it.   Store it in the ENTITY.
+
+         IF the MIME type is "multipart":
+             LET INNER_BOUND = get multipart "boundary" from header.
+             LET INNER_DELIM = "--INNER_BOUND".
+             LET INNER_CLOSE = "--INNER_BOUND--".
+
+             Parse preamble:
+                 REPEAT:
+                     Read (and discard) next line
+                 UNTIL (line is INNER_DELIM) OR we hit EOF (error).
+
+             Parse parts:
+                 REPEAT:
+                     LET (PART, STATE) = parse(FILEHANDLE, INNER_BOUND).
+                     Add PART to ENTITY.
+                 UNTIL (STATE != "DELIM").
+
+             Parse epilogue:
+                 REPEAT (to parse epilogue): 
+                     Read (and discard) next line
+                 UNTIL (line is OUTER_DELIM or OUTER_CLOSE) OR we hit EOF
+                 LET STATE = "EOF", "DELIM", or "CLOSE" accordingly.
+ 
+         ELSE (if the MIME type is not "multipart"):
+             Open output destination (e.g., a file)
+
+             DO:
+                 Read, decode, and output data from FILEHANDLE
+             UNTIL (line is OUTER_DELIM or OUTER_CLOSE) OR we hit EOF.
+             LET STATE = "EOF", "DELIM", or "CLOSE" accordingly.
+
+         ENDIF
+
+         RETURN (ENTITY, STATE).
+     END
+
+For reasons discussed in MIME::Entity, we can't just discard the
+"discard text": some mailers actually put data in the preamble.
+
+
+Questionable practices
+----------------------
+
+Multipart messages are always read line-by-line
+     Multipart document parts are read line-by-line, so that the
+     encapsulation boundaries may easily be detected.  However, bad MIME
+     composition agents (for example, naive CGI scripts) might return
+     multipart documents where the parts are, say, unencoded bitmap
+     files... and, consequently, where such "lines" might be
+     veeeeeeeeery long indeed.
+
+     A better solution for this case would be to set up some form of
+     state machine for input processing.  This will be left for future
+     versions.
+
+Multipart parts read into temp files before decoding
+     In my original implementation, the MIME::Decoder classes had to be
+     aware of encapsulation boundaries in multipart MIME documents.
+     While this decode-while-parsing approach obviated the need for
+     temporary files, it resulted in inflexible and complex decoder
+     implementations.
+
+     The revised implementation uses a temporary file (a la `tmpfile()')
+     during parsing to hold the *encoded* portion of the current MIME
+     document or part.  This file is deleted automatically after the
+     current part is decoded and the data is written to the "body
+     stream" object; you'll never see it, and should never need to worry
+     about it.
+
+     Some folks have asked for the ability to bypass this temp-file
+     mechanism, I suppose because they assume it would slow down their
+     application.  I considered accomodating this wish, but the
+     temp-file approach solves a lot of thorny problems in parsing, and
+     it also protects against hidden bugs in user applications (what if
+     you've directed the encoded part into a scalar, and someone
+     unexpectedly sends you a 6 MB tar file?).  Finally, I'm just not
+     conviced that the temp-file use adds significant overhead.
+
+Fuzzing of CRLF and newline on input
+     RFC-1521 dictates that MIME streams have lines terminated by CRLF
+     (`"\r\n"').  However, it is extremely likely that folks will want
+     to parse MIME streams where each line ends in the local newline
+     character `"\n"' instead.
+
+     An attempt has been made to allow the parser to handle both CRLF
+     and newline-terminated input.
+
+Fuzzing of CRLF and newline on output
+     The `"7bit"' and `"8bit"' decoders will decode both a `"\n"' and a
+     `"\r\n"' end-of-line sequence into a `"\n"'.
+
+     The `"binary"' decoder (default if no encoding specified) still
+     outputs stuff verbatim... so a MIME message with CRLFs and no
+     explicit encoding will be output as a text file that, on many
+     systems, will have an annoying ^M at the end of each line... *but
+     this is as it should be*.
+
+Inability to handle multipart boundaries that contain newlines
+     First, let's get something straight: *this is an evil, EVIL
+     practice,* and is incompatible with RFC-1521... hence, it's not
+     valid MIME.
+
+     If your mailer creates multipart boundary strings that contain
+     newlines *when they appear in the message body,* give it two weeks
+     notice and find another one.  If your mail robot receives MIME mail
+     like this, regard it as syntactically incorrect MIME, which it is.
+
+     Why do I say that?  Well, in RFC-1521, the syntax of a boundary is
+     given quite clearly:
+
+          boundary := 0*69<bchars> bcharsnospace
+  
+          bchars := bcharsnospace / " "
+
+          bcharsnospace :=    DIGIT / ALPHA / "'" / "(" / ")" / "+" /"_"
+                       / "," / "-" / "." / "/" / ":" / "=" / "?"
+
+     All of which means that a valid boundary string *cannot* have 
+     newlines in it, and any newlines in such a string in the message header
+     are expected to be solely the result of *folding* the string (i.e.,
+     inserting to-be-removed newlines for readability and line-shortening 
+     *only*).
+
+     Yet, there is at least one brain-damaged user agent out there that
+     composes mail like this:
+
+          MIME-Version: 1.0
+          Content-type: multipart/mixed; boundary="----ABC-
+           123----"
+          Subject: Hi... I'm a dork!
+
+          This is a multipart MIME message (yeah, right...)
+
+          ----ABC-
+           123----
+
+          Hi there! 
+
+     We have *got* to discourage practices like this (and the recent
+     file upload idiocy where binary files that are part of a multipart
+     MIME message aren't base64-encoded) if we want MIME to stay
+     relatively simple, and MIME parsers to be relatively robust.
+
+     *Thanks to Andreas Koenig for bringing a baaaaaaaaad user agent to
+     my attention.*
+
+
+WARNINGS
+========
+
+binmode
+     New, untested binmode() calls were added in module version 1.11... 
+     if binmode() is *not* a NOOP on your system, please pay careful attention 
+     to your output, and report any anomalies.  
+     *It is possible that "make test" will fail on such systems,* 
+     since some of the tests involve checking the sizes of the output
+     files.  That doesn't necessarily indicate a problem.
+
+     *If anyone* wants to test out this package's handling of both binary
+     and textual email on a system where binmode() is not a NOOP, I
+     would be most grateful.  If stuff breaks, send me the pieces
+     (including the original email that broke it, and at the very least
+     a description of how the output was screwed up).
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+
+VERSION
+=======
+
+$Revision: 3.203 $ $Date: 1997/01/22 08:40:01 $
+
+
+
+
+File: pm.info, Node: MIME/QuotedPrint, Next: MIME/ToolUtils, Prev: MIME/ParserBase, Up: Module List
+
+Encode string using quoted-printable encoding
+*********************************************
+
+
+
+NAME
+====
+
+encode_qp - Encode string using quoted-printable encoding
+
+decode_qp - Decode quoted-printable string
+
+
+SYNOPSIS
+========
+
+     use MIME::QuotedPrint;
+
+     $encoded = encode_qp($decoded);
+     $decoded = decode_qp($encoded);
+
+
+DESCRIPTION
+===========
+
+This module provides functions to encode and decode strings into the
+Quoted-Printable encoding specified in RFC 2045 - *MIME (Multipurpose
+Internet Mail Extensions)*.  The Quoted-Printable encoding is intended
+to represent data that largely consists of bytes that correspond to
+printable characters in the ASCII character set.  Non-printable
+characters (as defined by english americans) are represented by a
+triplet consisting of the character "=" followed by two hexadecimal
+digits.
+
+Note that the encode_qp() routine does not change newlines `"\n"' to the
+CRLF sequence even though this might be considered the right thing to do
+(RFC 1521 (Q-P Rule #4)).
+
+If you prefer not to import these routines into your namespace you can
+call them as:
+
+     use MIME::QuotedPrint ();
+     $encoded = MIME::QuotedPrint::encode($decoded);
+     $decoded = MIME::QuotedPrint::decode($encoded);
+
+
+COPYRIGHT
+=========
+
+Copyright 1995-1997 Gisle Aas.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: MIME/ToolUtils, Next: MLDBM, Prev: MIME/QuotedPrint, Up: Module List
+
+MIME-tools kit configuration and utilities
+******************************************
+
+
+
+NAME
+====
+
+MIME::ToolUtils - MIME-tools kit configuration and utilities
+
+
+DESCRIPTION
+===========
+
+A catch-all place for miscellaneous global information related to the
+configuration of the MIME-tools kit.
+
+Since most of the MIME-tools modules "use" it by name, this module is
+really not subclassable.
+
+
+PUBLIC INTERFACE
+================
+
+config [VARIABLE, [VALUE]]
+     *Class method.*
+     Set/get a configuration variable:
+
+          # Get current debugging flag:
+          $current = config MIME::ToolUtils 'DEBUGGING';
+
+          # Invert it:
+          config MIME::ToolUtils DEBUGGING => !$current;
+
+     *Note:* as you can see, I like the `arrow' syntax when setting values.
+
+     The complete list of configuration variables is listed below.  They
+     are all-uppercase, possibly with underscores.  To get a list of all
+     valid config variables in your program, and output their current
+     values, you can say:
+
+          foreach $var (sort (config MIME::ToolUtils)) {
+             print "MIME config $var = ", (config MIME::ToolUtils $var), "\n";
+          }
+
+     Note that some of these variables may have nice printed
+     representations, while others may not.
+
+     *Rationale:* I wanted access to the configuration to be done via
+     some kind of controllable public interface, in case "setting a
+     config variable" involved making a subroutine call.  This approach
+     is an attempt to do so while preventing an explosion of lots of
+     little methods, many of which will do nothing more than set an
+     entry in the internal %CONFIG hash.  I suppose a tied hash would
+     have been slicker.
+
+
+CONFIGURATION VARIABLES
+=======================
+
+You may set/get all of these via the config method.
+
+AUTO_SYNC_HEADERS
+     When printing out a MIME entity, you may find it desirable to
+     always output a Content-Length header (even though this is a
+     non-standard MIME header).  If you set this configuration option
+     true (the default is false), the toolkit will attempt to precompute
+     the Content-Length of all singleparts in your message, and set the
+     headers appropriately.  Otherwise, it will leave the headers alone.
+
+     You should be aware that auto-synching the headers can slow down
+     the printing of messages.
+
+DEBUGGING
+     Value should be a boolean: true to turn debugging on, false to turn
+     it off.
+
+EMULATE_TMPFILE
+     Determines how to patch a Perl 5.002 bug in
+     FileHandle::new_tmpfile, and get a FileHandle object which really
+     *will* be destroyed when it goes out of scope.  Possible values
+     are:
+
+     OPENDUP
+          Always emulate FileHandle->new_tmpfile, using an fd-opened
+          duplicate filehandle.  Pretty ugly (two additional filehandles
+          sharing the same descriptor are briefly open at one point,
+          though both are closed before the new tmpfile object is
+          returned): however, it's probably quite portable since it (a)
+          doesn't require POSIX, and (b) doesn't make assumptions as to
+          the underlying implementation of FileHandle objects.
+
+     UNLINK
+          Always emulate FileHandle->new_tmpfile, using tmpnam() plus
+          unlink().  Probably only works on Unix-like systems, but is
+          very straightforward.  Depends on POSIX::tmpnam() and on the
+          autodelete-on-unlink behavior.
+
+     NO
+          No emulation: always just use FileHandle->new_tmpfile to get
+          tmpfile handles.
+
+     (a subroutine reference)
+          Use the given subroutine, with no arguments, to return a
+          tmpfile.
+
+     If any of the named emulation options ends with '!' (e.g.,
+     "UNLINK!"), then the package will *always* emulate that way.
+     Otherwise, it will try to make a reasonable guess as to whether
+     emulation is necessary, based on your version of Perl.
+
+     The default setting (if you never invoke this method) is
+     `"OPENDUP"'.
+
+EMULATE_VERSION
+     Emulate the behavior of a previous version of the MIME-tools kit
+     (a.k.a the MIME-parser kit in its version 1.x incarnations).  This
+     will *not* turn off warnings about deprecated usage (that would
+     impede progress), but it *will* patch things like the `get()'
+     method of MIME::Head:
+
+          config MIME::ToolUtils EMULATE_VERSION => 1.0;
+
+     The value should be '1' or '1.0'.  To reliably turn off emulation,
+     set it to undef.
+
+VERSION
+     *Read-only.*  The version of the *toolkit.*
+
+          config MIME::ToolUtils VERSION => 1.0;
+
+     Please notice that as of 3.x, this *happens* to be the same as the
+     $MIME::ToolUtils::VERSION: however, this was not always the case,
+     and someday may not be the case again.
+
+
+AUTHOR
+======
+
+Copyright (c) 1996 by Eryq / eryq@rhine.gsfc.nasa.gov
+
+All rights reserved.  This program is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+
+VERSION
+=======
+
+$Revision: 3.204 $ $Date: 1997/01/22 07:43:19 $
+
+*Note: this file is used to set the version of the entire MIME-tools 
+distribution.*
+
+
+
+
+File: pm.info, Node: MLDBM, Next: Mac/Apps/MacPGP, Prev: MIME/ToolUtils, Up: Module List
+
+store multi-level hash structure in single level tied hash
+**********************************************************
+
+
+
+NAME
+====
+
+MLDBM - store multi-level hash structure in single level tied hash
+
+
+SYNOPSIS
+========
+
+     use MLDBM;                   # this gets the default, SDBM
+     #use MLDBM qw(DB_File);
+ 
+     $dbm = tie %o, MLDBM [..other DBM args..] or die $!;
+
+
+DESCRIPTION
+===========
+
+This module, intended primarily for use with DBM packages, can serve as
+a transparent interface to any TIEHASH package that must be used to
+store arbitrary perl data, including nested references.
+
+It works by converting the values in the hash that are references, to
+their string representation in perl syntax.  When using a DBM database,
+it is this string that gets stored.
+
+It requires the Data::Dumper package, available at any CPAN site.
+
+See the BUGS section for important limitations.
+
+
+Configuration Variables or Methods
+----------------------------------
+
+$MLDBM::UseDB  *or*  *$OBJ*->UseDB(*[DBNAME]*)
+     You may want to set $MLDBM::UseDB to default to something other
+     than "SDBM_File", in case you have a more efficient DBM, or if you
+     want to use this with some other TIEHASH implementation.
+     Alternatively, you can specify the name of the package at use time.
+     Nested module names can be specified as "Foo::Bar".
+
+$MLDBM::Key  *or*  *$OBJ*->Key(*[KEYSTRING]*)
+     Defaults to the magic string used to recognize MLDBM data. It is a
+     six character wide, unique string. This is best left alone, unless
+     you know what you're doing.
+
+$MLDBM::DumpMeth  *or*  *$OBJ*->DumpMeth(*[METHNAME]*)
+     This controls which of the two dumping methods available from
+     `Data::Dumper' are used.  By default, this is set to "Dumpxs", the
+     faster of the two methods, but only if MLDBM detects that "Dumpxs"
+     is supported on your platform.  Otherwise, defaults to the slower
+     "Dump" method.
+
+
+EXAMPLE
+=======
+
+     use MLDBM;                            # this gets SDBM
+     #use MLDBM qw(DB_File);
+     use Fcntl;                            # to get 'em constants
+ 
+     $dbm = tie %o, MLDBM, 'testmldbm', O_CREAT|O_RDWR, 0640 or die $!;
+ 
+     $c = [\ 'c'];
+     $b = {};
+     $a = [1, $b, $c];
+     $b->{a} = $a;
+     $b->{b} = $a->[1];
+     $b->{c} = $a->[2];
+     @o{qw(a b c)} = ($a, $b, $c);
+ 
+     #
+     # to see what wuz stored
+     #
+     use Data::Dumper;
+     print Data::Dumper->Dump([@o{qw(a b c)}], [qw(a b c)]);
+
+     #
+     # to modify data in a substructure
+     #
+     $tmp = $o{a};
+     $tmp[0] = 'foo';
+     $o{a} = $tmp;
+ 
+     #
+     # can access the underlying DBM methods transparently
+     #
+     #print $dbm->fd, "\n";                # DB_File method
+
+
+BUGS
+====
+
+  1. Adding or altering substructures to a hash value is not entirely
+     transparent in current perl.  If you want to store a reference or
+     modify an existing reference value in the DBM, it must first be
+     retrieved and stored in a temporary variable for further
+     modifications.  In particular, something like this will NOT work
+     properly:
+
+          $mldb{key}{subkey}[3] = 'stuff';  # won't work
+
+     Instead, that must be written as:
+
+          $tmp = $mldb{key};                # retrieve value
+          $tmp->{subkey}[3] = 'stuff';
+          $mldb{key} = $tmp;                # store value
+
+     This limitation exists because the perl TIEHASH interface currently
+     has no support for multidimensional ties.
+
+  2. MLDBM was first released along with the Data::Dumper package as an
+     example.  If you got serious with that and have a DBM file from
+     that version, you can do something like this to convert the old
+     records to the new format:
+
+          use MLDBM (DB_File);              # be sure it's the new MLDBM
+          use Fcntl;
+          tie %o, MLDBM, 'oldmldbm.file', O_RDWR, 0640 or die $!;
+          for $k (keys %o) {
+            my $v = $o{$k};
+            if ($v =~ /^\$CrYpTiCkEy/o) {
+          	$v = eval $v;
+          	if ($@) { warn "Error: $@\twhile evaluating $v\n"; }
+          	else    { $o{$k} = $v; }
+            }
+          }
+
+
+
+AUTHOR
+======
+
+Gurusamy Sarathy gsar@umich.edu
+
+Copyright (c) 1995 Gurusamy Sarathy. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+VERSION
+=======
+
+Version 1.22 26 August 1996
+
+
+SEE ALSO
+========
+
+perl(1), perltie(1), perlfunc(1)
+
+
+
+
+File: pm.info, Node: Mac/Apps/MacPGP, Next: Mail/Address, Prev: MLDBM, Up: Module List
+
+MacPGP.pm
+*********
+
+
+
+NAME
+====
+
+MacPGP.pm
+
+
+SYNOPSIS
+========
+
+     use Mac::Apps::MacPGP;
+     $object = new MacPGP;
+
+
+DESCRIPTION
+===========
+
+MacPerl interface to MacPGP 2.6.3.  Older versions WILL NOT WORK.  The
+MIT version, MacPGP 2.6.2, does not support nearly the number of
+AppleEvents as does 2.6.3.  For those outside the U.S., you will not be
+able to download the program; but there are International versions.
+Perhaps in the future I will add support for those.  Many of the
+functions should work fine for those, actually, but I imagine some will
+not.
+
+MacPerl 5.1.1 (released January 1997) or higher is also required because
+of bugs in the AppleEvents library in previous versions.
+
+
+NOTES
+=====
+
+For optional parameters, MacPGP will either use the default or prompt
+the user.  Parameters are required unless noted as optional.  Exception:
+For the `$OUTP' parameter, the MacPGP default is binary but I set it to
+ASCII in the module, because I rarely use binary PGP files.
+
+Boolean parameters take a value of 1 (true) or 0 (false).  Filenames
+should be given the full pathname.  To leave an optional parameter
+empty, give it a value of undef.  Optional parameters will either be
+given the default by MacPGP or MacPGP will prompt the user for a value
+if necessary.
+
+For further explanation of methods and parameters, see your MacPGP 2.6.3
+user guide.
+
+If something seems seems to not work properly, try doing it directly
+from MacPGP before assuming it is the fault of MacPGP.pm.  :-)
+
+
+USAGE
+=====
+
+
+encrypt
+-------
+
+Encrypt.  Returns encrypted text for `$TYPE="ncrd"'.
+
+$object->encrypt(TYPE, DOBJ, [RECV|CPAS], PASS, USID, SIGN, READ, OUTP,
+LATI, WRAP, ALNS, TABX, MDAL, WSRC, COPT);
+
+TYPE
+     One of "encr" (encrypt files), "ncrd" (encrypt data), or "cncr"
+     (conventional encryption).
+
+DOBJ
+     For `$TYPE="encr"' or `"cncr"', `$DOBJ' is either a filename or a
+     reference to an array of filenames.  For `$TYPE="ncrd"', `$DOBJ' is
+     the data to be encrypted.  If `$DOBJ' is empty, MacPGP will attempt
+     to encrypt the clipboard instead.
+
+RECV
+     Either the name of a recipient or a reference to an array of
+     recipients.  (encr and ncrd only)
+
+CPAS
+     Password used for conventional encryption.  Optional.  (cncr only)
+
+PASS
+     The password.  Optional.
+
+USID
+     Name of secret key.  Optional.
+
+SIGN
+     Sign?  One of "sepa" (signature in separate file), "incl",
+     (signature included), "omit" (omitted, don't sign).  Optional.
+
+READ
+     Input format.  One of "macb" (MacBinarize first), "text", (convert
+     text to CRLF), "norm" (do nothing).  Optional.
+
+OUTP
+     Output format.  One of "bina" (8-bit binary), "asci",
+     (ASCII-armored).  Optional.
+
+LATI
+     Convert text to ISO-Latin1?  Boolean.  Optional.
+
+WRAP
+     Wrap text to this many lines, between 30 and 100.  0=no wrap.
+     Optional.
+
+ALNS
+     For armored files, split output into files of this line length.
+     0=no split.  Optional.
+
+TABX
+     For wrapped files, expand tabs to this many spaces, from 0 to 9.
+     Optional.
+
+MDAL
+     Use "MD5 " or "SHA1" to compute message digest for file.  Optional.
+
+WSRC
+     Wipe out source file?  Boolean.  Optional.  (encr and cncr only)
+
+COPT
+     Self-decrypting?  One of "sdf" (self-decrypting) or "sdfb",
+     (self-decrypting and binhexed).  Default is neither.
+     Optional. (cncr only)
+
+
+decrypt
+-------
+
+Decrypt.  Returns decrypted text for `$TYPE="dcrd"' and `$DOBJ ne
+undef'.  Returns signatures for `$TYPE="decr"'.
+
+$object->decrypt(TYPE, DOBJ, PASS, SCRE, NSIG, APL2, RECV);
+
+TYPE
+     One of "decr" (decrypt files), "dcrd" (decrypt data).
+
+DOBJ
+     For `$TYPE="decr"', `$DOBJ' is either a filename or a reference to
+     an array of filenames.  For `$TYPE="dcrd"', `$DOBJ' is the data to
+     be decrypted.  If `$DOBJ' is empty, MacPGP will attempt to decrypt
+     the clipboard instead.  To get signatures from "dcrd" event, see
+     `"checksignresult"' in this node.
+
+PASS
+     The password.  Optional.
+
+SCRE
+     Decrypt to screen instead of file?  Boolean.  Optional.
+
+NSIG
+     Do not put up bad signature alerts?  Boolean.  Optional.
+
+APL2
+     If direct object is a separate sig file, the file the sig applies
+     to.  Optional.
+
+RECV
+     File to decrypt to.  Optional. (decr only)
+
+
+sign
+----
+
+Sign.  Returns encrypted signed text for `$TYPE="sigd"', returns
+signature results for `$TYPE="sign"'.
+
+$object->sign(TYPE, DOBJ, PASS, USID, SIGN, READ, OUTP, LATI, WRAP,
+ALNS, TABX, MDAL, STFX);
+
+TYPE
+     One of "sign" (sign files), "sigd" (sign data).
+
+DOBJ
+     For `$TYPE="sign"', `$DOBJ' is either a filename or a reference to
+     an array of filenames.  For `$TYPE="sigd"', `$DOBJ' is the data to
+     be signed.  If `$DOBJ' is empty, MacPGP will attempt to sign the
+     clipboard instead.
+
+PASS
+     The password.  Optional.
+
+USID
+     Name of secret key.  Optional.
+
+SIGN
+     Sign?  One of "sepa" (signature in separate file), "incl",
+     (signature included), "omit" (omitted, don't sign).  Optional.
+
+READ
+     See READ in `"encrypt"' in this node.  Optional.
+
+OUTP
+     See OUTP in `"encrypt"' in this node.  Optional.
+
+LATI
+     See LATI in `"encrypt"' in this node.  Optional.
+
+WRAP
+     See WRAP in `"encrypt"' in this node.  Optional.
+
+ALNS
+     See ALNS in `"encrypt"' in this node.  Optional.
+
+TABX
+     See TABX in `"encrypt"' in this node.  Optional.
+
+MDAL
+     See MDAL in `"encrypt"' in this node.  Optional.
+
+STFX
+     Set text flag? (Esoteric option for some PGP/MIME implementations.)
+     Boolean.  Optional.
+
+
+asciify
+-------
+
+Asciify a file.
+
+$object->asciify(DOBJ, READ, LATI, WRAP, ALNS, TABX);
+
+DOBJ
+     Filename or reference to an array of filenames to be asciified.
+
+READ
+     See READ in `"encrypt"' in this node.  Optional.
+
+LATI
+     See LATI in `"encrypt"' in this node.  Optional.
+
+WRAP
+     See WRAP in `"encrypt"' in this node.  Optional.
+
+ALNS
+     See ALNS in `"encrypt"' in this node.  Optional.
+
+TABX
+     See TABX in `"encrypt"' in this node.  Optional.
+
+
+execute
+-------
+
+Execute MacPGP command-line command.
+
+$object->execute(DOBJ, PASS, LATI, WRAP, ALNS, TABX, MDAL);
+
+DOBJ
+     Command to be executed (i.e., `pgp -kv pudge').
+
+PASS
+     The password.  Optional.
+
+LATI
+     See LATI in `"encrypt"' in this node.  Optional.
+
+WRAP
+     See WRAP in `"encrypt"' in this node.  Optional.
+
+ALNS
+     See ALNS in `"encrypt"' in this node.  Optional.
+
+TABX
+     See TABX in `"encrypt"' in this node.  Optional.
+
+MDAL
+     See MDAL in `"encrypt"' in this node.  Optional.
+
+
+generate
+--------
+
+Generate new public/secret key pair.
+
+$object->generate(DOBJ, LENG, EBIT);
+
+DOBJ
+     User id of new key.
+
+LENG
+     Bit length of key.  Higher is stronger and slower.  Lower is faster
+     and less secure.  Can be either a number from 384 to 2048, or one
+     of the following: "casu" (casual, 512), "comm" (commercial, 768),
+     "mili" (military, 1024).  Default is casual.  Optional.
+
+EBIT
+     Number of bits in encryption exponent.  Default is 17.  Optional.
+
+
+extract
+-------
+
+Extract (export) a key.
+
+$object->extract(DOBJ, RECV, KEYR, OUTP);
+
+DOBJ
+     Key id to extract.
+
+RECV
+     File to extract key to.  File must already exist (for now).  See
+     `"create"' in this node.
+
+KEYR
+     Filename of keyring to perform operation on.  Optional.
+
+OUTP
+     Output format.  One of "bina" (8-bit binary), "asci",
+     (ASCII-armored).  Optional.
+
+
+keyring
+-------
+
+Miscellaneous keyring functions.
+
+$object->keyring(TYPE, DOBJ, KEYR, USID);
+
+TYPE
+     addk
+          Add key in file `$DOBJ'.
+
+     ckey
+          Count keys matching `$DOBJ'.
+
+     crfy
+          Certify key matching `$DOBJ'.
+
+     fing
+          Return fingerprint of key matching `$DOBJ'.
+
+     remv
+          Remove key matching `$DOBJ'.
+
+     selk
+          Show dialog box, with text `$DOBJ', of keys available in
+          keyring.  Returns user id of selected key.
+
+DOBJ
+     Varies; see above.
+
+KEYR
+     Filename of keyring to perform operation on.  Optional.
+
+USID
+     Name of secret key to certify with.  Optional. (crfy only)
+
+
+create
+------
+
+Create temporary scratch file.  File with same name, if existing, is
+erased.
+
+$object->create(DOBJ);
+
+DOBJ
+     New filename.
+
+
+clip2file
+---------
+
+Copy Clipboard to file.
+
+$object->clip2file(DOBJ);
+
+DOBJ
+     Filename of destination file.
+
+
+file2clip
+---------
+
+Copy file to Clipboard.  NOTE: This only works if MacPGP is the front
+application (see `"switchapp"' in this node).
+
+$object->file2clip(DOBJ);
+
+DOBJ
+     Filename of source file.
+
+
+checksignresult
+---------------
+
+Check signature result from previous decrypt data event.  See
+`"decrypt"' in this node.
+
+$object->checksignresult;
+
+
+getlasterror
+------------
+
+Returns error message from previous MacPGP Apple Event.
+
+$object->getlasterror;
+
+
+getversion
+----------
+
+Returns MacPGP version.
+
+$object->getversion;
+
+
+window
+------
+
+Show/hide window.
+
+$object->window(DOBJ);
+
+DOBJ
+     Either "show" or "hide".
+
+
+logfile
+-------
+
+Echo PGP messages to a logfile.  If logging was active when true sent or
+no filename is given, returns error. If logging was active.  Returns
+full pathname if successful.
+
+$object->logfile(DOBJ, RECV);
+
+DOBJ
+     Logging?  Boolean.
+
+RECV
+     Full pathname of logfile.  Existing file of same name erased.
+     Optional.
+
+
+switchapp
+---------
+
+Set up window handling.  Whenever another method is called, MacPGP.pm
+will use these two variables to determine what app should be in front.
+Note: when muliple methods are called, this doesn't seem to work great.
+Oh well.  Maybe someone else will fix this for me or have some ideas.
+Until then, I suggest that if you DO want MacPGP to come to the front
+and you have sveral methods being called one after the other, that you
+just set `$object-'switchapp(1)> and don't have it switch back.
+
+$object->switchapp(SWITCH, APP);
+
+SWITCH
+     Switch to MacPGP when method is called?  Boolean.
+
+APP
+     Switch to `$APP' after `$object' is destroyed (i.e., when last
+     reference to `$object' is made).  If left blank and `$SWITCH=1',
+     MacPGP will go to front and stay there.
+
+
+getresults
+----------
+
+Returns result of parameter `$DOBJ' from last method call.
+
+$object->getresults(DOBJ);
+
+DOBJ
+     Name of parameter keyword, one of "----", "result" (synonym for
+     "----", the direct object parameter), "errs" (error string), "errn"
+     (error number), "outp".  Optional, defaults to "result".
+
+
+getresultsall
+-------------
+
+Returns hash of all result parameters from last method call.
+
+%results = $object->getresultsall;
+
+
+quitpgp
+-------
+
+Quit MacPGP app.
+
+$object->quitpgp;
+
+
+VERSION NOTES
+=============
+
+v.1.0, February 9, 1997
+     First full release.
+
+        * Added a whole slew of scripts and extensions for BBEdit,
+          YA-NewsWatcher, Clipboard, Drag-n-Drop.  See
+          MacPGP-scripts.readme for details.
+
+        * Changed the behavior of switchapp method.  Switching to MacPGP
+          only occurs when switchapp method is invoked, and switching
+          back only occurs when object is destroyed.  Previously,
+          switching took place before and after each method call.
+
+        * Fixed bug which required decrypt, encrypt and sign to have a
+          DOBJ value.  When one of those methods is performing a
+          function on data (dcrd, ncrd, sigd), MacPGP will use Clipboard
+          if no data is given.
+
+        * Fixed bug in `_MpgpBBool' routine which would not catch
+          unacceptable input.
+
+v.1.0b3, January 15, 1997
+     Simply switching to .tar.gz for CPAN instead of .sit.hqx.
+
+v.1.0b2 January 8, 1997
+     Fixes problems in earlier release, optimizes, module-izes.
+
+        * Change name from MacPGP to Mac::Apps::MacPGP.
+
+        * Rewrote AppleEvent calls using individual `AEPutParamDesc' and
+          `AEBuild' calls.  Should be more efficient.  Fixes other bugs
+          (like problems with lists and certain characters in TEXT
+          values).
+
+        * Improved error handling and descriptions.  Uses `carp' for
+          MacPGP errors.
+
+        * Made file and recipients variables capable of handling either
+          a scalar or a reference to an array.
+
+        * Added switchapp, getresults, getresultsall, quitpgp methods.
+          See docs above.
+
+v.1.0b1, January 3, 1997
+     First public beta.  Nearly fully-functional.
+
+
+BUGS / TO DO
+============
+
+app switching
+     I want to benchmark different ways to switch between applications
+     and use the best one.  Stay tuned.  If you have ideas, let me know.
+
+other versions
+     I am investigating the idea of making this useful with other
+     versions of MacPGP (international versions, and limited
+     capabilities of MacPGP 2.6.2) and the future version of PGP 5.0.
+
+stealthify
+     I have one more method group to add, and that is for
+     stealtifying/destealthifying files.  This will come along
+     eventually, but it is not a high priority.  First I have to figure
+     out how to use it and what it does ... :-) If you have a need/want
+     for it, let me know.
+
+
+SEE ALSO
+========
+
+MacPGP 2.6.3 Home Page
+     http://www.math.ohio-state.edu/~fiedorow/PGP/
+
+MacPGP 2.6.3 Documentation
+     Included with the above package, take special note of the PGP
+     User's Guide, MacPGP263_Manual, and MacPGP263_AppleEvents.
+
+
+AUTHOR / COPYRIGHT
+==================
+
+Chris Nandor, 09-Feb-1997
+
+     mailto:pudge@pobox.com
+     http://pudge.net/
+
+Copyright (c) 1997 Chris Nandor.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.  Please see the Perl Artistic License.
+
+
+
+

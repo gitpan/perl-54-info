@@ -1,0 +1,2178 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Net/Time, Next: Net/UDP, Prev: Net/Telnet, Up: Module List
+
+time and daytime network client interface
+*****************************************
+
+
+
+NAME
+====
+
+Net::Time - time and daytime network client interface
+
+
+SYNOPSIS
+========
+
+     use Net::Time qw(inet_time inet_daytime);
+
+     print inet_time();		# use default host from Net::Config
+     print inet_time('localhost');
+     print inet_time('localhost', 'tcp');
+
+     print inet_daytime();	# use default host from Net::Config
+     print inet_daytime('localhost');
+     print inet_daytime('localhost', 'tcp');
+
+
+DESCRIPTION
+===========
+
+`Net::Time' provides subroutines that obtain the time on a remote
+machine.
+
+inet_time ( [HOST [, PROTOCOL [, TIMEOUT]]])
+     Obtain the time on `HOST', or some default host if `HOST' is not
+     given or not defined, using the protocol as defined in RFC868. The
+     optional argument `PROTOCOL' should define the protocol to use,
+     either `tcp' or `udp'. The result will be a unix-like time value or
+     undef upon failure.
+
+inet_daytime ( [HOST [, PROTOCOL [, TIMEOUT]]])
+     Obtain the time on `HOST', or some default host if `HOST' is not
+     given or not defined, using the protocol as defined in RFC867. The
+     optional argument `PROTOCOL' should define the protocol to use,
+     either `tcp' or `udp'. The result will be an ASCII string or undef
+     upon failure.
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/UDP, Next: Net/UNIX, Prev: Net/Time, Up: Module List
+
+UDP sockets interface module
+****************************
+
+
+
+NAME
+====
+
+Net::UDP - UDP sockets interface module
+
+
+SYNOPSIS
+========
+
+     use Socket;			# optional
+     use Net::Gen;		# optional
+     use Net::Inet;		# optional
+     use Net::UDP;
+
+
+DESCRIPTION
+===========
+
+The `Net::UDP' module provides services for UDP communications over
+sockets.  It is layered atop the `Net::Inet' and `Net::Gen' modules,
+which are part of the same distribution.
+
+
+Public Methods
+--------------
+
+The following methods are provided by the `Net::UDP' module itself,
+rather than just being inherited from `Net::Inet' or `Net::Gen'.
+
+new
+     Usage:
+
+          $obj = new Net::UDP;
+          $obj = new Net::UDP $host, $service;
+          $obj = new Net::UDP \%parameters;
+          $obj = new Net::UDP $host, $service, \%parameters;
+
+     Returns a newly-initialised object of the given class.  If called
+     for a derived class, no validation of the supplied parameters will
+     be performed.  (This is so that the derived class can add the
+     parameter validation it needs to the object before allowing the
+     validation.)  Otherwise, it will cause the parameters to be
+     validated by calling its init method, which `Net::UDP' inherits
+     from `Net::Inet'.  In particular, this means that if both a host
+     and a service are given, that an object will only be returned if a
+     connect() call was successful.
+
+
+Protected Methods
+-----------------
+
+none.
+
+
+Known Socket Options
+--------------------
+
+There are no object parameters registered by the `Net::UDP' module
+itself.
+
+
+Known Object Parameters
+-----------------------
+
+There are no object parameters registered by the `Net::UDP' module
+itself.
+
+
+TIESCALAR
+---------
+
+Tieing of scalars to a UDP handle is supported by inheritance from the
+TIESCALAR method of `Net::Gen'.  That method only succeeds if a call to
+a new method results in an object for which the isconnected method
+returns true, which is why it is mentioned in connection with this
+module.
+
+Example:
+
+     tie $x,Net::UDP,0,'daytime' or die;
+     $x = "\n"; $x = "\n";
+     print $y if defined($y = $x);
+     untie $x;
+
+This is an expensive re-implementation of date on many machines.
+
+Each assignment to the tied scalar is really a call to the put method
+(via the STORE method), and each read from the tied scalar is really a
+call to the getline method (via the FETCH method).
+
+
+Exports
+-------
+
+none
+
+
+AUTHOR
+======
+
+Spider Boardman `<spider@Orb.Nashua.NH.US>'
+
+
+
+
+File: pm.info, Node: Net/UNIX, Next: Net/Whois, Prev: Net/UDP, Up: Module List
+
+UNIX-domain sockets interface module
+************************************
+
+
+
+NAME
+====
+
+Net::UNIX - UNIX-domain sockets interface module
+
+
+SYNOPSIS
+========
+
+     use Socket;			# optional
+     use Net::Gen;		# optional
+     use Net::UNIX;
+
+
+DESCRIPTION
+===========
+
+The `Net::UNIX' module provides services for UNIX-domain socket
+communication.  It is layered atop the `Net::Gen' module, which is part
+of the same distribution.
+
+
+Public Methods
+--------------
+
+The following methods are provided by the `Net::UNIX' module
+    itself, rather than just being inherited from `Net::Gen'.
+
+new
+     Usage:
+
+          $obj = new Net::UNIX;
+          $obj = new Net::UNIX $pathname;
+          $obj = new Net::UNIX \%parameters;
+          $obj = new Net::UNIX $pathname, \%parameters;
+
+     Returns a newly-initialised object of the given class.  If called
+     for a derived class, no validation of the supplied parameters will
+     be performed.  (This is so that the derived class can add the
+     parameter validation it needs to the object before allowing the
+     validation.)  Otherwise, it will cause the parameters to be
+     validated by calling its init method.  In particular, this means
+     that if a pathname is given, an object will be returned only if a
+     connect() call was successful.
+
+Server::new
+     Usage:
+
+          $obj = new Net::UNIX::Server $pathname;
+          $obj = new Net::UNIX::Server $pathname, \%parameters;
+
+     Returns a newly-initialised object of the given class.  This is
+     much like the regular new method, except that it does a bind rather
+     than a connect, and it does a listen.
+
+init
+     Usage:
+
+          return undef unless $self = $self->init;
+          return undef unless $self = $self->init(\%parameters);
+          return undef unless $self = $self->init($pathname);
+          return undef unless $self = $self->init($pathname, \%parameters);
+
+     Verifies that all previous parameter assignments are valid (via
+     checkparams).  Returns the incoming object on success, and undef on
+     failure.  Usually called only via a derived class's init method or
+     its own new call.
+
+bind
+     Usage:
+
+          $ok = $obj->bind;
+          $ok = $obj->bind($pathname);
+          $ok = $obj->bind($pathname,\%newparameters);
+
+     Updates the object with the supplied new parameters (if supplied),
+     then sets up the srcaddrlist object parameter with the specified
+     $pathname argument (if supplied), and then returns the value from
+     the inherited bind method.
+
+     Example:
+
+          $ok = $obj->bind('/tmp/.fnord'); # start a service on /tmp/.fnord
+
+connect
+     Usage:
+
+          $ok = $obj->connect;
+          $ok = $obj->connect($pathname);
+          $ok = $obj->connect($pathname,\%newparameters);
+
+     Attempts to establish a connection for the object.  If the
+     `newparams' argument is specified, it will be used to update the
+     object parameters.  Then, if the $pathname argument is specified,
+     it will be used to set the dstaddrlist object parameter.  Finally,
+     the result of a call to the inherited connect method will be
+     returned.
+
+format_addr
+     Usage:
+
+          $string = $obj->format_addr($sockaddr);
+          $string = format_addr Module $sockaddr;
+
+     Returns a formatted representation of the socket address.  This is
+     normally just a pathname, or the constant string `'''.
+
+
+Protected Methods
+-----------------
+
+[See the description in `"Protected Methods"', *Note Net/Gen: Net/Gen,
+for my definition of protected methods in Perl.]
+
+None.
+
+
+Known Socket Options
+--------------------
+
+There are no socket options known to the `Net::UNIX' module itself.
+
+
+Known Object Parameters
+-----------------------
+
+There are no object parameters registered by the `Net::UNIX' module
+itself.
+
+
+TIESCALAR
+---------
+
+Tieing of scalars to a UNIX-domain handle is supported by inheritance
+from the TIESCALAR method of `Net::Gen'.  That method only succeeds if a
+call to a new method results in an object for which the isconnected
+method returns a true result.  Thus, for `Net::UNIX', TIESCALAR will not
+succeed unless the `pathname' argument is given.
+
+Each assignment to the tied scalar is really a call to the put method
+(via the STORE method), and each read from the tied scalar is really a
+call to the getline method (via the FETCH method).
+
+
+Non-Method Subroutines
+----------------------
+
+pack_sockaddr_un
+     Usage:
+
+          $connect_address = pack_sockaddr_un($family, $pathname);
+          $connect_address = pack_sockaddr_un($pathname);
+
+     Returns the packed `struct sockaddr_un' corresponding to the
+     provided $family and $pathname arguments.  The $family argument as
+     assumed to be `AF_UNIX' if it is missing.  This is otherwise the
+     same as the pack_sockaddr_un() routine in the Socket module.
+
+unpack_sockaddr_un
+     Usage:
+
+          ($family, $pathname) = unpack_sockaddr_un($connected_address);
+          $pathname = unpack_sockaddr_un($connected_address);
+
+     Returns the address family and pathname (if known) from the
+     supplied packed `struct sockaddr_un'.  This is the inverse of
+     pack_sockaddr_un().  It differs from the implementation in the
+     Socket module in its return of the `$family' value, and in that it
+     trims the returned pathname at the first null character.
+
+
+Exports
+-------
+
+default
+     None.
+
+exportable
+     pack_sockaddr_un unpack_sockaddr_un
+
+tags
+     The following *:tags* are available for grouping exportable items:
+
+     :routines
+          pack_sockaddr_un unpack_sockaddr_un
+
+     :ALL
+          All of the above exportable items.
+
+
+
+
+AUTHOR
+======
+
+Spider Boardman `<spider@Orb.Nashua.NH.US>'
+
+
+
+
+File: pm.info, Node: Net/Whois, Next: Net/hostent, Prev: Net/UNIX, Up: Module List
+
+Get and parse "whois" data from InterNIC
+****************************************
+
+
+
+NAME
+====
+
+Net::Whois - Get and parse "whois" data from InterNIC
+
+
+SYNOPSIS
+========
+
+     my $w = new Net::Whois::Domain $dom
+         or die "Can't find info on $dom\n";
+     #
+     # Note that all fields except "name" and "tag" may be undef
+     #   because "whois" information is erratically filled in.
+     #
+     print "Domain: ", $w->domain, "\n";
+     print "Name: ", $w->name, "\n";
+     print "Tag: ", $w->tag, "\n";
+     print "Address:\n", map { "    $_\n" } $w->address;
+     print "Country: ", $w->country, "\n";
+     print "Servers:\n", map { "    $$_[0] ($$_[1])\n" } @{$w->servers};
+     my ($c, $t);
+     if ($c = $w->contacts) {
+         print "Contacts:\n";
+         for $t (sort keys %$c) {
+             print "    $t:\n";
+             print map { "\t$_\n" } @{$$c{$t}};
+         }
+     }
+
+     $cur_server = Net::Whois::server;
+     Net::Whois::server 'new.whois.server';  # optional
+
+
+DESCRIPTION
+===========
+
+Net::Whois::Domain new() attempts to retrieve and parse the given
+domain's "whois" information from the InterNIC.  If the constructor
+returns a reference, that reference can be used to access the various
+attributes of the domains' whois entry.
+
+Note that the Locale::Country module (part of the Locale-Codes
+distribution) is used to recognize spelled-out country names; if that
+module is not present, only two-letter country abbreviations will be
+recognized.
+
+The server consulted is "whois.internic.net", unless this is changed by
+a call to Net::Whois::server().
+
+
+AUTHOR
+======
+
+Originally written by Chip Salzenberg in April of 1997 for Idle
+Communications, Inc.
+
+
+COPYRIGHT
+=========
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/hostent, Next: Net/netent, Prev: Net/Whois, Up: Module List
+
+by-name interface to Perl's built-in gethost*() functions
+*********************************************************
+
+
+
+NAME
+====
+
+Net::hostent - by-name interface to Perl's built-in gethost*() functions
+
+
+SYNOPSIS
+========
+
+     use Net::hostnet;
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core gethostbyname() and
+gethostbyaddr() functions, replacing them with versions that return
+"Net::hostent" objects.  This object has methods that return the
+similarly named structure field name from the C's hostent structure from
+`netdb.h'; namely name, aliases, addrtype, length, and addr_list.  The
+aliases and addr_list methods return array reference, the rest scalars.
+The addr method is equivalent to the zeroth element in the addr_list
+array reference.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `h_'.  Thus, `$host_obj->name()'
+corresponds to $h_name if you import the fields.  Array references are
+available as regular array variables, so for example `@{
+$host_obj->aliases() }' would be simply @h_aliases.
+
+The gethost() funtion is a simple front-end that forwards a numeric
+argument to gethostbyaddr() by way of Socket::inet_aton, and the rest to
+gethostbyname().
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+EXAMPLES
+========
+
+     use Net::hostent;
+     use Socket;
+
+     @ARGV = ('netscape.com') unless @ARGV;
+
+     for $host ( @ARGV ) {
+
+     unless ($h = gethost($host)) {
+     	warn "$0: no such host: $host\n";
+     	next;
+     }
+
+     printf "\n%s is %s%s\n", 
+     	    $host, 
+     	    lc($h->name) eq lc($host) ? "" : "*really* ",
+     	    $h->name;
+
+     print "\taliases are ", join(", ", @{$h->aliases}), "\n"
+     		if @{$h->aliases};     
+
+     if ( @{$h->addr_list} > 1 ) { 
+     	my $i;
+     	for $addr ( @{$h->addr_list} ) {
+     	    printf "\taddr #%d is [%s]\n", $i++, inet_ntoa($addr);
+     	} 
+     } else {
+     	printf "\taddress is [%s]\n", inet_ntoa($h->addr);
+     } 
+
+     if ($h = gethostbyaddr($h->addr)) {
+     	if (lc($h->name) ne lc($host)) {
+     	    printf "\tThat addr reverses to host %s!\n", $h->name;
+     	    $host = $h->name;
+     	    redo;
+     	} 
+     }
+      }
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Net/netent, Next: Net/protoent, Prev: Net/hostent, Up: Module List
+
+by-name interface to Perl's built-in getnet*() functions
+********************************************************
+
+
+
+NAME
+====
+
+Net::netent - by-name interface to Perl's built-in getnet*() functions
+
+
+SYNOPSIS
+========
+
+     use Net::netent qw(:FIELDS);
+     getnetbyname("loopback") 		or die "bad net";
+     printf "%s is %08X\n", $n_name, $n_net;
+
+     use Net::netent;
+
+     $n = getnetbyname("loopback") 		or die "bad net";
+     { # there's gotta be a better way, eh?
+         @bytes = unpack("C4", pack("N", $n->net));
+         shift @bytes while @bytes && $bytes[0] == 0;
+     }
+     printf "%s is %08X [%d.%d.%d.%d]\n", $n->name, $n->net, @bytes;
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core getnetbyname() and
+getnetbyaddr() functions, replacing them with versions that return
+"Net::netent" objects.  This object has methods that return the
+similarly named structure field name from the C's netent structure from
+`netdb.h'; namely name, aliases, addrtype, and net.  The aliases method
+returns an array reference, the rest scalars.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `n_'.  Thus, `$net_obj->name()'
+corresponds to $n_name if you import the fields.  Array references are
+available as regular array variables, so for example `@{
+$net_obj->aliases() }' would be simply @n_aliases.
+
+The getnet() funtion is a simple front-end that forwards a numeric
+argument to getnetbyaddr(), and the rest to getnetbyname().
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+EXAMPLES
+========
+
+The getnet() functions do this in the Perl core:
+
+     sv_setiv(sv, (I32)nent->n_net);
+
+The gethost() functions do this in the Perl core:
+
+     sv_setpvn(sv, hent->h_addr, len);
+
+That means that the address comes back in binary for the host functions,
+and as a regular perl integer for the net ones.  This seems a bug, but
+here's how to deal with it:
+
+     use strict;
+     use Socket;
+     use Net::netent;
+
+     @ARGV = ('loopback') unless @ARGV;
+
+     my($n, $net);
+
+     for $net ( @ARGV ) {
+
+         unless ($n = getnetbyname($net)) {
+     	warn "$0: no such net: $net\n";
+     	next;
+         }
+
+         printf "\n%s is %s%s\n", 
+     	    $net, 
+     	    lc($n->name) eq lc($net) ? "" : "*really* ",
+     	    $n->name;
+
+         print "\taliases are ", join(", ", @{$n->aliases}), "\n"
+     		if @{$n->aliases};     
+
+         # this is stupid; first, why is this not in binary?
+         # second, why am i going through these convolutions
+         # to make it looks right
+         {
+     	my @a = unpack("C4", pack("N", $n->net));
+     	shift @a while @a && $a[0] == 0;
+     	printf "\taddr is %s [%d.%d.%d.%d]\n", $n->net, @a;
+         }
+
+         if ($n = getnetbyaddr($n->net)) {
+     	if (lc($n->name) ne lc($net)) {
+     	    printf "\tThat addr reverses to net %s!\n", $n->name;
+     	    $net = $n->name;
+     	    redo;
+     	} 
+         }
+     }
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Net/protoent, Next: Net/servent, Prev: Net/netent, Up: Module List
+
+by-name interface to Perl's built-in getproto*() functions
+**********************************************************
+
+
+
+NAME
+====
+
+Net::protoent - by-name interface to Perl's built-in getproto*()
+functions
+
+
+SYNOPSIS
+========
+
+     use Net::protoent;
+     $p = getprotobyname(shift || 'tcp') || die "no proto";
+     printf "proto for %s is %d, aliases are %s\n",
+        $p->name, $p->proto, "@{$p->aliases}";
+
+     use Net::protoent qw(:FIELDS);
+     getprotobyname(shift || 'tcp') || die "no proto";
+     print "proto for $p_name is $p_proto, aliases are @p_aliases\n";
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core getprotoent(),
+getprotobyname(), and getnetbyport() functions, replacing them with
+versions that return "Net::protoent" objects.  They take default second
+arguments of "tcp".  This object has methods that return the similarly
+named structure field name from the C's protoent structure from
+`netdb.h'; namely name, aliases, and proto.  The aliases method returns
+an array reference, the rest scalars.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `p_'.  Thus, `$proto_obj->name()'
+corresponds to $p_name if you import the fields.  Array references are
+available as regular array variables, so for example `@{
+$proto_obj->aliases() }' would be simply @p_aliases.
+
+The getproto() function is a simple front-end that forwards a numeric
+argument to getprotobyport(), and the rest to getprotobyname().
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: Net/servent, Next: NetObj, Prev: Net/protoent, Up: Module List
+
+by-name interface to Perl's built-in getserv*() functions
+*********************************************************
+
+
+
+NAME
+====
+
+Net::servent - by-name interface to Perl's built-in getserv*() functions
+
+
+SYNOPSIS
+========
+
+     use Net::servent;
+     $s = getservbyname(shift || 'ftp') || die "no service";
+     printf "port for %s is %s, aliases are %s\n",
+        $s->name, $s->port, "@{$s->aliases}";
+
+     use Net::servent qw(:FIELDS);
+     getservbyname(shift || 'ftp') || die "no service";
+     print "port for $s_name is $s_port, aliases are @s_aliases\n";
+
+
+DESCRIPTION
+===========
+
+This module's default exports override the core getservent(),
+getservbyname(), and getnetbyport() functions, replacing them with
+versions that return "Net::servent" objects.  They take default second
+arguments of "tcp".  This object has methods that return the similarly
+named structure field name from the C's servent structure from
+`netdb.h'; namely name, aliases, port, and proto.  The aliases method
+returns an array reference, the rest scalars.
+
+You may also import all the structure fields directly into your
+namespace as regular variables using the :FIELDS import tag.  (Note that
+this still overrides your core functions.)  Access these fields as
+variables named with a preceding `n_'.  Thus, `$serv_obj->name()'
+corresponds to $s_name if you import the fields.  Array references are
+available as regular array variables, so for example `@{
+$serv_obj->aliases() }' would be simply @s_aliases.
+
+The getserv() function is a simple front-end that forwards a numeric
+argument to getservbyport(), and the rest to getservbyname().
+
+To access this functionality without the core overrides, pass the use an
+empty import list, and then access function functions with their full
+qualified names.  On the other hand, the built-ins are still available
+via the `CORE::' pseudo-package.
+
+
+EXAMPLES
+========
+
+     use Net::servent qw(:FIELDS);
+
+     while (@ARGV) {
+         my ($service, $proto) = ((split m!/!, shift), 'tcp');
+         my $valet = getserv($service, $proto);
+         unless ($valet) {
+             warn "$0: No service: $service/$proto\n"
+             next;
+         }
+         printf "service $service/$proto is port %d\n", $valet->port;
+         print "alias are @s_aliases\n" if @s_aliases;
+     }
+
+
+NOTE
+====
+
+While this class is currently implemented using the Class::Struct module
+to build a struct-like class, you shouldn't rely upon this.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+
+
+File: pm.info, Node: NetObj, Next: Netscape/Cache, Prev: Net/servent, Up: Module List
+
+NAME
+----
+
+     NetObj - allows you to create a distributed module platform for perl
+
+
+SYNOPSIS
+--------
+
+     ######  Server creation ######
+
+     use NetObj;
+     use NetObj::Block;
+
+     my $server = new NetObj Server;
+
+     $server->open();
+
+     ($peer, $port) = $server->getconnectinfo();
+
+     $objectname = $server->getrequest();
+ 
+     $block = new NetObj::Block Object => $objectname;
+
+     $module = $block->createblock();
+
+     $server->putobj($module);
+
+     $server->close();
+
+     ##### To make a request #####
+
+     use NetObj;
+ 
+     my $req = new NetObj Request;
+
+     $req->ObjectName($somemodulename);
+
+     $req->request(Remote => $remotehostname);
+
+     # [ .. you can then use the module like normal .. ]
+
+
+DESCRIPTION
+-----------
+
+     NetObj allows you to distribute modules over a network in real time. 
+     It's limitations are that of the B module,  so as of this moment,  it
+     cannot do XSUBS,  and autoloading (I believe) and other funky stuff like
+     that.
+
+     More documentation will come as this moves beyond an Alpha release,  and
+     into something more stable.
+
+
+AUTHOR     James Duncan <jduncan@hawk.igs.net>
+----------------------------------------------
+
+
+THANKS TO...
+------------
+
+     Felix Gallo, for providing some initial insight into this sort of thing.
+     Malcolm Beattie, for the wonderful Perl Compiler (And more specifically
+     	the Bytecode->Asm part of it).
+
+
+
+
+File: pm.info, Node: Netscape/Cache, Next: Netscape/History, Prev: NetObj, Up: Module List
+
+object class for accessing Netscape cache files
+***********************************************
+
+
+
+NAME
+====
+
+Netscape::Cache - object class for accessing Netscape cache files
+
+
+SYNOPSIS
+========
+
+The object oriented interace:
+
+     use Netscape::Cache;
+
+     $cache = new Netscape::Cache;
+     while (defined($url = $cache->next_url)) {
+     	print $url, "\n";
+     }
+
+     while (defined($o = $cache->next_object)) {
+     	print
+     	  $o->{'URL'}, "\n",
+     	  $o->{'CACHEFILE'}, "\n",
+     	  $o->{'LAST_MODIFIED'}, "\n",
+     	  $o->{'MIME_TYPE'}, "\n";
+     }
+
+The TIEHASH interface:
+
+     use Netscape::Cache;
+
+     tie %cache, 'Netscape::Cache';
+     foreach (sort keys %cache) { 
+     	print $cache{$_}->{URL}, "\n";
+     }
+
+
+DESCRIPTION
+===========
+
+The `Netscape::Cache' module implements an object class for accessing
+the filenames and URLs of the cache files used by the Netscape web
+browser. You can access the cached URLs offline via Netscape if you set
+`Options->Network Preferences->Verify Document' to Never.
+
+Note: You can also use the undocumented pseudo-URLs `about:cache',
+`about:memory-cache' and `about:global-history' to access your cache,
+memory cache and history.
+
+There is also an interface for using tied hashes.
+
+
+CONSTRUCTOR
+===========
+
+     $cache = new Netscape::Cache(-cachedir => "$ENV{HOME}/.netscape/cache");
+
+This creates a new instance of the `Netscape::Cache' object class. The
+*-cachedir* argument is optional. By default, the cache directory setting
+is retrieved from `~/.netscape/preferences'.
+
+If the Netscape cache index file does not exist, a warning message will
+be generated, and the constructor will return undef.
+
+
+METHODS
+=======
+
+The `Netscape::Cache' class implements the following methods:
+
+   * rewind - reset cache index to first URL
+
+   * next_url - get next URL from cache index
+
+   * next_object - get next URL as a full Netscape::Cache::Object
+     description from cache index
+
+   * get_object - get the Netscape::Cache::Object description for a
+     given URL
+
+Each of the methods is described separately below.
+
+
+next_url
+--------
+
+     $url = $history->next_url;
+
+This method returns the next URL from the cache index. Unlike
+Netscape::History, this method returns a string and not an URI::URL-like
+object.
+
+This method is faster than next_object, since it does only evaluate the
+URL of the cached file.
+
+
+next_object
+-----------
+
+     $cache->next_object;
+
+This method returns the next URL from the cache index as a
+Netscape::Cache::Object object. See below for accessing the components
+(cache filename, content length, mime type and more) of this object.
+
+
+get_object
+----------
+
+     $cache->get_object;
+
+This method returns the Netscape::Cache::Object object for a given URL.
+If the URL does not live in the cache index, then the returned value
+will be undefined.
+
+
+delete_object
+-------------
+
+Deletes URL from cache index and the related file from the cache.
+
+*WARNING:* Do not use delete_object while in a next_object loop!
+It is better to collect all objects for delete in a list and do the
+deletion after the loop, otherwise you can get strange behaviour (e.g.
+malloc panics).
+
+
+rewind
+------
+
+     $cache->rewind();
+
+This method is used to move the internal pointer of the cache index to
+the first URL in the cache index. You don't need to bother with this if
+you have just created the object, but it doesn't harm anything if you
+do.
+
+
+Netscape::Cache::Object
+=======================
+
+next_object and get_object return an object of the class
+Netscape::Cache::Object. This object is simply a hash, which members
+have to be accessed directly (no methods).
+
+An example:
+
+     $o = $cache->next_object;
+     print $o->{'URL'}, "\n";
+
+URL
+     The URL of the cached object
+
+CACHEFILE
+     The filename of the cached URL in the cache directory. To construct
+     the full path use ($cache is a Netscape::Cache object and $o a
+     Netscape::Cache::Object object)
+
+          $cache->{'CACHEDIR'} . "/" . $o->{'CACHEFILE'}
+
+CACHEFILE_SIZE
+     The size of the cache file.
+
+CONTENT_LENGTH
+     The length of the cache file as specified in the HTTP response
+     header.  In general, SIZE and CONTENT_LENGTH are equal. If you
+     interrupt a transfer of a file, only the first part of the file is
+     written to the cache, resulting in a smaller CONTENT_LENGTH than
+     SIZE.
+
+LAST_MODIFIED
+     The date of last modification of the URL as unix time (seconds
+     since epoch). Use
+
+          scalar localtime $o->{'LAST_MODIFIED'}
+
+     to get a human readable date.
+
+LAST_VISITED
+     The date of last visit.
+
+EXPIRE_DATE
+     If defined, the date of expiry for the URL.
+
+MIME_TYPE
+     The MIME type of the URL (eg. text/html or image/jpeg).
+
+ENCODING
+     The encoding of the URL (eg. x-gzip for gzipped data).
+
+CHARSET
+     The charset of the URL (eg. iso-8859-1).
+
+
+AN EXAMPLE PROGRAM
+==================
+
+This program loops through all cache objects and prints a HTML-ified
+list.  The list ist sorted by URL, but you can sort it by last visit
+date or size, too.
+
+     use Netscape::Cache;
+
+     $cache = new Netscape::Cache;
+
+     while ($o = $cache->next_object) {
+         push(@url, $o);
+     }
+     # sort by name
+     @url = sort {$a->{'URL'} cmp $b->{'URL'}} @url;
+     # sort by visit time
+     #@url = sort {$b->{'LAST_VISITED'} <=> $a->{'LAST_VISITED'}} @url;
+     # sort by mime type
+     #@url = sort {$a->{'MIME_TYPE'} cmp $b->{'MIME_TYPE'}} @url;
+     # sort by size
+     #@url = sort {$b->{'CACHEFILE_SIZE'} <=> $a->{'CACHEFILE_SIZE'}} @url;
+
+     print "<ul>\n";
+     foreach (@url) {
+         print
+           "<li><a href=\"file:",
+           $cache->{'CACHEDIR'}, "/", $_->{'CACHEFILE'}, "\">",
+           $_->{'URL'}, "</a> ",
+     	  scalar localtime $_->{'LAST_VISITED'}, "<br>",
+           "type: ", $_->{'MIME_TYPE'}, 
+     	  ",size: ", $_->{'CACHEFILE_SIZE'}, "\n";
+     }
+     print "</ul>\n";
+
+
+ENVIRONMENT
+===========
+
+The Netscape::Cache module examines the following environment variables:
+
+HOME
+     Home directory of the user, used to find Netscape's preferences
+     ($HOME/.netscape). Otherwise, if not set, retrieve the home
+     directory from the passwd file.
+
+
+BUGS
+====
+
+There are still some unknown fields (_XXX_FLAG_{1,2,3}).
+
+You can't use delete_object while looping with next_object. See the
+question "What happens if I add or remove keys from a hash while
+iterating over it?" in *Note Perlfaq4: (perl.info)perlfaq4,.
+
+*keys()* or *each()* on the tied hash are slower than the object
+oriented equivalents next_object or next_url.
+
+
+SEE ALSO
+========
+
+*Note Netscape/History: Netscape/History,
+
+
+AUTHOR
+======
+
+Slaven Rezic <eserte@cs.tu-berlin.de>
+
+Thanks to: Fernando Santagata <lac0658@iperbole.bologna.it>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Slaven Rezic. All rights reserved.  This module is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Netscape/History, Next: Netscape/HistoryURL, Prev: Netscape/Cache, Up: Module List
+
+object class for accessing Netscape history database
+****************************************************
+
+
+
+NAME
+====
+
+Netscape::History - object class for accessing Netscape history database
+
+
+SYNOPSIS
+========
+
+     use Netscape::History;
+
+     $history = new Netscape::History();
+     while (defined($url = $history->next_url() ))
+     {
+     }
+
+
+DESCRIPTION
+===========
+
+The Netscape::History module implements an object class for accessing
+the history database maintained by the Netscape web browser.  The
+history database keeps a list of all URLs you have visited, and is used
+by Netscape to change the color of URLs which you have previously
+visited, for example.
+
+
+CONSTRUCTOR
+-----------
+
+     $history = new Netscape::History();
+
+This creates a new instance of the Netscape::History object class.  You
+can optionally pass the path to the history database as an argument to
+the constructor, as in:
+
+     $history = new Netscape::History('/home/bob/.netscape/history.db');
+
+If you do not specify the file, then the constructor will use:
+
+     $HOME/.netscape/history.db
+
+If the Netscape history database does not exist, a warning message will
+be generated, and the constructor will return undef.
+
+
+METHODS
+=======
+
+The Netscape::History class implements the following methods:
+
+   * rewind - reset history database to first URL
+
+   * next_url - get next URL from your history
+
+   * delete_url - remove a URL from your history
+
+   * close - close the history database
+
+Each of the methods is described separately below.
+
+
+next_url - get the next URL from your history database
+------------------------------------------------------
+
+     $url = $history->next_url();
+
+This method returns the next URL from your history database.  If you
+want to process all URLs in the database, you should call the rewind
+method before looping over all URLs.
+
+The URL returned is an instance of the Netscape::HistoryURL class, which
+works just like an instance of URI::URL, but provides an extra method
+*visit_time()*.  This returns the time of your last visit to that URL.
+
+
+delete_url - remove a URL from the history database
+---------------------------------------------------
+
+     $history->delete_url($url);
+
+This method is used to remove a URL from your history database.  The URL
+passed can be a simple text string with the URL, or an instance of
+Netscape::HistoryURL, URI::URL, or any other class which can be rendered
+into a string.
+
+
+rewind - reset internal URL pointer to first URL in history
+-----------------------------------------------------------
+
+     $history->rewind();
+
+This method is used to move the history database's internal pointer to
+the first URL in your history database.  You don't need to bother with
+this if you have just created the object, but it doesn't harm anything
+if you do.
+
+
+close - close the history database
+----------------------------------
+
+     $history->close();
+
+This closes the history database. The destructor will do this
+automatically for you, so most of time you don't actually have to bother
+calling this method explicitly. Good programming style says you should
+though :-)
+
+
+EXAMPLE PROGRAM
+===============
+
+The following example illustrates use of this module, and the
+*visit_time()* method of the URLs returned.  The program will list all
+URLs visited, along with visit time.  The Date::Format module is used to
+format the visit time.
+
+     #!/usr/bin/perl -w
+
+     use Netscape::History;
+     use Date::Format;
+     use strict;
+
+     my $history;
+     my $url;
+
+     $history = new Netscape::History;
+     while (defined($url = $history->next_url() ))
+     {
+         print "$url : ", ctime($url->visit_time());
+     }
+     $history->close();
+
+
+SEE ALSO
+========
+
+*Note Netscape/HistoryURL: Netscape/HistoryURL,
+     When you call the `next_url' in this node method, you are returned
+     instances of this class.
+
+*Note URI/URL: URI/URL,
+     The underlying class for *Note Netscape/HistoryURL:
+     Netscape/HistoryURL,, which provides the mechanisms for
+     manipulating URLs.
+
+*Note Date/Format: Date/Format,
+     Functions for formatting time and date in strings.
+
+
+AUTHOR
+======
+
+Neil Bowers <neilb@cre.canon.co.uk>, and Richard Taylor
+<rit@cre.canon.co.uk>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Canon Research Centre Europe. All rights reserved.
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Netscape/HistoryURL, Next: News/NNTPClient, Prev: Netscape/History, Up: Module List
+
+subclass of URI::URL which provides visit time
+**********************************************
+
+
+
+NAME
+====
+
+Netscape::HistoryURL - subclass of URI::URL which provides visit time
+
+
+SYNOPSIS
+========
+
+     use Netscape::HistoryURL;
+
+     $url = new Netscape::HistoryURL('http://foobar.com/', $time);
+
+
+DESCRIPTION
+===========
+
+The `Netscape::HistoryURL' module subclasses *Note URI/URL: URI/URL, to
+provide a URL class with a method for accessing visit time.
+
+
+CONSTRUCTOR
+-----------
+
+     $object = new Netscape::HistoryURL( URL, TIME );
+
+This creates a new instance of the Netscape::HistoryURL object class.
+This supports all the methods supported by the URI::URL class.  Please
+see the documentation for that module.
+
+The first argument passed is a string which contains a valid URL.  The
+second argument is the time of visit, in seconds since the last epoch.
+
+
+METHODS
+=======
+
+The *Netscape::HistoryURL* class implements the following methods:
+
+   * *visit_time* returns the time you last visited the URL.
+
+   * URI::URL methods All the methods of the URI::URL class are
+     supported.  See the documentation for that module.
+
+The methods specific to this class are further described below.
+
+
+visit_time - return the time of last visit
+------------------------------------------
+
+     $time = $url->visit_time();
+
+This method returns the time you last visited the URL, in seconds since
+the last epoch.  This can then be used with any of the standard routines
+for formatting as a string.  The following example uses ctime(), from
+the Date::Format module:
+
+     print "Time of last visit for $url : ", ctime($url->visit_time);
+
+
+SEE ALSO
+========
+
+Netscape::History
+     An object class for accessing the Netscape history database.
+
+URI::URL
+     Base-class, which provides heaps of functionality.
+
+
+AUTHOR
+======
+
+Neil Bowers <neilb@cre.canon.co.uk>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Canon Research Centre Europe. All rights reserved.
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: News/NNTPClient, Next: News/Newsrc, Prev: Netscape/HistoryURL, Up: Module List
+
+Perl 5 module to talk to NNTP (RFC977) server
+*********************************************
+
+
+
+NAME
+====
+
+News::NNTPClient - Perl 5 module to talk to NNTP (RFC977) server
+
+
+DESCRIPTION
+===========
+
+This module implements a client interface to NNTP, enabling a Perl 5
+application to talk to NNTP servers.  It uses the OOP (Object Oriented
+Programming) interface introduced with Perl 5.
+
+
+USAGE
+=====
+
+To use it in your programs, you can use either:
+
+     use News::NNTPClient;
+
+or
+
+     require News::NNTPClient;
+
+NNTPClient exports nothing.
+
+A new NNTPClient object must be created with the new method.  Once this
+has been done, all NNTP commands are accessed through this object.
+
+Here are a couple of short examples.  The first prints all articles in
+the "test" newsgroup:
+
+     #!/usr/local/bin/perl -w
+ 
+     use News::NNTPClient;
+ 
+     $c = new News::NNTPClient;
+ 
+     ($first, $last) = ($c->group("test"));
+ 
+     for (; $first <= $last; $first++) {
+         print $c->article($first);
+     }
+ 
+     __END__
+
+This example prints the body of all articles in the "test" newsgroup
+newer than one hour:
+
+     #!/usr/local/bin/perl -w
+ 
+     require News::NNTPClient;
+ 
+     $c = new News::NNTPClient;
+ 
+     foreach ($c->newnews("test", time - 3600)) {
+         print $c->body($_);
+     }
+ 
+     __END__
+
+
+NNTPClient Commands
+-------------------
+
+These commands are used to manipulate the NNTPClient object, and aren't
+directly related to commands available on any NNTP server.
+
+new
+     Use this to create a new NNTP connection. It takes three arguments,
+     a hostname, a port and a debug flag.  It calls initialize.  Use an
+     empty argument to specify defaults.
+
+     If port is omitted or blank (""), looks for environment variable
+     NNTPPORT, service "nntp", or uses 119.
+
+     If host is omitted or empty (""), looks for environment variable
+     NNTPSERVER or uses "news".
+
+     Examples:
+
+          $c = new News::NNTPClient;
+          or
+          $c = new News::NNTPClient("newsserver.some.where");
+          or
+          $c = new News::NNTPClient("experimental", 9999);
+          or
+          # Specify debug but use defaults.
+          $c = new News::NNTPClient("", "", 2);
+
+     Returns a blessed reference, representing a new NNTP connection.
+
+initialize
+     Calls port, host, connect, and response, in that order.  If any of
+     these fail, initialization is aborted.
+
+connect
+     Connects to current host/port.  Not normally needed, as the new
+     method does this for you.  Closes any existing connection.  Sets
+     the posting status.  See the postok method.
+
+host
+     Sets the host that will be used on the next connect.  Not normally
+     needed, as the new method does this for you.
+
+     Without an argument, returns current host.
+
+     Argument can be hostname or dotted quad, for example,
+     "15.2.174.218".
+
+     Returns fully qualified host name.
+
+port
+     Sets the port that will be used on the next connect.  Not normally
+     needed, as the new method does this for you.
+
+     Without an argument, returns current port.
+
+     Argument can be port number or name.  If it is a name, it must be a
+     valid service.
+
+     Returns port number.
+
+debug
+     Sets the debug level.
+
+     Without an argument, returns current debug level.
+
+     There are currently three debug levels.  Level 0, level 1, and
+     level 2.
+
+     At level 0 the messages described for level 1 are not produced.
+     Debug level 0 is a way of turning off messages produced by the
+     default debug level 1.  Serious error messages, such as EOF (End Of
+     File) on the file handle, are still produced.
+
+     At level 1, any NNTP command that results in a result code of 400
+     or greater prints a warning message.  This is the default.
+
+     At level 2, in addition to level 1 messages, status messages are
+     printed to indicate actions taking place.
+
+     Returns old debug value.
+
+ok
+     Returns boolean status of most recent command.  NNTP return codes
+     less than 400 are considered OK.  Not often needed as most commands
+     return false upon failure anyway.
+
+okprint
+     Returns boolean status of most recent command.  NNTP return codes
+     less than 400 are considered OK.  Prints an error message for
+     return codes of 400 or greater unless debug level is set to zero
+     (0).
+
+     This method is used internally by most commands, and could be
+     considered to be "for internal use only".  You should use the
+     return status of commands directly to determine pass-fail, or if
+     needed the ok method can be used to check status later.
+
+message
+     Returns the NNTP response message of the most recent command.
+
+     Example, as returned by NNTP server version 1.5.11t:
+
+          $c->slave;
+          print $c->message;
+
+          Kinky, kinky.  I don't support such perversions.
+
+code
+     Returns the NNTP response code of the most recent command.
+
+     Example:
+
+          $c->article(1);
+          print $c->code, "\n";
+
+          412
+
+postok
+     Returns the post-ability status that was reported upon connection
+     or after the mode_reader command.
+
+eol
+     Sets the End-Of-Line termination for text returned from the server.
+
+     Returns the old EOL setting.
+
+     Default is \n.
+
+     To set EOL to nothing, pass it the empty string.
+
+     To query current EOL without setting it, call with no arguments.
+
+     Returns the old EOL termination.
+
+     Example:
+
+          $old_eol = $c->eol();     # Get original.
+          $c->eol("");              # Set EOL to nothing.
+          @article = $c->article(); # Fetch an article.
+          $c->eol($old_eol);        # Restore value.
+
+version
+     Returns version number.
+
+     This document represents @(#) $Revision: 0.26 $.
+
+
+NNTP Commands
+-------------
+
+These commands directly correlate to NNTP server commands.  They return
+a false value upon failure, true upon success.  The truth value is
+usually some bit of useful information.  For example, the stat command
+returns Message-ID if it is successful.
+
+Some commands return multiple lines.  These lines are returned as an
+array in array context, and as a reference to an array in scalar
+context.  For example, if you do this:
+
+     @lines = $c->article(14);
+
+then @lines will contain the article, one line per array element.
+However, if you do this:
+
+     $lines = $c->article(14);
+
+then $lines will contain a *reference* to an array.  This feature is for
+those that don't like passing arrays from routine to routine.
+
+mode_reader
+     Some servers require this command to process NNTP client commands.
+     Sets postok status.  See postok.
+
+     Returns OK status.
+
+article
+     Retrieves an article from the server.  This is the main command for
+     fetching articles.  Expects a single argument, an article number or
+     Message-ID.  If you use an article number, you must be in a news
+     group.  See group.
+
+     Returns the header, a separating blank line, and the body of the
+     article as an array of lines terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     Examples:
+
+          print $c->article('<art1234@soom.oom>');
+
+          $c->group("test");
+
+          print $c->article(99);
+
+body
+     Expects a single argument, an article number or Message-ID.
+
+     Returns the body of an article as an array of lines terminated by
+     the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     See article.
+
+head
+     Expects a single argument, an article number or Message-ID.
+
+     Returns the head of the article as an array of lines terminated by
+     the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     See article.
+
+stat
+     Expects a single argument, an article number or Message-ID.
+
+     The STAT command is like the ARTICLE command except that it does
+     not return any text.  It can be used to set the "current article
+     pointer" if passed an article number, or to validate a Message-ID
+     if passed a Message-ID.
+
+     Returns Message-ID if successful, otherwise returns false.
+
+last
+     The "current article pointer" maintained by the server is moved to
+     the previous article in the current news group.
+
+     Returns Message-ID if successful, otherwise returns false.
+
+next
+     The "current article pointer" maintained by the server is moved to
+     the next article in the current news group.
+
+     Returns Message-ID if successful, otherwise returns false.
+
+group
+     Expects a single argument, the name of a valid news group.
+
+     This command sets the current news group as maintained by the
+     server.  It also sets the server maintained "current article
+     pointer" to the first article in the group.  This enables the use
+     of certain other server commands, such as article, head, body,
+     stat, last, and next.  Also sets the current group in the
+     NNTPClient object, which is used by the newnews and xindex
+     commands.
+
+     Returns (first, last) in list context, or "first-last" in scalar
+     context, where first and last are the first and last article
+     numbers as reported by the group command.  Returns false if there
+     is an error.
+
+     It is an error to attempt to select a non-existent news group.
+
+     If the estimated article count is needed, it can be extracted from
+     the message.  See message.
+
+list
+     Accepts one optional argument that can be used indicate the type of
+     list desired.  List type depends on server.
+
+     With an argument of "active" or with no arguments, this command
+     returns a list of valid newsgroups and associated information.  The
+     format is:
+
+          group last first p
+
+     where group is the news group name, last is the article number of
+     the last article, first is the article number of the first article,
+     and p is flag indicating if posting is allowed.  A 'y' flag is an
+     indication that posting is allowed.
+
+     Other possible arguments are: newsgroups, distributions,
+     subscriptions for B-News, and active.times, distributions,
+     distrib.pats, newsgroups, overview.fmt for INN.
+
+     Returns an array of lines terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+newgroups
+     Expects at least one argument representing the date/time in seconds,
+     or in "YYMMDD HHMMSS" format.  Remaining arguments are used as
+     distributions.
+
+     Example, print all new groups in the "comp" and/or "news" hierarchy
+     as of one hour ago:
+
+          print $c->newgroups(time() - 3600, "comp", "news");
+
+     Returns list of new news group names as an array of lines
+     terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+newnews
+     Expects one, two, or more arguments.
+
+     If the first argument is a group name, it looks for new news in
+     that group, and the date/time is the second argument.  If the first
+     argument represents the date/time in seconds or in "YYMMDD HHMMSS"
+     format, then the group is is last group set via the group
+     command. If no group command has been issued then the group is "*",
+     representing all groups.  Remaining arguments are use to restrict
+     search to certain distribution(s).
+
+     Returns a list of Message-IDs of articles that have been posted or
+     received since the specified time.
+
+     Examples:
+
+          # Hour old news in news group "test".
+          $c->newnews("test", time() - 3600);
+          or
+          # Hour old in all groups.
+          $c->newnews(time() - 3600);
+          or
+          $c->newnews("*", time() - 3600);
+          or
+          # Hour old news in news group "test".
+          $c->group("test");
+          $c->newnews(time() - 3600);
+
+     The group argument can include an asterisk "*" to specify a range
+     news groups.  It can also include multiple news groups, separated
+     by a comma ",".
+
+     Example:
+
+          $c->newnews("comp.*.sources,alt.sources", time() - 3600);
+
+     An exclamation point "!" may be used to negate the selection of
+     certain groups.
+
+     Example:
+
+          $c->newnews("*sources*,!*.d,!*.wanted", time() - 3600);
+
+     Any additional distribution arguments will be concatenated together
+     and send as a distribution list.  The distribution list will limit
+     articles to those that have a Distribution: header containing one
+     of the distributions passed.
+
+     Example:
+
+          $c->newnews("*", time() - 3600, "local", "na");
+
+     Returns Message-IDs of new articles as an array of lines terminated
+     by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+help
+     Returns any server help information.  The format of the information
+     is highly dependent on the server, but usually contains a list of
+     NNTP commands recognized by the server.
+
+     Returns an array of lines terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+post
+     Post an article.  Expects data to be posted as an array of lines.
+     Most servers expect, at a minimum, Newsgroups and Subject headers.
+     Be sure to separate the header from the body with a neck, er blank
+     line.
+
+     Example:
+
+          @header = ("Newsgroups: test", "Subject: test");
+          @body   = ("This is the body of the article");
+
+          $c->post(@header, "", @body);
+
+     Any "\n" characters at the end of a line will be trimmed.
+
+ihave
+     Transfer an article.  Expects an article Message-ID and the article
+     to be sent as an array of lines.
+
+     Example:
+
+          # Fetch article from server on $c
+          @article = $c->article($artid);
+
+          # Send to server on $d
+          if ($d->ihave($artid, @article)) {
+              print "Article transfered\n";
+          } else {
+              print "Article rejected: ", $d->message, "\n";
+          }
+
+slave
+     Doesn't do anything on most servers.  Included for completeness.
+
+DESTROY
+     This method is called whenever the the object created by
+     News::NNTPClient::new is destroyed.  It calls quit to close the
+     connection.
+
+quit
+     Send the NNTP quit command and close the connection.  The
+     connection can be then be re-opened with the connect method.  Quit
+     will automatically be called when the object is destroyed, so there
+     is no need to explicitly call quit before exiting your program.
+
+
+Extended NNTP Commands
+----------------------
+
+These commands also directly correlate NNTP server commands, but are not
+mentioned in RFC977, and are not part of the standard.  However, many
+servers implement them, so they are included as part of this package for
+your convenience.  If a command is not recognized by a server, the
+server usually returns code 500, command unrecognized.
+
+authinfo
+     Expects two arguments, user and password.
+
+date
+     Returns server date in "YYYYMMDDhhmmss" format.
+
+listgroup
+     Expects one argument, a group name.  Default is current group.
+
+     Returns article numbers as an array of lines terminated by the
+     current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+xmotd
+     Expects one argument of unix time in seconds or as a string in the
+     form "YYMMDD HHMMSS".
+
+     Returns the news servers "Message Of The Day" as an array of lines
+     terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     For example, the following will always print the message of the
+     day, if there is any:
+
+          print $c->xmotd(1);
+          NNTP Server News2
+
+          News administrator is Joseph Blough <joeblo@news.foo.com>
+
+xgtitle
+     Expects one argument of a group pattern.  Default is current group.
+
+     Returns group titles an array of lines terminated by the current
+     EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     Example:
+
+          print $c->xgtitle("bit.listserv.v*");
+
+          bit.listserv.valert-l   Virus Alert List. (Moderated)
+          bit.listserv.vfort-l    VS-Fortran Discussion List.
+          bit.listserv.vm-util    VM Utilities Discussion List.
+          bit.listserv.vmesa-l    VM/ESA Mailing List.
+          bit.listserv.vmslsv-l   VAX/VMS LISTSERV Discussion List.
+          bit.listserv.vmxa-l     VM/XA Discussion List.
+          bit.listserv.vnews-l    VNEWS Discussion List.
+          bit.listserv.vpiej-l    Electronic Publishing Discussion
+
+xpath
+     Expects one argument of an article Message-ID.  Returns the path
+     name of the file on the server.
+
+     Example:
+
+          print print $c->xpath(q(<43bq5l$7b5@news.dtc.hp.com>))'
+          hp/test/4469
+
+xhdr
+     Fetch header for a range of articles.  First argument is name of
+     header to fetch.  If omitted or blank, default to Message-ID.
+     Second argument is start of article range.  If omitted, defaults to
+     1.  Next argument is end of range.
+
+     Returns headers as an array of lines terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     Examples:
+
+          # Fetch Message-ID of article 1.
+          $c->xhdr();
+
+          # Fetch Subject of article 1.
+          $c->xhdr("Subject");
+
+          # Fetch Subject of article 3345.
+          $c->xhdr("Subject", 3345);
+
+          # Fetch Subjects of articles 3345-9873
+          $c->xhdr("Subject", 3345, 9873);
+
+          # Fetch Message-ID of articles 3345-9873
+          $c->xhdr("", 3345,9873);
+
+xpat
+     Fetch header for a range of articles matching one or more patterns.
+     First argument is name of header to fetch.  If omitted or blank,
+     default to Subject.  Second argument is start of article range.  If
+     omitted, defaults to 1.  Next argument is end of range.  Remaining
+     arguments are patterns to match.  Some servers use "*" for
+     wildcard.
+
+     Returns headers as an array of lines terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     Examples:
+
+          # Fetch Subject header of article 1.
+          $c->xpat();
+
+          # Fetch "From" header of article 1.
+          $c->xpat("From");
+
+          # Fetch "From" of article 3345.
+          $c->xpat("From", 3345);
+
+          # Fetch "From" of articles 3345-9873 matching *foo*
+          $c->xpat("From", 3345, 9873, "*foo*");
+
+          # Fetch "Subject" of articles 3345-9873 matching
+          # *foo*, *bar*, *and*, *stuff*
+          $c->xpat("", 3345,9873, qw(*foo* *bar* *and* *stuff*));
+
+xover
+     Expects an article number or a starting and ending article number
+     representing a range of articles.
+
+     Returns overview information for each article as an array of lines
+     terminated by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+     Xover generally returns items separated by tabs.  Here is an
+     example that prints out the xover fields from all messages in the
+     "test" news group.
+
+          #!/usr/local/bin/perl
+
+          require News::NNTPClient;
+
+          $c = new News::NNTPClient;
+
+          @fields = qw(numb subj from date mesg refr char line xref);
+
+          foreach $xover ($c->xover($c->group("test"))) {
+              %fields = ();
+              @fields{@fields} = split /\t/, $xover;
+              print map { "$_: $fields{$_}\n" } @fields;
+              print "\n";
+          }
+
+          __END__
+
+xthread
+     Expects zero or one argument.  Value of argument doesn't matter.
+     If present, *dbinit* command is sent.  If absent, *thread* command
+     is sent.
+
+     Returns binary data as a scalar value.
+
+     Format of data returned is unknown at this time.
+
+xindex
+     Expects one argument, a group name.  If omitted, defaults to the
+     group set by last group command.  If there hasn't been a group
+     command, it returns an error;
+
+     Returns index information for group as an array of lines terminated
+     by the current EOL.
+
+     In scalar context a reference to the array is returned instead of
+     the array itself.
+
+xsearch
+     Expects a query as an array of lines which are sent to the server,
+     much like post.  Returns the result of the search as an array of
+     lines or a reference to same.
+
+     Format of query is unknown at this time.
+
+
+AUTHOR
+======
+
+Rodger Anderson <rodger@boi.hp.com>
+
+
+SOURCE
+======
+
+The latest version may be retrieved by sending mail to:
+
+     <rodger@boi.hp.com>
+
+with the body of the message starting with:
+
+     send nntpclient
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Rodger Anderson. All rights reserved.  This module is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+

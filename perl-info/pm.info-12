@@ -1,0 +1,2999 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: DBD/Ingres, Next: DBD/Oracle, Prev: DBD/Ingperl, Up: Module List
+
+Ingres access interface for Perl5
+*********************************
+
+
+
+NAME
+====
+
+DBD::Ingres - Ingres access interface for Perl5
+
+
+SYNOPSIS
+========
+
+     $dbh = DBI->connect($dbname, $user, $options, 'Ingres')
+     $sth = $dbh->prepare($statement)
+     $sth->execute
+     @row = $sth->fetchrow
+     $sth->finish
+     $dbh->commit
+     $dbh->rollback
+     $dbh->disconnect
+     and many more
+
+
+DESCRIPTION
+===========
+
+DBD::Ingres is an extension to Perl which allows access to Ingres
+databases. It is built on top of the standard DBI extension an
+implements the methods that DBI require.
+
+This document describes the differences between the "generic" DBD and
+DBD::Ingres.
+
+
+Not implemented
+---------------
+
+Binding
+     Binding is not implented is this version of DBD::Ingres. It is
+     planned for a future release - but does not have high priority. Any
+     takers?
+
+     As there is no binding, there is no need for reexecution of
+     statements - not that anything in the code prevents it - to my
+     knowledge :-)
+
+OpenIngres new features
+     The new features of OpenIngres are not (yet) supported in
+     DBD::Ingres.
+
+     This includes BLOBS, decimal datatype and spatial datatypes.
+
+     Support will be added when the need arises - if you need it you add
+     it ;-)
+
+
+Extensions/Changes
+------------------
+
+$dbh->do
+     This is implemented as a call to 'EXECUTE IMMEDIATE'. (The generic
+     way is through prepare, bind, execute).  This will probably change
+     when binds are added.
+
+$sth->TYPE
+     Returns an array of the "perl"-type of the return fields of a
+     select statement.
+
+     The types are represented as:
+
+     'i': integer
+          All integer types, ie. int1, int2 and int4.
+
+     'f': float
+          The types float, float8 and money.
+
+     's': string
+          All other supported types, ie. char, varchar, text, date etc.
+
+$sth->SqlLen
+     Returns an array containing the lengths of the fields in Ingres,
+     eg. an int2 will return 2, a varchar(7) 7 and so on.
+
+$sth->SqlType
+     Returns an array containing the Ingres types of the fields. The
+     types are given as documented in the Ingres SQL Reference Manual.
+
+
+NOTES
+=====
+
+I wonder if I have forgotten something? There is no authoritative DBI
+documentation (other than the code); it is difficult to document the
+differences from a non-existent document ;-}
+
+
+SEE ALSO
+========
+
+The DBI documentation (at the end of DBI.pm).
+
+
+AUTHORS
+=======
+
+DBI/DBD was developed by Tim Bunce, <Tim.Bunce@ig.co.uk>, who also
+developed the DBD::Oracle that is the closest we have to a generic DBD
+implementation.
+
+Henrik Tougaard, <ht@datani.dk> developed the DBD::Ingres extension.
+=cut
+
+
+
+File: pm.info, Node: DBD/Oracle, Next: DBD/Oraperl, Prev: DBD/Ingres, Up: Module List
+
+Oracle database driver for the DBI module
+*****************************************
+
+
+
+NAME
+====
+
+DBD::Oracle - Oracle database driver for the DBI module
+
+
+SYNOPSIS
+========
+
+     use DBI;
+
+     $dbh = DBI->connect("dbi:Oracle:", $user, $passwd);
+
+     # See the DBI module documentation for full details
+
+
+DESCRIPTION
+===========
+
+DBD::Oracle is a Perl module which works with the DBI module to provide
+access to Oracle databases.
+
+
+CONNECTING TO ORACLE
+====================
+
+This is a topic which often causes problems. Mainly due to Oracle's many
+and sometimes complex ways of specifying and connecting to databases.
+(James Taylor and Lane Sharman have contributed much of the text in this
+section.)
+
+
+Oracle environment variables
+----------------------------
+
+Oracle typically uses two environment variables to specify default
+connections: ORACLE_SID and TWO_TASK.
+
+ORACLE_SID is really unnecessary to set since TWO_TASK provides the same
+functionality in addition to allowing remote connections.
+
+     % setenv TWO_TASK T:hostname:ORACLE_SID            # for csh shell
+     $ TWO_TASK=T:hostname:ORACLE_SID export TWO_TASK   # for sh shell
+
+     % sqlplus username/password
+
+Note that if you have *both* local and remote databases, and you have
+ORACLE_SID *and* TWO_TASK set, and you don't specify a fully qualified
+connect string on the command line, TWO_TASK takes precedence over
+ORACLE_SID (i.e. you get connected to remote system).
+
+     TWO_TASK=P:sid
+
+will use the pipe driver for local connections using SQL*Net v1.
+
+     TWO_TASK=T:machine:sid
+
+will use TCP/IP (or D for DECNET, etc.) for remote SQL*Net v1
+connection.
+
+     TWO_TASK=dbname
+
+will use the info stored in the SQL*Net v2 `tnsnames.ora' configuration
+file for local or remote connections.
+
+The ORACLE_HOME environment variable should be set correctly. It can be
+left unset if you aren't using any of Oracle's executables, but it is
+not recommended and error messages may not display.
+
+Discouraging the use of ORACLE_SID makes it easier on the users to see
+what is going on. (It's unfortunate that TWO_TASK couldn't be renamed,
+since it makes no sense to the end user, and doesn't have the ORACLE
+prefix).
+
+
+Using DBD::Oracle
+-----------------
+
+Below are various ways of connecting to an oracle database using SQL*Net
+1.x and SQL*Net 2.x.  "Machine" is the computer the database is running
+on, "SID" is the SID of the database, "DB" is the SQL*Net 2.x connection
+descriptor for the database.
+
+     BEGIN { 
+        $ENV{ORACLE_HOME} = '/home/oracle/product/7.x.x';
+        $ENV{TWO_TASK}    = 'DB'; 
+     }
+     $dbh = DBI->connect('dbi:Oracle:','scott', 'tiger');
+     #  - or -
+     $dbh = DBI->connect('dbi:Oracle:','scott/tiger');
+
+works for SQL*Net 2.x, so does
+
+     $ENV{TWO_TASK}    = 'T:Machine:SID';
+
+for SQL*Net 1.x connections.  For local connections you can use the pipe
+driver:
+
+     $ENV{TWO_TASK}    = 'P:SID';
+
+Here are some variations (not setting TWO_TASK)
+
+     $dbh = DBI->connect('dbi:Oracle:T:Machine:SID','username','password')
+
+     $dbh = DBI->connect('dbi:Oracle:','username@T:Machine:SID','password')
+
+     $dbh = DBI->connect('dbi:Oracle:','username@DB','password')
+
+     $dbh = DBI->connect('dbi:Oracle:DB','username','password')
+
+     $dbh = DBI->connect('dbi:Oracle:DB','username/password','')
+
+     $dbh = DBI->connect('dbi:Oracle:', q{scott/tiger@(DESCRIPTION=
+     (ADDRESS=(PROTOCOL=TCP)(HOST= foobar)(PORT=1521))
+     (CONNECT_DATA=(SID=foobarSID)))}, "")
+
+If you are having problems with login taking a long time (>10 secs say)
+then you might have tripped up on an Oracle bug. Yoy can try using one
+of the ...@DB variants as a workaround. E.g.,
+
+     $dbh = DBI->connect('','username/password@DB','');
+
+On the other hand, that may cause you to trip up on another Oracle bug
+that causes alternating connection attempts to fail! (In reality only a
+small proportion of people experience these problems.)
+
+
+Optimizing Oracle's listner
+---------------------------
+
+[By Lane Sharman <lane@bienlogic.com>] I spent a LOT of time optimizing
+listener.ora and I am including it here for anyone to benefit from. My
+connections over tnslistener on the same humble Netra 1 take an average
+of 10-20 millies according to tnsping. If anyone knows how to make it
+better, please let me know!
+
+     LISTENER =
+      (ADDRESS_LIST =
+            (ADDRESS = 
+              (PROTOCOL = TCP)
+              (Host = aa.bbb.cc.d)
+              (Port = 1521)
+     					(QUEUESIZE=10)
+            )
+      )
+
+     STARTUP_WAIT_TIME_LISTENER = 0
+     CONNECT_TIMEOUT_LISTENER = 10
+     TRACE_LEVEL_LISTENER = OFF
+     SID_LIST_LISTENER =
+      (SID_LIST =
+        (SID_DESC =
+          (SID_NAME = xxxx)
+          (ORACLE_HOME = /xxx/local/oracle7-3)
+     			(PRESPAWN_MAX = 40)
+     			(PRESPAWN_LIST=
+     				(PRESPAWN_DESC=(PROTOCOL=tcp) (POOL_SIZE=40) (TIMEOUT=120))
+     			)
+        )
+      )
+
+1) When the application is co-located on the host AND there is no need
+for outside SQLNet connectivity, stop the listener. You do not need
+it. Get your application/cgi/whatever working using pipes and shared
+memory. I am convinced that this is one of the connection bugs (sockets
+over the same machine). Note the $ENV{ORAPIPES} env var.  The essential
+code to do this at the end of this section.
+
+2) Be careful in how you implement the multi-threaded server. Currently
+I am not using it in the initxxxx.ora file but will be doing some more
+testing.
+
+3) Be sure to create user rollback segments and use them; do not use the
+system rollback segments; however, you must also create a small rollback
+space for the system as well.
+
+5) Use large tuning settings and get lots of RAM. Check out all the
+parameters you can set in v$parameters because there are quite a few not
+documented you may to set in your initxxx.ora file.
+
+6) Use svrmgrl to control oracle from the command line. Write lots of
+small SQL scripts to get at V$ info.
+
+     use DBI;
+     # Environmental variables used by Oracle 
+     $ENV{ORACLE_SID}   = "xxx";
+     $ENV{ORACLE_HOME}  = "/opt/oracle7";
+     $ENV{EPC_DISABLED} = "TRUE";
+     $ENV{ORAPIPES} = "V2";
+     my $dbname = "xxx";
+     my $dbuser = "xxx";
+     my $dbpass = "xxx";
+     my $dbh = DBI->connect("dbi:Oracle:$dbname", $dbuser, $dbpass)
+                || die "Unale to connect to $dbname: $DBI::errstr\n";
+
+
+Oracle utilities
+----------------
+
+If you are still having problems connecting then the Oracle adapters
+utility may offer some help. Run these two commands:
+
+     $ORACLE_HOME/bin/adapters
+     $ORACLE_HOME/bin/adapters $ORACLE_HOME/bin/sqlplus
+
+and check the output. The "Protocol Adapters" section should be the
+same.  It should include at least "IPC Protocol Adapter" and "TCP/IP
+Protocol Adapter".
+
+If it generates any errors which look relevant then please talk to yor
+Oracle technical support (and not the dbi-users mailing list). Thanks.
+Thanks to Mark Dedlow for this information.
+
+
+International NLS / 8-bit text issues
+-------------------------------------
+
+If 8-bit text is returned as '?' characters or can't be inserted make
+sure the following environment vaiables are set correctly:
+    NLS_LANG, ORA_NLS, ORA_NLS32 Thanks to Robin Langdon <robin@igis.se>
+for this information.  Example:
+   $ENV{NLS_LANG} = "american_america.we8iso8859p1";
+   $ENV{ORA_NLS} = "/home/oracle/ocommon/nls/admin/data";
+   $ENV{ORA_NLS32} = "/home/oracle/ocommon/nls/admin/data";
+
+Also From: Yngvi Thor Sigurjonsson <yngvi@hagkaup.is> If you are using
+8-bit characters and "export" for backups make sure that you have
+NLS_LANG set when export is run.  Otherwise you might get unusable
+backups with ? replacing all your beloved characters. We were lucky once
+when we noticed that our exports were damaged before disaster struck.
+
+Remember that the database has to be created with an 8-bit character
+set.
+
+Also note that the NLS files $ORACLE_HOME/ocommon/nls/admin/data changed
+extension (from .d to .nlb) between 7.2.3 and 7.3.2.
+
+
+SEE ALSO
+========
+
+*Note DBI: DBI,
+
+
+AUTHOR
+======
+
+DBD::Oracle by Tim Bunce.
+
+
+COPYRIGHT
+=========
+
+The DBD::Oracle module is Copyright (c) 1995,1996,1997 Tim
+Bunce. England.  The DBD::Oracle module is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself
+with the exception that it cannot be placed on a CD-ROM or similar media
+for commercial distribution without the prior approval of the author.
+
+
+ACKNOWLEDGEMENTS
+================
+
+See also `ACKNOWLEDGEMENTS', *Note DBI: DBI,.
+
+
+
+
+File: pm.info, Node: DBD/Oraperl, Next: DBD/Solid, Prev: DBD/Oracle, Up: Module List
+
+Perl access to Oracle databases for old oraperl scripts
+*******************************************************
+
+
+
+NAME
+====
+
+Oraperl - Perl access to Oracle databases for old oraperl scripts
+
+
+SYNOPSIS
+========
+
+     $lda = &ora_login($system_id, $name, $password)
+     $csr = &ora_open($lda, $stmt [, $cache])
+     &ora_bind($csr, $var, ...)
+     &ora_fetch($csr [, $trunc])
+     &ora_close($csr)
+     &ora_logoff($lda)
+
+     &ora_do($lda, $stmt)
+
+     &ora_titles($csr)
+     &ora_lengths($csr)
+     &ora_types($csr)
+     &ora_commit($lda)
+     &ora_rollback($lda)
+     &ora_autocommit($lda, $on_off)
+     &ora_version()
+
+     $ora_cache
+     $ora_long
+     $ora_trunc
+     $ora_errno
+     $ora_errstr
+     $ora_verno
+
+     $ora_debug
+
+
+DESCRIPTION
+===========
+
+Oraperl is an extension to Perl which allows access to Oracle databases.
+
+The functions which make up this extension are described in the
+following sections. All functions return a false or undefined (in the
+Perl sense) value to indicate failure.  You do not need to understand
+the references to OCI in these descriptions. They are here to help those
+who wish to extend the routines or to port them to new machines.
+
+The text in this document is largely unchanged from the original Perl4
+oraperl manual written by Kevin Stock <kstock@auspex.fr>. Any comments
+specific to the DBD::Oracle Oraperl emulation are prefixed by *DBD:*.
+
+
+Principal Functions
+-------------------
+
+The main functions for database access are &ora_login(), &ora_open(),
+&ora_bind(), &ora_fetch(), &ora_close(), &ora_do() and &ora_logoff().
+
+   * ora_login
+          $lda = &ora_login($system_id, $username, $password)
+
+
+     In order to access information held within an Oracle database, a
+     program must first log in to it by calling the &ora_login()
+     function.  This function is called with three parameters, the
+     system ID (see below) of the Oracle database to be used, and the
+     Oracle username and password. The value returned is a login
+     identifier (actually an Oracle Login Data Area) referred to below
+     as $lda.
+
+     Multiple logins may be active simultaneously. This allows a simple
+     mechanism for correlating or transferring data between databases.
+
+     Most Oracle programs (for example, SQL*Plus or SQL*Forms) examine
+     the environment variable ORACLE_SID or TWO_TASK to determine which
+     database to connect to. In an environment which uses several
+     different databases, it is easy to make a mistake, and attempt to
+     run a program on the wrong one.  Also, it is cumbersome to create a
+     program which works with more than one database
+     simultaneously. Therefore, Oraperl requires the system ID to be
+     passed as a parameter. However, if the system ID parameter is an
+     empty string then oracle will use the existing value of ORACLE_SID
+     or TWO_TASK in the usual manner.
+
+     Example:
+
+          $lda = &ora_login('personnel', 'scott', 'tiger') || die $ora_errstr;
+
+     This function is equivalent to the OCI olon and orlon functions.
+
+     *DBD:* note that a name is assumed to be a TNS alias if it does not
+     appear as the name of a SID in /etc/oratab or
+     /var/opt/oracle/oratab.  See the code in Oracle.pm for the full
+     logic of database name handling.
+
+     *DBD:* Since the returned $lda is a Perl5 reference the database login
+     identifier is now automatically released if $lda is overwritten or
+     goes out of scope.
+
+   * ora_open
+          $csr = &ora_open($lda, $statement [, $cache])
+
+
+     To specify an SQL statement to be executed, the program must call
+     the &ora_open() function. This function takes at least two
+     parameters: a login identifier (obtained from &ora_login()) and the
+     SQL statement to be executed. An optional third parameter specifies
+     the size of the row cache to be used for a SELECT statement. The
+     value returned from &ora_open() is a statement identifier (actually
+     an ORACLE Cursor) referred to below as $csr.
+
+     If the row cache size is not specified, a default size is used. As
+     distributed, the default is five rows, but this may have been
+     changed at your installation (see the &ora_version() function and
+     $ora_cache variable below).
+
+     Examples:
+
+          $csr = &ora_open($lda, 'select ename, sal from emp order by ename', 10);
+
+          $csr = &ora_open($lda, 'insert into dept values(:1, :2, :3)');
+
+     This function is equivalent to the OCI oopen and oparse
+     functions. For statements which do not contain substitution
+     variables (see the section Substitution Variables below), it also
+     uses of the oexec function. For SELECT statements, it also makes
+     use of the odescr and odefin functions to allocate memory for the
+     values to be returned from the database.
+
+   * ora_bind
+          &ora_bind($csr, $var, ...)
+
+
+     If an SQL statement contains substitution variables (see the
+     section Substitution Variables below), &ora_bind() is used to
+     assign actual values to them. This function takes a statement
+     identifier (obtained from &ora_open()) as its first parameter,
+     followed by as many parameters as are required by the statement.
+
+     Example:
+
+          &ora_bind($csr, 50, 'management', 'Paris');
+
+     This function is equivalent to the OCI obndrn and oexec statements.
+
+     The OCI obndrn function does not allow empty strings to be
+     bound. As distributed, $ora_bind therefore replaces empty strings
+     with a single space. However, a compilation option allows this
+     substitution to be suppressed, causing &ora_bind() to fail. The
+     output from the &ora_version() function specifies which is the case
+     at your installation.
+
+   * ora_fetch
+          $nfields = &ora_fetch($csr)
+
+          @data = &ora_fetch($csr [, $trunc])
+
+
+     The &ora_fetch() function is used in conjunction with a SQL SELECT
+     statement to retrieve information from a database.  This function
+     takes one mandatory parameter, a statement identifier (obtained
+     from &ora_open()).
+
+     Used in a scalar context, the function returns the number of fields
+     returned by the query but no data is actually fetched. This may be
+     useful in a program which allows a user to enter a statement
+     interactively.
+
+     Example:
+
+          $nfields = &ora_fetch($csr);
+
+     Used in an array context, the value returned is an array containing
+     the data, one element per field. Note that this will not work as
+     expected:
+
+          @data = &ora_fetch($csr) || die "...";    # WRONG
+
+     The || forces a scalar context so ora_fetch returns the number of
+     fields.
+
+     An optional second parameter may be supplied to indicate whether
+     the truncation of a LONG or LONG RAW field is to be permitted
+     (non-zero) or considered an error (zero). If this parameter is not
+     specified, the value of the global variable $ora_trunc is used
+     instead. Truncation of other datatypes is always considered a
+     error.
+
+     *DBD:* The optional second parameter to ora_fetch is not supported.
+     A DBI usage error will be generated if a second parameter is
+     supplied.  Use the global variable $ora_trunc instead. Also note
+     that the experimental DBI readblob method can be used to retrieve a
+     long:
+
+          $csr->readblob($field, $offset, $len [, \$dest, $destoffset]);
+
+     If truncation occurs, $ora_errno will be set to 1406.  &ora_fetch()
+     will complete successfully if truncation is permitted, otherwise it
+     will fail.
+
+     &ora_fetch() will fail at the end of the data or if an error
+     occurs. It is possible to distinguish between these cases by
+     testing the value of the variable $ora_errno. This will be zero for
+     end of data, non-zero if an error has occurred.
+
+     Example:
+
+          while (($deptno, $dname, $loc) = &ora_fetch($csr))
+          {
+            warn "Truncated!!!" if $ora_errno == 1406;
+            # do something with the data
+          }
+          warn $ora_errstr if $ora_errno;
+
+     This function is equivalent to the OCI ofetch function.
+
+   * ora_close
+          &ora_close($csr)
+
+
+     If an SQL statement is no longer required (for example, all the
+     data selected has been processed, or no more rows are to be
+     inserted) then the statement identifier should be released. This is
+     done by calling the &ora_close() function with the statement
+     identifier as its only parameter.
+
+     This function is equivalent to the OCI oclose function.
+
+     *DBD:* Since $csr is a Perl5 reference the statement/cursor is now
+     automatically closed if $csr is overwritten or goes out of scope.
+
+   * ora_do
+          &ora_do($lda, $statement)
+
+
+     Not all SQL statements return data or contain substitution
+     variables. In these cases the &ora_do() function may be used as an
+     alternative to &ora_open() and &ora_close().  This function takes
+     two parameters, a login identifier and the statement to be
+     executed.
+
+     Example:
+
+          &ora_do($lda, 'drop table employee');
+
+     This function is roughly equivalent to
+
+          &ora_close( &ora_open($lda, $statement) )
+
+     *DBD:* oraperl v2 used to return the string 'OK' to indicate
+     success with a zero numeric value. The Oraperl emulation now uses
+     the string '0E0' to achieve the same effect since it does not cause
+     any -w warnings when used in a numeric context.
+
+   * ora_logoff
+          &ora_logoff($lda)
+
+
+     When the program no longer needs to access a given database, the
+     login identifier should be released using the &ora_logoff()
+     function.
+
+     This function is equivalent to the OCI ologoff function.
+
+     *DBD:* Since $lda is a Perl5 reference the database login identifier
+     is now automatically released if $lda is overwritten or goes out of
+     scope.
+
+
+Ancillary Functions
+-------------------
+
+Additional functions available are: &ora_titles(), &ora_lengths(),
+&ora_types(), &ora_autocommit(), &ora_commit(), &ora_rollback() and
+&ora_version().
+
+The first three are of most use within a program which allows statements
+to be entered interactively. See, for example, the sample program sql
+which is supplied with Oraperl and may have been installed at your site.
+
+   * ora_titles
+          @titles = &ora_titles($csr)
+
+
+     A program may determine the field titles of an executed query by
+     calling &ora_titles(). This function takes a single parameter, a
+     statement identifier (obtained from &ora_open()) indicating the
+     query for which the titles are required. The titles are returned as
+     an array of strings, one for each column.
+
+     Titles are truncated to the length of the field, as reported by the
+     &ora_lengths() function.
+
+     *DBD:* oraperl v2.2 actually changed the behaviour such that the
+     titles were not truncated unless an optional second parameter was
+     true.  This was not reflected in the oraperl manual.  The Oraperl
+     emulation adopts the non truncating behaviour and doesn't support
+     the truncate parameter.
+
+   * ora_lengths
+          @lengths = &ora_lengths($csr)
+
+
+     A program may determine the length of each of the fields returned
+     by a query by calling the &ora_lengths() function.  This function
+     takes a single parameter, a statement identifier (obtained from
+     &ora_open()) indicating the query for which the lengths are
+     required. The lengths are returned as an array of integers, one for
+     each column.
+
+   * ora_types
+          @types = &ora_types($csr)
+
+
+     A program may determine the type of each of the fields returned by
+     a query by calling the &ora_types() function.  This function takes
+     a single parameter, a statement identifier (obtained from
+     &ora_open()) indicating the query for which the lengths are
+     required. The types are returned as an array of integers, one for
+     each field.
+
+     These types are defined in your OCI documentation. The correct
+     interpretation for Oracle v6 is given in the file oraperl.ph.
+
+   * ora_autocommit
+          &ora_autocommit($lda, $on_or_off)
+
+
+     Autocommit mode (in which each transaction is committed
+     immediately, without waiting for an explicit commit) may be enabled
+     or disabled using &ora_autocommit(). This function takes two
+     parameters, a login identifier (obtained from &ora_login()) and a
+     true/false value indicating whether autocommit is to be enabled
+     (non-zero) or disabled (zero).  By default, autocommit is off.
+
+     Note that autocommit can only be set per login, not per
+     statement. If you need to control autocommit by statement (for
+     example, to allow deletions to be rolled back, but insertions to be
+     committed immediately) you should make multiple calls to
+     &ora_login() and use a separate login identifier for each
+     statement.
+
+   * ora_commit, ora_rollback
+          &ora_commit($lda)
+          &ora_rollback($lda)
+
+
+     Modifications to a database may be committed or rolled back using
+     the &ora_commit() and &ora_rollback() functions.  These functions
+     take a single parameter, a login identifier obtained from
+     &ora_login().
+
+     Transactions which have been committed (either explicitly by a call
+     to &ora_commit() or implicitly through the use of
+     &ora_autocommit()) cannot be subsequently rolled back.
+
+     Note that commit and rollback can only be used per login, not per
+     statement. If you need to commit or rollback by statement you
+     should make multiple calls to &ora_login() and use a separate login
+     identifier for each statement.
+
+   * ora_version
+          &ora_version()
+
+
+     The &ora_version() function prints the version number and copyright
+     information concerning Oraperl. It also prints the values of
+     various compilation time options. It does not return any value, and
+     should not normally be used in a program.
+
+     Example:
+
+          perl -MOraperl -e 'ora_version()'
+
+          This is Oraperl, version 2, patch level 0.
+
+          Debugging is available, including the -D flag.
+          Default fetch row cache size is 5.
+          Empty bind values are replaced by a space.
+
+          Perl is copyright by Larry Wall; type oraperl -v for details.
+          Additions for oraperl: Copyright 1991, 1992, Kevin Stock.
+
+          Oraperl may be distributed under the same conditions as Perl.
+
+     This function is the equivalent of Perl's -v flag.
+
+     *DBD:* The Oraperl emulation printout is similar but not identical.
+
+
+VARIABLES
+=========
+
+Six special variables are provided, $ora_cache, $ora_long, $ora_trunc,
+$ora_errno, $ora_errstr and $ora_verno.
+
+
+Customisation Variables
+-----------------------
+
+These variables are used to dictate the behaviour of Oraperl under
+certain conditions.
+
+   * $ora_cache
+
+     The $ora_cache variable determines the default cache size used by
+     the &ora_open() function for SELECT statements if an explicit cache
+     size is not given.
+
+     It is initialised to the default value reported by &ora_version()
+     but may be set within a program to apply to all subsequent calls to
+     &ora_open(). Cursors which are already open are not affected. As
+     distributed, the default value is five, but may have been altered
+     at your installation.
+
+     As a special case, assigning zero to $ora_cache resets it to the
+     default value. Attempting to set $ora_cache to a negative value
+     results in a warning.
+
+   * $ora_long
+
+     Normally, Oraperl interrogates the database to determine the length
+     of each field and allocates buffer space accordingly.  This is not
+     possible for fields of type LONG or LONGRAW. To allocate space
+     according to the maximum possible length (65535 bytes) would
+     obviously be extremely wasteful of memory.
+
+     Therefore, when &ora_open() determines that a field is a LONG type,
+     it allocates the amount of space indicated by the $ora_long
+     variable. This is initially set to 80 (for compatibility with
+     Oracle products) but may be set within a program to whatever size
+     is required.
+
+     $ora_long is only used when fetching data, not when inserting it.
+
+   * $ora_trunc
+
+     Since Oraperl cannot determine exactly the maximum length of a LONG
+     field, it is possible that the length indicated by $ora_long is not
+     sufficient to store the data fetched. In such a case, the optional
+     second parameter to &ora_fetch() indicates whether the truncation
+     should be allowed or should provoke an error.
+
+     If this second parameter is not specified, the value of $ora_trunc
+     is used as a default. This only applies to LONG and LONGRAW data
+     types.  Truncation of a field of any other type is always
+     considered an error (principally because it indicates a bug in
+     Oraperl).
+
+
+Status Variables
+----------------
+
+These variables report information about error conditions or about
+Oraperl itself. They may only be read; a fatal error occurs if a program
+attempts to change them.
+
+   * $ora_errno
+
+     $ora_errno contains the Oracle error code provoked by the last
+     function call.
+
+     There are two cases of particular interest concerning
+     &ora_fetch(). If a LONG or LONGRAW field is truncated (and
+     truncation is allowed) then &ora_fetch() will complete successfully
+     but $ora_errno will be set to 1406 to indicate the truncation. When
+     &ora_fetch() fails, $ora_errno will be set to zero if this was due
+     to the end of data or an error code if it was due to an actual
+     error.
+
+   * $ora_errstr
+
+     The $ora_errstr variable contains the Oracle error message
+     corresponding to the current value of $ora_errno.
+
+   * $ora_verno
+
+     The $ora_verno variable contains the version number of Oraperl in
+     the form v.ppp where v is the major version number and ppp is the
+     patchlevel. For example, in Oraperl version 3, patch level 142,
+     $ora_verno would contain the value 3.142 (more or less, allowing
+     for floating point error).
+
+
+SUBSTITUTION VARIABLES
+======================
+
+Oraperl allows an SQL statement to contain substitution variables.
+These consist of a colon followed by a number.  For example, a program
+which added records to a telephone list might use the following call to
+&ora_open():
+
+     $csr = &ora_open($csr, "insert into telno values(:1, :2)");
+
+The two names :1 and :2 are called substitution variables.  The function
+&ora_bind() is used to assign values to these variables. For example,
+the following statements would add two new people to the list:
+
+     &ora_bind($csr, "Annette", "472-8836");
+     &ora_bind($csr, "Brian", "937-1823");
+
+Note that the substitution variables must be assigned consecutively
+beginning from 1 for each SQL statement, as &ora_bind() assigns its
+parameters in this order. Named substitution variables (for example,
+:NAME, :TELNO) are not permitted.
+
+*DBD:* Substitution variables are now bound as type 1 (VARCHAR2)
+and not type 5 (STRING) by default. This can alter the behaviour of SQL
+code which compares a char field with a substitution variable.  See the
+String Comparison section in the Datatypes chapter of the Oracle OCI
+manual for more details.
+
+You can work around this by using DBD::Oracle's ability to specify the
+Oracle type to be used on a per field basis:
+
+     $char_attrib = { ora_type => 5 }; # 5 = STRING (ala oraperl2.4)
+     $csr = ora_open($dbh, "select foo from bar where x=:1 and y=:2");
+     $csr->bind_param(1, $value_x, $char_attrib);
+     $csr->bind_param(2, $value_y, $char_attrib);
+     ora_bind($csr);  # bind with no parameters since we've done bind_param()'s
+
+
+DEBUGGING
+=========
+
+*DBD:* The Oraperl $ora_debug variable is not supported. However
+detailed debugging can be enabled at any time by executing
+
+     $h->debug(2);
+
+where $h is either a $lda or a $csr. If debugging is enabled on an $lda
+then it is automatically passed on to any cursors returned by
+&ora_open().
+
+
+EXAMPLE
+=======
+
+     format STDOUT_TOP =
+     Name Phone
+     ==== =====
+     .
+
+     format STDOUT =
+     @<<<<<<<<<< @>>>>>>>>>>
+     $name, $phone
+     .
+
+     die "You should use oraperl, not perl\n" unless defined &ora_login;
+     $ora_debug = shift if $ARGV[0] =~ /^\-#/;
+
+     $lda = &ora_login('t', 'kstock', 'kstock')
+               || die $ora_errstr;
+     $csr = &ora_open($lda, 'select * from telno order by name')
+               || die $ora_errstr;
+
+     $nfields = &ora_fetch($csr);
+     print "Query will return $nfields fields\n\n";
+
+     while (($name, $phone) = &ora_fetch($csr)) { write; }
+     warn $ora_errstr if $ora_errno;
+
+     die "fetch error: $ora_errstr" if $ora_errno;
+
+     do ora_close($csr) || die "can't close cursor";
+     do ora_logoff($lda) || die "can't log off Oracle";
+
+
+NOTES
+=====
+
+In keeping with the philosophy of Perl, there is no pre-defined limit to
+the number of simultaneous logins or SQL statements which may be active,
+nor to the number of data fields which may be returned by a query. The
+only limits are those imposed by the amount of memory available, or by
+Oracle.
+
+
+WARNINGS
+========
+
+The Oraperl emulation software shares no code with the original
+oraperl. It is built on top of the new Perl5 DBI and DBD::Oracle
+modules.  These modules are still evolving. (One of the goals of the
+Oraperl emulation software is to allow useful work to be done with the
+DBI and DBD::Oracle modules whilst insulating users from the ongoing
+changes in their interfaces.)
+
+It is quite possible, indeed probable, that some differences in
+behaviour will exist. These are probably confined to error handling.
+
+*All* differences in behaviour which are not documented here should be
+reported to Tim.Bunce@ig.co.uk and CC'd to dbi-users@fugue.com.
+
+
+SEE ALSO
+========
+
+Oracle Documentation
+     SQL Language Reference Manual.  Programmer's Guide to the Oracle
+     Call Interfaces.
+
+Books
+     Programming Perl by Larry Wall and Randal Schwartz.  Learning Perl
+     by Randal Schwartz.
+
+Manual Pages
+     perl(1)
+
+
+AUTHORS
+=======
+
+Perl by Larry Wall <lwall@netlabs.com>.
+
+ORACLE by Oracle Corporation, California.
+
+Original Oraperl 2.4 code and documentation by Kevin Stock
+<kstock@auspex.fr>.
+
+DBI and Oraperl emulation using DBD::Oracle by <Tim.Bunce@ig.co.uk>
+
+
+
+
+File: pm.info, Node: DBD/Solid, Next: DBD/Solid/Const, Prev: DBD/Oraperl, Up: Module List
+
+DBD driver to access Solid database
+***********************************
+
+
+
+NAME
+====
+
+DBD::Solid - DBD driver to access Solid database
+
+
+SYNOPSIS
+========
+
+     require DBI;
+
+     $dbh = DBI->connect('DBI:Solid:' . $database, $user, $pass);
+     $dbh = DBI->connect($database, $user, $pass, 'Solid');
+
+
+DESCRIPTION
+===========
+
+This module is the low level driver to access the Solid database using
+the DBI interface. Please refer to the DBI documentation for using it.
+
+
+REFERENCE
+=========
+
+Driver Level functions
+          $dbh = DBI->connect('DBI:Solid:', $user, $pass);
+          $dbh = DBI->connect('', $user, $pass, 'Solid');
+
+          Connects to a local database.
+
+          $dbh = DBI->connect('DBI:Solid:TCP/IP somewhere.com 1313', 
+          		      $user, $pass);
+          $dbh = DBI->connect('TCP/IP somewhere.com 1313',
+                              $user, $pass, 'Solid');
+
+          Connects via tcp/ip to remote database listening on
+          port 1313 at host "somewhere.com".
+          NOTE: It depends on the Solid license whether 
+                TCP connections (even to 'localhost') are possible.
+
+Common handle functions
+          $h->err		full support
+          $h->errstr		full support
+          $h->state		full support
+
+          $h->{Warn}		used to deactivate 'Depreciated 
+          			feature' warnings
+          $h->{CompatMode}	not used
+          $h->{InactiveDestroy}	handled by DBI (?)
+          $h->{PrintError}	handled by DBI
+          $h->{RaiseError}	handled by DBI
+          $h->{ChopBlanks}	full support
+          $h->trace(...)	handled by DBI
+          $h->{LongReadLen}	full support
+          $h->{LongTruncOk}	full support
+          $h->func(...)		no functions defined yet
+
+Database handle functions
+          $sth = $dbh->prepare(	        	full support
+          		$statement)		
+          $sth = $dbh->prepare(			full support
+          		$statement, 
+          		\%attr);
+
+          DBD::Solid note: As the DBD driver looks for placeholders within 
+          the statement, additional to the ANSI style '?' placeholders 
+          the Solid driver can parse :1, :2 and :foo style placeholders 
+          (like Oracle). 
+
+          \%attr values:
+
+          {LongReadLen => number}
+
+          May be useful when you know that the LONG values fetched from 
+          the query will have a maximum size.
+          Allows to handle LONG columns like any other column.
+
+          History note:
+          DBD::Solid 0.07 and above: 
+          	the attribute 'blob_size' triggers a 'depreciated 
+          	feature' warning when warnings are enabled.
+                  DBD::Solid 0.08 and above:
+          	the attribute 'solid_blob_size' triggers a 
+          	depreciated feature' warning when warnings are enabled
+          	(because DBI 0.86+ specifies a LongReadLen attribute).
+
+          $rc = $dbh->do($statement)		full support
+          $rc = $dbh->commit()			full support
+          $rc = $dbh->rollback()		full support
+          $dbh->{AutoCommit}			full support
+
+          $dbh->{solid_characterset} = $charset;
+
+          This is a quick hack to activate Solid's 
+          characterset translation, just in the case 
+          Solid doesn't guess the default translation 
+          (based on operating system and adjustable 
+          by a solid.ini parameter in the working directory) 
+                  right.
+
+          Possible values are:
+
+          $charset = 'default';
+          $charset = 'nocnv';
+          $charset = 'ansi';
+          $charset = 'pcoem';
+          $charset = '7bitscand';
+
+          $rc = $dbh->disconnect()		full support
+          	does a ROLLBACK, so the application must
+          	commit the transaction before calling 
+          	disconnect
+
+          $rc = $dbh->ping()			no support
+          					(due to ongoing 
+          					discussion about)
+
+          $rc = $dbh->quote()			handled by DBI
+          $rc = $sth->execute()			full support
+          @array    = $sth->fetchrow_array()	full support
+          @array    = $sth->fetchrow()		full support
+          $arrayref = $sth->fetchrow_arrayref()	handled by DBI
+          $hashref  = $sth->fetchrow_hashref()	handled by DBI
+          $tbl_ary_ref = $sth->fetch_all()	handled by DBI
+          $sth->rows()				full support
+
+          $rv = $sth->bind_col(                  full support
+          	$column_number,
+          	\$var_to_bind);			
+
+          $rv = $sth->bind_col(                  no attr defined yet
+          	$column_number, 
+          	\$var_to_bind, 
+          	\%attr);			
+
+          $rv = $sth->bind_columns(              full support
+          	\%attr, 
+          	@refs_to_vars_to_bind);		
+
+          $sth->{NUM_OF_FIELDS}			full support
+          $sth->{NUM_OF_PARAMS}			full support
+          $sth->{NAME}				full support
+          $sth->{NULLABLE}			full support
+          $sth->{CursorName}			full support
+
+
+AUTHOR
+======
+
+T.Wenrich, wenrich@ping.at or wet@timeware.co.at
+
+
+SEE ALSO
+========
+
+perl(1), DBI(perldoc), DBD::Solid::Const(perldoc), Solid documentation
+
+
+
+
+File: pm.info, Node: DBD/Solid/Const, Next: DBD/mSQL, Prev: DBD/Solid, Up: Module List
+
+Constansts for DBD::Solid Perl extension
+****************************************
+
+
+
+NAME
+====
+
+DBD::Solid::Const - Constansts for DBD::Solid Perl extension
+
+
+SYNOPSIS
+========
+
+     use DBD::Solid::Const qw(:sql_types);
+
+     if ($sth->{TYPE}->[5] == SQL_LONGVARCHAR) {
+         do_something_very_different;
+         }
+
+
+DESCRIPTION
+===========
+
+This module import some of the constants used by DBD::Solid into your
+namespace. This is useful for querying some of the values returned by
+the DBD::Solid interface.
+
+
+AUTHOR
+======
+
+T.Wenrich, wenrich@ping.at
+
+
+SEE ALSO
+========
+
+perl(1), DBD::Solid(perldoc), DBI, Exporter(perldoc)
+
+
+
+
+File: pm.info, Node: DBD/mSQL, Next: DBI, Prev: DBD/Solid/Const, Up: Module List
+
+mSQL-1.x / 2.x driver for the Perl5 Database Interface (DBI)
+************************************************************
+
+
+
+NAME
+====
+
+DBD::mSQL - mSQL-1.x / 2.x driver for the Perl5 Database Interface (DBI)
+
+
+SYNOPSIS
+========
+
+     $dbh = DBI->connect( "$database:$hostname:$port" );
+
+     @databases = $drh->func( $hostname, '_ListDBs' );
+     @tables = $dbh->func( '_ListTables' );
+     $ref = $dbh->func( $table, '_ListFields' );
+     $ref = $sth->func( '_ListSelectedFields' );
+
+     $numRows = $sth->func( '_NumRows' );
+
+     $rc = $drh->func( $database, '_CreateDB' );
+     $rc = $drh->func( $database, '_DropDB' );
+
+
+DESCRIPTION
+===========
+
+DBD::mSQL is the Perl5 Database Interface driver for mSQL 1.x and 2.x
+databases.
+
+
+Compatibility Alert
+-------------------
+
+As of version 0.70 DBD::mSQL has a new maintainer
+
+
+DBD::mSQL Class Methods
+-----------------------
+
+connect
+          $dbh = DBI->connect( "$database" );
+          $dbh = DBI->connect( "$database:$hostname" );
+          $dbh = DBI->connect( "$database:$hostname:$port" );
+
+     A `database' must always be specified.
+
+     The hostname, if not specified or specified as '', will default to
+     an mSQL daemon running on the local machine on the default port for
+     the UNIX socket.
+
+     Should the mSQL daemon be running on a non-standard port number,
+     you may explicitly state the port number to connect to in the
+     hostname argument, by concatenating the hostname and *port number*
+     together separated by a colon ( `:' ) character.
+
+
+DBD::mSQL Private MetaData Methods
+----------------------------------
+
+ListDBs
+          @databases = $drh->func( $hostname, '_ListDBs' );
+
+     This private method returns an array containing the names of all
+     databases present on the mSQL daemon running on hostname. If there
+     are no databases, an empty list will be returned. A sample usage of
+     this method is:
+
+          @databases = $drh->func( 'localhost', '_ListDBs' );
+          foreach $db ( @databases ) {
+              print "Database: $db\n";
+            }
+
+ListTables
+          @tables = $dbh->func( '_ListTables' );
+
+     Once connected to the desired database on the desired mSQL daemon
+     with the `DBI-'connect()> method, we may extract a list of the
+     tables that have been created within that database.
+
+     ListTables returns an array containing the names of all the tables
+     present within the selected database. If no tables have been
+     created, an empty list is returned.
+
+          @tables = $dbh->func( '_ListTables' );
+          foreach $table ( @tables ) {
+              print "Table: $table\n";
+            }
+
+ListFields
+          $ref = $dbh->func( $table, '_ListFields' );
+
+     ListFields returns a reference to a hashtable containing metadata
+     information on the fields within the given table. If the table
+     specified in `table' does not exist, undef will be returned and an
+     error flagged.
+
+     The valid keys within the hashtable that may be referenced are:
+
+          NAME           The name of the field
+          TYPE           The datatype of the field: CHAR, REAL, INTEGER, NULL
+          IS_NOT_NULL    Indicates whether the field is NULLable or not
+          IS_PRI_KEY     Indicates whether the field is a Primary Key ( this is
+                           only valid in mSQL 1.x databases. mSQL 2.x uses indices )
+          LENGTH         The size of the field
+          NUMFIELDS      The number of fields within the table
+
+     Since a reference is returned, it requires slightly more work to
+     extract the pertinent information from it. Here's an example of how
+     to do it:
+
+          $ref = $dbh->func( 'someTable', '_ListFields' );
+          @fieldNames = @{ $ref->{NAME} };
+          @fieldTypes = @{ $ref->{TYPE} };
+          @fieldNulls = @{ $ref->{IS_NOT_NULL} };
+          @fieldKeys  = @{ $ref->{IS_PRI_KEY} };
+          @fieldLength = @{ $ref->{LENGTH} };
+          for ( $i = 0 ; $i < $ref->{NUMFIELDS} ; $i++ ) {
+              print "Field: $fieldNames[$i]\n";
+              print "\tType: $fieldTypes[$i]\n";
+              print "\tNullable: $fieldNulls[$i]\n";
+              print "\tKey?: $fieldKeys[$i]\n";
+              print "\tLength: $fieldLength[$i]\n";
+            }
+
+ListSelectedFields
+          $ref = $sth->func( '_ListSelectedFields' );
+
+     ListSelectedFields is a similar function to ListFields, except,
+     where ListFields lists the fields for a given table within the
+     current database, ListSelectedFields lists the field information
+     for the fields present in a *SELECT* statement handle. This is
+     primarily used for extracting meta-data about the current `sth'.
+
+     The usage of ListSelectedFields is identical to ListFields.
+
+`NumRows'
+          $numRows = $sth->func( '_NumRows' );
+
+     The `NumRows' private method returns the number of rows affected by a
+     *SELECT* statement. This functionality was introduced prior to it
+     becoming a standard within the DBI interface itself, where the
+     number of rows affected by a *SELECT* may be obtained by checking
+     the return value of the `$sth-'execute> method.
+
+
+DBD::mSQL Database Manipulation
+-------------------------------
+
+CreateDB
+          $rc = $drh->func( $database, '_CreateDB' );
+          $rc = $drh->func( $database, '_DropDB' );
+
+     These two methods allow programmers to create and drop databases
+     from DBI scripts. Since mSQL disallows the creation and deletion of
+     databases over the network, these methods explicitly connect to the
+     mSQL daemon running on the machine `localhost' and execute these
+     operations there.
+
+     It should be noted that database deletion is *not prompted for* in
+     any way.  Nor is it undo-able from DBI.
+
+          Once you issue the dropDB() method, the database will be gone!
+
+     These methods should be used at your own risk.
+
+
+BUGS
+====
+
+The port part of the first argument to the connect call is implemented
+in an unsafe way. It in fact it never did more than set the environment
+variable MSQL_TCP_PORT during the connect call. If another connect call
+uses another port and the handles are used simultaneously, they will
+interfere. In a future version this behaviour will change.
+
+The host part of the first argument to the connect call is currently
+documented as defaulting to 'localhost'. If I read this right, it
+implicates that there are no provisions to connect to the UNIX
+socket. This is a major speed disadvantage for application that run on
+the server host. This will have to be revisited in the next release.
+
+The func method call on a driver handle seems to be undocumented in the
+DBI manpage. DBD::mSQL has func methods on driverhandles, database
+handles, and statement handles. What gives?
+
+Despite all these func methods, AFAIK it is currently not possible to
+connect to a different host and query the available databases. If true,
+this is a minor nit, but needs to be resolved somehow.
+
+I haven't yet found out how the constants CHAR_TYPE, INT_TYPE, etc. are
+accessed in DBD::mSQL. Can anybody help me on the tracks here?
+
+Please speak up now (June 1997) if you encounter additional bugs. I'm
+still learning about the DBI API and can neither judge the quality of
+the code presented here nor the DBI compliancy. But I'm intending to
+resolve things quickly as I'd really like to get rid of the multitude of
+implementations ASAP.
+
+
+AUTHOR
+======
+
+DBD::mSQL has been primarily written by Alligator Descartes
+<*descarte@hermetica.com*>, who has been aided and abetted by Gary Shea,
+Andreas Koenig and Tim Bunce amongst others. Apologies if your name
+isn't listed, it probably is in the file called 'Acknowledgments'. As of
+version 0.80 the maintainer is Andreas König.
+
+
+COPYRIGHT
+=========
+
+This module is Copyright (c)1994-1997 Alligator Descartes, with code
+portions Copyright (c)1994-1997 their original authors. This module is
+released under the 'Artistic' license which you can find in the perl
+distribution.
+
+This document is Copyright (c)1997 Alligator Descartes. All rights
+reserved.  Permission to distribute this document, in full or in part,
+via email, Usenet, ftp archives or http is granted providing that no
+charges are involved, reasonable attempt is made to use the most current
+version and all credits and copyright notices are retained ( the AUTHOR
+and COPYRIGHT sections ).  Requests for other distribution rights,
+including incorporation into commercial products, such as books,
+magazine articles or CD-ROMs should be made to Alligator Descartes
+<*descarte@hermetica.com*>.
+
+
+Additional DBI Information
+==========================
+
+Additional information on the DBI project can be found on the World Wide
+Web at the following URL:
+
+     http://www.hermetica.com/technologia/perl/DBI
+
+where documentation, pointers to the mailing lists and mailing list
+archives and pointers to the most current versions of the modules can be
+used.
+
+Information on the DBI interface itself can be gained by typing:
+
+     perldoc DBI
+
+right now!
+
+
+
+
+File: pm.info, Node: DBI, Next: DBI/DBD, Prev: DBD/mSQL, Up: Module List
+
+Database independent interface for Perl
+***************************************
+
+
+
+NAME
+====
+
+DBI - Database independent interface for Perl
+
+
+SYNOPSIS
+========
+
+     use DBI;
+ 
+     @data_sources = DBI->data_sources($driver_name);
+
+     $dbh = DBI->connect($data_source, $username, $auth);
+     $dbh = DBI->connect($data_source, $username, $auth, \%attr);
+ 
+     $rc  = $dbh->disconnect;
+ 
+     $rv  = $dbh->do($statement);
+     $rv  = $dbh->do($statement, \%attr);
+     $rv  = $dbh->do($statement, \%attr, @bind_values);
+ 
+     $sth = $dbh->prepare($statement);
+     $sth = $dbh->prepare($statement, \%attr);
+ 
+     $rc = $sth->bind_col($col_num, \$col_variable);
+     $rc = $sth->bind_columns(\%attr, @list_of_refs_to_vars_to_bind);
+
+     $rv = $sth->bind_param($param_num, $bind_value);
+     $rv = $sth->bind_param($param_num, $bind_value, $bind_type);
+     $rv = $sth->bind_param($param_num, $bind_value, \%attr);
+
+     $rv = $sth->execute;
+     $rv = $sth->execute(@bind_values);
+ 
+     @row_ary  = $sth->fetchrow_array;
+     $ary_ref  = $sth->fetchrow_arrayref;
+     $hash_ref = $sth->fetchrow_hashref;
+ 
+     $rc = $sth->finish;
+ 
+     $rv = $sth->rows;
+ 
+     $rc  = $dbh->commit;
+     $rc  = $dbh->rollback;
+
+     $sql = $dbh->quote($string);
+ 
+     $rc  = $h->err;
+     $str = $h->errstr;
+     $rv  = $h->state;
+
+
+NOTE
+----
+
+This is the draft DBI specification that corresponds to the DBI version
+0.89 ($Date: 1997/07/25 11:17:49 $).
+
+     * The DBI specification is currently evolving quite quickly so it is
+     * important to check that you have the latest copy. The RECENT CHANGES
+     * section below has a summary of user-visible changes and the F<Changes>
+     * file supplied with the DBI holds more detailed change information.
+
+     * Note also that whenever the DBI changes the drivers take some time to
+     * catch up. Recent versions of the DBI have added many new features that
+     * may not yet be supported by the drivers you use. Talk to the authors of
+     * those drivers if you need the features.
+
+Please also read the DBI FAQ which is installed as a DBI::FAQ module so
+you can use perldoc to read it by executing the `perldoc DBI::FAQ'
+command.
+
+
+RECENT CHANGES
+--------------
+
+A brief summary of significant user-visible changes in recent versions
+(if a recent version isn't mentioned it simply means that there were no
+significant user-visible changes in that version).
+
+DBI 0.86 - 16th July 1997
+     Added $h->{LongReadLen} and $h->{LongTruncOk} attributes for BLOBS.
+     Added DBI_USER and DBI_PASS env vars. See `' in this node for
+     usage.  Added DBI->trace() to set global trace level (like
+     per-handle $h->trace).  PERL_DBI_DEBUG env var renamed DBI_TRACE
+     (old name still works for now).  Updated docs, including commit,
+     rollback, AutoCommit and Transactions sections.  Added bind_param
+     method and execute(@bind_values) to docs.
+
+DBI 0.85 - 25th June 1997
+     The 'new-style connect' (see below) now defaults to AutoCommit mode
+     unless { AutoCommit => 0 } specified in connect attributes (see `'
+     in this node).  New DBI_DSN env var default for connect method
+     (supersedes DBI_DRIVER).  Documented the func method.
+
+DBI 0.84 - 20th June 1997
+     Added $h->{PrintError} attribute which, if set true, causes all
+     errors to trigger a warn().  New-style DBI->connect call now
+     automatically sets PrintError=1 unless { PrintError => 0 }
+     specified in the connect attributes (see `' in this node).  The
+     old-style connect with a separate driver parameter is deprecated.
+     Renamed $h->debug to $h->trace() and added a trace filename arg.
+
+DBI 0.83 - 11th June 1997
+     Added 'new-style' driver specification syntax to the DBI->connect
+     data_source parameter: DBI->connect( 'dbi:driver:...', $user,
+     $passwd); The DBI->data_sources method should return data_source
+     names with the appropriate 'dbi:driver:' prefix.  DBI->connect will
+     warn if \%attr is true but not a hash ref.  Added new fetchrow
+     methods (fetchrow_array, fetchrow_arrayref and fetchrow_hashref):
+     Added the DBI FAQ from Alligator Descartes in module form for easy
+     reading via "perldoc DBI::FAQ".
+
+DBI 0.82 - 23rd May 1997
+     Added $h->{RaiseError} attribute which, if set true, causes all
+     errors to trigger a die(). This makes it much easier to implement
+     robust applications in terms of higher level eval { ... } blocks
+     and rollbacks.  Added DBI->data_sources($driver) method for
+     implementation by drivers.
+
+
+DESCRIPTION
+===========
+
+The Perl DBI is a database access Application Programming Interface
+(API) for the Perl Language.  The DBI defines a set of functions,
+variables and conventions that provide a consistent database interface
+independant of the actual database being used.
+
+It is important to remember that the DBI is just an interface. A thin
+layer of 'glue' between an application and one or more Database Drivers.
+It is the drivers which do the real work. The DBI provides a standard
+interface and framework for the drivers to operate within.
+
+This document is a *work-in-progress*. Although it is incomplete it
+should be useful in getting started with the DBI.
+
+
+Architecture of a DBI Application
+---------------------------------
+
+     |<- Scope of DBI ->|
+          .-.   .--------------.   .-------------.
+       .-------.       | |---| XYZ Driver   |---| XYZ Engine  |
+       | Perl  |       |S|   `--------------'   `-------------'
+       | script|  |A|  |w|   .--------------.   .-------------.
+       | using |--|P|--|i|---|Oracle Driver |---|Oracle Engine|
+       | DBI   |  |I|  |t|   `--------------'   `-------------'
+       | API   |       |c|...
+       |methods|       |h|... Other drivers
+       `-------'       | |...
+          `-'
+
+The API is the Application Perl-script (or Programming) Interface.  The
+call interface and variables provided by DBI to perl scripts. The API is
+implemented by the DBI Perl extension.
+
+The 'Switch' is the code that 'dispatches' the DBI method calls to the
+appropriate Driver for actual execution.  The Switch is also responsible
+for the dynamic loading of Drivers, error checking/handling and other
+duties. The DBI and Switch are generally synonymous.
+
+The Drivers implement support for a given type of Engine (database).
+Drivers contain implementations of the DBI methods written using the
+private interface functions of the corresponding Engine.  Only authors
+of sophisticated/multi-database applications or generic library
+functions need be concerned with Drivers.
+
+
+Notation and Conventions
+------------------------
+
+     DBI    static 'top-level' class name
+     $dbh   Database handle object
+     $sth   Statement handle object
+     $drh   Driver handle object (rarely seen or used in applications)
+     $h     Any of the $??h handle types above
+     $rc    General Return Code  (boolean: true=ok, false=error)
+     $rv    General Return Value (typically an integer)
+     @ary   List of values returned from the database, typically a row of data
+     $rows  Number of rows processed by a function (if available, else -1)
+     $fh    A filehandle
+     undef  NULL values are represented by undefined values in perl
+
+Note that Perl will automatically destroy database and statement objects
+if all references to them are deleted.
+
+Handle object attributes are shown as:
+
+` $h->{attribute_name}' (type)
+
+where type indicates the type of the value of the attribute (if it's not
+a simple scalar):
+
+     \$   reference to a scalar: $h->{attr}       or  $a = ${$h->{attr}}
+     \@   reference to a list:   $h->{attr}->[0]  or  @a = @{$h->{attr}}
+     \%   reference to a hash:   $h->{attr}->{a}  or  %a = %{$h->{attr}}
+
+
+General Interface Rules & Caveats
+---------------------------------
+
+The DBI does not have a concept of a `current session'. Every session
+has a handle object (i.e., a $dbh) returned from the connect method and
+that handle object is used to invoke database related methods.
+
+Most data is returned to the perl script as strings (null values are
+returned as undef).  This allows arbitrary precision numeric data to be
+handled without loss of accuracy.  Be aware that perl may not preserve
+the same accuracy when the string is used as a number.
+
+Dates and times are returned as character strings in the native format
+of the corresponding Engine.  Time Zone effects are Engine/Driver
+dependent.
+
+Perl supports binary data in perl strings and the DBI will pass binary
+data to and from the Driver without change. It is up to the Driver
+implementors to decide how they wish to handle such binary data.
+
+Multiple SQL statements may not be combined in a single statement
+handle, e.g., a single $sth.
+
+Non-sequential record reads are not supported in this version of the
+DBI. E.g., records can only be fetched in the order that the database
+returned them and once fetched they are forgotten.
+
+Positioned updates and deletes are not directly supported by the DBI.
+See the description of the CursorName attribute for an alternative.
+
+Individual Driver implementors are free to provide any private functions
+and/or handle attributes that they feel are useful.  Private functions
+can be invoked using the DBI func method (which is currently not
+documented). Private attributes are accessed just like standard
+attributes.
+
+Character sets: Most databases which understand character sets have a
+default global charset and text stored in the database is, or should be,
+stored in that charset (if it's not then that's the fault of either the
+database or the application that inserted the data). When text is
+fetched it should be (automatically) converted to the charset of the
+client (presumably based on the locale). If a driver needs to set a flag
+to get that behaviour then it should do so. It should not require the
+application to do that.
+
+
+Naming Conventions
+------------------
+
+The DBI package and all packages below it (DBI::*) are reserved for use
+by the DBI. Package names beginning with DBD:: are reserved for use by
+DBI database drivers.  All environment variables used by the DBI or
+DBD's begin with 'DBI_' or 'DBD_'.
+
+The letter case used for attribute names is significant and plays an
+important part in the portability of DBI scripts.  The case of the
+attribute name is used to signify who defined the meaning of that name
+and its values.
+
+     Case of name  Has a meaning defined by
+     ------------  ------------------------
+     UPPER_CASE    Standards, e.g.,  X/Open, SQL92 etc (portable)
+     MixedCase     DBI API (portable), underscores are not used.
+     lower_case    Driver or Engine specific (non-portable)
+
+It is of the utmost importance that Driver developers only use lowercase
+attribute names when defining private attributes.
+
+
+Data Query Methods
+------------------
+
+The DBI allows an application to `prepare' a statement for later
+execution.  A prepared statement is identified by a statement handle
+object, e.g., $sth.
+
+Typical method call sequence for a select statement:
+
+     connect,
+       prepare,
+         execute, fetch, fetch, ... finish,
+         execute, fetch, fetch, ... finish,
+         execute, fetch, fetch, ... finish.
+
+Typical method call sequence for a non-select statement:
+
+     connect,
+       prepare,
+         execute,
+         execute,
+         execute.
+
+
+Placeholders and Bind Values
+----------------------------
+
+Some drivers support Placeholders and Bind Values. These drivers allow a
+database statement to contain placeholders, sometimes called parameter
+markers, that indicate values that will be supplied later, before the
+prepared statement is executed.  For example, an application might use
+the following to insert a row of data into the SALES table:
+
+     insert into sales (product_code, qty, price) values (?, ?, ?)
+
+or the following, to select the description for a product:
+
+     select product_description from products where product_code = ?
+
+The `?' characters are the placeholders.  The association of actual
+values with placeholders is known as binding and the values are referred
+to as bind values. Undefined values or undef can be used to indicate
+null values.
+
+Without using placeholders, the insert statement above would have to
+contain the literal values to be inserted and it would have to be
+re-prepared and re-executed for each row. With placeholders, the insert
+statement only needs to be prepared once. The bind values for each row
+can be given to the execute method each time it's called. By avoiding
+the need to re-prepare the statement for each row the application
+typically many times faster! Here's an example:
+
+     my $sth = $dbh->prepare(q{
+       insert into sales (product_code, qty, price) values (?, ?, ?)
+     }) || die $dbh->errstr;
+     while(<>) {
+         chop;
+         my($product_code, $qty, $price) = split(/,/);
+         $sth->execute($product_code, $qty, $price) || die $dbh->errstr;
+     }
+     $dbh->commit || die $dbh->errstr;
+
+See `' in this node and `' in this node for more details.
+
+
+SQL - A Query Language
+----------------------
+
+Most DBI drivers require applications to use a dialect of SQL (the
+Structured Query Language) to interact with the database engine.  These
+links may provide some useful information about SQL:
+
+     http://www.jcc.com/sql_stnd.html
+     http://w3.one.net/~jhoffman/sqltut.htm
+     http://skpc10.rdg.ac.uk/misc/sqltut.htm
+
+The DBI itself does not mandate or require any particular language to be
+used.  It is language independant. In ODBC terms it is always in
+pass-thru mode. The only requirement is that queries and other
+statements must be expressed as a single string of letters passed as the
+first argument to the `' in this node method.
+
+
+THE DBI CLASS
+=============
+
+
+DBI Class Methods
+-----------------
+
+connect
+          $dbh = DBI->connect($data_source, $username, $password);
+          $dbh = DBI->connect($data_source, $username, $password, \%attr);
+
+     Establishes a database connection (session) to the requested
+     data_source.  Returns a database handle object.
+
+     Multiple simultaneous connections to multiple databases through
+     multiple drivers can be made via the DBI. Simply make one connect
+     call for each and keep a copy of each returned database handle.
+
+     The $data_source value should begin with 'dbi:driver_name:'. That
+     prefix will be stripped off and the driver_name part is used to
+     specify the driver.  As a convenience, if the $data_source field is
+     undefined or empty the DBI will substitute the value of the
+     environment variable DBI_DSN if any.
+
+     If driver is not specified, the environment variable DBI_DRIVER is
+     used. If that variable is not set then the connect dies.
+
+     If $username or $password are *undefined* (rather than empty) then
+     the DBI will substitute the values of the DBI_USER and DBI_PASS
+     environment variables respectively.  The use of the environment for
+     these values is not recommended for security reasons. The mechanism
+     is only intended to simplify testing.
+
+     DBI->connect automatically installs the driver if it has not been
+     installed yet. Driver installation *always* returns a valid driver
+     handle or it *dies* with an error message which includes the string
+     'install_driver' and the underlying problem. So, DBI->connect will
+     die on a driver installation failure and will only return undef on
+     a connect failure, for which $DBI::errstr will hold the error.
+
+     The $data_source argument (with the 'dbi:...:' prefix removed) and
+     the $username and $password arguments are then passed to the driver
+     for processing. The DBI does not define any interpretation for the
+     contents of these fields.  The driver is free to interpret the
+     data_source, username and password fields in any way and supply
+     whatever defaults are appropriate for the engine being accessed
+     (Oracle, for example, uses the ORACLE_SID and TWO_TASK env vars if
+     no data_source is specified).
+
+     The AutoCommit and PrintError attributes for each connection
+     default to default to *on* (see `' in this node and `' in this node
+     for more information).
+
+     The \%attr parameter can be used to alter the default settings of
+     the PrintError, RaiseError and AutoCommit attributes. For example:
+
+          $dbh = DBI->connect($data_source, $user, $pass, {
+          	PrintError => 0,
+          	AutoCommit => 0
+          });
+
+     These are currently the *only* defined uses for the DBI->connect
+     \%attr.
+
+     Portable applications should not assume that a single driver will
+     be able to support multiple simultaneous sessions.
+
+     Where possible each session ($dbh) is independent from the
+     transactions in other sessions. This is useful where you need to
+     hold cursors open across transactions, e.g., use one session for
+     your long lifespan cursors (typically read-only) and another for
+     your short update transactions.
+
+     For compatibility with old DBI scripts the driver can be specified
+     by passing its name as the fourth argument to connect (instead of
+     \%attr):
+
+          $dbh = DBI->connect($data_source, $user, $pass, $driver);
+
+     In this 'old-style' form of connect the $data_source should not
+     start with 'dbi:driver_name:' and, even if it does, the embedded
+     driver_name will be ignored. The $dbh->{AutoCommit} attribute is
+     *undefined*. The $dbh->{PrintError} attribute is off. And the old
+     DBI_DBNAME env var is checked if DBI_DSN is not defined.
+
+available_drivers
+          @ary = DBI->available_drivers;
+          @ary = DBI->available_drivers($quiet);
+
+     Returns a list of all available drivers by searching for DBD::*
+     modules through the directories in @INC. By default a warning will
+     be given if some drivers are hidden by others of the same name in
+     earlier directories. Passing a true value for $quiet will inhibit
+     the warning.
+
+data_sources
+          @ary = DBI->data_sources($driver);
+
+     Returns a list of all data sources (databases) available via the
+     named driver. The driver will be loaded if not already. If $driver
+     is empty or undef then the value of the DBI_DRIVER environment
+     variable will be used.
+
+     Note that many drivers have no way of knowing what data sources
+     might be available for it and thus, typically, return an empty
+     list.
+
+trace
+          DBI->trace($trace_level)
+          DBI->trace($trace_level, $trace_file)
+
+     DBI trace information can be enabled for all handles using this DBI
+     class method. To enable trace information for a specific handle use
+     the similar $h->trace method described elsewhere.
+
+     Use $trace_level 2 to see detailed call trace information including
+     parameters and return values.  The trace output is detailed and
+     typically *very* useful.
+
+     Use $trace_level 0 to disable the trace.
+
+     If $trace_filename is specified then the file is opened in append
+     mode and all trace output (including that from other handles) is
+     redirected to that file.
+
+     See also the $h->trace() method and `' in this node for information
+     about the DBI_TRACE environment variable.
+
+
+DBI Utility Functions
+---------------------
+
+neat
+          $str = DBI::neat($value, $maxlen);
+
+     Return a string containing a neat (and tidy) representation of the
+     supplied value. Strings will be quoted and undefined (NULL) values
+     will be shown as undef. Unprintable characters will be replaced by
+     dot (.) and the string will be truncated and terminated with '...'
+     if longer than $maxlen (0 or undef defaults to 400 characters).
+
+neat_list
+          $str = DBI::neat_list(\@listref, $maxlen, $field_sep);
+
+     Calls DBI::neat on each element of the list and returns a string
+     containing the results joined with $field_sep. $field_sep defaults
+     to `", "'.
+
+dump_results
+          $rows = DBI::dump_results($sth, $maxlen, $lsep, $fsep, $fh);
+
+     Fetches all the rows from $sth, calls DBI::neat_list for each row
+     and prints the results to $fh (defaults to `STDOUT') separated by
+     $lsep (default `"\n"'). $fsep defaults to `", "' and $maxlen
+     defaults to 35.  This function is designed as a handy utility for
+     prototyping and testing queries.
+
+
+DBI Dynamic Attributes
+----------------------
+
+These attributes are always associated with the last handle used.
+
+Where an attribute is Equivalent to a method call, then refer to the
+method call for all related documentation.
+
+$DBI::err
+     Equivalent to $h->err.
+
+$DBI::errstr
+     Equivalent to $h->errstr.
+
+$DBI::state
+     Equivalent to $h->state.
+
+$DBI::rows
+     Equivalent to $h->rows.
+
+
+METHODS COMMON TO ALL HANDLES
+=============================
+
+err
+          $rv = $h->err;
+
+     Returns the native database engine error code from the last driver
+     function called.
+
+errstr
+          $str = $h->errstr;
+
+     Returns the native database engine error message from the last
+     driver function called.
+
+state
+          $str = $h->state;
+
+     Returns an error code in the standard SQLSTATE five character
+     format.  Note that the specific success code `00000' is translated
+     to `0' (false). If the driver does not support SQLSTATE then state
+     will return `S1000' (General Error) for all errors.
+
+trace
+          $h->trace($trace_level);
+          $h->trace($trace_level, $trace_filename);
+
+     DBI trace information can be enabled for a specific handle (and any
+     future children of that handle) by setting the trace level using
+     the trace method.
+
+     Use $trace_level 2 to see detailed call trace information including
+     parameters and return values.  The trace output is detailed and
+     typically *very* useful.
+
+     Use $trace_level 0 to disable the trace.
+
+     If $trace_filename is specified then the file is opened in append
+     mode and all trace output (including that from other handles) is
+     redirected to that file.
+
+     See also the DBI->trace() method and `' in this node for
+     information about the DBI_TRACE environment variable.
+
+func
+          $h->func(@func_arguments, $func_name);
+
+     The func method can be used to call private non-standard and
+     non-portable methods implemented by the driver. Note that the
+     function name is given as the last argument.
+
+
+ATTRIBUTES COMMON TO ALL HANDLES
+================================
+
+These attributes are common to all types of DBI handles.
+
+Some attributes are inherited by *child* handles. That is, the value of
+an inherited attribute in a newly created statement handle is the same
+as the value in the parent database handle. Changes to attributes in the
+new statement handle do not affect the parent database handle and
+changes to the database handle do not affect *existing* statement
+handles, only future ones.
+
+Attempting to set or get the value of an undefined attribute is fatal,
+except for private driver specific attributes (which all have names
+starting with a lowercase letter).
+
+Warn (inherited)
+          $h->{Warn}
+
+     Enables useful warnings for certain bad practices. Enabled by
+     default. Some emulation layers, especially those for perl4
+     interfaces, disable warnings.
+
+CompatMode (inherited)
+          $h->{CompatMode}
+
+     Used by emulation layers (such as Oraperl) to enable compatible
+     behaviour in the underlying driver (e.g., DBD::Oracle) for this
+     handle. Not normally set by application code.
+
+InactiveDestroy
+          $h->{InactiveDestroy}
+
+     This attribute can be used to disable the effect of destroying a
+     handle (which would normally close a prepared statement or
+     disconnect from the database etc). It is specifically designed for
+     use in unix applications which 'fork' child processes. Either the
+     parent or the child process, but not both, should set
+     InactiveDestroy on all their handles.
+
+PrintError (inherited)
+          $h->{PrintError}
+
+     This attribute can be used to force errors to generate warnings
+     (using warn) in addition to returning error codes in the normal
+     way.  When set on, any method which results in an error occuring
+     ($DBI::err being set true) will cause the DBI to effectively do
+     warn("$DBI::errstr").  Note that the contents of the warning are
+     currently just $DBI::errstr but that may change and should not be
+     relied upon.
+
+     By default DBI->connect sets PrintError on (except for old-style
+     connect usage, see connect for more details).
+
+     If desired, the warnings can be caught and processed using a
+     $SIG{__WARN__} handler or modules like CGI::ErrorWrap.
+
+RaiseError (inherited)
+          $h->{RaiseError}
+
+     This attribute can be used to force errors to raise exceptions
+     rather than simply return error codes in the normal way. It
+     defaults to off.  When set on, any method which results in an error
+     occuring ($DBI::err being set true) will cause the DBI to
+     effectively do croak("$DBI::errstr").
+
+     If PrintError is also on then the PrintError is done before the
+     RaiseError unless no __DIE__ handler has been defined, in which
+     case PrintError is skipped since the croak will print the message.
+
+     Note that the contents of $@ are currently just $DBI::errstr but
+     that may change and should not be relied upon.
+
+ChopBlanks (inherited)
+          $h->{ChopBlanks}
+
+     This attribute can be used to control the trimming of trailing
+     space characters from fixed width char fields. No other field types
+     are affected.
+
+     The default is false (it is possible that that may change).
+     Applications that need specific behaviour should set the attribute
+     as needed. Emulation interfaces should set the attribute to match
+     the behaviour of the interface they are emulating.
+
+     Drivers are not required to support this attribute but any driver
+     which does not must arrange to return undef as the attribute value.
+
+LongReadLen (inherited)
+          $h->{LongReadLen}
+
+     This attribute may be used to control the maximum length of 'long'
+     (or 'blob') fields which the driver will read from the database
+     automatically when it fetches each row of data.
+
+     The default is typically 80 bytes but may vary between
+     drivers. Most applications using long fields will set this value to
+     slightly larger than the longest long field value which will be
+     fetched.
+
+     See `' in this node about truncation behaviour.
+
+LongTruncOk (inherited)
+          $h->{LongTruncOk}
+
+     This attribute may be used to control the effect of fetching a long
+     field value which has been truncated (typically because it's longer
+     than the value of the LongReadLen attribute).
+
+     By default LongTruncOk is false and fetching a truncated long value
+     will cause the fetch to fail. (Applications should always take care
+     to check for errors after a fetch loop in case a database error,
+     such as a divide by zero or long field truncation, caused the fetch
+     to terminate prematurely.)
+
+
+DBI DATABASE HANDLE OBJECTS
+===========================
+
+
+Database Handle Methods
+-----------------------
+
+prepare
+          $sth = $dbh->prepare($statement)           || die $dbh->errstr;
+          $sth = $dbh->prepare($statement, \%attr)   || die $dbh->errstr;
+
+     Prepare a single statement for execution by the database engine and
+     return a reference to a statement handle object which can be used
+     to get attributes of the statement and invoke the `' in this node
+     method.
+
+     Note that prepare should never execute a statement, even if it is
+     not a select statement, it only prepares it for execution. Having
+     said that, some drivers, notably Oracle, will execute data
+     definition statements such as create/drop table when they are
+     prepared. In practice this is rarely a problem.
+
+     Drivers for engines which don't have the concept of preparing a
+     statement will typically just store the statement in the returned
+     handle and process it when $sth->execute is called. Such drivers
+     are likely to be unable to give much useful information about the
+     statement, such as $sth->{NUM_OF_FIELDS}, until after $sth->execute
+     has been called. Portable applications should take this into
+     account.
+
+do
+          $rc  = $dbh->do($statement)           || die $dbh->errstr;
+          $rc  = $dbh->do($statement, \%attr)   || die $dbh->errstr;
+          $rv  = $dbh->do($statement, \%attr, @bind_values) || ...
+
+     Prepare and execute a statement. Returns the number of rows
+     affected (-1 if not known or not available) or undef on error.
+
+     This method is typically most useful for non-select statements
+     which either cannot be prepared in advance (due to a limitation in
+     the driver) or which do not need to be executed repeatedly.
+
+     The default do method is logically similar to:
+
+          sub do {
+              my($dbh, $statement, $attr, @bind_values) = @_;
+              my $sth = $dbh->prepare($statement) or return undef;
+              $sth->execute(@bind_values) or return undef;
+              my $rows = $sth->rows;
+              ($rows == 0) ? "0E0" : $rows;
+          }
+
+     Example:
+
+          my $rows_deleted = $dbh->do(q{
+              delete from table
+              where status = 'DONE'
+          }) || die $dbh->errstr;
+
+     Using placeholders and `@bind_values' with the do method can be
+     useful because it avoids the need to correctly quote any variables
+     in the $statement.
+
+commit
+          $rc  = $dbh->commit     || die $dbh->errstr;
+
+     Commit (make permanent) the most recent series of database changes
+     if the database supports transactions.
+
+     If the database supports transactions and AutoCommit is on then the
+     commit should issue a "commit ineffective with AutoCommit" warning.
+
+     See also `' in this node.
+
+rollback
+          $rc  = $dbh->rollback   || die $dbh->errstr;
+
+     Roll-back (undo) the most recent series of uncommitted database
+     changes if the database supports transactions.
+
+     If the database supports transactions and AutoCommit is on then the
+     rollback should issue a "rollback ineffective with AutoCommit"
+     warning.
+
+     See also `' in this node.
+
+disconnect
+          $rc  = $dbh->disconnect   || warn $dbh->errstr;
+
+     Disconnects the database from the database handle. Typically only
+     used before exiting the program. The handle is of little use after
+     disconnecting.
+
+     The transaction behaviour of disconnect is undefined.  Some
+     database systems (such as Oracle and Ingres) will automatically
+     commit any outstanding changes, but others (such as Informix) will
+     rollback any outstanding changes.  Applications should explicitly
+     call commit or rollback before calling disconnect.
+
+     The database is automatically disconnected (by the DESTROY method)
+     if still connected when there are no longer any references to the
+     handle.  The DESTROY method for each driver should explicitly call
+     rollback to undo any uncommitted changes. This is *vital* behaviour
+     to ensure that incomplete transactions don't get committed simply
+     because Perl calls DESTROY on every object before exiting.
+
+ping
+          $rc = $dbh->ping;
+
+     Attempts to determine, in a reasonably efficient way, if the
+     database server is still running and the connection to it is still
+     working.  The default implementation currently always returns true
+     without actually doing anything. Individual drivers should
+     implement this function in the most suitable manner for their
+     database engine.
+
+     Very few applications would have any use for this method. See the
+     specialist Apache::DBI module for one example usage.
+
+quote
+          $sql = $dbh->quote($string);
+
+     Quote a string literal for use in an SQL statement by *escaping*
+     any special characters (such as quotation marks) contained within
+     the string and adding the required type of outer quotation marks.
+
+          $sql = sprintf "select foo from bar where baz = %s",
+                        $dbh->quote("Don't\n");
+
+     For most database types quote would return `'Don''t'' (including
+     the outer quotation marks).
+
+     An undefined $string value will be returned as NULL (without
+     quotation marks).
+
+
+Database Handle Attributes
+--------------------------
+
+AutoCommit
+          $dbh->{AutoCommit}     ($)
+
+     If true then database changes cannot be rolledback (undone).  If
+     false then database changes automatically occur within a
+     'transaction' which must either be committed or rolled-back using
+     the commit or rollback methods.
+
+     Drivers should always default to AutoCommit mode. (An unfortunate
+     choice forced on the DBI by ODBC and JDBC conventions.)
+
+     Attempting to set AutoCommit to an unsupported value is a fatal
+     error.  This is an important feature of the DBI. Applications which
+     need full transaction behaviour can set $dbh->{AutoCommit}=0 (or
+     via connect) without having to check the value was assigned okay.
+
+     For the purposes of this description we can divide databases into
+     three categories:
+
+          Database which don't support transactions at all.
+          Database in which a transaction is always active.
+          Database in which a transaction must be explicitly started ('BEGIN WORK').
+
+     ** Database which don't support transactions at all*
+
+     For these databases attempting to turn AutoCommit off is a fatal
+     error.  Commit and rollback both issue warnings about being
+     ineffective while AutoCommit is in effect.
+
+     ** Database in which a transaction is always active*
+
+     These are typically mainstream commercial relational databases with
+     'ANSI standandard' transaction behaviour.
+
+     If AutoCommit is off then changes to the database won't have any
+     lasting effect unless `' in this node is called (but see also `' in
+     this node). If `' in this node is called then any changes since the
+     last commit are undone.
+
+     If AutoCommit is on then the effect is the same as if the DBI were
+     to have called commit automatically after every successful database
+     operation. In other words, calling commit or rollback explicitly
+     while AutoCommit is on would be ineffective because the changes
+     would have already been commited.
+
+     Changing AutoCommit from off to on may issue a `' in this node in
+     some drivers.
+
+     Changing AutoCommit from on to off should have no immediate effect.
+
+     For databases which don't support a specific auto-commit mode, the
+     driver has to commit each statement automatically using an explicit
+     COMMIT after it completes successfully (and roll it back using an
+     explicit ROLLBACK if it fails).  The error information reported to
+     the application will correspond to the statement which was
+     executed, unless it succeeded and the commit or rollback failed.
+
+     ** Database in which a transaction must be explicitly started*
+
+     For these database the intention is to have them act like databases
+     in which a transaction is always active (as described above).
+
+     To do this the DBI driver will automatically begin a transaction
+     when AutoCommit is turned off (from the default on state) and will
+     automatically begin another transaction after a `' in this node or
+     `' in this node.
+
+     In this way, the application does not have to treat these databases
+     as a special case.
+
+
+DBI STATEMENT HANDLE OBJECTS
+============================
+
+
+Statement Handle Methods
+------------------------
+
+bind_param
+          $rc = $sth->bind_param($param_num, $bind_value)  || die $sth->errstr;
+          $rv = $sth->bind_param($param_num, $bind_value, \%attr)     || ...
+          $rv = $sth->bind_param($param_num, $bind_value, $bind_type) || ...
+
+     The bind_param method can be used to bind (assign/associate) a
+     value with a *placeholder* embedded in the prepared
+     statement. Placeholders are indicated with question mark character
+     (`?'). For example:
+
+          $dbh->{RaiseError} = 1;        # save having to check each method call
+          $sth = $dbh->prepare("select name, age from people where name like ?");
+          $sth->bind_param(1, "John%");  # placeholders are numbered from 1
+          $sth->execute;
+          DBI::dump_results($sth);
+
+     Note that the `?' is not enclosed in quotation marks even when the
+     placeholder represents a string.  Some drivers also allow `:1',
+     `:2' etc and `:name' style placeholders in addition to `?' but
+     their use is not portable.
+
+     Sadly, placeholders can only represent single scalar values, so
+     this statement, for example, won't work as expected for more than
+     one value:
+
+          "select name, age from people where name in (?)"    # wrong
+
+     The `\%attr' parameter can be used to specify the data type the
+     placeholder should have. Typically the driver is only interested in
+     knowing if the placeholder should be bound as a number or a string.
+
+          $sth->bind_param(1, $value, { TYPE => SQL_INTEGER });
+
+     As a short-cut for this common case, the data type can be passed
+     directly inplace of the attr hash reference. This example is
+     equivalent to the one above:
+
+          $sth->bind_param(1, $value, SQL_INTEGER);
+
+     Perl only has string and number scalar data types. All database
+     types that aren't numbers are bound as strings and must be in a
+     format the database will understand.
+
+     Undefined values or undef can be used to indicate null values.
+
+execute
+          $rv = $sth->execute                || die $sth->errstr;
+          $rv = $sth->execute(@bind_values)  || die $sth->errstr;
+
+     Perform whatever processing is necessary to execute the prepared
+     statement.  An undef is returned if an error occurs, a successful
+     execute always returns true (see below). It is always important to
+     check the return status of execute (and most other DBI methods).
+
+     For a non-select statement execute returns the number of rows
+     affected (if known). Zero rows is returned as "0E0" which Perl will
+     treat as 0 but will regard as true. If the number of rows affected
+     is not known then execute returns -1.
+
+     For select statements execute simply 'starts' the query within the
+     Engine. Use one of the fetch methods to retreive the data after
+     calling execute.  Note that the execute method does *not* return
+     the number of rows that will be returned by the query (because most
+     Engines can't tell in advance).
+
+     If any arguments are given then execute will effectively call `' in
+     this node for each value before executing the statement.  Values
+     bound in this way are treated as SQL_VARCHAR types.
+
+fetchrow_arrayref
+          $ary_ref = $sth->fetchrow_arrayref;
+          $ary_ref = $sth->fetch;    # alias
+
+     Fetches the next row of data and returns a reference to an array
+     holding the field values. If there are no more rows
+     fetchrow_arrayref returns undef.  Null values are returned as
+     undef. This is the fastest way to fetch data, particularly if used
+     with $sth->bind_columns.
+
+fetchrow_array
+          @ary = $sth->fetchrow_array;
+
+     An alternative to fetchrow_arrayref. Fetches the next row of data
+     and returns it as an array holding the field values. If there are
+     no more rows fetchrow_array returns an empty list.  Null values are
+     returned as undef.
+
+fetchrow_hashref
+          $hash_ref = $sth->fetchrow_hashref;
+
+     An alternative to fetchrow_arrayref. Fetches the next row of data
+     and returns it as a reference to a hash containing field name and
+     field value pairs.  Null values are returned as undef.  If there
+     are no more rows fetchhash returns undef.
+
+     The keys of the hash are the same names returned by
+     $sth->{NAME}. If more than one field has the same name there will
+     only be one entry in the returned hash.
+
+     Because of the extra work fetchrow_hashref and perl have to perform
+     it is not as efficient as fetchrow_arrayref or fetchrow_array and
+     is not recommended where performance is very important. Currently a
+     new hash reference is returned for each row.  This is likely to
+     change in the future so don't rely on it.
+
+fetchall_arrayref
+          $tbl_ary_ref = $sth->fetchall_arrayref;
+
+     The fetchall_arrayref method can be used to fetch all the data to
+     be returned from a prepared statement. It returns a reference to an
+     array which contains one array reference per row (as returned by
+     fetchrow_arrayref).
+
+     If there are no rows to return, fetchall_arrayref returns a
+     reference to an empty array.
+
+finish
+          $rc  = $sth->finish;
+
+     Indicates that no more data will be fetched from this statement
+     before it is either prepared again or destroyed.  It is helpful to
+     call this method where appropriate in order to allow the server to
+     free off any internal resources (such as read locks) currently
+     being held. It does not affect the transaction status of the
+     session in any way.
+
+rows
+          $rv = $sth->rows;
+
+     Returns the number of rows affected by the last database altering
+     command, or -1 if not known or not available.
+
+     Generally you can only rely on a row count after a do() or
+     non-select execute().  Some drivers only offer a row count after
+     executing some specific operations (e.g., update and delete).
+
+     It is generally not possible to know how many rows will be returned
+     from an arbitrary select statement except by fetching and counting
+     them all.  Also note that some drivers, such as DBD::Oracle,
+     implement read-ahead row caches for select statements which means
+     that the row count may appear to be incorrect while there are still
+     more records to fetch.
+
+bind_col
+          $rc = $sth->bind_col($column_number, \$var_to_bind);
+          $rc = $sth->bind_col($column_number, \$var_to_bind, \%attr);
+
+     Binds a column (field) of a select statement to a perl variable.
+     Whenever a row is fetched from the database the corresponding perl
+     variable is automatically updated. There is no need to fetch and
+     assign the values manually. This makes using bound variables very
+     efficient.  See bind_columns below for an example.  Note that
+     column numbers count up from 1.
+
+     The binding is performed at a very low level using perl aliasing so
+     there is no extra copying taking place. So long as the driver uses
+     the correct internal DBI call to get the array the fetch function
+     returns, it will automatically support column binding.
+
+bind_columns
+          $rc = $sth->bind_columns(\%attr, @list_of_refs_to_vars_to_bind);
+
+     e.g.
+
+          $sth->prepare(q{ select region, sales from sales_by_region }) or die ...;
+          my($region, $sales);
+          # Bind perl variables to columns.
+          $rv = $sth->bind_columns(undef, \$region, \$sales);
+          # you can also use perl's \(...) syntax (see perlref docs):
+          #     $sth->bind_columns(undef, \($region, $sales));
+          # Column binding is the most eficient way to fetch data
+          while($sth->fetch) {
+              print "$region: $sales\n";
+          }
+
+     Calls bind_col for each column of the select
+     statement. bind_columns will croak if the number of references does
+     not match the number of fields.
+
+
+Statement Handle Attributes
+---------------------------
+
+Note that some drivers cannot provide valid values for some or all of
+these attributes until after $sth->execute has been called.
+
+NUM_OF_FIELDS
+          $sth->{NUM_OF_FIELDS}  ($)
+
+     Number of fields (columns) the prepared statement will
+     return. Non-select statements will have NUM_OF_FIELDS == 0.
+
+NUM_OF_PARAMS
+          $sth->{NUM_OF_PARAMS}  ($)
+
+     The number of parameters (placeholders) in the prepared statement.
+     See SUBSTITUTION VARIABLES below for more details.
+
+NAME
+          $sth->{NAME}           (\@)
+
+     Returns a *reference* to an array of field names for each
+     column. The names may contain spaces but should not be truncated or
+     have any trailing space.
+
+          print "First column name: $sth->{NAME}->[0]\n";
+
+NULLABLE
+          $sth->{NULLABLE}       (\@)
+
+     Returns a *reference* to an array indicating the possibility of
+     each column returning a null.
+
+          print "First column may return NULL\n" if $sth->{NULLABLE}->[0];
+
+CursorName
+          $sth->{CursorName}     ($)
+
+     Returns the name of the cursor associated with the statement handle
+     if available. If not available or the database driver does not
+     support the `"where current of ..."' SQL syntax then it returns
+     undef.
+
+
+TRANSACTIONS
+============
+
+Transactions are a fundamental part of any quality database system. They
+protect against errors and database corruption by ensuring that changes
+to the database take place in atomic (indivisible, all-or-nothing)
+units.
+
+See `' in this node for details of using AutoCommit with various types
+of database.
+
+
+Robust Applications
+-------------------
+
+This section applies to databases which support transactions and where
+AutoCommit is off.
+
+The recommended way to implement robust transactions in Perl
+applications is to make use of `eval { ... }' (which is very fast,
+unlike `eval "..."').
+
+     eval {
+         foo(...)
+     };
+     if ($@) {
+         $dbh->rollback;
+         # add other application on-error-clean-up code here
+     }
+     else {
+         $dbh->commit;
+     }
+
+The code in foo(), or any other code executed from within the curly
+braces, can be implemented in this way:
+
+     $h->method(@args) || die $h->errstr
+
+or the $h->{RaiseError} attribute can be set on, in which case the DBI
+will automatically croak() on error so you don't have to test the return
+value of each method call. See `' in this node for more details.
+
+A major advantage of the eval approach is that the transaction will be
+properly rolled back if any code in the inner application croaks or dies
+for any reason.
+
+
+SIMPLE EXAMPLE
+==============
+
+     my $dbh = DBI->connect("dbi:Oracle:$data_source", $user, $password)
+         || die "Can't connect to $data_source: $DBI::errstr";
+
+     my $sth = $dbh->prepare( q{
+             SELECT name, phone
+             FROM mytelbook
+     }) || die "Can't prepare statement: $DBI::errstr";
+
+     my $rc = $sth->execute
+         || die "Can't execute statement: $DBI::errstr";
+
+     print "Query will return $sth->{NUM_FIELDS} fields.\n\n";
+
+     print "$sth->{NAME}->[0]: $sth->{NAME}->[1]\n";
+     while (($name, $phone) = $sth->fetchrow_array) {
+         print "$name: $phone\n";
+     }
+     # check for problems which may have terminated the fetch early
+     warn $DBI::errstr if $DBI::err;
+
+     $sth->finish;
+
+
+DEBUGGING
+=========
+
+In addition to the `' in this node method you can enable the same trace
+information by setting the DBI_TRACE environment variable before
+starting perl.
+
+On unix-like systems using a bourne-like shell you can do this easily
+for a single command:
+
+     DBI_TRACE=2 perl your_test_script.pl
+
+If DBI_TRACE is set to a non-numeric value then it is assumed to be a
+file name and the trace level will be set to 2 with all trace output
+will be appended to that file.
+
+See also the `' in this node method.
+
+
+WARNINGS
+========
+
+The DBI is *alpha* software. It is *only* 'alpha' because the interface
+(api) is not finalised. The alpha status does not reflect code quality.
+
+
+SEE ALSO
+========
+
+
+Database Documentation
+----------------------
+
+SQL Language Reference Manual.
+
+
+Books and Journals
+------------------
+
+     Programming Perl 2nd Ed. by Larry Wall, Tom Christiansen & Randal Schwartz.
+     Learning Perl by Randal Schwartz.
+
+     Dr Dobb's Journal, November 1996.
+     The Perl Journal, April 1997.
+
+
+Manual Pages
+------------
+
+`perl(1)' in this node, `perlmod(1)' in this node, `perlbook(1)' in this
+node
+
+
+Mailing List
+------------
+
+The dbi-users mailing list is the primary means of communication among
+uses of the DBI and its related modules. Subscribe and unsubscribe via:
+
+     http://www.fugue.com/dbi
+
+Mailing list archives are held at:
+
+     http://www.rosat.mpe-garching.mpg.de/mailing-lists/PerlDB-Interest/
+     http://www.coe.missouri.edu/~faq/lists/dbi.html
+
+
+Assorted Related WWW Links
+--------------------------
+
+The DBI 'Home Page' (not maintained by me):
+
+     http://www.hermetica.com/technologia/DBI
+
+Other related links:
+
+     http://www-ccs.cs.umass.edu/db.html
+     http://www.odmg.org/odmg93/updates_dbarry.html
+     http://www.jcc.com/sql_stnd.html
+     ftp://alpha.gnu.ai.mit.edu/gnu/gnusql-0.7b3.tar.gz
+
+
+FAQ
+---
+
+Please also read the DBI FAQ which is installed as a DBI::FAQ module so
+you can use perldoc to read it by executing the `perldoc DBI::FAQ'
+command.
+
+
+AUTHORS
+=======
+
+DBI by Tim Bunce.  This pod text by Tim Bunce, J. Douglas Dunlop,
+Jonathan Leffler and others.  Perl by Larry Wall and the perl5-porters.
+
+
+COPYRIGHT
+=========
+
+The DBI module is Copyright (c) 1995,1996,1997 Tim Bunce. England.  The
+DBI module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+This document is Copyright (c) 1997 by Tim Bunce. All rights reserved.
+Permission to distribute this document, in full or part, via email,
+usenet or ftp/http archives or printed copy is granted providing that no
+charges are involved, reasonable attempt is made to use the most current
+version, and all credits and copyright notices are retained.  Requests
+for other distribution rights, including incorporation in commercial
+products, such as books, magazine articles, or CD-ROMs should be made to
+Tim.Bunce@ig.co.uk (please *don't* use this mail address for other DBI
+related mail - use the dbi-users mailing list).
+
+
+ACKNOWLEDGEMENTS
+================
+
+I would like to acknowledge the valuable contributions of the many
+people I have worked with on the DBI project, especially in the early
+years (1992-1994): Kevin Stock, Buzz Moschetti, Kurt Andersen, Ted
+Lemon, William Hails, Garth Kennedy, Michael Peppler, Neil S. Briscoe,
+David J. Hughes, Jeff Stander, Forrest D Whitcher, Larry Wall, Jeff
+Fried, Roy Johnson, Paul Hudson, Georg Rehfeld, Steve Sizemore, Ron
+Pool, Jon Meek, Tom Christiansen, Steve Baumgarten, Randal Schwartz, and
+a whole lot more.
+
+
+SUPPORT / WARRANTY
+==================
+
+The DBI is free software. IT COMES WITHOUT WARRANTY OF ANY KIND.
+
+Commercial support agreements for Perl and the DBI, DBD::Oracle and
+Oraperl modules can be arranged via The Perl Clinic. See
+http://www.perl.co.uk/tpc for more details.
+
+
+OUTSTANDING ISSUES TO DO
+========================
+
+     data types (ISO type numbers and type name conversions)
+     error handling
+     data dictionary methods
+     test harness support methods
+     portability
+     blob_read
+     etc
+
+
+FREQUENTLY ASKED QUESTIONS
+==========================
+
+See the DBI FAQ for a more comprehensive list of FAQs. Use the `perldoc
+DBI::FAQ' command to read it.
+
+
+Why doesn't my CGI script work right?
+-------------------------------------
+
+Read the information in the references below.  Please do *not* post CGI
+related questions to the dbi-users mailing list (or to me).
+
+     http://www.perl.com/perl/faq/idiots-guide.html
+     http://www3.pair.com/webthing/docs/cgi/faqs/cgifaq.shtml
+     http://www.perl.com/perl/faq/perl-cgi-faq.html
+     http://www-genome.wi.mit.edu/WWW/faqs/www-security-faq.html
+     http://www.boutell.com/faq/
+     http://www.perl.com/perl/faq/
+
+General problems and good ideas:
+
+     Use the CGI::ErrorWrap module.
+     Remember that many env vars won't be set for CGI scripts
+
+
+How can I maintain a WWW connection to a database?
+--------------------------------------------------
+
+For information on the Apache httpd server and the mod_perl module see
+http://www.osf.org/~dougm/apache
+
+
+A driver build fails because it can't find DBIXS.h
+--------------------------------------------------
+
+The installed location of the DBIXS.h file changed with 0.77 (it was
+being installed into the 'wrong' directory but that's where driver
+developers came to expect it to be). The first thing to do is check to
+see if you have the latest version of your driver. Driver authors will
+be releasing new versions which use the new location. If you have the
+latest then ask for a new release. You can edit the Makefile.PL file
+yourself. Change the part which reads `"-I.../DBI"' so it reads
+`"-I.../auto/DBI"' (where ... is a string of non-space characters).
+
+
+Has the DBI and DBD::Foo been ported to NT / Win32?
+---------------------------------------------------
+
+The latest version of the DBI and, at least, the DBD::Oracle module will
+build - without changes - on NT/Win32 *if* your are using the standard
+Perl 5.004 and *not* the ActiveWare port.
+
+Jeffrey Urlwin <jurlwin@access.digex.net> (or <jurlwin@hq.caci.com>) is
+helping me with the port (actually he's doing it and I'm integrating the
+changes :-).
+
+
+What about ODBC?
+----------------
+
+See the statement and following notes in the DBI README file.
+
+
+KNOWN DRIVER MODULES
+====================
+
+Oracle - DBD::Oracle
+          Author:  Tim Bunce
+          Email:   dbi-users@fugue.com
+
+Ingres - DBD::Ingres
+          Author:  Henrik Tougaard
+          Email:   ht@datani.dk,  dbi-users@fugue.com
+
+mSQL - DBD::mSQL
+DB2 - DBD::DB2
+Empress - DBD::Empress
+Informix - DBD::Informix
+          Author:  Jonathan Leffler
+          Email:   johnl@informix.com, dbi-users@fugue.com
+
+Solid - DBD::Solid
+          Author:  Thomas Wenrich
+          Email:   wenrich@site58.ping.at, dbi-users@fugue.com
+
+Postgres - DBD::Pg
+          Author:  Edmund Mergl
+          Email:   mergl@nadia.s.bawue.de, dbi-users@fugue.com
+
+Fulcrum SearchServer - DBD::Fulcrum
+          Author:  Davide Migliavacca
+          Email:   davide.migliavacca@inferentia.it
+
+
+OTHER RELATED WORK AND PERL MODULES
+===================================
+
+Apache::DBI by E.Mergl@bawue.de
+     To be used with the Apache daemon together with an embedded perl
+     interpreter like mod_perl. Establishes a database connection which
+     remains open for the lifetime of the http daemon. This way the CGI
+     connect and disconnect for every database access becomes
+     superfluous.
+
+JDBC Server by Stuart 'Zen' Bishop <zen@bf.rmit.edu.au>
+     The server is written in Perl. The client classes that talk to it
+     are of course in Java. Thus, a Java applet or application will be
+     able to comunicate via the JDBC API with any database that has a
+     DBI driver installed.  The URL used is in the form
+     jdbc:dbi://host.domain.etc:999/Driver/DBName.  It seems to be very
+     similar to some commercial products, such as jdbcKona.
+
+Remote Proxy DBD support
+          Carl Declerck <carl@miskatonic.inbe.net>
+          Terry Greenlaw <z50816@mip.mar.lmco.com>
+
+     Carl is developing a generic proxy object module which could form
+     the basis of a DBD::Proxy driver in the future. Terry is doing
+     something similar.
+
+SQL Parser - Stephen Zander <stephen.zander@mckesson.com>
+     Based on the O'Reilly lex/yacc book examples and byacc.
+
+
+
+

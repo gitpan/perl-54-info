@@ -1,0 +1,2105 @@
+Info file: perl.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigperl.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+settitle perl
+
+
+
+File: perl.info, Node: perlmodlib, Next: perlform, Prev: perlmod, Up: Top
+
+constructing new Perl modules and finding existing ones
+*******************************************************
+
+
+
+NAME
+====
+
+perlmodlib - constructing new Perl modules and finding existing ones
+
+
+DESCRIPTION
+===========
+
+
+THE PERL MODULE LIBRARY
+=======================
+
+A number of modules are included the Perl distribution.  These are
+described below, and all end in `.pm'.  You may also discover files in
+the library directory that end in either `.pl' or `.ph'.  These are old
+libraries supplied so that old programs that use them still run.  The
+`.pl' files will all eventually be converted into standard modules, and
+the `.ph' files made by h2ph will probably end up as extension modules
+made by h2xs.  (Some `.ph' values may already be available through the
+POSIX module.)  The *pl2pm* file in the distribution may help in your
+conversion, but it's just a mechanical process and therefore far from
+bulletproof.
+
+
+Pragmatic Modules
+-----------------
+
+They work somewhat like pragmas in that they tend to affect the
+compilation of your program, and thus will usually work well only when
+used within a use, or no.  Most of these are locally scoped, so an inner
+BLOCK may countermand any of these by saying:
+
+     no integer;
+     no strict 'refs';
+
+which lasts until the end of that BLOCK.
+
+Unlike the pragmas that effect the $^H hints variable, the `use
+vars' and `use subs' declarations are not BLOCK-scoped.  They allow
+you to predeclare a variables or subroutines within a particular
+*file* rather than just a block.  Such declarations are effective
+for the entire file for which they were declared.  You cannot rescind
+them with `no vars' or `no subs'.
+
+The following pragmas are defined (and have their own documentation).
+
+use autouse MODULE => qw(sub1 sub2 sub3)
+     Defers `require MODULE' until someone calls one of the specified
+     subroutines (which must be exported by MODULE).  This pragma should
+     be used with caution, and only when necessary.
+
+blib
+     manipulate @INC at compile time to use MakeMaker's uninstalled
+     version of a package
+
+diagnostics
+     force verbose warning diagnostics
+
+integer
+     compute arithmetic in integer instead of double
+
+less
+     request less of something from the compiler
+
+lib
+     manipulate @INC at compile time
+
+locale
+     use or ignore current locale for builtin operations (see *Note
+     Perllocale: perllocale,)
+
+ops
+     restrict named opcodes when compiling or running Perl code
+
+overload
+     overload basic Perl operations
+
+sigtrap
+     enable simple signal handling
+
+strict
+     restrict unsafe constructs
+
+subs
+     predeclare sub names
+
+vmsish
+     adopt certain VMS-specific behaviors
+
+vars
+     predeclare global variable names
+
+
+Standard Modules
+----------------
+
+Standard, bundled modules are all expected to behave in a well-defined
+manner with respect to namespace pollution because they use the Exporter
+module.  See their own documentation for details.
+
+AnyDBM_File
+     provide framework for multiple DBMs
+
+AutoLoader
+     load functions only on demand
+
+AutoSplit
+     split a package for autoloading
+
+Benchmark
+     benchmark running times of code
+
+CPAN
+     interface to Comprehensive Perl Archive Network
+
+CPAN::FirstTime
+     create a CPAN configuration file
+
+CPAN::Nox
+     run CPAN while avoiding compiled extensions
+
+Carp
+     warn of errors (from perspective of caller)
+
+Class::Struct
+     declare struct-like datatypes
+
+Config
+     access Perl configuration information
+
+Cwd
+     get pathname of current working directory
+
+DB_File
+     access to Berkeley DB
+
+Devel::SelfStubber
+     generate stubs for a SelfLoading module
+
+DirHandle
+     supply object methods for directory handles
+
+DynaLoader
+     dynamically load C libraries into Perl code
+
+English
+     use nice English (or awk) names for ugly punctuation variables
+
+Env
+     import environment variables
+
+Exporter
+     implements default import method for modules
+
+ExtUtils::Embed
+     utilities for embedding Perl in C/C++ applications
+
+ExtUtils::Install
+     install files from here to there
+
+ExtUtils::Liblist
+     determine libraries to use and how to use them
+
+ExtUtils::MM_OS2
+     methods to override Unix behaviour in ExtUtils::MakeMaker
+
+ExtUtils::MM_Unix
+     methods used by ExtUtils::MakeMaker
+
+ExtUtils::MM_VMS
+     methods to override Unix behaviour in ExtUtils::MakeMaker
+
+ExtUtils::MakeMaker
+     create an extension Makefile
+
+ExtUtils::Manifest
+     utilities to write and check a MANIFEST file
+
+ExtUtils::Mkbootstrap
+     make a bootstrap file for use by DynaLoader
+
+ExtUtils::Mksymlists
+     write linker options files for dynamic extension
+
+ExtUtils::testlib
+     add blib/* directories to @INC
+
+Fcntl
+     load the C Fcntl.h defines
+
+File::Basename
+     split a pathname into pieces
+
+File::CheckTree
+     run many filetest checks on a tree
+
+File::Compare
+     compare files or filehandles
+
+File::Copy
+     copy files or filehandles
+
+File::Find
+     traverse a file tree
+
+File::Path
+     create or remove a series of directories
+
+File::stat
+     by-name interface to Perl's builtin stat() functions
+
+FileCache
+     keep more files open than the system permits
+
+FileHandle
+     supply object methods for filehandles
+
+FindBin
+     locate directory of original perl script
+
+GDBM_File
+     access to the gdbm library
+
+Getopt::Long
+     extended processing of command line options
+
+Getopt::Std
+     process single-character switches with switch clustering
+
+I18N::Collate
+     compare 8-bit scalar data according to the current locale
+
+IO
+     load various IO modules
+
+IO::File
+     supply object methods for filehandles
+
+IO::Handle
+     supply object methods for I/O handles
+
+IO::Pipe
+     supply object methods for pipes
+
+IO::Seekable
+     supply seek based methods for I/O objects
+
+IO::Select
+     OO interface to the select system call
+
+IO::Socket
+     object interface to socket communications
+
+IPC::Open2
+     open a process for both reading and writing
+
+IPC::Open3
+     open a process for reading, writing, and error handling
+
+Math::BigFloat
+     arbitrary length float math package
+
+Math::BigInt
+     arbitrary size integer math package
+
+Math::Complex
+     complex numbers and associated mathematical functions
+
+Math::Trig
+     simple interface to parts of Math::Complex for those who need
+     trigonometric functions only for real numbers
+
+NDBM_File
+     tied access to ndbm files
+
+Net::Ping
+     Hello, anybody home?
+
+Net::hostent
+     by-name interface to Perl's builtin gethost*() functions
+
+Net::netent
+     by-name interface to Perl's builtin getnet*() functions
+
+Net::protoent
+     by-name interface to Perl's builtin getproto*() functions
+
+Net::servent
+     by-name interface to Perl's builtin getserv*() functions
+
+Opcode
+     disable named opcodes when compiling or running perl code
+
+Pod::Text
+     convert POD data to formatted ASCII text
+
+POSIX
+     interface to IEEE Standard 1003.1
+
+SDBM_File
+     tied access to sdbm files
+
+Safe
+     compile and execute code in restricted compartments
+
+Search::Dict
+     search for key in dictionary file
+
+SelectSaver
+     save and restore selected file handle
+
+SelfLoader
+     load functions only on demand
+
+Shell
+     run shell commands transparently within perl
+
+Socket
+     load the C socket.h defines and structure manipulators
+
+Symbol
+     manipulate Perl symbols and their names
+
+Sys::Hostname
+     try every conceivable way to get hostname
+
+Sys::Syslog
+     interface to the Unix syslog(3) calls
+
+Term::Cap
+     termcap interface
+
+Term::Complete
+     word completion module
+
+Term::ReadLine
+     interface to various readline packages
+
+Test::Harness
+     run perl standard test scripts with statistics
+
+Text::Abbrev
+     create an abbreviation table from a list
+
+Text::ParseWords
+     parse text into an array of tokens
+
+Text::Soundex
+     implementation of the Soundex Algorithm as described by Knuth
+
+Text::Tabs
+     expand and unexpand tabs per the Unix expand(1) and unexpand(1)
+
+Text::Wrap
+     line wrapping to form simple paragraphs
+
+Tie::Hash
+     base class definitions for tied hashes
+
+Tie::RefHash
+     base class definitions for tied hashes with references as keys
+
+Tie::Scalar
+     base class definitions for tied scalars
+
+Tie::SubstrHash
+     fixed-table-size, fixed-key-length hashing
+
+Time::Local
+     efficiently compute time from local and GMT time
+
+Time::gmtime
+     by-name interface to Perl's builtin gmtime() function
+
+Time::localtime
+     by-name interface to Perl's builtin localtime() function
+
+Time::tm
+     internal object used by Time::gmtime and Time::localtime
+
+UNIVERSAL
+     base class for ALL classes (blessed references)
+
+User::grent
+     by-name interface to Perl's builtin getgr*() functions
+
+User::pwent
+     by-name interface to Perl's builtin getpw*() functions
+
+To find out all the modules installed on your system, including those
+without documentation or outside the standard release, do this:
+
+     find `perl -e 'print "@INC"'` -name '*.pm' -print
+
+They should all have their own documentation installed and accessible
+via your system man(1) command.  If that fails, try the *perldoc*
+program.
+
+
+Extension Modules
+-----------------
+
+Extension modules are written in C (or a mix of Perl and C) and may be
+statically linked or in general are dynamically loaded into Perl if and
+when you need them.  Supported extension modules include the Socket,
+Fcntl, and POSIX modules.
+
+Many popular C extension modules do not come bundled (at least, not
+completely) due to their sizes, volatility, or simply lack of time for
+adequate testing and configuration across the multitude of platforms on
+which Perl was beta-tested.  You are encouraged to look for them in
+archie(1L), the Perl FAQ or Meta-FAQ, the WWW page, and even with their
+authors before randomly posting asking for their present condition and
+disposition.
+
+
+CPAN
+====
+
+CPAN stands for the Comprehensive Perl Archive Network.  This is a
+globally replicated collection of all known Perl materials, including
+hundreds of unbundled modules.  Here are the major categories of
+modules:
+
+   * Language Extensions and Documentation Tools
+   * Development Support
+   * Operating System Interfaces
+   * Networking, Device Control (modems) and InterProcess Communication
+   * Data Types and Data Type Utilities
+   * Database Interfaces
+   * User Interfaces
+   * Interfaces to / Emulations of Other Programming Languages
+   * File Names, File Systems and File Locking (see also File Handles)
+   * String Processing, Language Text Processing, Parsing, and Searching
+   * Option, Argument, Parameter, and Configuration File Processing
+   * Internationalization and Locale
+   * Authentication, Security, and Encryption
+   * World Wide Web, HTML, HTTP, CGI, MIME
+   * Server and Daemon Utilities
+   * Archiving and Compression
+   * Images, Pixmap and Bitmap Manipulation, Drawing, and Graphing
+   * Mail and Usenet News
+   * Control Flow Utilities (callbacks and exceptions etc)
+   * File Handle and Input/Output Stream Utilities
+   * Miscellaneous Modules
+
+The registered CPAN sites as of this writing include the following.  You
+should try to choose one close to you:
+
+   * Africa
+          South Africa    ftp://ftp.is.co.za/programming/perl/CPAN/
+
+   * Asia
+          Hong Kong       ftp://ftp.hkstar.com/pub/CPAN/
+          Japan           ftp://ftp.jaist.ac.jp/pub/lang/perl/CPAN/
+                          ftp://ftp.lab.kdd.co.jp/lang/perl/CPAN/
+          South Korea     ftp://ftp.nuri.net/pub/CPAN/
+          Taiwan          ftp://dongpo.math.ncu.edu.tw/perl/CPAN/
+                          ftp://ftp.wownet.net/pub2/PERL/
+
+   * Australasia
+          Australia       ftp://ftp.netinfo.com.au/pub/perl/CPAN/
+          New Zealand     ftp://ftp.tekotago.ac.nz/pub/perl/CPAN/
+
+   * Europe
+          Austria         ftp://ftp.tuwien.ac.at/pub/languages/perl/CPAN/
+          Belgium         ftp://ftp.kulnet.kuleuven.ac.be/pub/mirror/CPAN/
+          Czech Republic  ftp://sunsite.mff.cuni.cz/Languages/Perl/CPAN/
+          Denmark         ftp://sunsite.auc.dk/pub/languages/perl/CPAN/
+          Finland         ftp://ftp.funet.fi/pub/languages/perl/CPAN/
+          France          ftp://ftp.ibp.fr/pub/perl/CPAN/
+                          ftp://ftp.pasteur.fr/pub/computing/unix/perl/CPAN/
+          Germany         ftp://ftp.gmd.de/packages/CPAN/
+                          ftp://ftp.leo.org/pub/comp/programming/languages/perl/CPAN/
+                          ftp://ftp.mpi-sb.mpg.de/pub/perl/CPAN/
+                          ftp://ftp.rz.ruhr-uni-bochum.de/pub/CPAN/
+                          ftp://ftp.uni-erlangen.de/pub/source/Perl/CPAN/
+                          ftp://ftp.uni-hamburg.de/pub/soft/lang/perl/CPAN/
+          Greece          ftp://ftp.ntua.gr/pub/lang/perl/
+          Hungary         ftp://ftp.kfki.hu/pub/packages/perl/CPAN/
+          Italy           ftp://cis.utovrm.it/CPAN/
+          the Netherlands ftp://ftp.cs.ruu.nl/pub/PERL/CPAN/
+                          ftp://ftp.EU.net/packages/cpan/
+          Norway          ftp://ftp.uit.no/pub/languages/perl/cpan/
+          Poland          ftp://ftp.pk.edu.pl/pub/lang/perl/CPAN/
+                          ftp://sunsite.icm.edu.pl/pub/CPAN/
+          Portugal        ftp://ftp.ci.uminho.pt/pub/lang/perl/
+                          ftp://ftp.telepac.pt/pub/CPAN/
+          Russia          ftp://ftp.sai.msu.su/pub/lang/perl/CPAN/
+          Slovenia        ftp://ftp.arnes.si/software/perl/CPAN/
+          Spain           ftp://ftp.etse.urv.es/pub/mirror/perl/
+                          ftp://ftp.rediris.es/mirror/CPAN/
+          Sweden          ftp://ftp.sunet.se/pub/lang/perl/CPAN/
+          UK              ftp://ftp.demon.co.uk/pub/mirrors/perl/CPAN/
+                          ftp://sunsite.doc.ic.ac.uk/packages/CPAN/
+                          ftp://unix.hensa.ac.uk/mirrors/perl-CPAN/
+
+   * North America
+          Ontario         ftp://ftp.utilis.com/public/CPAN/
+                          ftp://enterprise.ic.gc.ca/pub/perl/CPAN/
+          Manitoba        ftp://theory.uwinnipeg.ca/pub/CPAN/
+          California      ftp://ftp.digital.com/pub/plan/perl/CPAN/
+                          ftp://ftp.cdrom.com/pub/perl/CPAN/
+          Colorado        ftp://ftp.cs.colorado.edu/pub/perl/CPAN/
+          Florida         ftp://ftp.cis.ufl.edu/pub/perl/CPAN/
+          Illinois        ftp://uiarchive.uiuc.edu/pub/lang/perl/CPAN/
+          Massachusetts   ftp://ftp.iguide.com/pub/mirrors/packages/perl/CPAN/
+          New York        ftp://ftp.rge.com/pub/languages/perl/
+          North Carolina  ftp://ftp.duke.edu/pub/perl/
+          Oklahoma        ftp://ftp.ou.edu/mirrors/CPAN/
+          Oregon          http://www.perl.org/CPAN/
+                          ftp://ftp.orst.edu/pub/packages/CPAN/
+          Pennsylvania    ftp://ftp.epix.net/pub/languages/perl/
+          Texas           ftp://ftp.sedl.org/pub/mirrors/CPAN/
+                          ftp://ftp.metronet.com/pub/perl/
+
+   * South America
+          Chile           ftp://sunsite.dcc.uchile.cl/pub/Lang/perl/CPAN/
+
+
+For an up-to-date listing of CPAN sites, see
+`http://www.perl.com/perl/CPAN' or `ftp://ftp.perl.com/perl/'.
+
+
+Modules: Creation, Use, and Abuse
+=================================
+
+(The following section is borrowed directly from Tim Bunce's modules
+file, available at your nearest CPAN site.)
+
+Perl implements a class using a package, but the presence of a package
+doesn't imply the presence of a class.  A package is just a namespace.
+A class is a package that provides subroutines that can be used as
+methods.  A method is just a subroutine that expects, as its first
+argument, either the name of a package (for "static" methods), or a
+reference to something (for "virtual" methods).
+
+A module is a file that (by convention) provides a class of the same
+name (sans the .pm), plus an import method in that class that can be
+called to fetch exported symbols.  This module may implement some of its
+methods by loading dynamic C or C++ objects, but that should be totally
+transparent to the user of the module.  Likewise, the module might set
+up an AUTOLOAD function to slurp in subroutine definitions on demand,
+but this is also transparent.  Only the `.pm' file is required to exist.
+See *Note Perlsub: perlsub,, *Note Perltoot: perltoot,, and *Note
+AutoLoader: (pm.info)AutoLoader, for details about the AUTOLOAD
+mechanism.
+
+
+Guidelines for Module Creation
+------------------------------
+
+Do similar modules already exist in some form?
+     If so, please try to reuse the existing modules either in whole or
+     by inheriting useful features into a new class.  If this is not
+     practical try to get together with the module authors to work on
+     extending or enhancing the functionality of the existing modules.
+     A perfect example is the plethora of packages in perl4 for dealing
+     with command line options.
+
+     If you are writing a module to expand an already existing set of
+     modules, please coordinate with the author of the package.  It
+     helps if you follow the same naming scheme and module interaction
+     scheme as the original author.
+
+Try to design the new module to be easy to extend and reuse.
+     Use blessed references.  Use the two argument form of bless to
+     bless into the class name given as the first parameter of the
+     constructor, e.g.,:
+
+          sub new {
+          	my $class = shift;
+          	return bless {}, $class;
+          }
+
+     or even this if you'd like it to be used as either a static or a
+     virtual method.
+
+          sub new {
+          	my $self  = shift;
+          	my $class = ref($self) || $self;
+          	return bless {}, $class;
+          }
+
+     Pass arrays as references so more parameters can be added later
+     (it's also faster).  Convert functions into methods where
+     appropriate.  Split large methods into smaller more flexible ones.
+     Inherit methods from other modules if appropriate.
+
+     Avoid class name tests like: `die "Invalid" unless ref $ref eq
+     'FOO''.  Generally you can delete the "`eq 'FOO''" part with no
+     harm at all.  Let the objects look after themselves! Generally,
+     avoid hard-wired class names as far as possible.
+
+     Avoid `$r->Class::func()' where using `@ISA=qw(... Class ...)' and
+     `$r->func()' would work (see *Note Perlbot: perlbot, for more
+     details).
+
+     Use autosplit so little used or newly added functions won't be a
+     burden to programs which don't use them. Add test functions to the
+     module after __END__ either using AutoSplit or by saying:
+
+          eval join('',<main::DATA>) || die $@ unless caller();
+
+     Does your module pass the 'empty subclass' test? If you say
+     "`@SUBCLASS::ISA = qw(YOURCLASS);'" your applications should be
+     able to use SUBCLASS in exactly the same way as YOURCLASS.  For
+     example, does your application still work if you change: `$obj =
+     new YOURCLASS;' into: `$obj = new SUBCLASS;' ?
+
+     Avoid keeping any state information in your packages. It makes it
+     difficult for multiple other packages to use yours. Keep state
+     information in objects.
+
+     Always use -w. Try to `use strict;' (or `use strict qw(...);').
+     Remember that you can add `no strict qw(...);' to individual blocks
+     of code which need less strictness. Always use -w. Always use -w!
+     Follow the guidelines in the perlstyle(1) manual.
+
+Some simple style guidelines
+     The perlstyle manual supplied with perl has many helpful points.
+
+     Coding style is a matter of personal taste. Many people evolve
+     their style over several years as they learn what helps them write
+     and maintain good code.  Here's one set of assorted suggestions
+     that seem to be widely used by experienced developers:
+
+     Use underscores to separate words.  It is generally easier to read
+     $var_names_like_this than $VarNamesLikeThis, especially for
+     non-native speakers of English. It's also a simple rule that works
+     consistently with VAR_NAMES_LIKE_THIS.
+
+     Package/Module names are an exception to this rule. Perl informally
+     reserves lowercase module names for 'pragma' modules like integer
+     and strict. Other modules normally begin with a capital letter and
+     use mixed case with no underscores (need to be short and portable).
+
+     You may find it helpful to use letter case to indicate the scope or
+     nature of a variable. For example:
+
+          $ALL_CAPS_HERE   constants only (beware clashes with perl vars)
+          $Some_Caps_Here  package-wide global/static
+          $no_caps_here    function scope my() or local() variables
+
+     Function and method names seem to work best as all lowercase.
+     e.g., `$obj->as_string()'.
+
+     You can use a leading underscore to indicate that a variable or
+     function should not be used outside the package that defined it.
+
+Select what to export.
+     Do NOT export method names!
+
+     Do NOT export anything else by default without a good reason!
+
+     Exports pollute the namespace of the module user.  If you must
+     export try to use @EXPORT_OK in preference to @EXPORT and avoid
+     short or common names to reduce the risk of name clashes.
+
+     Generally anything not exported is still accessible from outside
+     the module using the ModuleName::item_name (or
+     `$blessed_ref->method') syntax.  By convention you can use a
+     leading underscore on names to indicate informally that they are
+     'internal' and not for public use.
+
+     (It is actually possible to get private functions by saying: `my
+     $subref = sub { ... }; &$subref;'.  But there's no way to call that
+     directly as a method, because a method must have a name in the
+     symbol table.)
+
+     As a general rule, if the module is trying to be object oriented
+     then export nothing. If it's just a collection of functions then
+      @EXPORT_OK anything but use @EXPORT with caution.
+
+Select a name for the module.
+     This name should be as descriptive, accurate, and complete as
+     possible.  Avoid any risk of ambiguity. Always try to use two or
+     more whole words.  Generally the name should reflect what is
+     special about what the module does rather than how it does it.
+     Please use nested module names to group informally or categorize a
+     module.  There should be a very good reason for a module not to
+     have a nested name.  Module names should begin with a capital
+     letter.
+
+     Having 57 modules all called Sort will not make life easy for
+     anyone (though having 23 called Sort::Quick is only marginally
+     better :-).  Imagine someone trying to install your module
+     alongside many others.  If in any doubt ask for suggestions in
+     comp.lang.perl.misc.
+
+     If you are developing a suite of related modules/classes it's good
+     practice to use nested classes with a common prefix as this will
+     avoid namespace clashes. For example: Xyz::Control, Xyz::View,
+     Xyz::Model etc. Use the modules in this list as a naming guide.
+
+     If adding a new module to a set, follow the original author's
+     standards for naming modules and the interface to methods in those
+     modules.
+
+     To be portable each component of a module name should be limited to
+     11 characters. If it might be used on MS-DOS then try to ensure
+     each is unique in the first 8 characters. Nested modules make this
+     easier.
+
+Have you got it right?
+     How do you know that you've made the right decisions? Have you
+     picked an interface design that will cause problems later? Have you
+     picked the most appropriate name? Do you have any questions?
+
+     The best way to know for sure, and pick up many helpful
+     suggestions, is to ask someone who knows. Comp.lang.perl.misc is
+     read by just about all the people who develop modules and it's the
+     best place to ask.
+
+     All you need to do is post a short summary of the module, its
+     purpose and interfaces. A few lines on each of the main methods is
+     probably enough. (If you post the whole module it might be ignored
+     by busy people - generally the very people you want to read it!)
+
+     Don't worry about posting if you can't say when the module will be
+     ready - just say so in the message. It might be worth inviting
+     others to help you, they may be able to complete it for you!
+
+README and other Additional Files.
+     It's well known that software developers usually fully document the
+     software they write. If, however, the world is in urgent need of
+     your software and there is not enough time to write the full
+     documentation please at least provide a README file containing:
+
+        * A description of the module/package/extension etc.
+        * A copyright notice - see below.
+        * Prerequisites - what else you may need to have.
+        * How to build it - possible changes to Makefile.PL etc.
+        * How to install it.
+        * Recent changes in this release, especially incompatibilities
+        * Changes / enhancements you plan to make in the future.
+
+     If the README file seems to be getting too large you may wish to
+     split out some of the sections into separate files: INSTALL,
+     Copying, ToDo etc.
+
+     Adding a Copyright Notice.
+          How you choose to license your work is a personal decision.
+          The general mechanism is to assert your Copyright and then
+          make a declaration of how others may copy/use/modify your
+          work.
+
+          Perl, for example, is supplied with two types of licence: The
+          GNU GPL and The Artistic Licence (see the files README,
+          Copying, and Artistic).  Larry has good reasons for NOT just
+          using the GNU GPL.
+
+          My personal recommendation, out of respect for Larry, Perl,
+          and the perl community at large is to state something simply
+          like:
+
+               Copyright (c) 1995 Your Name. All rights reserved.
+               This program is free software; you can redistribute it and/or
+               modify it under the same terms as Perl itself.
+
+          This statement should at least appear in the README file. You
+          may also wish to include it in a Copying file and your source
+          files.  Remember to include the other words in addition to the
+          Copyright.
+
+     Give the module a version/issue/release number.
+          To be fully compatible with the Exporter and MakeMaker modules
+          you should store your module's version number in a non-my
+          package variable called $VERSION.  This should be a floating
+          point number with at least two digits after the decimal (i.e.,
+          hundredths, e.g, `$VERSION = "0.01"').  Don't use a "1.3.2"
+          style version.  See Exporter.pm in Perl5.001m or later for
+          details.
+
+          It may be handy to add a function or method to retrieve the
+          number.  Use the number in announcements and archive file
+          names when releasing the module (ModuleName-1.02.tar.Z).  See
+          perldoc ExtUtils::MakeMaker.pm for details.
+
+     How to release and distribute a module.
+          It's good idea to post an announcement of the availability of
+          your module (or the module itself if small) to the
+          comp.lang.perl.announce Usenet newsgroup.  This will at least
+          ensure very wide once-off distribution.
+
+          If possible you should place the module into a major ftp
+          archive and include details of its location in your
+          announcement.
+
+          Some notes about ftp archives: Please use a long descriptive
+          file name which includes the version number. Most incoming
+          directories will not be readable/listable, i.e., you won't be
+          able to see your file after uploading it. Remember to send
+          your email notification message as soon as possible after
+          uploading else your file may get deleted automatically. Allow
+          time for the file to be processed and/or check the file has
+          been processed before announcing its location.
+
+          FTP Archives for Perl Modules:
+
+          Follow the instructions and links on
+
+               http://franz.ww.tu-berlin.de/modulelist
+
+          or upload to one of these sites:
+
+               ftp://franz.ww.tu-berlin.de/incoming
+               ftp://ftp.cis.ufl.edu/incoming
+
+          and notify <`upload@franz.ww.tu-berlin.de'>.
+
+          By using the WWW interface you can ask the Upload Server to
+          mirror your modules from your ftp or WWW site into your own
+          directory on CPAN!
+
+          Please remember to send me an updated entry for the Module
+          list!
+
+     Take care when changing a released module.
+          Always strive to remain compatible with previous released
+          versions (see 2.2 above) Otherwise try to add a mechanism to
+          revert to the old behaviour if people rely on it. Document
+          incompatible changes.
+
+
+Guidelines for Converting Perl 4 Library Scripts into Modules
+-------------------------------------------------------------
+
+There is no requirement to convert anything.
+     If it ain't broke, don't fix it! Perl 4 library scripts should
+     continue to work with no problems. You may need to make some minor
+     changes (like escaping non-array @'s in double quoted strings) but
+     there is no need to convert a .pl file into a Module for just that.
+
+Consider the implications.
+     All the perl applications which make use of the script will need to
+     be changed (slightly) if the script is converted into a module.  Is
+     it worth it unless you plan to make other changes at the same time?
+
+Make the most of the opportunity.
+     If you are going to convert the script to a module you can use the
+     opportunity to redesign the interface. The 'Guidelines for Module
+     Creation' above include many of the issues you should consider.
+
+The pl2pm utility will get you started.
+     This utility will read *.pl files (given as parameters) and write
+     corresponding *.pm files. The pl2pm utilities does the following:
+
+        * Adds the standard Module prologue lines
+        * Converts package specifiers from ' to ::
+        * Converts die(...) to croak(...)
+        * Several other minor changes
+
+     Being a mechanical process pl2pm is not bullet proof. The converted
+     code will need careful checking, especially any package statements.
+     Don't delete the original .pl file till the new .pm one works!
+
+
+Guidelines for Reusing Application Code
+---------------------------------------
+
+Complete applications rarely belong in the Perl Module Library.
+Many applications contain some perl code which could be reused.
+     Help save the world! Share your code in a form that makes it easy
+     to reuse.
+
+Break-out the reusable code into one or more separate module files.
+Take the opportunity to reconsider and redesign the interfaces.
+In some cases the 'application' can then be reduced to a small
+     fragment of code built on top of the reusable modules. In these
+     cases the application could invoked as:
+
+          perl -e 'use Module::Name; method(@ARGV)' ...
+          or
+          perl -mModule::Name ...    (in perl5.002 or higher)
+
+
+NOTE
+====
+
+Perl does not enforce private and public parts of its modules as you may
+have been used to in other languages like C++, Ada, or Modula-17.  Perl
+doesn't have an infatuation with enforced privacy.  It would prefer that
+you stayed out of its living room because you weren't invited, not
+because it has a shotgun.
+
+The module and its user have a contract, part of which is common law,
+and part of which is "written".  Part of the common law contract is that
+a module doesn't pollute any namespace it wasn't asked to.  The written
+contract for the module (A.K.A. documentation) may make other
+provisions.  But then you know when you `use RedefineTheWorld' that
+you're redefining the world and willing to take the consequences.
+
+
+
+File: perl.info, Node: perlform, Next: perllocale, Prev: perlmodlib, Up: Top
+
+Perl formats
+************
+
+
+
+NAME
+====
+
+perlform - Perl formats
+
+
+DESCRIPTION
+===========
+
+Perl has a mechanism to help you generate simple reports and charts.  To
+facilitate this, Perl helps you code up your output page close to how it
+will look when it's printed.  It can keep track of things like how many
+lines are on a page, what page you're on, when to print page headers,
+etc.  Keywords are borrowed from FORTRAN: format() to declare and
+write() to execute; see their entries in *Note Perlfunc: perlfunc,.
+Fortunately, the layout is much more legible, more like BASIC's PRINT
+USING statement.  Think of it as a poor man's nroff(1).
+
+Formats, like packages and subroutines, are declared rather than
+executed, so they may occur at any point in your program.  (Usually it's
+best to keep them all together though.) They have their own namespace
+apart from all the other "types" in Perl.  This means that if you have a
+function named "Foo", it is not the same thing as having a format named
+"Foo".  However, the default name for the format associated with a given
+filehandle is the same as the name of the filehandle.  Thus, the default
+format for STDOUT is name "STDOUT", and the default format for
+filehandle TEMP is name "TEMP".  They just look the same.  They aren't.
+
+Output record formats are declared as follows:
+
+     format NAME =
+     FORMLIST
+     .
+
+If name is omitted, format "STDOUT" is defined.  FORMLIST consists of a
+sequence of lines, each of which may be one of three types:
+
+  1. A comment, indicated by putting a '#' in the first column.
+
+  2. A "picture" line giving the format for one output line.
+
+  3. An argument line supplying values to plug into the previous picture
+     line.
+
+Picture lines are printed exactly as they look, except for certain
+fields that substitute values into the line.  Each field in a picture
+line starts with either "@" (at) or "^" (caret).  These lines do not
+undergo any kind of variable interpolation.  The at field (not to be
+confused with the array marker @) is the normal kind of field; the other
+kind, caret fields, are used to do rudimentary multi-line text block
+filling.  The length of the field is supplied by padding out the field
+with multiple "<", ">", or "|" characters to specify, respectively, left
+justification, right justification, or centering.  If the variable would
+exceed the width specified, it is truncated.
+
+As an alternate form of right justification, you may also use "#"
+characters (with an optional ".") to specify a numeric field.  This way
+you can line up the decimal points.  If any value supplied for these
+fields contains a newline, only the text up to the newline is printed.
+Finally, the special field "@*" can be used for printing multi-line,
+nontruncated values; it should appear by itself on a line.
+
+The values are specified on the following line in the same order as
+the picture fields.  The expressions providing the values should be
+separated by commas.  The expressions are all evaluated in a list context
+before the line is processed, so a single list expression could produce
+multiple list elements.  The expressions may be spread out to more than
+one line if enclosed in braces.  If so, the opening brace must be the first
+token on the first line.  If an expression evaluates to a number with a
+decimal part, and if the corresponding picture specifies that the decimal
+part should appear in the output (that is, any picture except multiple "#"
+characters *without* an embedded "."), the character used for the decimal
+point is *always* determined by the current LC_NUMERIC locale.  This
+means that, if, for example, the run-time environment happens to specify a
+German locale, "," will be used instead of the default ".".  See
+*Note Perllocale: perllocale, and `"WARNINGS"' in this node for more information.
+
+Picture fields that begin with ^ rather than @ are treated specially.
+With a # field, the field is blanked out if the value is undefined.  For
+other field types, the caret enables a kind of fill mode.  Instead of an
+arbitrary expression, the value supplied must be a scalar variable name
+that contains a text string.  Perl puts as much text as it can into the
+field, and then chops off the front of the string so that the next time
+the variable is referenced, more of the text can be printed.  (Yes, this
+means that the variable itself is altered during execution of the
+write() call, and is not returned.)  Normally you would use a sequence
+of fields in a vertical stack to print out a block of text.  You might
+wish to end the final field with the text "...", which will appear in
+the output if the text was too long to appear in its entirety.  You can
+change which characters are legal to break on by changing the variable
+$: (that's $FORMAT_LINE_BREAK_CHARACTERS if you're using the English
+module) to a list of the desired characters.
+
+Using caret fields can produce variable length records.  If the text to
+be formatted is short, you can suppress blank lines by putting a "~"
+(tilde) character anywhere in the line.  The tilde will be translated to
+a space upon output.  If you put a second tilde contiguous to the first,
+the line will be repeated until all the fields on the line are
+exhausted.  (If you use a field of the at variety, the expression you
+supply had better not give the same value every time forever!)
+
+Top-of-form processing is by default handled by a format with the same
+name as the current filehandle with "_TOP" concatenated to it.  It's
+triggered at the top of each page.  See `write', *Note Perlfunc:
+perlfunc,.
+
+Examples:
+
+     # a report on the /etc/passwd file
+     format STDOUT_TOP =
+                             Passwd File
+     Name                Login    Office   Uid   Gid Home
+     ------------------------------------------------------------------
+     .
+     format STDOUT =
+     @<<<<<<<<<<<<<<<<<< @||||||| @<<<<<<@>>>> @>>>> @<<<<<<<<<<<<<<<<<
+     $name,              $login,  $office,$uid,$gid, $home
+     .
+
+     # a report from a bug report form
+     format STDOUT_TOP =
+                             Bug Reports
+     @<<<<<<<<<<<<<<<<<<<<<<<     @|||         @>>>>>>>>>>>>>>>>>>>>>>>
+     $system,                      $%,         $date
+     ------------------------------------------------------------------
+     .
+     format STDOUT =
+     Subject: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+              $subject
+     Index: @<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            $index,                       $description
+     Priority: @<<<<<<<<<< Date: @<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+               $priority,        $date,   $description
+     From: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+           $from,                         $description
+     Assigned to: @<<<<<<<<<<<<<<<<<<<<<< ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                  $programmer,            $description
+     ~                                    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                                          $description
+     ~                                    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                                          $description
+     ~                                    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                                          $description
+     ~                                    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                                          $description
+     ~                                    ^<<<<<<<<<<<<<<<<<<<<<<<...
+                                          $description
+     .
+
+It is possible to intermix print()s with write()s on the same output
+channel, but you'll have to handle $- ($FORMAT_LINES_LEFT) yourself.
+
+
+Format Variables
+----------------
+
+The current format name is stored in the variable $~ ($FORMAT_NAME), and
+the current top of form format name is in $^ ($FORMAT_TOP_NAME).  The
+current output page number is stored in $% ($FORMAT_PAGE_NUMBER), and
+the number of lines on the page is in $= ($FORMAT_LINES_PER_PAGE).
+Whether to autoflush output on this handle is stored in $|
+($OUTPUT_AUTOFLUSH).  The string output before each top of page (except
+the first) is stored in $^L ($FORMAT_FORMFEED).  These variables are set
+on a per-filehandle basis, so you'll need to select() into a different
+one to affect them:
+
+     select((select(OUTF),
+     	    $~ = "My_Other_Format",
+     	    $^ = "My_Top_Format"
+     	   )[0]);
+
+Pretty ugly, eh?  It's a common idiom though, so don't be too surprised
+when you see it.  You can at least use a temporary variable to hold the
+previous filehandle: (this is a much better approach in general, because
+not only does legibility improve, you now have intermediary stage in the
+expression to single-step the debugger through):
+
+     $ofh = select(OUTF);
+     $~ = "My_Other_Format";
+     $^ = "My_Top_Format";
+     select($ofh);
+
+If you use the English module, you can even read the variable names:
+
+     use English;
+     $ofh = select(OUTF);
+     $FORMAT_NAME     = "My_Other_Format";
+     $FORMAT_TOP_NAME = "My_Top_Format";
+     select($ofh);
+
+But you still have those funny select()s.  So just use the FileHandle
+module.  Now, you can access these special variables using lowercase
+method names instead:
+
+     use FileHandle;
+     format_name     OUTF "My_Other_Format";
+     format_top_name OUTF "My_Top_Format";
+
+Much better!
+
+
+NOTES
+=====
+
+Because the values line may contain arbitrary expressions (for at
+fields, not caret fields), you can farm out more sophisticated
+processing to other functions, like sprintf() or one of your own.  For
+example:
+
+     format Ident =
+     	@<<<<<<<<<<<<<<<
+     	&commify($n)
+     .
+
+To get a real at or caret into the field, do this:
+
+     format Ident =
+     I have an @ here.
+     	    "@"
+     .
+
+To center a whole line of text, do something like this:
+
+     format Ident =
+     @|||||||||||||||||||||||||||||||||||||||||||||||
+     	    "Some text line"
+     .
+
+There is no builtin way to say "float this to the right hand side of the
+page, however wide it is."  You have to specify where it goes.  The
+truly desperate can generate their own format on the fly, based on the
+current number of columns, and then eval() it:
+
+     $format  = "format STDOUT = \n";
+              . '^' . '<' x $cols . "\n";
+              . '$entry' . "\n";
+              . "\t^" . "<" x ($cols-8) . "~~\n";
+              . '$entry' . "\n";
+              . ".\n";
+     print $format if $Debugging;
+     eval $format;
+     die $@ if $@;
+
+Which would generate a format looking something like this:
+
+     format STDOUT =
+     ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     $entry
+             ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<~~
+     $entry
+     .
+
+Here's a little program that's somewhat like fmt(1):
+
+     format =
+     ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ~~
+     $_
+
+     .
+
+     $/ = '';
+     while (<>) {
+         s/\s*\n\s*/ /g;
+         write;
+     }
+
+
+Footers
+-------
+
+While $FORMAT_TOP_NAME contains the name of the current header format,
+there is no corresponding mechanism to automatically do the same thing
+for a footer.  Not knowing how big a format is going to be until you
+evaluate it is one of the major problems.  It's on the TODO list.
+
+Here's one strategy: If you have a fixed-size footer, you can get
+footers by checking $FORMAT_LINES_LEFT before each write() and print the
+footer yourself if necessary.
+
+Here's another strategy: Open a pipe to yourself, using `open(MYSELF,
+"|-")' (see `open()', *Note Perlfunc: perlfunc,) and always write() to
+MYSELF instead of STDOUT.  Have your child process massage its STDIN to
+rearrange headers and footers however you like.  Not very convenient,
+but doable.
+
+
+Accessing Formatting Internals
+------------------------------
+
+For low-level access to the formatting mechanism.  you may use
+formline() and access $^A (the $ACCUMULATOR variable) directly.
+
+For example:
+
+     $str = formline <<'END', 1,2,3;
+     @<<<  @|||  @>>>
+     END
+
+     print "Wow, I just stored `$^A' in the accumulator!\n";
+
+Or to make an swrite() subroutine which is to write() what sprintf() is
+to printf(), do this:
+
+     use Carp;
+     sub swrite {
+     	croak "usage: swrite PICTURE ARGS" unless @_;
+     	my $format = shift;
+     	$^A = "";
+     	formline($format,@_);
+     	return $^A;
+     }
+
+     $string = swrite(<<'END', 1, 2, 3);
+      Check me out
+      @<<<  @|||  @>>>
+      END
+     print $string;
+
+
+WARNINGS
+========
+
+The lone dot that ends a format can also prematurely end an email
+message passing through a misconfigured Internet mailer (and based on
+experience, such misconfiguration is the rule, not the exception).  So
+when sending format code through email, you should indent it so that the
+format-ending dot is not on the left margin; this will prevent email
+cutoff.
+
+Lexical variables (declared with "my") are not visible within a format
+unless the format is declared within the scope of the lexical variable.
+(They weren't visible at all before version 5.001.)
+
+Formats are the only part of Perl which unconditionally use information
+from a program's locale; if a program's environment specifies an
+LC_NUMERIC locale, it is always used to specify the decimal point
+character in formatted output.  Perl ignores all other aspects of locale
+handling unless the `use locale' pragma is in effect.  Formatted output
+cannot be controlled by `use locale' because the pragma is tied to the
+block structure of the program, and, for historical reasons, formats
+exist outside that block structure.  See *Note Perllocale: perllocale,
+for further discussion of locale handling.
+
+
+
+File: perl.info, Node: perltie, Next: perlbot, Prev: perlobj, Up: Top
+
+how to hide an object class in a simple variable
+************************************************
+
+
+
+NAME
+====
+
+perltie - how to hide an object class in a simple variable
+
+
+SYNOPSIS
+========
+
+     tie VARIABLE, CLASSNAME, LIST
+
+     $object = tied VARIABLE
+
+     untie VARIABLE
+
+
+DESCRIPTION
+===========
+
+Prior to release 5.0 of Perl, a programmer could use dbmopen() to
+connect an on-disk database in the standard Unix dbm(3x) format
+magically to a %HASH in their program.  However, their Perl was either
+built with one particular dbm library or another, but not both, and you
+couldn't extend this mechanism to other packages or types of variables.
+
+Now you can.
+
+The tie() function binds a variable to a class (package) that will
+provide the implementation for access methods for that variable.  Once
+this magic has been performed, accessing a tied variable automatically
+triggers method calls in the proper class.  All of the complexity of the
+class is hidden behind magic methods calls.  The method names are in ALL
+CAPS, which is a convention that Perl uses to indicate that they're
+called implicitly rather than explicitly--just like the BEGIN() and
+END() functions.
+
+In the tie() call, `VARIABLE' is the name of the variable to be
+enchanted.  `CLASSNAME' is the name of a class implementing objects of
+the correct type.  Any additional arguments in the LIST are passed to
+the appropriate constructor method for that class--meaning TIESCALAR(),
+TIEARRAY(), TIEHASH(), or TIEHANDLE().  (Typically these are arguments
+such as might be passed to the dbminit() function of C.) The object
+returned by the "new" method is also returned by the tie() function,
+which would be useful if you wanted to access other methods in
+`CLASSNAME'. (You don't actually have to return a reference to a right
+"type" (e.g., HASH or `CLASSNAME') so long as it's a properly blessed
+object.)  You can also retrieve a reference to the underlying object
+using the tied() function.
+
+Unlike dbmopen(), the tie() function will not use or require a module
+for you--you need to do that explicitly yourself.
+
+
+Tying Scalars
+-------------
+
+A class implementing a tied scalar should define the following methods:
+TIESCALAR, FETCH, STORE, and possibly DESTROY.
+
+Let's look at each in turn, using as an example a tie class for scalars
+that allows the user to do something like:
+
+     tie $his_speed, 'Nice', getppid();
+     tie $my_speed,  'Nice', $$;
+
+And now whenever either of those variables is accessed, its current
+system priority is retrieved and returned.  If those variables are set,
+then the process's priority is changed!
+
+We'll use Jarkko Hietaniemi <`jhi@iki.fi'>'s BSD::Resource class (not
+included) to access the PRIO_PROCESS, PRIO_MIN, and PRIO_MAX constants
+from your system, as well as the getpriority() and setpriority() system
+calls.  Here's the preamble of the class.
+
+     package Nice;
+     use Carp;
+     use BSD::Resource;
+     use strict;
+     $Nice::DEBUG = 0 unless defined $Nice::DEBUG;
+
+TIESCALAR classname, LIST
+     This is the constructor for the class.  That means it is expected
+     to return a blessed reference to a new scalar (probably anonymous)
+     that it's creating.  For example:
+
+          sub TIESCALAR {
+              my $class = shift;
+              my $pid = shift || $$; # 0 means me
+
+          if ($pid !~ /^\d+$/) {
+              carp "Nice::Tie::Scalar got non-numeric pid $pid" if $^W;
+              return undef;
+          }
+
+          unless (kill 0, $pid) { # EPERM or ERSCH, no doubt
+              carp "Nice::Tie::Scalar got bad pid $pid: $!" if $^W;
+              return undef;
+          }
+
+          return bless \$pid, $class;
+              }
+
+     This tie class has chosen to return an error rather than raising an
+     exception if its constructor should fail.  While this is how
+     dbmopen() works, other classes may well not wish to be so
+     forgiving.  It checks the global variable $^W to see whether to
+     emit a bit of noise anyway.
+
+FETCH this
+     This method will be triggered every time the tied variable is
+     accessed (read).  It takes no arguments beyond its self reference,
+     which is the object representing the scalar we're dealing with.
+     Because in this case we're using just a SCALAR ref for the tied
+     scalar object, a simple $$self allows the method to get at the real
+     value stored there.  In our example below, that real value is the
+     process ID to which we've tied our variable.
+
+          sub FETCH {
+              my $self = shift;
+              confess "wrong type" unless ref $self;
+              croak "usage error" if @_;
+              my $nicety;
+              local($!) = 0;
+              $nicety = getpriority(PRIO_PROCESS, $$self);
+              if ($!) { croak "getpriority failed: $!" }
+              return $nicety;
+          }
+
+     This time we've decided to blow up (raise an exception) if the
+     renice fails--there's no place for us to return an error otherwise,
+     and it's probably the right thing to do.
+
+STORE this, value
+     This method will be triggered every time the tied variable is set
+     (assigned).  Beyond its self reference, it also expects one (and
+     only one) argument--the new value the user is trying to assign.
+
+          sub STORE {
+              my $self = shift;
+              confess "wrong type" unless ref $self;
+              my $new_nicety = shift;
+              croak "usage error" if @_;
+
+          if ($new_nicety < PRIO_MIN) {
+              carp sprintf
+                "WARNING: priority %d less than minimum system priority %d",
+                    $new_nicety, PRIO_MIN if $^W;
+              $new_nicety = PRIO_MIN;
+          }
+
+          if ($new_nicety > PRIO_MAX) {
+              carp sprintf
+                "WARNING: priority %d greater than maximum system priority %d",
+                    $new_nicety, PRIO_MAX if $^W;
+              $new_nicety = PRIO_MAX;
+          }
+
+          unless (defined setpriority(PRIO_PROCESS, $$self, $new_nicety)) {
+              confess "setpriority failed: $!";
+          }
+          return $new_nicety;
+              }
+
+DESTROY this
+     This method will be triggered when the tied variable needs to be
+     destructed.  As with other object classes, such a method is seldom
+     necessary, because Perl deallocates its moribund object's memory
+     for you automatically--this isn't C++, you know.  We'll use a
+     DESTROY method here for debugging purposes only.
+
+          sub DESTROY {
+              my $self = shift;
+              confess "wrong type" unless ref $self;
+              carp "[ Nice::DESTROY pid $$self ]" if $Nice::DEBUG;
+          }
+
+That's about all there is to it.  Actually, it's more than all there is
+to it, because we've done a few nice things here for the sake of
+completeness, robustness, and general aesthetics.  Simpler TIESCALAR
+classes are certainly possible.
+
+
+Tying Arrays
+------------
+
+A class implementing a tied ordinary array should define the following
+methods: TIEARRAY, FETCH, STORE, and perhaps DESTROY.
+
+WARNING: Tied arrays are *incomplete*.  They are also distinctly lacking
+something for the `$#ARRAY' access (which is hard, as it's an lvalue),
+as well as the other obvious array functions, like push(), pop(),
+shift(), unshift(), and splice().
+
+For this discussion, we'll implement an array whose indices are fixed at
+its creation.  If you try to access anything beyond those bounds, you'll
+take an exception.  (Well, if you access an individual element; an
+aggregate assignment would be missed.) For example:
+
+     require Bounded_Array;
+     tie @ary, 'Bounded_Array', 2;
+     $| = 1;
+     for $i (0 .. 10) {
+         print "setting index $i: ";
+         $ary[$i] = 10 * $i;
+         $ary[$i] = 10 * $i;
+         print "value of elt $i now $ary[$i]\n";
+     }
+
+The preamble code for the class is as follows:
+
+     package Bounded_Array;
+     use Carp;
+     use strict;
+
+TIEARRAY classname, LIST
+     This is the constructor for the class.  That means it is expected
+     to return a blessed reference through which the new array (probably
+     an anonymous ARRAY ref) will be accessed.
+
+     In our example, just to show you that you don't *really* have to
+     return an ARRAY reference, we'll choose a HASH reference to
+     represent our object.  A HASH works out well as a generic record
+     type: the `{BOUND}' field will store the maximum bound allowed, and
+     the `{ARRAY}' field will hold the true ARRAY ref.  If someone
+     outside the class tries to dereference the object returned
+     (doubtless thinking it an ARRAY ref), they'll blow up.  This just
+     goes to show you that you should respect an object's privacy.
+
+          sub TIEARRAY {
+          	my $class = shift;
+          	my $bound = shift;
+          	confess "usage: tie(\@ary, 'Bounded_Array', max_subscript)"
+          	    if @_ || $bound =~ /\D/;
+          	return bless {
+          	    BOUND => $bound,
+          	    ARRAY => [],
+          	}, $class;
+          }
+
+FETCH this, index
+     This method will be triggered every time an individual element the
+     tied array is accessed (read).  It takes one argument beyond its
+     self reference: the index whose value we're trying to fetch.
+
+          sub FETCH {
+            my($self,$idx) = @_;
+            if ($idx > $self->{BOUND}) {
+          	confess "Array OOB: $idx > $self->{BOUND}";
+            }
+            return $self->{ARRAY}[$idx];
+          }
+
+     As you may have noticed, the name of the FETCH method (et al.) is
+     the same for all accesses, even though the constructors differ in
+     names (TIESCALAR vs TIEARRAY).  While in theory you could have the
+     same class servicing several tied types, in practice this becomes
+     cumbersome, and it's easiest to keep them at simply one tie type
+     per class.
+
+STORE this, index, value
+     This method will be triggered every time an element in the tied
+     array is set (written).  It takes two arguments beyond its self
+     reference: the index at which we're trying to store something and
+     the value we're trying to put there.  For example:
+
+          sub STORE {
+            my($self, $idx, $value) = @_;
+            print "[STORE $value at $idx]\n" if _debug;
+            if ($idx > $self->{BOUND} ) {
+              confess "Array OOB: $idx > $self->{BOUND}";
+            }
+            return $self->{ARRAY}[$idx] = $value;
+          }
+
+DESTROY this
+     This method will be triggered when the tied variable needs to be
+     destructed.  As with the scalar tie class, this is almost never
+     needed in a language that does its own garbage collection, so this
+     time we'll just leave it out.
+
+The code we presented at the top of the tied array class accesses many
+elements of the array, far more than we've set the bounds to.
+Therefore, it will blow up once they try to access beyond the 2nd
+element of @ary, as the following output demonstrates:
+
+     setting index 0: value of elt 0 now 0
+     setting index 1: value of elt 1 now 10
+     setting index 2: value of elt 2 now 20
+     setting index 3: Array OOB: 3 > 2 at Bounded_Array.pm line 39
+             Bounded_Array::FETCH called at testba line 12
+
+
+Tying Hashes
+------------
+
+As the first Perl data type to be tied (see dbmopen()), hashes have the
+most complete and useful tie() implementation.  A class implementing a
+tied hash should define the following methods: TIEHASH is the
+constructor.  FETCH and STORE access the key and value pairs.  EXISTS
+reports whether a key is present in the hash, and DELETE deletes one.
+CLEAR empties the hash by deleting all the key and value pairs.
+FIRSTKEY and NEXTKEY implement the keys() and each() functions to
+iterate over all the keys.  And DESTROY is called when the tied variable
+is garbage collected.
+
+If this seems like a lot, then feel free to inherit from merely the
+standard Tie::Hash module for most of your methods, redefining only the
+interesting ones.  See *Note Tie/Hash: (pm.info)Tie/Hash, for details.
+
+Remember that Perl distinguishes between a key not existing in the hash,
+and the key existing in the hash but having a corresponding value of
+undef.  The two possibilities can be tested with the `exists()' and
+`defined()' functions.
+
+Here's an example of a somewhat interesting tied hash class: it gives
+you a hash representing a particular user's dot files.  You index into
+the hash with the name of the file (minus the dot) and you get back that
+dot file's contents.  For example:
+
+     use DotFiles;
+     tie %dot, 'DotFiles';
+     if ( $dot{profile} =~ /MANPATH/ ||
+          $dot{login}   =~ /MANPATH/ ||
+          $dot{cshrc}   =~ /MANPATH/    )
+     {
+     	print "you seem to set your MANPATH\n";
+     }
+
+Or here's another sample of using our tied class:
+
+     tie %him, 'DotFiles', 'daemon';
+     foreach $f ( keys %him ) {
+     	printf "daemon dot file %s is size %d\n",
+     	    $f, length $him{$f};
+     }
+
+In our tied hash DotFiles example, we use a regular hash for the object
+containing several important fields, of which only the `{LIST}' field
+will be what the user thinks of as the real hash.
+
+USER
+     whose dot files this object represents
+
+HOME
+     where those dot files live
+
+CLOBBER
+     whether we should try to change or remove those dot files
+
+LIST
+     the hash of dot file names and content mappings
+
+Here's the start of `Dotfiles.pm':
+
+     package DotFiles;
+     use Carp;
+     sub whowasi { (caller(1))[3] . '()' }
+     my $DEBUG = 0;
+     sub debug { $DEBUG = @_ ? shift : 1 }
+
+For our example, we want to be able to emit debugging info to help in
+tracing during development.  We keep also one convenience function
+around internally to help print out warnings; whowasi() returns the
+function name that calls it.
+
+Here are the methods for the DotFiles tied hash.
+
+TIEHASH classname, LIST
+     This is the constructor for the class.  That means it is expected
+     to return a blessed reference through which the new object
+     (probably but not necessarily an anonymous hash) will be accessed.
+
+     Here's the constructor:
+
+          sub TIEHASH {
+          	my $self = shift;
+          	my $user = shift || $>;
+          	my $dotdir = shift || '';
+          	croak "usage: @{[&whowasi]} [USER [DOTDIR]]" if @_;
+          	$user = getpwuid($user) if $user =~ /^\d+$/;
+          	my $dir = (getpwnam($user))[7]
+          		|| croak "@{[&whowasi]}: no user $user";
+          	$dir .= "/$dotdir" if $dotdir;
+
+          my $node = {
+              USER    => $user,
+              HOME    => $dir,
+              LIST    => {},
+              CLOBBER => 0,
+          };
+
+          opendir(DIR, $dir)
+          	|| croak "@{[&whowasi]}: can't opendir $dir: $!";
+          foreach $dot ( grep /^\./ && -f "$dir/$_", readdir(DIR)) {
+              $dot =~ s/^\.//;
+              $node->{LIST}{$dot} = undef;
+          }
+          closedir DIR;
+          return bless $node, $self;
+              }
+
+     It's probably worth mentioning that if you're going to filetest the
+     return values out of a readdir, you'd better prepend the directory
+     in question.  Otherwise, because we didn't chdir() there, it would
+     have been testing the wrong file.
+
+FETCH this, key
+     This method will be triggered every time an element in the tied
+     hash is accessed (read).  It takes one argument beyond its self
+     reference: the key whose value we're trying to fetch.
+
+     Here's the fetch for our DotFiles example.
+
+          sub FETCH {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	my $dot = shift;
+          	my $dir = $self->{HOME};
+          	my $file = "$dir/.$dot";
+
+          unless (exists $self->{LIST}->{$dot} || -f $file) {
+              carp "@{[&whowasi]}: no $dot file" if $DEBUG;
+              return undef;
+          }
+
+          if (defined $self->{LIST}->{$dot}) {
+              return $self->{LIST}->{$dot};
+          } else {
+              return $self->{LIST}->{$dot} = `cat $dir/.$dot`;
+          }
+              }
+
+     It was easy to write by having it call the Unix cat(1) command, but
+     it would probably be more portable to open the file manually (and
+     somewhat more efficient).  Of course, because dot files are a Unixy
+     concept, we're not that concerned.
+
+STORE this, key, value
+     This method will be triggered every time an element in the tied
+     hash is set (written).  It takes two arguments beyond its self
+     reference: the index at which we're trying to store something, and
+     the value we're trying to put there.
+
+     Here in our DotFiles example, we'll be careful not to let them try
+     to overwrite the file unless they've called the clobber() method on
+     the original object reference returned by tie().
+
+          sub STORE {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	my $dot = shift;
+          	my $value = shift;
+          	my $file = $self->{HOME} . "/.$dot";
+          	my $user = $self->{USER};
+
+          croak "@{[&whowasi]}: $file not clobberable"
+              unless $self->{CLOBBER};
+
+          open(F, "> $file") || croak "can't open $file: $!";
+          print F $value;
+          close(F);
+              }
+
+     If they wanted to clobber something, they might say:
+
+          $ob = tie %daemon_dots, 'daemon';
+          $ob->clobber(1);
+          $daemon_dots{signature} = "A true daemon\n";
+
+     Another way to lay hands on a reference to the underlying object is
+     to use the tied() function, so they might alternately have set
+     clobber using:
+
+          tie %daemon_dots, 'daemon';
+          tied(%daemon_dots)->clobber(1);
+
+     The clobber method is simply:
+
+          sub clobber {
+          	my $self = shift;
+          	$self->{CLOBBER} = @_ ? shift : 1;
+          }
+
+DELETE this, key
+     This method is triggered when we remove an element from the hash,
+     typically by using the delete() function.  Again, we'll be careful
+     to check whether they really want to clobber files.
+
+          sub DELETE   {
+          	carp &whowasi if $DEBUG;
+
+          my $self = shift;
+          my $dot = shift;
+          my $file = $self->{HOME} . "/.$dot";
+          croak "@{[&whowasi]}: won't remove file $file"
+              unless $self->{CLOBBER};
+          delete $self->{LIST}->{$dot};
+          my $success = unlink($file);
+          carp "@{[&whowasi]}: can't unlink $file: $!" unless $success;
+          $success;
+              }
+
+     The value returned by DELETE becomes the return value of the call
+     to delete().  If you want to emulate the normal behavior of
+     delete(), you should return whatever FETCH would have returned for
+     this key.  In this example, we have chosen instead to return a
+     value which tells the caller whether the file was successfully
+     deleted.
+
+CLEAR this
+     This method is triggered when the whole hash is to be cleared,
+     usually by assigning the empty list to it.
+
+     In our example, that would remove all the user's dot files!  It's
+     such a dangerous thing that they'll have to set CLOBBER to
+     something higher than 1 to make it happen.
+
+          sub CLEAR    {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	croak "@{[&whowasi]}: won't remove all dot files for $self->{USER}"
+          	    unless $self->{CLOBBER} > 1;
+          	my $dot;
+          	foreach $dot ( keys %{$self->{LIST}}) {
+          	    $self->DELETE($dot);
+          	}
+          }
+
+EXISTS this, key
+     This method is triggered when the user uses the exists() function
+     on a particular hash.  In our example, we'll look at the `{LIST}'
+     hash element for this:
+
+          sub EXISTS   {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	my $dot = shift;
+          	return exists $self->{LIST}->{$dot};
+          }
+
+FIRSTKEY this
+     This method will be triggered when the user is going to iterate
+     through the hash, such as via a keys() or each() call.
+
+          sub FIRSTKEY {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	my $a = keys %{$self->{LIST}};		# reset each() iterator
+          	each %{$self->{LIST}}
+          }
+
+NEXTKEY this, lastkey
+     This method gets triggered during a keys() or each() iteration.  It
+     has a second argument which is the last key that had been accessed.
+     This is useful if you're carrying about ordering or calling the
+     iterator from more than one sequence, or not really storing things
+     in a hash anywhere.
+
+     For our example, we're using a real hash so we'll do just the
+     simple thing, but we'll have to go through the LIST field
+     indirectly.
+
+          sub NEXTKEY  {
+          	carp &whowasi if $DEBUG;
+          	my $self = shift;
+          	return each %{ $self->{LIST} }
+          }
+
+DESTROY this
+     This method is triggered when a tied hash is about to go out of
+     scope.  You don't really need it unless you're trying to add
+     debugging or have auxiliary state to clean up.  Here's a very
+     simple function:
+
+          sub DESTROY  {
+          	carp &whowasi if $DEBUG;
+          }
+
+Note that functions such as keys() and values() may return huge array
+values when used on large objects, like DBM files.  You may prefer to
+use the each() function to iterate over such.  Example:
+
+     # print out history file offsets
+     use NDBM_File;
+     tie(%HIST, 'NDBM_File', '/usr/lib/news/history', 1, 0);
+     while (($key,$val) = each %HIST) {
+         print $key, ' = ', unpack('L',$val), "\n";
+     }
+     untie(%HIST);
+
+
+Tying FileHandles
+-----------------
+
+This is partially implemented now.
+
+A class implementing a tied filehandle should define the following
+methods: TIEHANDLE, at least one of PRINT, PRINTF, READLINE, GETC, or
+READ, and possibly DESTROY.
+
+It is especially useful when perl is embedded in some other program,
+where output to STDOUT and STDERR may have to be redirected in some
+special way. See nvi and the Apache module for examples.
+
+In our example we're going to create a shouting handle.
+
+     package Shout;
+
+TIEHANDLE classname, LIST
+     This is the constructor for the class.  That means it is expected
+     to return a blessed reference of some sort. The reference can be
+     used to hold some internal information.
+
+          sub TIEHANDLE { print "<shout>\n"; my $i; bless \$i, shift }
+
+PRINT this, LIST
+     This method will be triggered every time the tied handle is printed
+     to with the `print()' function.  Beyond its self reference it also
+     expects the list that was passed to the print function.
+
+          sub PRINT { $r = shift; $$r++; print join($,,map(uc($_),@_)),$\ }
+
+PRINTF this, LIST
+     This method will be triggered every time the tied handle is printed
+     to with the `printf()' function.  Beyond its self reference it also
+     expects the format and list that was passed to the printf function.
+
+          sub PRINTF {
+              shift;
+              my $fmt = shift;
+              print sprintf($fmt, @_)."\n";
+          }
+
+READ this LIST
+     This method will be called when the handle is read from via the
+     read or sysread functions.
+
+          sub READ {
+          	$r = shift;
+          	my($buf,$len,$offset) = @_;
+          	print "READ called, \$buf=$buf, \$len=$len, \$offset=$offset";
+          }
+
+READLINE this
+     This method will be called when the handle is read from via
+     <HANDLE>.  The method should return undef when there is no more
+     data.
+
+          sub READLINE { $r = shift; "PRINT called $$r times\n"; }
+
+GETC this
+     This method will be called when the getc function is called.
+
+          sub GETC { print "Don't GETC, Get Perl"; return "a"; }
+
+DESTROY this
+     As with the other types of ties, this method will be called when
+     the tied handle is about to be destroyed. This is useful for
+     debugging and possibly cleaning up.
+
+          sub DESTROY { print "</shout>\n" }
+
+Here's how to use our little example:
+
+     tie(*FOO,'Shout');
+     print FOO "hello\n";
+     $a = 4; $b = 6;
+     print FOO $a, " plus ", $b, " equals ", $a + $b, "\n";
+     print <FOO>;
+
+
+The untie Gotcha
+----------------
+
+If you intend making use of the object returned from either tie() or
+tied(), and if the tie's target class defines a destructor, there is a
+subtle gotcha you *must* guard against.
+
+As setup, consider this (admittedly rather contrived) example of a tie;
+all it does is use a file to keep a log of the values assigned to a
+scalar.
+
+     package Remember;
+
+     use strict;
+     use IO::File;
+
+     sub TIESCALAR {
+         my $class = shift;
+         my $filename = shift;
+         my $handle = new IO::File "> $filename"
+                          or die "Cannot open $filename: $!\n";
+
+     print $handle "The Start\n";
+     bless {FH => $handle, Value => 0}, $class;
+         }
+
+     sub FETCH {
+         my $self = shift;
+         return $self->{Value};
+     }
+
+     sub STORE {
+         my $self = shift;
+         my $value = shift;
+         my $handle = $self->{FH};
+         print $handle "$value\n";
+         $self->{Value} = $value;
+     }
+
+     sub DESTROY {
+         my $self = shift;
+         my $handle = $self->{FH};
+         print $handle "The End\n";
+         close $handle;
+     }
+
+     1;
+
+Here is an example that makes use of this tie:
+
+     use strict;
+     use Remember;
+
+     my $fred;
+     tie $fred, 'Remember', 'myfile.txt';
+     $fred = 1;
+     $fred = 4;
+     $fred = 5;
+     untie $fred;
+     system "cat myfile.txt";
+
+This is the output when it is executed:
+
+     The Start
+     1
+     4
+     5
+     The End
+
+So far so good.  Those of you who have been paying attention will have
+spotted that the tied object hasn't been used so far.  So lets add an
+extra method to the Remember class to allow comments to be included in
+the file -- say, something like this:
+
+     sub comment {
+         my $self = shift;
+         my $text = shift;
+         my $handle = $self->{FH};
+         print $handle $text, "\n";
+     }
+
+And here is the previous example modified to use the comment method
+(which requires the tied object):
+
+     use strict;
+     use Remember;
+
+     my ($fred, $x);
+     $x = tie $fred, 'Remember', 'myfile.txt';
+     $fred = 1;
+     $fred = 4;
+     comment $x "changing...";
+     $fred = 5;
+     untie $fred;
+     system "cat myfile.txt";
+
+When this code is executed there is no output.  Here's why:
+
+When a variable is tied, it is associated with the object which is the
+return value of the TIESCALAR, TIEARRAY, or TIEHASH function.  This
+object normally has only one reference, namely, the implicit reference
+from the tied variable.  When untie() is called, that reference is
+destroyed.  Then, as in the first example above, the object's destructor
+(DESTROY) is called, which is normal for objects that have no more valid
+references; and thus the file is closed.
+
+In the second example, however, we have stored another reference to the
+tied object in `$x'.  That means that when untie() gets called there
+will still be a valid reference to the object in existence, so the
+destructor is not called at that time, and thus the file is not closed.
+The reason there is no output is because the file buffers have not been
+flushed to disk.
+
+Now that you know what the problem is, what can you do to avoid it?
+Well, the good old -w flag will spot any instances where you call
+untie() and there are still valid references to the tied object.  If the
+second script above is run with the -w flag, Perl prints this warning
+message:
+
+     untie attempted while 1 inner references still exist
+
+To get the script to work properly and silence the warning make sure
+there are no valid references to the tied object *before* untie() is
+called:
+
+     undef $x;
+     untie $fred;
+
+
+SEE ALSO
+========
+
+See `DB_File' in this node or *Note Config: (pm.info)Config, for some
+interesting tie() implementations.
+
+
+BUGS
+====
+
+Tied arrays are *incomplete*.  They are also distinctly lacking
+something for the `$#ARRAY' access (which is hard, as it's an lvalue),
+as well as the other obvious array functions, like push(), pop(),
+shift(), unshift(), and splice().
+
+You cannot easily tie a multilevel data structure (such as a hash of
+hashes) to a dbm file.  The first problem is that all but GDBM and
+Berkeley DB have size limitations, but beyond that, you also have
+problems with how references are to be represented on disk.  One
+experimental module that does attempt to address this need partially is
+the MLDBM module.  Check your nearest CPAN site as described in *Note
+Perlmodlib: perlmodlib, for source code to MLDBM.
+
+
+AUTHOR
+======
+
+Tom Christiansen
+
+TIEHANDLE by Sven Verdoolaege <`skimo@dns.ufsia.ac.be'> and Doug
+MacEachern <`dougm@osf.org'>
+
+
+

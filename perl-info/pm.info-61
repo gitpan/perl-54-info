@@ -1,0 +1,2365 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: X11/Protocol/Connection/INETSocket, Next: X11/Protocol/Connection/Socket, Prev: X11/Protocol/Connection/INETFH, Up: Module List
+
+Perl module for IO::Socket::INET-based X11 connections
+******************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Connection::INETSocket - Perl module for
+IO::Socket::INET-based X11 connections
+
+
+SYNOPSIS
+========
+
+     use X11::Protocol;
+     use X11::Protocol::Connection::INETSocket;
+     $conn = X11::Protocol::Connection::INETSocket
+       ->open($host, $display_number);
+     $x = X11::Protocol->new($conn); 
+
+
+DESCRIPTION
+===========
+
+This module is used by X11::Protocol to establish a connection and
+communicate with a server over a TCP/IP connection, using the
+IO::Socket::INET module.
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node,
+*Note X11/Protocol: X11/Protocol,,
+*Note X11/Protocol/Connection/Socket: X11/Protocol/Connection/Socket,,
+*Note X11/Protocol/Connection/UNIXSocket: X11/Protocol/Connection/UNIXSocket,, 
+*Note IO/Socket: IO/Socket,.
+
+
+
+
+File: pm.info, Node: X11/Protocol/Connection/Socket, Next: X11/Protocol/Connection/UNIXFH, Prev: X11/Protocol/Connection/INETSocket, Up: Module List
+
+Perl module base class for IO::Socket-based X11 connections
+***********************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Connection::Socket - Perl module base class for
+IO::Socket-based X11 connections
+
+
+SYNOPSIS
+========
+
+     package X11::Protocol::Connection::WeirdSocket;
+     use X11::Protocol::Connection::Socket;
+     @ISA = ('X11::Protocol::Connection::Socket')
+
+
+DESCRIPTION
+===========
+
+This module defines get(), give() and fh() methods common to
+X11::Protocol::Connection types that are based on IO::Socket. They
+expect the object they are called with to be a reference to an
+IO::Socket.
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node,
+*Note X11/Protocol: X11/Protocol,,
+*Note X11/Protocol/Connection/INETSocket: X11/Protocol/Connection/INETSocket,,
+*Note X11/Protocol/Connection/UNIXSocket: X11/Protocol/Connection/UNIXSocket,, 
+*Note IO/Socket: IO/Socket,.
+
+
+
+
+File: pm.info, Node: X11/Protocol/Connection/UNIXFH, Next: X11/Protocol/Connection/UNIXSocket, Prev: X11/Protocol/Connection/Socket, Up: Module List
+
+Perl module for FileHandle-based Unix-domain X11 connections
+************************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Connection::UNIXFH - Perl module for FileHandle-based
+Unix-domain X11 connections
+
+
+SYNOPSIS
+========
+
+     use X11::Protocol;
+     use X11::Protocol::Connection::UNIXFH;
+     $conn = X11::Protocol::Connection::UNIXFH
+       ->open($host, $display_number);
+     $x = X11::Protocol->new($conn); 
+
+
+DESCRIPTION
+===========
+
+This module is used by X11::Protocol to establish a connection and
+communicate with a server over a local Unix-domain socket connection,
+using the FileHandle module. The host argument is ignored.
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node,
+*Note X11/Protocol: X11/Protocol,,
+*Note X11/Protocol/Connection/INETFH: X11/Protocol/Connection/INETFH,,
+*Note X11/Protocol/Connection/FileHandle: X11/Protocol/Connection/FileHandle,, 
+*Note FileHandle: FileHandle,.
+
+
+
+
+File: pm.info, Node: X11/Protocol/Connection/UNIXSocket, Next: X11/Protocol/Ext/BIG_REQUESTS, Prev: X11/Protocol/Connection/UNIXFH, Up: Module List
+
+Perl module for IO::Socket::UNIX-based X11 connections
+******************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Connection::UNIXSocket - Perl module for
+IO::Socket::UNIX-based X11 connections
+
+
+SYNOPSIS
+========
+
+     use X11::Protocol;
+     use X11::Protocol::Connection::UNIXSocket;
+     $conn = X11::Protocol::Connection::UNIXSocket
+       ->open($host, $display_number);
+     $x = X11::Protocol->new($conn); 
+
+
+DESCRIPTION
+===========
+
+This module is used by X11::Protocol to establish a connection and
+communicate with a server over a local Unix-domain socket connection,
+using the IO::Socket::UNIX module. The host argument is ignored.
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node,
+*Note X11/Protocol: X11/Protocol,,
+*Note X11/Protocol/Connection/INETSocket: X11/Protocol/Connection/INETSocket,,
+*Note X11/Protocol/Connection/Socket: X11/Protocol/Connection/Socket,, 
+*Note IO/Socket: IO/Socket,.
+
+
+
+
+File: pm.info, Node: X11/Protocol/Ext/BIG_REQUESTS, Next: X11/Protocol/Ext/SHAPE, Prev: X11/Protocol/Connection/UNIXSocket, Up: Module List
+
+Perl module for the X11 protocol Big Requests extension
+*******************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Ext::BIG_REQUESTS - Perl module for the X11 protocol Big
+Requests extension
+
+
+SYNOPSIS
+========
+
+     use X11::Protocol;
+     $x = X11::Protocol->new($ENV{'DISPLAY'});
+     $x->init_extension('BIG_REQUESTS') or die;
+
+
+DESCRIPTION
+===========
+
+This module is used by the X11::Protocol module to participate in the
+'Big Requests' extension to the X protocol. Once initialized, it
+transparently allows requests of more than 262140 (65535 * 4) bytes.
+The new maximum request length is avaliable as
+`$x->maximum_request_length'.
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node,
+*Note X11/Protocol: X11/Protocol,,
+*Big Requests Extension (X Consortium Standard)*.
+
+
+
+
+File: pm.info, Node: X11/Protocol/Ext/SHAPE, Next: X11/XEvent, Prev: X11/Protocol/Ext/BIG_REQUESTS, Up: Module List
+
+Perl module for the X11 Protocol Nonrectangular Window Shape Extension
+**********************************************************************
+
+
+
+NAME
+====
+
+X11::Protocol::Ext::SHAPE - Perl module for the X11 Protocol
+Nonrectangular Window Shape Extension
+
+
+SYNOPSIS
+========
+
+     use X11::Protocol;
+     $x = X11::Protocol->new($ENV{'DISPLAY'});
+     $x->init_extension('SHAPE') or die;
+
+
+DESCRIPTION
+===========
+
+This module is used by the X11::Protocol module to participate in the
+shaped window extension to the X protocol, allowing windows to be of any
+shape, not just rectangles.
+
+
+SYMBOLIC CONSTANTS
+==================
+
+This extension adds the constant types 'ShapeKind' and 'ShapeOp', with
+values as defined in the standard.
+
+
+EVENTS
+======
+
+This extension adds the event type 'ShapeNotify', with values as
+specified in the standard. This event is selected using the
+ShapeSelectInput() request.
+
+
+REQUESTS
+========
+
+This extension adds several requests, called as shown below:
+
+     $x->ShapeQueryVersion
+     =>
+     ($major, $minor)
+
+     $x->ShapeRectangles($dest, $destKind, $op, $xOff, $yOff,
+     		      $ordering, @rectangles) 
+
+     $x->ShapeMask($dest, $destKind, $op, $xOff, $yOff, $source)
+
+     $x->ShapeCombine($dest, $destKind, $op, $xOff, $yOff, $source,
+     		   $sourceKind)
+
+     $x->ShapeOffset($dest, $destKind, $xOff, $yOff)
+
+     $x->ShapeQueryExtents($dest)
+     =>
+     ($boundingShaped, $clipShaped,
+      ($xBoundingShape, $yBoundingShape,
+       $widthBoundingShape, $heightBoundingShape)  
+      ($xClipShape, $yClipShape, $widthClipShape, $heightClipShape))
+
+     $x->ShapeSelectInput($window, $enable)  
+
+     $x->ShapeInputSelected($window)
+     =>
+     $enable
+
+     $x->ShapeGetRectangles($window, $kind)
+     =>
+     ($ordering, [$x, $y, $width, $height], ...)
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>.
+
+
+SEE ALSO
+========
+
+`perl(1)' in this node, 
+*Note X11/Protocol: X11/Protocol,,
+*Nonrectangular Window Shape Extension (X Consortium Standard)*.
+
+
+
+
+File: pm.info, Node: X11/XEvent, Next: X11/XFontStruct, Prev: X11/Protocol/Ext/SHAPE, Up: Module List
+
+package to access XEvent structure fields
+*****************************************
+
+
+
+NAME
+====
+
+XEvent - package to access XEvent structure fields
+
+
+SYNOPSIS
+========
+
+     use <a package that returns XEvents>;
+     use X11::XEvent;
+
+     $xevent = function_that_returns_xevent(its, parms);
+     $type = $xevent->type;    
+
+     # Any XEvent field can be read like this.
+
+
+DESCRIPTION
+===========
+
+This class/package provides an extension to perl that allows Perl
+programs read-only access to the XEvent structure. So.  how do they get
+hold of an XEvent to read? Well, they use ANOTHER Perl extension that
+blesses pointers to XEvents into the XEvent class. Such an extension
+would do that by supplying a TYPEMAP as follows:
+
+     XEvent *    T_PTROBJ
+
+and then returning XEvent pointers from appropriate function calls.
+
+An extension that does this is the X11::Xforms extension. So, using
+these two extensions the perl programmer can do some pretty powerful
+XWindows application programming.
+
+So whats in this package. Well, quite simply, every method in this
+package is named after a field in the XEvent structure. Now, anyone who
+has seen that structure knows that it is, in fact, a union of a bunch of
+other structures, the only common field of which is the first field, the
+type field.
+
+However, this package is written so that you don't have to know the REAL
+structure of the event you are interested in, you just have to know the
+name of the field you are after. ALL XEvent fields are catered for, even
+the wierd vector ones. ALL are returned as perl scalars of various
+intuitively obvious types.
+
+There is one special function that might interest some of you. The
+all_fields function returns the values of all fields in the XEvent as a
+perl list.
+
+
+
+
+File: pm.info, Node: X11/XFontStruct, Next: Xbase, Prev: X11/XEvent, Up: Module List
+
+package to access XFontStruct structure fields
+**********************************************
+
+
+
+NAME
+====
+
+XFontStruct - package to access XFontStruct structure fields
+
+
+SYNOPSIS
+========
+
+     use <a package that returns XFontStructs>;
+     use X11::XFontStruct;
+
+     $xfontstruct = function_that_returns_xfontstruct(its, parms);
+     $ascent = $xfontstruct->ascent;    
+
+     # Any XFontStruct field can be read like this.
+
+
+DESCRIPTION
+===========
+
+This class/package provides an extension to perl that allows Perl
+programs read-only access to the XFontStruct structure. So.  how do they
+get hold of an XFontStruct to read? Well, they use ANOTHER Perl
+extension that blesses pointers to XFontStructs into the XFontStruct
+class. Such an extension would do that by supplying a TYPEMAP as
+follows:
+
+     XFontStruct *    T_PTROBJ
+
+and then returning XFontStruct pointers from appropriate function calls.
+
+An extension that does this is the X11::Xforms extension. So, using
+these two extensions the perl programmer can do some pretty powerful
+XWindows application programming.
+
+So whats in this package. Well, quite simply, every method in this
+package is named after a field in the XFontStruct structure.
+
+ALL XFontStruct fields are catered for, except XExtData.  ALL are
+returned as perl scalars or, in the case of substructures, as lists of
+scalars, of various intuitively obvious types. Here is the syntax for
+each field:
+
+     $fid = $xf->$fid;
+     $direction = $xf->direction;
+     $min_char_or_byte2 = $xf->min_char_or_byte2;
+     $max_char_or_byte2 = $xf->max_char_or_byte2;
+     $min_byte1 = $xf->min_byte1;
+     $max_byte1 = $xf->max_byte1;
+     $all_chars_exist = $xf->all_chars_exist;
+     $default_char = $xf->default_char;
+     $n_properties = $xf->n_properties;
+     @properties = $xf->properties;
+     	[or    ($name, $card32, @more_props) = $xf->n_properties;]	
+     @min_bounds = $xf->min_bounds;
+     	[or    ($lbearing,
+     		$rbearing,
+     		$width,
+     		$ascent,
+     		$descent,
+     		$attributes) = $xf->min_bounds;]
+     @max_bounds = $xf->max_bounds;
+     	[or    ($lbearing,
+     		$rbearing,
+     		$width,
+     		$ascent,
+     		$descent,
+     		$attributes) = $xf->max_bounds;]
+     @per_char = $xf->per_char;
+     	[or    ($lbearing,
+     		$rbearing,
+     		$width,
+     		$ascent,
+     		$descent,
+     		$attributes,
+     		@more_chars) = $xf->per_char;]
+     $ascent = $xf->ascent;
+     $descent = $xf->descent;
+     }
+
+
+
+
+File: pm.info, Node: Xbase, Next: autouse, Prev: X11/XFontStruct, Up: Module List
+
+Perl Module to Read Xbase DBF Files and Foxpro IDX indexes
+**********************************************************
+
+
+
+NAME
+====
+
+Xbase - Perl Module to Read Xbase DBF Files and Foxpro IDX indexes
+
+
+ABSTRACT
+========
+
+This is a perl module to access xbase files with simple IDX indexes.  At
+the moment only read access to the files are provided by this package
+Writing is tougher with IDX updates etc and is being worked on. Since
+the read functionality is useful in itself this version is being
+released.
+
+
+INSTALLATION
+============
+
+To install this package, change to the directory where this file is
+present and type
+
+     perl Makefile.PL
+     make
+     make install
+
+This will copy Xbase.pm to the perl library directory provided you have
+the permissions to do so. To use the module in your programs you will
+use the line:
+
+     use Xbase;
+
+If you cannot install it in the system directory, put it whereever you
+like and tell perl where to find it by using the following in the
+beginning of your script:
+
+     BEGIN {
+     	unshift(@INC,'/usr/underprivileged/me/lib');
+     }
+     use Xbase;
+
+
+DESCRIPTION
+===========
+
+The various methods that are supported by this module are given
+below. There is a very distinct xbase like flavour to most of the
+commands.
+
+
+CREATING A NEW XBASE OBJECT:
+----------------------------
+
+     $database = new Xbase;
+
+This will create an object $database that will be used to interact with
+the various methods the module provides.
+
+
+OPENING A DATABASE
+------------------
+
+     $database->open_dbf($dbf_name, $idx_name);
+
+Associates the DBF file and optionally the IDX file with the object. It
+opens the files and if a associated MEMO file is present automatically
+opens it. Only Foxpro Memo files are currently supported and assumes the
+same filename as the DBF with a FPT extension.
+
+
+DATABASE TYPE
+-------------
+
+     print $database->dbf_type;
+
+Returns a string telling you if the xbase file opened is DBF3, DBF4 or
+FOX
+
+
+LAST UPDATE DATE
+----------------
+
+     print $database->last_update;
+
+Returns a date string telling you when the database was last updated.
+
+
+LAST RECORD NUMBER
+------------------
+
+     $end=$database->lastrec;
+
+Returns the record number of the last record in the database file.
+
+
+DATABASE STATUS INFORMATION
+---------------------------
+
+     $database->dbf_stat;
+
+This prints out on to STDOUT a display of the status/structure of the
+database. It is similar to the xbase command DISPLAY STATUS. Since it
+prints field names and structure it is commonly used to see if the
+module is reading the database as intended and finding out the field
+names.
+
+
+INDEX FILE STATUS INFORMATION
+-----------------------------
+
+     $database->idx_stat;
+
+Prints on to STDOUT the status information of an open IDX file.
+
+
+GO TOP
+------
+
+     $database->go_top;
+
+Moves the record pointer to the top of the database. Physical top of
+database if no index is present else first record according to index
+order.
+
+
+GO BOTTOM
+---------
+
+     $database->go_bottom;
+
+Moves the record pointer to the bottom of the database. Physical bottom
+of database if no index is present else last record according to index
+order.
+
+
+GO NEXT
+-------
+
+     $database->go_next;
+
+Equivalent to the xbase command SKIP 1 which moves the record pointer to
+the next record.
+
+
+GO PREVIOUS
+-----------
+
+     $database->go_prev;
+
+Equivalent to the xbase command SKIP -1 which moves the record pointer
+to the previous record.
+
+
+SEEK
+----
+
+     $stat=$database->seek($keyvalue);
+
+This command positions the record pointer on the first matching record
+that has the key value specified. The database should be opened with an
+associated index. Seek without an available index will print an error
+message and abort. The return value indicates whether the key value was
+found or not.
+
+
+RECORD NUMBER
+-------------
+
+     $current_rec=$database->recno;
+
+Returns the record number that the record pointer is currently at.
+
+
+BEGINNING OF FILE
+-----------------
+
+     if ($database->bof) {
+     	print "At the very top of the file \n";
+     }
+
+Tells you whether you are at the beginning of the file. Like in xbase it
+is not true when you are at record number one but rather it is set when
+you try to $database->go_prev when you are at the top of the file.
+
+
+END OF FILE   	if ($database->eof) { 		print "At the very end of the file \n"; 	}
+-------------------------------------------------------------------------------------------------
+
+Tells you whether you are at the end of the file. Like in xbase it is
+not true when you are at the last record but rather it is set when you
+try to $database->go_next from the last record.
+
+
+READ INDIVIDUAL FIELD VALUES
+----------------------------
+
+     print $database->get_field("NAME");
+
+Returns as a string the contents of a field name specified from the
+current record. Using the pseudo field name _DELETED will tell you if
+the current record is marked for deletion.
+
+
+READ FIELD VALUES INTO ARRAY
+----------------------------
+
+     @fields = $database->get_record;
+
+Returns as an array all the fields from the current record. The fields
+are in the same order as in the database.
+
+
+CLOSE DATABASE
+--------------
+
+     $database->close_dbf;
+
+This closes the database files, index files and memo files that are
+associated with the $database object with $database->open_dbf
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Pratap Pereira. All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+I request that if you use this module at a web site to make a link to
+	
+	http://eewww.eng.ohio-state.edu/~pereira/software/xbase/
+
+This is just so that others might find it. This is however not required
+of you.
+
+
+AUTHOR INFORMATION
+==================
+
+Please send your comments, suggestions, gripes, bug-reports to
+
+     Pratap Pereira
+     pereira@ee.eng.ohio-state.edu
+
+
+UPDATE HISTORY
+==============
+
+Original perl 4 script done in March 1994
+Perl 5 module done in February 1995
+RELEASE 2 was first public release now called xbase12.pm
+RELEASE 3 was done 6/22/95 called xbase13.pm
+          Fixed problem with GO_PREV & GO_NEXT after SEEK.
+          Fixed problem with parsing headers of dbfs with 
+                  record length > 255.
+          Added Memo file support.
+
+RELEASE 4 was done 9/29/95
+          Fixed problem with certain IDX failing completely, 
+                  was a stupid
+          indexing mistake.
+
+RELEASE 5 was done 11/14/95 (called xbase.pm 1.05)
+          Fixed field length inconsistency errors by changing 
+                  way header is decoded. Should work with more xbase 
+                  variants. (Dick Sutton & Andrew Vasquez)
+
+Version 1.06  was done 11/17/95
+          Added binmode command to file handles to support 
+          Windows NT 
+
+Version 1.07 was done 01/23/96
+          Made documentation in pod format, installation 
+                  automated. Fixed problem with deleted status being 
+                  improperly read (Chung Huynh). Renamed to Xbase 
+                  (previously xbase) to be consistent with other perl
+                  modules. Released in CPAN.
+          Prettied up dbf_stat output (Gilbert Ramirez).    
+
+
+CREDITS
+=======
+
+Thanks are due to Chung Huynh (chuynh@nero.finearts.uvic.ca), Jim
+Esposito (jgespo@exis.net), Dick Sutton (suttond@federal.unisys.com),
+Andrew Vasquez (praka@ophelia.fullcoll.edu), Leonard Samuelson
+(lcs@synergy.smartpages.com) and Gilbert Ramirez Jr
+(gram@merece.uthscsa.edu)
+
+
+
+
+File: pm.info, Node: autouse, Next: blib, Prev: Xbase, Up: Module List
+
+postpone load of modules until a function is used
+*************************************************
+
+
+
+NAME
+====
+
+autouse - postpone load of modules until a function is used
+
+
+SYNOPSIS
+========
+
+     use autouse 'Carp' => qw(carp croak);
+     carp "this carp was predeclared and autoused ";
+
+
+DESCRIPTION
+===========
+
+If the module Module is already loaded, then the declaration
+
+     use autouse 'Module' => qw(func1 func2($;$) Module::func3);
+
+is equivalent to
+
+     use Module qw(func1 func2);
+
+if Module defines func2() with prototype `($;$)', and func1() and
+func3() have no prototypes.  (At least if Module uses Exporter's import,
+otherwise it is a fatal error.)
+
+If the module Module is not loaded yet, then the above declaration
+declares functions func1() and func2() in the current package, and
+declares a function Module::func3().  When these functions are called,
+they load the package Module if needed, and substitute themselves with
+the correct definitions.
+
+
+WARNING
+=======
+
+Using `autouse' will move important steps of your program's execution
+from compile time to runtime.  This can
+
+   * Break the execution of your program if the module you `autouse'd
+     has some initialization which it expects to be done early.
+
+   * hide bugs in your code since important checks (like correctness of
+     prototypes) is moved from compile time to runtime.  In particular,
+     if the prototype you specified on `autouse' line is wrong, you will
+     not find it out until the corresponding function is executed.  This
+     will be very unfortunate for functions which are not always called
+     (note that for such functions `autouse'ing gives biggest win, for a
+     workaround see below).
+
+To alleviate the second problem (partially) it is advised to write your
+scripts like this:
+
+     use Module;
+     use autouse Module => qw(carp($) croak(&$));
+     carp "this carp was predeclared and autoused ";
+
+The first line ensures that the errors in your argument specification
+are found early.  When you ship your application you should comment out
+the first line, since it makes the second one useless.
+
+
+BUGS
+====
+
+If Module::func3() is autoused, and the module is loaded between the
+`autouse' directive and a call to Module::func3(), warnings about
+redefinition would appear if warnings are enabled.
+
+If Module::func3() is autoused, warnings are disabled when loading the
+module via autoused functions.
+
+
+AUTHOR
+======
+
+Ilya Zakharevich (ilya@math.ohio-state.edu)
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: blib, Next: constant, Prev: autouse, Up: Module List
+
+Use MakeMaker's uninstalled version of a package
+************************************************
+
+
+
+NAME
+====
+
+blib - Use MakeMaker's uninstalled version of a package
+
+
+SYNOPSIS
+========
+
+     perl -Mblib script [args...]
+
+     perl -Mblib=dir script [args...]
+
+
+DESCRIPTION
+===========
+
+Looks for MakeMaker-like *'blib'* directory structure starting in dir
+(or current directory) and working back up to five levels of '..'.
+
+Intended for use on command line with -M option as a way of testing
+arbitary scripts against an uninstalled version of a package.
+
+However it is possible to :
+
+     use blib; 
+     or 
+     use blib '..';
+
+etc. if you really must.
+
+
+BUGS
+====
+
+Pollutes global name space for development only task.
+
+
+AUTHOR
+======
+
+Nick Ing-Simmons nik@tiuk.ti.com
+
+
+
+
+File: pm.info, Node: constant, Next: diagnostics, Prev: blib, Up: Module List
+
+Perl pragma to declare constants
+********************************
+
+
+
+NAME
+====
+
+constant - Perl pragma to declare constants
+
+
+SYNOPSIS
+========
+
+     use constant BUFFER_SIZE	=> 4096;
+     use constant ONE_YEAR	=> 365.2425 * 24 * 60 * 60;
+     use constant PI		=> 4 * atan2 1, 1;
+     use constant DEBUGGING	=> 0;
+     use constant ORACLE		=> 'oracle@cs.indiana.edu';
+     use constant USERNAME	=> scalar getpwuid($<);
+     use constant USERINFO	=> getpwuid($<);
+
+     sub deg2rad { PI * $_[0] / 180 }
+
+     print "This line does nothing"		unless DEBUGGING;
+
+
+DESCRIPTION
+===========
+
+This will declare a symbol to be a constant with the given scalar or
+list value.
+
+When you declare a constant such as `PI' using the method shown above,
+each machine your script runs upon can have as many digits of accuracy
+as it can use. Also, your program will be easier to read, more likely to
+be maintained (and maintained correctly), and far less likely to send a
+space probe to the wrong planet because nobody noticed the one equation
+in which you wrote `3.14195'.
+
+
+NOTES
+=====
+
+The value or values are evaluated in a list context. You may override
+this with scalar as shown above.
+
+These constants do not directly interpolate into double-quotish strings,
+although you may do so indirectly. (See *Note Perlref:
+(perl.info)perlref, for details about how this works.)
+
+     print "The value of PI is @{[ PI ]}.\n";
+
+List constants are returned as lists, not as arrays.
+
+     $homedir = USERINFO[7];		# WRONG
+     $homedir = (USERINFO)[7];		# Right
+
+The use of all caps for constant names is merely a convention, although
+it is recommended in order to make constants stand out and to help avoid
+collisions with other barewords, keywords, and subroutine
+names. Constant names must begin with a letter.
+
+Constant symbols are package scoped (rather than block scoped, as `use
+strict' is). That is, you can refer to a constant from package Other as
+`Other::CONST'.
+
+As with all use directives, defining a constant happens at compile
+time. Thus, it's probably not correct to put a constant declaration
+inside of a conditional statement (like `if ($foo) { use constant
+... }').
+
+Omitting the value for a symbol gives it the value of undef in a scalar
+context or the empty list, `()', in a list context. This isn't so nice
+as it may sound, though, because in this case you must either quote the
+symbol name, or use a big arrow, (`=>'), with nothing to point to. It is
+probably best to declare these explicitly.
+
+     use constant UNICORNS	=> ();
+     use constant LOGFILE	=> undef;
+
+The result from evaluating a list constant in a scalar context is
+not documented, and is *not* guaranteed to be any particular value
+in the future. In particular, you should not rely upon it being
+the number of elements in the list, especially since it is not
+*necessarily* that value in the current implementation.
+
+Magical values, tied values, and references can be made into constants
+at compile time, allowing for way cool stuff like this.  (These error
+numbers aren't totally portable, alas.)
+
+     use constant E2BIG => ($! = 7);
+     print   E2BIG, "\n";	# something like "Arg list too long"
+     print 0+E2BIG, "\n";	# "7"
+
+
+TECHNICAL NOTE
+==============
+
+In the current implementation, scalar constants are actually inlinable
+subroutines. As of version 5.004 of Perl, the appropriate scalar
+constant is inserted directly in place of some subroutine calls, thereby
+saving the overhead of a subroutine call. See `"Constant Functions"',
+*Note Perlsub: (perl.info)perlsub, for details about how and when this
+happens.
+
+
+BUGS
+====
+
+In the current version of Perl, list constants are not inlined and some
+symbols may be redefined without generating a warning.
+
+It is not possible to have a subroutine or keyword with the same name as
+a constant. This is probably a Good Thing.
+
+Unlike constants in some languages, these cannot be overridden on the
+command line or via environment variables.
+
+
+AUTHOR
+======
+
+Tom Phoenix, <`rootbeer@teleport.com'>, with help from many other folks.
+
+
+COPYRIGHT
+=========
+
+Copyright (C) 1997, Tom Phoenix
+
+This module is free software; you can redistribute it or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: diagnostics, Next: integer, Prev: constant, Up: Module List
+
+Perl compiler pragma to force verbose warning diagnostics
+*********************************************************
+
+
+
+NAME
+====
+
+diagnostics - Perl compiler pragma to force verbose warning diagnostics
+
+splain - standalone program to do the same thing
+
+
+SYNOPSIS
+========
+
+As a pragma:
+
+     use diagnostics;
+     use diagnostics -verbose;
+
+     enable  diagnostics;
+     disable diagnostics;
+
+Aa a program:
+
+     perl program 2>diag.out
+     splain [-v] [-p] diag.out
+
+
+DESCRIPTION
+===========
+
+
+The diagnostics Pragma
+----------------------
+
+This module extends the terse diagnostics normally emitted by both the
+perl compiler and the perl interpeter, augmenting them with the more
+explicative and endearing descriptions found in *Note Perldiag:
+(perl.info)perldiag,.  Like the other pragmata, it affects the
+compilation phase of your program rather than merely the execution
+phase.
+
+To use in your program as a pragma, merely invoke
+
+     use diagnostics;
+
+at the start (or near the start) of your program.  (Note that this
+*does* enable perl's -w flag.)  Your whole compilation will then be
+subject(ed :-) to the enhanced diagnostics.  These still go out
+*STDERR*.
+
+Due to the interaction between runtime and compiletime issues, and
+because it's probably not a very good idea anyway, you may not use `no
+diagnostics' to turn them off at compiletime.  However, you may control
+there behaviour at runtime using the disable() and enable() methods to
+turn them off and on respectively.
+
+The *-verbose* flag first prints out the *Note Perldiag:
+(perl.info)perldiag, introduction before any other diagnostics.  The
+$diagnostics::PRETTY variable can generate nicer escape sequences for
+pagers.
+
+
+The *splain* Program
+--------------------
+
+While apparently a whole nuther program, *splain* is actually nothing
+more than a link to the (executable) `diagnostics.pm' module, as well as
+a link to the `diagnostics.pod' documentation.  The -v flag is like
+the `use diagnostics -verbose' directive.
+The -p flag is like the
+$diagnostics::PRETTY variable.  Since you're post-processing with 
+*splain*, there's no sense in being able to enable() or disable() processing.
+
+Output from *splain* is directed to *STDOUT*, unlike the pragma.
+
+
+EXAMPLES
+========
+
+The following file is certain to trigger a few errors at both runtime
+and compiletime:
+
+     use diagnostics;
+     print NOWHERE "nothing\n";
+     print STDERR "\n\tThis message should be unadorned.\n";
+     warn "\tThis is a user warning";
+     print "\nDIAGNOSTIC TESTER: Please enter a <CR> here: ";
+     my $a, $b = scalar <STDIN>;
+     print "\n";
+     print $x/$y;
+
+If you prefer to run your program first and look at its problem
+afterwards, do this:
+
+     perl -w test.pl 2>test.out
+     ./splain < test.out
+
+Note that this is not in general possible in shells of more dubious
+heritage, as the theoretical
+
+     (perl -w test.pl >/dev/tty) >& test.out
+     ./splain < test.out
+
+Because you just moved the existing *stdout* to somewhere else.
+
+If you don't want to modify your source code, but still have on-the-fly
+warnings, do this:
+
+     exec 3>&1; perl -w test.pl 2>&1 1>&3 3>&- | splain 1>&2 3>&- 
+
+Nifty, eh?
+
+If you want to control warnings on the fly, do something like this.
+Make sure you do the use first, or you won't be able to get at the
+enable() or disable() methods.
+
+     use diagnostics; # checks entire compilation phase 
+     	print "\ntime for 1st bogus diags: SQUAWKINGS\n";
+     	print BOGUS1 'nada';
+     	print "done with 1st bogus\n";
+
+     disable diagnostics; # only turns off runtime warnings
+     	print "\ntime for 2nd bogus: (squelched)\n";
+     	print BOGUS2 'nada';
+     	print "done with 2nd bogus\n";
+
+     enable diagnostics; # turns back on runtime warnings
+     	print "\ntime for 3rd bogus: SQUAWKINGS\n";
+     	print BOGUS3 'nada';
+     	print "done with 3rd bogus\n";
+
+     disable diagnostics;
+     	print "\ntime for 4th bogus: (squelched)\n";
+     	print BOGUS4 'nada';
+     	print "done with 4th bogus\n";
+
+
+INTERNALS
+=========
+
+Diagnostic messages derive from the `perldiag.pod' file when available
+at runtime.  Otherwise, they may be embedded in the file itself when the
+splain package is built.  See the `Makefile' for details.
+
+If an extant $SIG{__WARN__} handler is discovered, it will continue to
+be honored, but only after the diagnostics::splainthis() function (the
+module's $SIG{__WARN__} interceptor) has had its way with your warnings.
+
+There is a $diagnostics::DEBUG variable you may set if you're
+desperately curious what sorts of things are being intercepted.
+
+     BEGIN { $diagnostics::DEBUG = 1 } 
+
+
+BUGS
+====
+
+Not being able to say "no diagnostics" is annoying, but may not be
+insurmountable.
+
+The `-pretty' directive is called too late to affect matters.  You have
+to do this instead, and *before* you load the module.
+
+     BEGIN { $diagnostics::PRETTY = 1 } 
+
+I could start up faster by delaying compilation until it should be
+needed, but this gets a "panic: top_level" when using the pragma form in
+Perl 5.001e.
+
+While it's true that this documentation is somewhat subserious, if you
+use a program named *splain*, you should expect a bit of whimsy.
+
+
+AUTHOR
+======
+
+Tom Christiansen <`tchrist@mox.perl.com'>, 25 June 1995.
+
+
+
+
+File: pm.info, Node: integer, Next: less, Prev: diagnostics, Up: Module List
+
+Perl pragma to compute arithmetic in integer instead of double
+**************************************************************
+
+
+
+NAME
+====
+
+integer - Perl pragma to compute arithmetic in integer instead of double
+
+
+SYNOPSIS
+========
+
+     use integer;
+     $x = 10/3;
+     # $x is now 3, not 3.33333333333333333
+
+
+DESCRIPTION
+===========
+
+This tells the compiler that it's okay to use integer operations from
+here to the end of the enclosing BLOCK.  On many machines, this doesn't
+matter a great deal for most computations, but on those without floating
+point hardware, it can make a big difference.
+
+See `Pragmatic Modules', *Note Perlmod: (perl.info)perlmod,.
+
+
+
+
+File: pm.info, Node: less, Next: lib, Prev: integer, Up: Module List
+
+perl pragma to request less of something from the compiler
+**********************************************************
+
+
+
+NAME
+====
+
+less - perl pragma to request less of something from the compiler
+
+
+SYNOPSIS
+========
+
+     use less;  # unimplemented
+
+
+DESCRIPTION
+===========
+
+Currently unimplemented, this may someday be a compiler directive to
+make certain trade-offs, such as perhaps
+
+     use less 'memory';
+     use less 'CPU';
+     use less 'fat';
+
+
+
+
+File: pm.info, Node: lib, Next: locale, Prev: less, Up: Module List
+
+manipulate @INC at compile time
+*******************************
+
+
+
+NAME
+====
+
+lib - manipulate @INC at compile time
+
+
+SYNOPSIS
+========
+
+     use lib LIST;
+
+     no lib LIST;
+
+
+DESCRIPTION
+===========
+
+This is a small simple module which simplifies the manipulation of @INC
+at compile time.
+
+It is typically used to add extra directories to perl's search path so
+that later use or require statements will find modules which are not
+located on perl's default search path.
+
+
+ADDING DIRECTORIES TO @INC
+--------------------------
+
+The parameters to `use lib' are added to the start of the perl search
+path. Saying
+
+     use lib LIST;
+
+is *almost* the same as saying
+
+     BEGIN { unshift(@INC, LIST) }
+
+For each directory in LIST (called $dir here) the lib module also checks
+to see if a directory called $dir/$archname/auto exists.  If so the
+$dir/$archname directory is assumed to be a corresponding architecture
+specific directory and is added to @INC in front of $dir.
+
+If LIST includes both $dir and $dir/$archname then $dir/$archname will
+be added to @INC twice (if $dir/$archname/auto exists).
+
+
+DELETING DIRECTORIES FROM @INC
+------------------------------
+
+You should normally only add directories to @INC.  If you need to delete
+directories from @INC take care to only delete those which you added
+yourself or which you are certain are not needed by other modules in
+your script.  Other modules may have added directories which they need
+for correct operation.
+
+By default the `no lib' statement deletes the *first* instance of each
+named directory from @INC.  To delete multiple instances of the same
+name from @INC you can specify the name multiple times.
+
+To delete all instances of all the specified names from @INC you can
+specify ':ALL' as the first parameter of `no lib'. For example:
+
+     no lib qw(:ALL .);
+
+For each directory in LIST (called $dir here) the lib module also checks
+to see if a directory called $dir/$archname/auto exists.  If so the
+$dir/$archname directory is assumed to be a corresponding architecture
+specific directory and is also deleted from @INC.
+
+If LIST includes both $dir and $dir/$archname then $dir/$archname will
+be deleted from @INC twice (if $dir/$archname/auto exists).
+
+
+RESTORING ORIGINAL @INC
+-----------------------
+
+When the lib module is first loaded it records the current value of @INC
+in an array `@lib::ORIG_INC'. To restore @INC to that value you can say
+
+     @INC = @lib::ORIG_INC;
+
+
+SEE ALSO
+========
+
+FindBin - optional module which deals with paths relative to the source
+file.
+
+
+AUTHOR
+======
+
+Tim Bunce, 2nd June 1995.
+
+
+
+
+File: pm.info, Node: locale, Next: lwpcook, Prev: lib, Up: Module List
+
+Perl pragma to use and avoid POSIX locales for built-in operations
+******************************************************************
+
+
+
+NAME
+====
+
+locale - Perl pragma to use and avoid POSIX locales for built-in
+operations
+
+
+SYNOPSIS
+========
+
+     @x = sort @y;	# ASCII sorting order
+     {
+         use locale;
+         @x = sort @y;   # Locale-defined sorting order
+     }
+     @x = sort @y;	# ASCII sorting order again
+
+
+DESCRIPTION
+===========
+
+This pragma tells the compiler to enable (or disable) the use of POSIX
+locales for built-in operations (LC_CTYPE for regular expressions, and
+LC_COLLATE for string comparison).  Each "use locale" or "no locale"
+affects statements to the end of the enclosing BLOCK.
+
+
+
+
+File: pm.info, Node: lwpcook, Next: ops, Prev: locale, Up: Module List
+
+libwww-perl cookbook
+********************
+
+
+
+NAME
+====
+
+lwpcook - libwww-perl cookbook
+
+
+DESCRIPTION
+===========
+
+This document contain some examples that show typical usage of the
+libwww-perl library.  You should consult the documentation for the
+individual modules for more detail.
+
+All examples should be runnable programs. You can, in most cases, test
+the code sections by piping the program text directly to perl.
+
+
+GET
+===
+
+It is very easy to use this library to just fetch documents from the
+net.  The LWP::Simple module provides the get() function that return the
+document specified by its URL argument:
+
+     use LWP::Simple;
+     $doc = get 'http://www.sn.no/libwww-perl/';
+
+or, as a perl one-liner using the getprint() function:
+
+     perl -MLWP::Simple -e 'getprint "http://www.sn.no/libwww-perl/"'
+
+or, how about fetching the latest perl by running this:
+
+     perl -MLWP::Simple -e '
+       getstore "ftp://ftp.sunet.se/pub/lang/perl/CPAN/src/latest.tar.gz",
+                "perl.tar.gz"'
+
+You will probably first want to find a CPAN site closer to you by
+running something like the following command:
+
+     perl -MLWP::Simple -e 'getprint "http://www.perl.com/perl/CPAN/CPAN.html"'
+
+Enough of this simple stuff!  The LWP object oriented interface gives
+you more control over the request sent to the server.  Using this
+interface you have full control over headers sent and how you want to
+handle the response returned.
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+     $ua->agent("$0/0.1 " . $ua->agent);
+     # $ua->agent("Mozilla/5.0") # pretend you are some very new Netscape browser
+
+     $req = new HTTP::Request 'GET' => 'http://www.sn.no/libwww-perl';
+     $req->header('Accept' => 'text/html');
+
+     # send request
+     $res = $ua->request($req);
+
+     # check the outcome
+     if ($res->is_success) {
+        print $res->content;
+     } else {
+        print "Error: " . $res->code . " " . $res->message;
+     }
+
+The lwp-request program (alias GET) that is distributed with the library
+can also be used to fetch documents from WWW servers.
+  
+
+
+HEAD
+====
+
+If you just want to check if a document is present (i.e. the URL is
+valid) try to run code that looks like this:
+
+     use LWP::Simple;
+
+     if (head($url)) {
+        # ok document exists
+     }
+
+The head() function really returns a list of meta-information about the
+document.  The first three values of the list returned are the document
+type, the size of the document, and the age of the document.
+
+More control over the request or access to all header values returned
+require that you use the object oriented interface described for GET
+above.  Just s/GET/HEAD/g.
+
+
+POST
+====
+
+There is no simple interface for posting data to a WWW server.  You must
+use the object oriented interface for this. The most common POST
+operation is to access a WWW form application:
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+
+     my $req = new HTTP::Request 'POST','http://www.perl.com/cgi-bin/BugGlimpse';
+     $req->content_type('application/x-www-form-urlencoded');
+     $req->content('match=www&errors=0');
+
+     my $res = $ua->request($req);
+     print $res->as_string;
+
+If your application has the key/value pairs to be posted in an
+associative array, then we can exploit the URI::URL module to create the
+content for the POST request message (it handles all the escaping
+issues):
+
+     %form = ( search => 'www', errors => 0 );
+
+     use URI::URL;
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+
+     my $req = new HTTP::Request 'POST', 'http://www.perl.com/cgi-bin/BugGlimpse';
+     $req->content_type('application/x-www-form-urlencoded');
+
+     my $curl = url("http:");      # create an empty HTTP URL object
+     $curl->query_form(%form);
+     $req->content($curl->equery); # %form content as escaped query string
+
+     print $ua->request($req)->as_string;
+
+The lwp-request program (alias POST) that is distributed with the
+library can also be used for posting data.
+
+
+PROXIES
+=======
+
+Some sites use proxies to go through fire wall machines, or just as
+cache in order to improve performance.  Proxies can also be used for
+accessing resources through protocols not supported directly (or
+supported badly :-) by the libwww-perl library.
+
+You should initialize your proxy setting before you start sending
+requests:
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+     $ua->env_proxy; # initialize from environment variables
+     # or
+     $ua->proxy(ftp  => 'http://proxy.myorg.com');
+     $ua->proxy(wais => 'http://proxy.myorg.com');
+     $ua->no_proxy(qw(no se fi));
+
+     my $req = new HTTP::Request 'wais://xxx.com/';
+     print $ua->request($req)->as_string;
+
+The LWP::Simple interface will call env_proxy() for you automatically.
+Applications that use the $ua->env_proxy() method will normally not use
+the $ua->proxy() and $ua->no_proxy() methods.
+
+
+ACCESS TO PROTECTED DOCUMENTS
+=============================
+
+Documents protected by basic authorization can easily be accessed like
+this:
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+     $req = new HTTP::Request GET => 'http://www.sn.no/secret/';
+     $req->authorization_basic('aas', 'mypassword');
+     print $ua->request($req)->as_string;
+
+The other alternative is to provide a subclass of *LWP::UserAgent* that
+overrides the get_basic_credentials() method. Study the *lwp-request*
+program for an example of this.
+
+
+MIRRORING
+=========
+
+If you want to mirror documents from a WWW server, then try to run code
+similar to this at regular intervals:
+
+     use LWP::Simple;
+
+     %mirrors = (
+        'http://www.sn.no/'             => 'sn.html',
+        'http://www.perl.com/'          => 'perl.html',
+        'http://www.sn.no/libwww-perl/' => 'lwp.html',
+        'gopher://gopher.sn.no/'        => 'gopher.html',
+     );
+
+     while (($url, $localfile) = each(%mirrors)) {
+        mirror($url, $localfile);
+     }
+
+Or, as a perl one-liner:
+
+     perl -MLWP::Simple -e 'mirror("http://www.perl.com/", "perl.html")';
+
+The document will not be transfered unless it has been updated.
+
+
+LARGE DOCUMENTS
+===============
+
+If the document you want to fetch is too large to be kept in memory,
+then you have two alternatives.  You can instruct the library to write
+the document content to a file (second $ua->request() argument is a file
+name):
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+
+     my $req = new HTTP::Request 'GET',
+                   'http://www.sn.no/~aas/perl/www/libwww-perl-5.00.tar.gz';
+     $res = $ua->request($req, "libwww-perl.tar.gz");
+     if ($res->is_success) {
+        print "ok\n";
+     }
+
+Or you can process the document as it arrives (second $ua->request()
+argument is a code reference):
+
+     use LWP::UserAgent;
+     $ua = new LWP::UserAgent;
+     $URL = 'ftp://ftp.unit.no/pub/rfc/rfc-index.txt';
+
+     my $expected_length;
+     my $bytes_received = 0;
+     $ua->request(HTTP::Request->new('GET', $URL),
+                  sub {
+                      my($chunk, $res) = @_;
+                      $bytes_received += length($chunk);
+     	           unless (defined $expected_length) {
+     	              $expected_length = $res->content_length || 0;
+                      }
+     		   if ($expected_length) {
+     		        printf STDERR "%d%% - ",
+     	                          100 * $bytes_received / $expected_length;
+                      }
+     	           print STDERR "$bytes_received bytes received\n";
+
+     # XXX Should really do something with the chunk itself
+     	           # print $chunk;
+                    });
+
+
+HTML FORMATTING
+===============
+
+It is easy to convert HTML code to "readable" text.
+
+     use LWP::Simple;
+     use HTML::Parse;
+     print parse_html(get 'http://www.sn.no/libwww-perl/')->format;
+
+
+PARSE URLS
+==========
+
+To access individual elements of a URL, try this:
+
+     use URI::URL;
+     $host = url("http://www.sn.no/")->host;
+
+or
+
+     use URI::URL;
+     $u = url("ftp://ftp.sn.no/test/aas;type=i");
+     print "Protocol scheme is ", $u->scheme, "\n";
+     print "Host is ", $u->host, " at port ", $u->port, "\n";
+
+or even
+
+     use URI::URL;
+     my($host,$port) = (url("ftp://ftp.sn.no/test/aas;type=i")->crack)[3,4];
+
+
+EXPAND RELATIVE URLS
+====================
+
+This code reads URLs and print expanded version.
+
+     use URI::URL;
+     $BASE = "http://www.sn.no/some/place?query";
+     while (<>) {
+        print url($_, $BASE)->abs->as_string, "\n";
+     }
+
+We can expand URLs in an HTML document by using the parser to build a
+tree that we then traverse:
+
+     %link_elements =
+     (
+      'a'    => 'href',
+      'img'  => 'src',
+      'form' => 'action',
+      'link' => 'href',
+     );
+
+     use HTML::Parse;
+     use URI::URL;
+
+     $BASE = "http://somewhere/root/";
+     $h = parse_htmlfile("xxx.html");
+     $h->traverse(\&expand_urls, 1);
+
+     print $h->as_HTML;
+
+     sub expand_urls
+     {
+        my($e, $start) = @_;
+        return 1 unless $start;
+        my $attr = $link_elements{$e->tag};
+        return 1 unless defined $attr;
+        my $url = $e->attr($attr);
+        return 1 unless defined $url;
+        $e->attr($attr, url($url, $BASE)->abs->as_string);
+     }
+
+
+BASE URL
+========
+
+If you want to resolve relative links in a page you will have to
+determine which base URL to use.  The HTTP::Response objects now has a
+base() method.
+
+     $BASE = $res->base;
+
+
+
+
+File: pm.info, Node: ops, Next: overload, Prev: lwpcook, Up: Module List
+
+Perl pragma to restrict unsafe operations when compiling
+********************************************************
+
+
+
+NAME
+====
+
+ops - Perl pragma to restrict unsafe operations when compiling
+
+
+SYNOPSIS
+========
+
+     perl -Mops=:default ...    # only allow reasonably safe operations
+
+     perl -M-ops=system ...     # disable the 'system' opcode
+
+
+DESCRIPTION
+===========
+
+Since the ops pragma currently has an irreversable global effect, it is
+only of significant practical use with the -M option on the command
+line.
+
+See the *Note Opcode: Opcode, module for information about opcodes,
+optags, opmasks and important information about safety.
+
+
+SEE ALSO
+========
+
+Opcode(3), Safe(3), perlrun(3)
+
+
+
+
+File: pm.info, Node: overload, Next: ptkFAQ, Prev: ops, Up: Module List
+
+Package for overloading perl operations
+***************************************
+
+
+
+NAME
+====
+
+overload - Package for overloading perl operations
+
+
+SYNOPSIS
+========
+
+     package SomeThing;
+
+     use overload 
+     	'+' => \&myadd,
+     	'-' => \&mysub;
+     	# etc
+     ...
+
+     package main;
+     $a = new SomeThing 57;
+     $b=5+$a;
+     ...
+     if (overload::Overloaded $b) {...}
+     ...
+     $strval = overload::StrVal $b;
+
+
+CAVEAT SCRIPTOR
+===============
+
+Overloading of operators is a subject not to be taken lightly.  Neither
+its precise implementation, syntax, nor semantics are 100% endorsed by
+Larry Wall.  So any of these may be changed at some point in the future.
+
+
+DESCRIPTION
+===========
+
+
+Declaration of overloaded functions
+-----------------------------------
+
+The compilation directive
+
+     package Number;
+     use overload
+     	"+" => \&add, 
+     	"*=" => "muas";
+
+declares function Number::add() for addition, and method muas() in the
+"class" Number (or one of its base classes) for the assignment form `*='
+of multiplication.
+
+Arguments of this directive come in (key, value) pairs.  Legal values
+are values legal inside a `&{ ... }' call, so the name of a subroutine,
+a reference to a subroutine, or an anonymous subroutine will all work.
+Note that values specified as strings are interpreted as methods, not
+subroutines.  Legal keys are listed below.
+
+The subroutine add will be called to execute `$a+$b' if $a is a
+reference to an object blessed into the package Number, or if $a is not
+an object from a package with defined mathemagic addition, but $b is a
+reference to a Number.  It can also be called in other situations, like
+`$a+=7', or `$a++'.  See `MAGIC AUTOGENERATION' in this node.
+(Mathemagical methods refer to methods triggered by an overloaded
+mathematical operator.)
+
+Since overloading respects inheritance via the @ISA hierarchy, the above
+declaration would also trigger overloading of `+' and `*=' in all the
+packages which inherit from Number.
+
+
+Calling Conventions for Binary Operations
+-----------------------------------------
+
+The functions specified in the `use overload ...' directive are called
+with three (in one particular case with four, see `Last Resort' in this
+node) arguments.  If the corresponding operation is binary, then the
+first two arguments are the two arguments of the operation.  However,
+due to general object calling conventions, the first argument should
+always be an object in the package, so in the situation of `7+$a', the
+order of the arguments is interchanged.  It probably does not matter
+when implementing the addition method, but whether the arguments are
+reversed is vital to the subtraction method.  The method can query this
+information by examining the third argument, which can take three
+different values:
+
+FALSE
+     the order of arguments is as in the current operation.
+
+TRUE
+     the arguments are reversed.
+
+undef
+     the current operation is an assignment variant (as in `$a+=7'), but
+     the usual function is called instead.  This additional information
+     can be used to generate some optimizations.
+
+
+Calling Conventions for Unary Operations
+----------------------------------------
+
+Unary operation are considered binary operations with the second
+argument being undef.  Thus the functions that overloads `{"++"}' is
+called with arguments `($a,undef,'')' when $a++ is executed.
+
+
+Overloadable Operations
+-----------------------
+
+The following symbols can be specified in `use overload':
+
+   * *Arithmetic operations*
+          "+", "+=", "-", "-=", "*", "*=", "/", "/=", "%", "%=",
+          "**", "**=", "<<", "<<=", ">>", ">>=", "x", "x=", ".", ".=",
+
+
+     For these operations a substituted non-assignment variant can be
+     called if the assignment variant is not available.  Methods for
+     operations "`+'", "-", "`+='", and "`-='" can be called to
+     automatically generate increment and decrement methods.  The
+     operation "-" can be used to autogenerate missing methods for unary
+     minus or abs.
+
+   * *Comparison operations*
+          "<",  "<=", ">",  ">=", "==", "!=", "<=>",
+          "lt", "le", "gt", "ge", "eq", "ne", "cmp",
+
+
+     If the corresponding "spaceship" variant is available, it can be
+     used to substitute for the missing operation.  During sorting
+     arrays, cmp is used to compare values subject to `use overload'.
+
+   * *Bit operations*
+          "&", "^", "|", "neg", "!", "~",
+
+
+     "`neg'" stands for unary minus.  If the method for `neg' is not
+     specified, it can be autogenerated using the method for
+     subtraction. If the method for "!" is not specified, it can be
+     autogenerated using the methods for "`bool'", or "`\"\"'", or
+     "`0+'".
+
+   * *Increment and decrement*
+          "++", "--",
+
+
+     If undefined, addition and subtraction methods can be used instead.
+     These operations are called both in prefix and postfix form.
+
+   * *Transcendental functions*
+          "atan2", "cos", "sin", "exp", "abs", "log", "sqrt",
+
+
+     If abs is unavailable, it can be autogenerated using methods for
+     "<" or "<=>" combined with either unary minus or subtraction.
+
+   * *Boolean, string and numeric conversion*
+          "bool", "\"\"", "0+",
+
+
+     If one or two of these operations are unavailable, the remaining
+     ones can be used instead.  `bool' is used in the flow control
+     operators (like `while') and for the ternary "`?:'" operation.
+     These functions can return any arbitrary Perl value.  If the
+     corresponding operation for this value is overloaded too, that
+     operation will be called again with this value.
+
+   * Special
+          "nomethod", "fallback", "=",
+
+
+     see `SPECIAL SYMBOLS FOR `use overload'' in this node.
+
+See `"Fallback"' in this node for an explanation of when a missing
+method can be autogenerated.
+
+
+Inheritance and overloading
+---------------------------
+
+Inheritance interacts with overloading in two ways.
+
+Strings as values of `use overload' directive
+     If value in
+
+          use overload key => value;
+
+     is a string, it is interpreted as a method name.
+
+Overloading of an operation is inherited by derived classes
+     Any class derived from an overloaded class is also overloaded.  The
+     set of overloaded methods is the union of overloaded methods of all
+     the ancestors. If some method is overloaded in several ancestor,
+     then which description will be used is decided by the usual
+     inheritance rules:
+
+     If A inherits from B and C (in this order), B overloads `+' with
+     `\&D::plus_sub', and C overloads `+' by `"plus_meth"', then the
+     subroutine `D::plus_sub' will be called to implement operation `+'
+     for an object in package A.
+
+Note that since the value of the `fallback' key is not a subroutine, its
+inheritance is not governed by the above rules.  In the current
+implementation, the value of `fallback' in the first overloaded ancestor
+is used, but this is accidental and subject to change.
+
+
+SPECIAL SYMBOLS FOR `use overload'
+==================================
+
+Three keys are recognized by Perl that are not covered by the above
+description.
+
+
+Last Resort
+-----------
+
+`"nomethod"' should be followed by a reference to a function of four
+parameters.  If defined, it is called when the overloading mechanism
+cannot find a method for some operation.  The first three arguments of
+this function coincide with the arguments for the corresponding method
+if it were found, the fourth argument is the symbol corresponding to the
+missing method.  If several methods are tried, the last one is used.
+Say, `1-$a' can be equivalent to
+
+     &nomethodMethod($a,1,1,"-")
+
+if the pair `"nomethod" => "nomethodMethod"' was specified in the `use
+overload' directive.
+
+If some operation cannot be resolved, and there is no function assigned
+to `"nomethod"', then an exception will be raised via die()-- unless
+`"fallback"' was specified as a key in `use overload' directive.
+
+
+Fallback
+--------
+
+The key `"fallback"' governs what to do if a method for a particular
+operation is not found.  Three different cases are possible depending on
+the value of `"fallback"':
+
+   * undef
+
+     Perl tries to use a substituted method (see `MAGIC AUTOGENERATION'
+     in this node).  If this fails, it then tries to calls `"nomethod"'
+     value; if missing, an exception will be raised.
+
+   * TRUE
+
+     The same as for the undef value, but no exception is raised.
+     Instead, it silently reverts to what it would have done were there
+     no `use overload' present.
+
+   * defined, but FALSE
+
+     No autogeneration is tried.  Perl tries to call `"nomethod"' value,
+     and if this is missing, raises an exception.
+
+*Note.* `"fallback"' inheritance via @ISA is not carved in stone
+yet, see `"Inheritance and overloading"' in this node.
+
+
+Copy Constructor
+----------------
+
+The value for `"="' is a reference to a function with three arguments,
+i.e., it looks like the other values in `use overload'. However, it does
+not overload the Perl assignment operator. This would go against Camel
+hair.
+
+This operation is called in the situations when a mutator is applied to
+a reference that shares its object with some other reference, such as
+
+     $a=$b; 
+     $a++;
+
+To make this change $a and not change $b, a copy of `$$a' is made, and
+$a is assigned a reference to this new object.  This operation is done
+during execution of the `$a++', and not during the assignment, (so
+before the increment `$$a' coincides with `$$b').  This is only done if
+`++' is expressed via a method for `'++'' or `'+=''.  Note that if this
+operation is expressed via `'+'' a nonmutator, i.e., as in
+
+     $a=$b; 
+     $a=$a+1;
+
+then `$a' does not reference a new copy of `$$a', since $$a does not
+appear as lvalue when the above code is executed.
+
+If the copy constructor is required during the execution of some
+mutator, but a method for `'='' was not specified, it can be
+autogenerated as a string copy if the object is a plain scalar.
+
+Example
+     The actually executed code for
+
+          $a=$b; 
+                  Something else which does not modify $a or $b....
+          ++$a;
+
+     may be
+
+          $a=$b; 
+                  Something else which does not modify $a or $b....
+          $a = $a->clone(undef,"");
+                  $a->incr(undef,"");
+
+     if $b was mathemagical, and `'++'' was overloaded with `\&incr',
+     `'='' was overloaded with `\&clone'.
+
+
+MAGIC AUTOGENERATION
+====================
+
+If a method for an operation is not found, and the value for
+`"fallback"' is TRUE or undefined, Perl tries to autogenerate a
+substitute method for the missing operation based on the defined
+operations.  Autogenerated method substitutions are possible for the
+following operations:
+
+*Assignment forms of arithmetic operations*
+     `$a+=$b' can use the method for `"+"' if the method for `"+="' is
+     not defined.
+
+*Conversion operations*
+     String, numeric, and boolean conversion are calculated in terms of
+     one another if not all of them are defined.
+
+*Increment and decrement*
+     The `++$a' operation can be expressed in terms of `$a+=1' or
+     `$a+1', and `$a--' in terms of `$a-=1' and `$a-1'.
+
+`abs($a)'
+     can be expressed in terms of `$a<0' and `-$a' (or `0-$a').
+
+*Unary minus*
+     can be expressed in terms of subtraction.
+
+Negation
+     ! and `not' can be expressed in terms of boolean conversion, or
+     string or numerical conversion.
+
+Concatenation
+     can be expressed in terms of string conversion.
+
+*Comparison operations*
+     can be expressed in terms of its "spaceship" counterpart: either
+     `<=>' or cmp:
+
+          <, >, <=, >=, ==, != 	in terms of <=>
+          lt, gt, le, ge, eq, ne 	in terms of cmp
+
+*Copy operator*
+     can be expressed in terms of an assignment to the dereferenced
+     value, if this value is a scalar and not a reference.
+
+
+WARNING
+=======
+
+The restriction for the comparison operation is that even if, for
+example, `cmp' should return a blessed reference, the autogenerated `lt'
+function will produce only a standard logical value based on the
+numerical value of the result of `cmp'.  In particular, a working
+numeric conversion is needed in this case (possibly expressed in terms
+of other conversions).
+
+Similarly, `.=' and `x=' operators lose their mathemagical properties if
+the string conversion substitution is applied.
+
+When you chop() a mathemagical object it is promoted to a string and its
+mathemagical properties are lost.  The same can happen with other
+operations as well.
+
+
+Run-time Overloading
+====================
+
+Since all use directives are executed at compile-time, the only way to
+change overloading during run-time is to
+
+     eval 'use overload "+" => \&addmethod';
+
+You can also use
+
+     eval 'no overload "+", "--", "<="';
+
+though the use of these constructs during run-time is questionable.
+
+
+Public functions
+================
+
+Package `overload.pm' provides the following public functions:
+
+overload::StrVal(arg)
+     Gives string value of `arg' as in absence of stringify overloading.
+
+overload::Overloaded(arg)
+     Returns true if `arg' is subject to overloading of some operations.
+
+overload::Method(obj,op)
+     Returns undef or a reference to the method that implements `op'.
+
+
+IMPLEMENTATION
+==============
+
+What follows is subject to change RSN.
+
+The table of methods for all operations is cached in magic for the
+symbol table hash for the package.  The cache is invalidated during
+processing of `use overload', `no overload', new function definitions,
+and changes in @ISA. However, this invalidation remains unprocessed
+until the next blessing into the package. Hence if you want to change
+overloading structure dynamically, you'll need an additional (fake)
+blessing to update the table.
+
+(Every SVish thing has a magic queue, and magic is an entry in that
+queue.  This is how a single variable may participate in multiple forms
+of magic simultaneously.  For instance, environment variables regularly
+have two forms at once: their %ENV magic and their taint magic. However,
+the magic which implements overloading is applied to the stashes, which
+are rarely used directly, thus should not slow down Perl.)
+
+If an object belongs to a package using overload, it carries a special
+flag.  Thus the only speed penalty during arithmetic operations without
+overloading is the checking of this flag.
+
+In fact, if `use overload' is not present, there is almost no overhead
+for overloadable operations, so most programs should not suffer
+measurable performance penalties.  A considerable effort was made to
+minimize the overhead when overload is used in some package, but the
+arguments in question do not belong to packages using overload.  When in
+doubt, test your speed with `use overload' and without it.  So far there
+have been no reports of substantial speed degradation if Perl is
+compiled with optimization turned on.
+
+There is no size penalty for data if overload is not used. The only size
+penalty if overload is used in some package is that all the packages
+acquire a magic during the next blessing into the package. This magic is
+three-words-long for packages without overloading, and carries the cache
+tabel if the package is overloaded.
+
+Copying (`$a=$b') is shallow; however, a one-level-deep copying is
+carried out before any operation that can imply an assignment to the
+object $a (or $b) refers to, like `$a++'.  You can override this
+behavior by defining your own copy constructor (see `"Copy Constructor"'
+in this node).
+
+It is expected that arguments to methods that are not explicitly
+supposed to be changed are constant (but this is not enforced).
+
+
+AUTHOR
+======
+
+Ilya Zakharevich <`ilya@math.mps.ohio-state.edu'>.
+
+
+DIAGNOSTICS
+===========
+
+When Perl is run with the *-Do* switch or its equivalent, overloading
+induces diagnostic messages.
+
+Using the m command of Perl debugger (see *Note Perldebug:
+(perl.info)perldebug,) one can deduce which operations are overloaded
+(and which ancestor triggers this overloading). Say, if eq is
+overloaded, then the method `(eq' is shown by debugger. The method `()'
+corresponds to the `fallback' key (in fact a presence of this method
+shows that this package has overloading enabled, and it is what is used
+by the `Overloaded' function).
+
+
+BUGS
+====
+
+Because it is used for overloading, the per-package hash %OVERLOAD now
+has a special meaning in Perl. The symbol table is filled with names
+looking like line-noise.
+
+For the purpose of inheritance every overloaded package behaves as if
+`fallback' is present (possibly undefined). This may create interesting
+effects if some package is not overloaded, but inherits from two
+overloaded packages.
+
+This document is confusing.
+
+
+
+

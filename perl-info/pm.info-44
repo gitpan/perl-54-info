@@ -1,0 +1,1990 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: POSIX, Next: Parse/Lex.fr, Prev: PGP/Sign, Up: Module List
+
+Perl interface to IEEE Std 1003.1
+*********************************
+
+
+
+NAME
+====
+
+POSIX - Perl interface to IEEE Std 1003.1
+
+
+SYNOPSIS
+========
+
+     use POSIX;
+     use POSIX qw(setsid);
+     use POSIX qw(:errno_h :fcntl_h);
+
+     printf "EINTR is %d\n", EINTR;
+
+     $sess_id = POSIX::setsid();
+
+     $fd = POSIX::open($path, O_CREAT|O_EXCL|O_WRONLY, 0644);
+     	# note: that's a filedescriptor, *NOT* a filehandle
+
+
+DESCRIPTION
+===========
+
+The POSIX module permits you to access all (or nearly all) the standard
+POSIX 1003.1 identifiers.  Many of these identifiers have been given
+Perl-ish interfaces.  Things which are `#defines' in C, like EINTR or
+O_NDELAY, are automatically exported into your namespace.  All functions
+are only exported if you ask for them explicitly.  Most likely people
+will prefer to use the fully-qualified function names.
+
+This document gives a condensed list of the features available in the
+POSIX module.  Consult your operating system's manpages for general
+information on most features.  Consult *Note Perlfunc:
+(perl.info)perlfunc, for functions which are noted as being identical to
+Perl's builtin functions.
+
+The first section describes POSIX functions from the 1003.1
+specification.  The second section describes some classes for signal
+objects, TTY objects, and other miscellaneous objects.  The remaining
+sections list various constants and macros in an organization which
+roughly follows IEEE Std 1003.1b-1993.
+
+
+NOTE
+====
+
+The POSIX module is probably the most complex Perl module supplied with
+the standard distribution.  It incorporates autoloading, namespace
+games, and dynamic loading of code that's in Perl, C, or both.  It's a
+great source of wisdom.
+
+
+CAVEATS
+=======
+
+A few functions are not implemented because they are C specific.  If you
+attempt to call these, they will print a message telling you that they
+aren't implemented, and suggest using the Perl equivalent should one
+exist.  For example, trying to access the setjmp() call will elicit the
+message "setjmp() is C-specific: use eval {} instead".
+
+Furthermore, some evil vendors will claim 1003.1 compliance, but in fact
+are not so: they will not pass the PCTS (POSIX Compliance Test Suites).
+For example, one vendor may not define EDEADLK, or the semantics of the
+errno values set by open(2) might not be quite right.  Perl does not
+attempt to verify POSIX compliance.  That means you can currently
+successfully say "use POSIX", and then later in your program you find
+that your vendor has been lax and there's no usable ICANON macro after
+all.  This could be construed to be a bug.
+
+
+FUNCTIONS
+=========
+
+_exit
+     This is identical to the C function `_exit()'.
+
+abort
+     This is identical to the C function `abort()'.
+
+abs
+     This is identical to Perl's builtin `abs()' function.
+
+access
+     Determines the accessibility of a file.
+
+          if( POSIX::access( "/", &POSIX::R_OK ) ){
+          	print "have read permission\n";
+          }
+
+     Returns undef on failure.
+
+acos
+     This is identical to the C function `acos()'.
+
+alarm
+     This is identical to Perl's builtin `alarm()' function.
+
+asctime
+     This is identical to the C function `asctime()'.
+
+asin
+     This is identical to the C function `asin()'.
+
+assert
+     Unimplemented.
+
+atan
+     This is identical to the C function `atan()'.
+
+atan2
+     This is identical to Perl's builtin `atan2()' function.
+
+atexit
+     atexit() is C-specific: use END {} instead.
+
+atof
+     atof() is C-specific.
+
+atoi
+     atoi() is C-specific.
+
+atol
+     atol() is C-specific.
+
+bsearch
+     bsearch() not supplied.
+
+calloc
+     calloc() is C-specific.
+
+ceil
+     This is identical to the C function `ceil()'.
+
+chdir
+     This is identical to Perl's builtin `chdir()' function.
+
+chmod
+     This is identical to Perl's builtin `chmod()' function.
+
+chown
+     This is identical to Perl's builtin `chown()' function.
+
+clearerr
+     Use method `IO::Handle::clearerr()' instead.
+
+clock
+     This is identical to the C function `clock()'.
+
+close
+     Close the file.  This uses file descriptors such as those obtained
+     by calling `POSIX::open'.
+
+          $fd = POSIX::open( "foo", &POSIX::O_RDONLY );
+          POSIX::close( $fd );
+
+     Returns undef on failure.
+
+closedir
+     This is identical to Perl's builtin `closedir()' function.
+
+cos
+     This is identical to Perl's builtin `cos()' function.
+
+cosh
+     This is identical to the C function `cosh()'.
+
+creat
+     Create a new file.  This returns a file descriptor like the ones
+     returned by `POSIX::open'.  Use `POSIX::close' to close the file.
+
+          $fd = POSIX::creat( "foo", 0611 );
+          POSIX::close( $fd );
+
+ctermid
+     Generates the path name for the controlling terminal.
+
+          $path = POSIX::ctermid();
+
+ctime
+     This is identical to the C function `ctime()'.
+
+cuserid
+     Get the character login name of the user.
+
+          $name = POSIX::cuserid();
+
+difftime
+     This is identical to the C function `difftime()'.
+
+div
+     div() is C-specific.
+
+dup
+     This is similar to the C function `dup()'.
+
+     This uses file descriptors such as those obtained by calling
+     `POSIX::open'.
+
+     Returns undef on failure.
+
+dup2
+     This is similar to the C function `dup2()'.
+
+     This uses file descriptors such as those obtained by calling
+     `POSIX::open'.
+
+     Returns undef on failure.
+
+errno
+     Returns the value of errno.
+
+          $errno = POSIX::errno();
+
+execl
+     execl() is C-specific.
+
+execle
+     execle() is C-specific.
+
+execlp
+     execlp() is C-specific.
+
+execv
+     execv() is C-specific.
+
+execve
+     execve() is C-specific.
+
+execvp
+     execvp() is C-specific.
+
+exit
+     This is identical to Perl's builtin `exit()' function.
+
+exp
+     This is identical to Perl's builtin `exp()' function.
+
+fabs
+     This is identical to Perl's builtin `abs()' function.
+
+fclose
+     Use method `IO::Handle::close()' instead.
+
+fcntl
+     This is identical to Perl's builtin `fcntl()' function.
+
+fdopen
+     Use method `IO::Handle::new_from_fd()' instead.
+
+feof
+     Use method `IO::Handle::eof()' instead.
+
+ferror
+     Use method `IO::Handle::error()' instead.
+
+fflush
+     Use method `IO::Handle::flush()' instead.
+
+fgetc
+     Use method `IO::Handle::getc()' instead.
+
+fgetpos
+     Use method `IO::Seekable::getpos()' instead.
+
+fgets
+     Use method `IO::Handle::gets()' instead.
+
+fileno
+     Use method `IO::Handle::fileno()' instead.
+
+floor
+     This is identical to the C function `floor()'.
+
+fmod
+     This is identical to the C function `fmod()'.
+
+fopen
+     Use method `IO::File::open()' instead.
+
+fork
+     This is identical to Perl's builtin `fork()' function.
+
+fpathconf
+     Retrieves the value of a configurable limit on a file or directory.
+     This uses file descriptors such as those obtained by calling
+     `POSIX::open'.
+
+     The following will determine the maximum length of the longest
+     allowable pathname on the filesystem which holds `/tmp/foo'.
+
+          $fd = POSIX::open( "/tmp/foo", &POSIX::O_RDONLY );
+          $path_max = POSIX::fpathconf( $fd, &POSIX::_PC_PATH_MAX );
+
+     Returns undef on failure.
+
+fprintf
+     fprintf() is C-specific--use printf instead.
+
+fputc
+     fputc() is C-specific--use print instead.
+
+fputs
+     fputs() is C-specific--use print instead.
+
+fread
+     fread() is C-specific--use read instead.
+
+free
+     free() is C-specific.
+
+freopen
+     freopen() is C-specific--use open instead.
+
+frexp
+     Return the mantissa and exponent of a floating-point number.
+
+          ($mantissa, $exponent) = POSIX::frexp( 3.14 );
+
+fscanf
+     fscanf() is C-specific--use <> and regular expressions instead.
+
+fseek
+     Use method `IO::Seekable::seek()' instead.
+
+fsetpos
+     Use method `IO::Seekable::setpos()' instead.
+
+fstat
+     Get file status.  This uses file descriptors such as those obtained
+     by calling `POSIX::open'.  The data returned is identical to the
+     data from Perl's builtin stat function.
+
+          $fd = POSIX::open( "foo", &POSIX::O_RDONLY );
+          @stats = POSIX::fstat( $fd );
+
+ftell
+     Use method `IO::Seekable::tell()' instead.
+
+fwrite
+     fwrite() is C-specific--use print instead.
+
+getc
+     This is identical to Perl's builtin `getc()' function.
+
+getchar
+     Returns one character from STDIN.
+
+getcwd
+     Returns the name of the current working directory.
+
+getegid
+     Returns the effective group id.
+
+getenv
+     Returns the value of the specified enironment variable.
+
+geteuid
+     Returns the effective user id.
+
+getgid
+     Returns the user's real group id.
+
+getgrgid
+     This is identical to Perl's builtin `getgrgid()' function.
+
+getgrnam
+     This is identical to Perl's builtin `getgrnam()' function.
+
+getgroups
+     Returns the ids of the user's supplementary groups.
+
+getlogin
+     This is identical to Perl's builtin `getlogin()' function.
+
+getpgrp
+     This is identical to Perl's builtin `getpgrp()' function.
+
+getpid
+     Returns the process's id.
+
+getppid
+     This is identical to Perl's builtin `getppid()' function.
+
+getpwnam
+     This is identical to Perl's builtin `getpwnam()' function.
+
+getpwuid
+     This is identical to Perl's builtin `getpwuid()' function.
+
+gets
+     Returns one line from STDIN.
+
+getuid
+     Returns the user's id.
+
+gmtime
+     This is identical to Perl's builtin `gmtime()' function.
+
+isalnum
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isalpha
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isatty
+     Returns a boolean indicating whether the specified filehandle is
+     connected to a tty.
+
+iscntrl
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isdigit
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isgraph
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+islower
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isprint
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+ispunct
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isspace
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isupper
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+isxdigit
+     This is identical to the C function, except that it can apply to a
+     single character or to a whole string.
+
+kill
+     This is identical to Perl's builtin `kill()' function.
+
+labs
+     labs() is C-specific, use abs instead.
+
+ldexp
+     This is identical to the C function `ldexp()'.
+
+ldiv
+     ldiv() is C-specific, use / and int instead.
+
+link
+     This is identical to Perl's builtin `link()' function.
+
+localeconv
+     Get numeric formatting information.  Returns a reference to a hash
+     containing the current locale formatting values.
+
+     The database for the *de* (Deutsch or German) locale.
+
+          $loc = POSIX::setlocale( &POSIX::LC_ALL, "de" );
+          print "Locale = $loc\n";
+          $lconv = POSIX::localeconv();
+          print "decimal_point	= ", $lconv->{decimal_point},	"\n";
+          print "thousands_sep	= ", $lconv->{thousands_sep},	"\n";
+          print "grouping	= ", $lconv->{grouping},	"\n";
+          print "int_curr_symbol	= ", $lconv->{int_curr_symbol},	"\n";
+          print "currency_symbol	= ", $lconv->{currency_symbol},	"\n";
+          print "mon_decimal_point = ", $lconv->{mon_decimal_point}, "\n";
+          print "mon_thousands_sep = ", $lconv->{mon_thousands_sep}, "\n";
+          print "mon_grouping	= ", $lconv->{mon_grouping},	"\n";
+          print "positive_sign	= ", $lconv->{positive_sign},	"\n";
+          print "negative_sign	= ", $lconv->{negative_sign},	"\n";
+          print "int_frac_digits	= ", $lconv->{int_frac_digits},	"\n";
+          print "frac_digits	= ", $lconv->{frac_digits},	"\n";
+          print "p_cs_precedes	= ", $lconv->{p_cs_precedes},	"\n";
+          print "p_sep_by_space	= ", $lconv->{p_sep_by_space},	"\n";
+          print "n_cs_precedes	= ", $lconv->{n_cs_precedes},	"\n";
+          print "n_sep_by_space	= ", $lconv->{n_sep_by_space},	"\n";
+          print "p_sign_posn	= ", $lconv->{p_sign_posn},	"\n";
+          print "n_sign_posn	= ", $lconv->{n_sign_posn},	"\n";
+
+localtime
+     This is identical to Perl's builtin `localtime()' function.
+
+log
+     This is identical to Perl's builtin `log()' function.
+
+log10
+     This is identical to the C function `log10()'.
+
+longjmp
+     longjmp() is C-specific: use die instead.
+
+lseek
+     Move the file's read/write position.  This uses file descriptors
+     such as those obtained by calling `POSIX::open'.
+
+          $fd = POSIX::open( "foo", &POSIX::O_RDONLY );
+          $off_t = POSIX::lseek( $fd, 0, &POSIX::SEEK_SET );
+
+     Returns undef on failure.
+
+malloc
+     malloc() is C-specific.
+
+mblen
+     This is identical to the C function `mblen()'.
+
+mbstowcs
+     This is identical to the C function `mbstowcs()'.
+
+mbtowc
+     This is identical to the C function `mbtowc()'.
+
+memchr
+     memchr() is C-specific, use index() instead.
+
+memcmp
+     memcmp() is C-specific, use eq instead.
+
+memcpy
+     memcpy() is C-specific, use = instead.
+
+memmove
+     memmove() is C-specific, use = instead.
+
+memset
+     memset() is C-specific, use x instead.
+
+mkdir
+     This is identical to Perl's builtin `mkdir()' function.
+
+mkfifo
+     This is similar to the C function `mkfifo()'.
+
+     Returns undef on failure.
+
+mktime
+     Convert date/time info to a calendar time.
+
+     Synopsis:
+
+          mktime(sec, min, hour, mday, mon, year, wday = 0, yday = 0, isdst = 0)
+
+     The month (`mon'), weekday (`wday'), and yearday (`yday') begin at
+     zero.  I.e. January is 0, not 1; Sunday is 0, not 1; January 1st is
+     0, not 1.  The year (year) is given in years since 1900.  I.e. The
+     year 1995 is 95; the year 2001 is 101.  Consult your system's
+     `mktime()' manpage for details about these and the other arguments.
+
+     Calendar time for December 12, 1995, at 10:30 am.
+
+          $time_t = POSIX::mktime( 0, 30, 10, 12, 11, 95 );
+          print "Date = ", POSIX::ctime($time_t);
+
+     Returns undef on failure.
+
+modf
+     Return the integral and fractional parts of a floating-point
+     number.
+
+          ($fractional, $integral) = POSIX::modf( 3.14 );
+
+nice
+     This is similar to the C function `nice()'.
+
+     Returns undef on failure.
+
+offsetof
+     offsetof() is C-specific.
+
+open
+     Open a file for reading for writing.  This returns file
+     descriptors, not Perl filehandles.  Use `POSIX::close' to close the
+     file.
+
+     Open a file read-only with mode 0666.
+
+          $fd = POSIX::open( "foo" );
+
+     Open a file for read and write.
+
+          $fd = POSIX::open( "foo", &POSIX::O_RDWR );
+
+     Open a file for write, with truncation.
+
+          $fd = POSIX::open( "foo", &POSIX::O_WRONLY | &POSIX::O_TRUNC );
+
+     Create a new file with mode 0640.  Set up the file for writing.
+
+          $fd = POSIX::open( "foo", &POSIX::O_CREAT | &POSIX::O_WRONLY, 0640 );
+
+     Returns undef on failure.
+
+opendir
+     Open a directory for reading.
+
+          $dir = POSIX::opendir( "/tmp" );
+          @files = POSIX::readdir( $dir );
+          POSIX::closedir( $dir );
+
+     Returns undef on failure.
+
+pathconf
+     Retrieves the value of a configurable limit on a file or directory.
+
+     The following will determine the maximum length of the longest
+     allowable pathname on the filesystem which holds `/tmp'.
+
+          $path_max = POSIX::pathconf( "/tmp", &POSIX::_PC_PATH_MAX );
+
+     Returns undef on failure.
+
+pause
+     This is similar to the C function `pause()'.
+
+     Returns undef on failure.
+
+perror
+     This is identical to the C function `perror()'.
+
+pipe
+     Create an interprocess channel.  This returns file descriptors like
+     those returned by `POSIX::open'.
+
+          ($fd0, $fd1) = POSIX::pipe();
+          POSIX::write( $fd0, "hello", 5 );
+          POSIX::read( $fd1, $buf, 5 );
+
+pow
+     Computes $x raised to the power $exponent.
+
+          $ret = POSIX::pow( $x, $exponent );
+
+printf
+     Prints the specified arguments to STDOUT.
+
+putc
+     putc() is C-specific--use print instead.
+
+putchar
+     putchar() is C-specific--use print instead.
+
+puts
+     puts() is C-specific--use print instead.
+
+qsort
+     qsort() is C-specific, use sort instead.
+
+raise
+     Sends the specified signal to the current process.
+
+rand
+     rand() is non-portable, use Perl's rand instead.
+
+read
+     Read from a file.  This uses file descriptors such as those
+     obtained by calling `POSIX::open'.  If the buffer `$buf' is not
+     large enough for the read then Perl will extend it to make room for
+     the request.
+
+          $fd = POSIX::open( "foo", &POSIX::O_RDONLY );
+          $bytes = POSIX::read( $fd, $buf, 3 );
+
+     Returns undef on failure.
+
+readdir
+     This is identical to Perl's builtin `readdir()' function.
+
+realloc
+     realloc() is C-specific.
+
+remove
+     This is identical to Perl's builtin `unlink()' function.
+
+rename
+     This is identical to Perl's builtin `rename()' function.
+
+rewind
+     Seeks to the beginning of the file.
+
+rewinddir
+     This is identical to Perl's builtin `rewinddir()' function.
+
+rmdir
+     This is identical to Perl's builtin `rmdir()' function.
+
+scanf
+     scanf() is C-specific--use <> and regular expressions instead.
+
+setgid
+     Sets the real group id for this process.
+
+setjmp
+     setjmp() is C-specific: use eval {} instead.
+
+setlocale
+     Modifies and queries program's locale.
+
+     The following will set the traditional UNIX system locale behavior
+     (the second argument `"C"').
+
+          $loc = POSIX::setlocale( &POSIX::LC_ALL, "C" );
+
+     The following will query (the missing second argument) the current
+     LC_CTYPE category.
+
+          $loc = POSIX::setlocale( &POSIX::LC_CTYPE);
+
+     The following will set the LC_CTYPE behaviour according to the
+     locale environment variables (the second argument `""').  Please
+     see your systems `setlocale(3)' in this node documentation for the
+     locale environment variables' meaning or consult *Note Perllocale:
+     (perl.info)perllocale,.
+
+          $loc = POSIX::setlocale( &POSIX::LC_CTYPE, "");
+
+     The following will set the LC_COLLATE behaviour to Argentinian
+     Spanish. NOTE: The naming and availability of locales depends on
+     your operating system. Please consult *Note Perllocale:
+     (perl.info)perllocale, for how to find out which locales are
+     available in your system.
+
+          $loc = POSIX::setlocale( &POSIX::LC_ALL, "es_AR.ISO8859-1" );
+
+setpgid
+     This is similar to the C function `setpgid()'.
+
+     Returns undef on failure.
+
+setsid
+     This is identical to the C function `setsid()'.
+
+setuid
+     Sets the real user id for this process.
+
+sigaction
+     Detailed signal management.  This uses POSIX::SigAction objects for
+     the `action' and `oldaction' arguments.  Consult your system's
+     sigaction manpage for details.
+
+     Synopsis:
+
+          sigaction(sig, action, oldaction = 0)
+
+     Returns undef on failure.
+
+siglongjmp
+     siglongjmp() is C-specific: use die instead.
+
+sigpending
+     Examine signals that are blocked and pending.  This uses
+     POSIX::SigSet objects for the `sigset' argument.  Consult your
+     system's sigpending manpage for details.
+
+     Synopsis:
+
+          sigpending(sigset)
+
+     Returns undef on failure.
+
+sigprocmask
+     Change and/or examine calling process's signal mask.  This uses
+     POSIX::SigSet objects for the `sigset' and `oldsigset' arguments.
+     Consult your system's sigprocmask manpage for details.
+
+     Synopsis:
+
+          sigprocmask(how, sigset, oldsigset = 0)
+
+     Returns undef on failure.
+
+sigsetjmp
+     sigsetjmp() is C-specific: use eval {} instead.
+
+sigsuspend
+     Install a signal mask and suspend process until signal arrives.
+     This uses POSIX::SigSet objects for the `signal_mask' argument.
+     Consult your system's sigsuspend manpage for details.
+
+     Synopsis:
+
+          sigsuspend(signal_mask)
+
+     Returns undef on failure.
+
+sin
+     This is identical to Perl's builtin `sin()' function.
+
+sinh
+     This is identical to the C function `sinh()'.
+
+sleep
+     This is identical to Perl's builtin `sleep()' function.
+
+sprintf
+     This is identical to Perl's builtin `sprintf()' function.
+
+sqrt
+     This is identical to Perl's builtin `sqrt()' function.
+
+srand
+     srand().
+
+sscanf
+     sscanf() is C-specific--use regular expressions instead.
+
+stat
+     This is identical to Perl's builtin `stat()' function.
+
+strcat
+     strcat() is C-specific, use .= instead.
+
+strchr
+     strchr() is C-specific, use index() instead.
+
+strcmp
+     strcmp() is C-specific, use eq instead.
+
+strcoll
+     This is identical to the C function `strcoll()'.
+
+strcpy
+     strcpy() is C-specific, use = instead.
+
+strcspn
+     strcspn() is C-specific, use regular expressions instead.
+
+strerror
+     Returns the error string for the specified errno.
+
+strftime
+     Convert date and time information to string.  Returns the string.
+
+     Synopsis:
+
+          strftime(fmt, sec, min, hour, mday, mon, year, wday = 0, yday = 0, isdst = 0)
+
+     The month (`mon'), weekday (`wday'), and yearday (`yday') begin at
+     zero.  I.e. January is 0, not 1; Sunday is 0, not 1; January 1st is
+     0, not 1.  The year (year) is given in years since 1900.  I.e. The
+     year 1995 is 95; the year 2001 is 101.  Consult your system's
+     `strftime()' manpage for details about these and the other
+     arguments.
+
+     The string for Tuesday, December 12, 1995.
+
+          $str = POSIX::strftime( "%A, %B %d, %Y", 0, 0, 0, 12, 11, 95, 2 );
+          print "$str\n";
+
+strlen
+     strlen() is C-specific, use length instead.
+
+strncat
+     strncat() is C-specific, use .= instead.
+
+strncmp
+     strncmp() is C-specific, use eq instead.
+
+strncpy
+     strncpy() is C-specific, use = instead.
+
+stroul
+     stroul() is C-specific.
+
+strpbrk
+     strpbrk() is C-specific.
+
+strrchr
+     strrchr() is C-specific, use rindex() instead.
+
+strspn
+     strspn() is C-specific.
+
+strstr
+     This is identical to Perl's builtin `index()' function.
+
+strtod
+     String to double translation. Returns the parsed number and the
+     number of characters in the unparsed portion of the string.  Truly
+     POSIX-compliant systems set $! ($ERRNO) to indicate a translation
+     error, so clear $! before calling strtod.  However, non-POSIX
+     systems may not check for overflow, and therefore will never set
+     $!.
+
+     strtod should respect any POSIX *setlocale()* settings.
+
+     To parse a string $str as a floating point number use
+
+          $! = 0;
+          ($num, $n_unparsed) = POSIX::strtod($str);
+
+     The second returned item and $! can be used to check for valid
+     input:
+
+          if (($str eq '') || ($n_unparsed != 0) || !$!) {
+              die "Non-numeric input $str" . $! ? ": $!\n" : "\n";
+          }
+
+     When called in a scalar context strtod returns the parsed number.
+
+strtok
+     strtok() is C-specific.
+
+strtol
+     String to (long) integer translation.  Returns the parsed number
+     and the number of characters in the unparsed portion of the string.
+     Truly POSIX-compliant systems set $! ($ERRNO) to indicate a
+     translation error, so clear $! before calling strtol.  However,
+     non-POSIX systems may not check for overflow, and therefore will
+     never set $!.
+
+     strtol should respect any POSIX *setlocale()* settings.
+
+     To parse a string $str as a number in some base $base use
+
+          $! = 0;
+          ($num, $n_unparsed) = POSIX::strtol($str, $base);
+
+     The base should be zero or between 2 and 36, inclusive.  When the
+     base is zero or omitted strtol will use the string itself to
+     determine the base: a leading "0x" or "0X" means hexadecimal; a
+     leading "0" means octal; any other leading characters mean decimal.
+     Thus, "1234" is parsed as a decimal number, "01234" as an octal
+     number, and "0x1234" as a hexadecimal number.
+
+     The second returned item and $! can be used to check for valid
+     input:
+
+          if (($str eq '') || ($n_unparsed != 0) || !$!) {
+              die "Non-numeric input $str" . $! ? ": $!\n" : "\n";
+          }
+
+     When called in a scalar context strtol returns the parsed number.
+
+strtoul
+     String to unsigned (long) integer translation.  strtoul is
+     identical to strtol except that strtoul only parses unsigned
+     integers.  See strtol for details.
+
+     Note: Some vendors supply strtod and strtol but not strtoul.  Other
+     vendors that do suply strtoul parse "-1" as a valid value.
+
+strxfrm
+     String transformation.  Returns the transformed string.
+
+          $dst = POSIX::strxfrm( $src );
+
+sysconf
+     Retrieves values of system configurable variables.
+
+     The following will get the machine's clock speed.
+
+          $clock_ticks = POSIX::sysconf( &POSIX::_SC_CLK_TCK );
+
+     Returns undef on failure.
+
+system
+     This is identical to Perl's builtin `system()' function.
+
+tan
+     This is identical to the C function `tan()'.
+
+tanh
+     This is identical to the C function `tanh()'.
+
+tcdrain
+     This is similar to the C function `tcdrain()'.
+
+     Returns undef on failure.
+
+tcflow
+     This is similar to the C function `tcflow()'.
+
+     Returns undef on failure.
+
+tcflush
+     This is similar to the C function `tcflush()'.
+
+     Returns undef on failure.
+
+tcgetpgrp
+     This is identical to the C function `tcgetpgrp()'.
+
+tcsendbreak
+     This is similar to the C function `tcsendbreak()'.
+
+     Returns undef on failure.
+
+tcsetpgrp
+     This is similar to the C function `tcsetpgrp()'.
+
+     Returns undef on failure.
+
+time
+     This is identical to Perl's builtin `time()' function.
+
+times
+     The times() function returns elapsed realtime since some point in
+     the past (such as system startup), user and system times for this
+     process, and user and system times used by child processes.  All
+     times are returned in clock ticks.
+
+          ($realtime, $user, $system, $cuser, $csystem) = POSIX::times();
+
+     Note: Perl's builtin `times()' function returns four values,
+     measured in seconds.
+
+tmpfile
+     Use method `IO::File::new_tmpfile()' instead.
+
+tmpnam
+     Returns a name for a temporary file.
+
+          $tmpfile = POSIX::tmpnam();
+
+tolower
+     This is identical to Perl's builtin `lc()' function.
+
+toupper
+     This is identical to Perl's builtin `uc()' function.
+
+ttyname
+     This is identical to the C function `ttyname()'.
+
+tzname
+     Retrieves the time conversion information from the tzname variable.
+
+          POSIX::tzset();
+          ($std, $dst) = POSIX::tzname();
+
+tzset
+     This is identical to the C function `tzset()'.
+
+umask
+     This is identical to Perl's builtin `umask()' function.
+
+uname
+     Get name of current operating system.
+
+          ($sysname, $nodename, $release, $version, $machine ) = POSIX::uname();
+
+ungetc
+     Use method `IO::Handle::ungetc()' instead.
+
+unlink
+     This is identical to Perl's builtin `unlink()' function.
+
+utime
+     This is identical to Perl's builtin `utime()' function.
+
+vfprintf
+     vfprintf() is C-specific.
+
+vprintf
+     vprintf() is C-specific.
+
+vsprintf
+     vsprintf() is C-specific.
+
+wait
+     This is identical to Perl's builtin `wait()' function.
+
+waitpid
+     Wait for a child process to change state.  This is identical to
+     Perl's builtin `waitpid()' function.
+
+          $pid = POSIX::waitpid( -1, &POSIX::WNOHANG );
+          print "status = ", ($? / 256), "\n";
+
+wcstombs
+     This is identical to the C function `wcstombs()'.
+
+wctomb
+     This is identical to the C function `wctomb()'.
+
+write
+     Write to a file.  This uses file descriptors such as those obtained
+     by calling `POSIX::open'.
+
+          $fd = POSIX::open( "foo", &POSIX::O_WRONLY );
+          $buf = "hello";
+          $bytes = POSIX::write( $b, $buf, 5 );
+
+     Returns undef on failure.
+
+
+CLASSES
+=======
+
+
+POSIX::SigAction
+----------------
+
+new
+     Creates a new POSIX::SigAction object which corresponds to the C
+     `struct sigaction'.  This object will be destroyed automatically
+     when it is no longer needed.  The first parameter is the
+     fully-qualified name of a sub which is a signal-handler.  The
+     second parameter is a POSIX::SigSet object, it defaults to the
+     empty set.  The third parameter contains the `sa_flags', it
+     defaults to 0.
+
+          $sigset = POSIX::SigSet->new(SIGINT, SIGQUIT);
+          $sigaction = POSIX::SigAction->new( 'main::handler', $sigset, &POSIX::SA_NOCLDSTOP );
+
+     This POSIX::SigAction object should be used with the
+     `POSIX::sigaction()' function.
+
+
+POSIX::SigSet
+-------------
+
+new
+     Create a new SigSet object.  This object will be destroyed
+     automatically when it is no longer needed.  Arguments may be
+     supplied to initialize the set.
+
+     Create an empty set.
+
+          $sigset = POSIX::SigSet->new;
+
+     Create a set with SIGUSR1.
+
+          $sigset = POSIX::SigSet->new( &POSIX::SIGUSR1 );
+
+addset
+     Add a signal to a SigSet object.
+
+          $sigset->addset( &POSIX::SIGUSR2 );
+
+     Returns undef on failure.
+
+delset
+     Remove a signal from the SigSet object.
+
+          $sigset->delset( &POSIX::SIGUSR2 );
+
+     Returns undef on failure.
+
+emptyset
+     Initialize the SigSet object to be empty.
+
+          $sigset->emptyset();
+
+     Returns undef on failure.
+
+fillset
+     Initialize the SigSet object to include all signals.
+
+          $sigset->fillset();
+
+     Returns undef on failure.
+
+ismember
+     Tests the SigSet object to see if it contains a specific signal.
+
+          if( $sigset->ismember( &POSIX::SIGUSR1 ) ){
+          	print "contains SIGUSR1\n";
+          }
+
+
+POSIX::Termios
+--------------
+
+new
+     Create a new Termios object.  This object will be destroyed
+     automatically when it is no longer needed.
+
+          $termios = POSIX::Termios->new;
+
+getattr
+     Get terminal control attributes.
+
+     Obtain the attributes for stdin.
+
+          $termios->getattr()
+
+     Obtain the attributes for stdout.
+
+          $termios->getattr( 1 )
+
+     Returns undef on failure.
+
+getcc
+     Retrieve a value from the c_cc field of a termios object.  The c_cc
+     field is an array so an index must be specified.
+
+          $c_cc[1] = $termios->getcc(1);
+
+getcflag
+     Retrieve the c_cflag field of a termios object.
+
+          $c_cflag = $termios->getcflag;
+
+getiflag
+     Retrieve the c_iflag field of a termios object.
+
+          $c_iflag = $termios->getiflag;
+
+getispeed
+     Retrieve the input baud rate.
+
+          $ispeed = $termios->getispeed;
+
+getlflag
+     Retrieve the c_lflag field of a termios object.
+
+          $c_lflag = $termios->getlflag;
+
+getoflag
+     Retrieve the c_oflag field of a termios object.
+
+          $c_oflag = $termios->getoflag;
+
+getospeed
+     Retrieve the output baud rate.
+
+          $ospeed = $termios->getospeed;
+
+setattr
+     Set terminal control attributes.
+
+     Set attributes immediately for stdout.
+
+          $termios->setattr( 1, &POSIX::TCSANOW );
+
+     Returns undef on failure.
+
+setcc
+     Set a value in the c_cc field of a termios object.  The c_cc field
+     is an array so an index must be specified.
+
+          $termios->setcc( &POSIX::VEOF, 1 );
+
+setcflag
+     Set the c_cflag field of a termios object.
+
+          $termios->setcflag( &POSIX::CLOCAL );
+
+setiflag
+     Set the c_iflag field of a termios object.
+
+          $termios->setiflag( &POSIX::BRKINT );
+
+setispeed
+     Set the input baud rate.
+
+          $termios->setispeed( &POSIX::B9600 );
+
+     Returns undef on failure.
+
+setlflag
+     Set the c_lflag field of a termios object.
+
+          $termios->setlflag( &POSIX::ECHO );
+
+setoflag
+     Set the c_oflag field of a termios object.
+
+          $termios->setoflag( &POSIX::OPOST );
+
+setospeed
+     Set the output baud rate.
+
+          $termios->setospeed( &POSIX::B9600 );
+
+     Returns undef on failure.
+
+Baud rate values
+     B38400 B75 B200 B134 B300 B1800 B150 B0 B19200 B1200 B9600 B600
+     B4800 B50 B2400 B110
+
+Terminal interface values
+     TCSADRAIN TCSANOW TCOON TCIOFLUSH TCOFLUSH TCION TCIFLUSH TCSAFLUSH
+     TCIOFF TCOOFF
+
+c_cc field values
+     VEOF VEOL VERASE VINTR VKILL VQUIT VSUSP VSTART VSTOP VMIN VTIME
+     NCCS
+
+c_cflag field values
+     CLOCAL CREAD CSIZE CS5 CS6 CS7 CS8 CSTOPB HUPCL PARENB PARODD
+
+c_iflag field values
+     BRKINT ICRNL IGNBRK IGNCR IGNPAR INLCR INPCK ISTRIP IXOFF IXON
+     PARMRK
+
+c_lflag field values
+     ECHO ECHOE ECHOK ECHONL ICANON IEXTEN ISIG NOFLSH TOSTOP
+
+c_oflag field values
+     OPOST
+
+
+PATHNAME CONSTANTS
+==================
+
+Constants
+     _PC_CHOWN_RESTRICTED _PC_LINK_MAX _PC_MAX_CANON _PC_MAX_INPUT
+     _PC_NAME_MAX _PC_NO_TRUNC _PC_PATH_MAX _PC_PIPE_BUF _PC_VDISABLE
+
+
+POSIX CONSTANTS
+===============
+
+Constants
+     _POSIX_ARG_MAX _POSIX_CHILD_MAX _POSIX_CHOWN_RESTRICTED
+     _POSIX_JOB_CONTROL _POSIX_LINK_MAX _POSIX_MAX_CANON
+     _POSIX_MAX_INPUT _POSIX_NAME_MAX _POSIX_NGROUPS_MAX _POSIX_NO_TRUNC
+     _POSIX_OPEN_MAX _POSIX_PATH_MAX _POSIX_PIPE_BUF _POSIX_SAVED_IDS
+     _POSIX_SSIZE_MAX _POSIX_STREAM_MAX _POSIX_TZNAME_MAX
+     _POSIX_VDISABLE _POSIX_VERSION
+
+
+SYSTEM CONFIGURATION
+====================
+
+Constants
+     _SC_ARG_MAX _SC_CHILD_MAX _SC_CLK_TCK _SC_JOB_CONTROL
+     _SC_NGROUPS_MAX _SC_OPEN_MAX _SC_SAVED_IDS _SC_STREAM_MAX
+     _SC_TZNAME_MAX _SC_VERSION
+
+
+ERRNO
+=====
+
+Constants
+     E2BIG EACCES EADDRINUSE EADDRNOTAVAIL EAFNOSUPPORT EAGAIN EALREADY
+     EBADF EBUSY ECHILD ECONNABORTED ECONNREFUSED ECONNRESET EDEADLK
+     EDESTADDRREQ EDOM EDQUOT EEXIST EFAULT EFBIG EHOSTDOWN EHOSTUNREACH
+     EINPROGRESS EINTR EINVAL EIO EISCONN EISDIR ELOOP EMFILE EMLINK
+     EMSGSIZE ENAMETOOLONG ENETDOWN ENETRESET ENETUNREACH ENFILE ENOBUFS
+     ENODEV ENOENT ENOEXEC ENOLCK ENOMEM ENOPROTOOPT ENOSPC ENOSYS
+     ENOTBLK ENOTCONN ENOTDIR ENOTEMPTY ENOTSOCK ENOTTY ENXIO EOPNOTSUPP
+     EPERM EPFNOSUPPORT EPIPE EPROCLIM EPROTONOSUPPORT EPROTOTYPE ERANGE
+     EREMOTE ERESTART EROFS ESHUTDOWN ESOCKTNOSUPPORT ESPIPE ESRCH
+     ESTALE ETIMEDOUT ETOOMANYREFS ETXTBSY EUSERS EWOULDBLOCK EXDEV
+
+
+FCNTL
+=====
+
+Constants
+     FD_CLOEXEC F_DUPFD F_GETFD F_GETFL F_GETLK F_OK F_RDLCK F_SETFD
+     F_SETFL F_SETLK F_SETLKW F_UNLCK F_WRLCK O_ACCMODE O_APPEND O_CREAT
+     O_EXCL O_NOCTTY O_NONBLOCK O_RDONLY O_RDWR O_TRUNC O_WRONLY
+
+
+FLOAT
+=====
+
+Constants
+     DBL_DIG DBL_EPSILON DBL_MANT_DIG DBL_MAX DBL_MAX_10_EXP DBL_MAX_EXP
+     DBL_MIN DBL_MIN_10_EXP DBL_MIN_EXP FLT_DIG FLT_EPSILON FLT_MANT_DIG
+     FLT_MAX FLT_MAX_10_EXP FLT_MAX_EXP FLT_MIN FLT_MIN_10_EXP
+     FLT_MIN_EXP FLT_RADIX FLT_ROUNDS LDBL_DIG LDBL_EPSILON
+     LDBL_MANT_DIG LDBL_MAX LDBL_MAX_10_EXP LDBL_MAX_EXP LDBL_MIN
+     LDBL_MIN_10_EXP LDBL_MIN_EXP
+
+
+LIMITS
+======
+
+Constants
+     ARG_MAX CHAR_BIT CHAR_MAX CHAR_MIN CHILD_MAX INT_MAX INT_MIN
+     LINK_MAX LONG_MAX LONG_MIN MAX_CANON MAX_INPUT MB_LEN_MAX NAME_MAX
+     NGROUPS_MAX OPEN_MAX PATH_MAX PIPE_BUF SCHAR_MAX SCHAR_MIN SHRT_MAX
+     SHRT_MIN SSIZE_MAX STREAM_MAX TZNAME_MAX UCHAR_MAX UINT_MAX
+     ULONG_MAX USHRT_MAX
+
+
+LOCALE
+======
+
+Constants
+     LC_ALL LC_COLLATE LC_CTYPE LC_MONETARY LC_NUMERIC LC_TIME
+
+
+MATH
+====
+
+Constants
+     HUGE_VAL
+
+
+SIGNAL
+======
+
+Constants
+     SA_NOCLDSTOP SA_NOCLDWAIT SA_NODEFER SA_ONSTACK SA_RESETHAND
+     SA_RESTART SA_SIGINFO SIGABRT SIGALRM SIGCHLD SIGCONT SIGFPE SIGHUP
+     SIGILL SIGINT SIGKILL SIGPIPE SIGQUIT SIGSEGV SIGSTOP SIGTERM
+     SIGTSTP SIGTTIN SIGTTOU SIGUSR1 SIGUSR2 SIG_BLOCK SIG_DFL SIG_ERR
+     SIG_IGN SIG_SETMASK SIG_UNBLOCK
+
+
+STAT
+====
+
+Constants
+     S_IRGRP S_IROTH S_IRUSR S_IRWXG S_IRWXO S_IRWXU S_ISGID S_ISUID
+     S_IWGRP S_IWOTH S_IWUSR S_IXGRP S_IXOTH S_IXUSR
+
+Macros
+     S_ISBLK S_ISCHR S_ISDIR S_ISFIFO S_ISREG
+
+
+STDLIB
+======
+
+Constants
+     EXIT_FAILURE EXIT_SUCCESS MB_CUR_MAX RAND_MAX
+
+
+STDIO
+=====
+
+Constants
+     BUFSIZ EOF FILENAME_MAX L_ctermid L_cuserid L_tmpname TMP_MAX
+
+
+TIME
+====
+
+Constants
+     CLK_TCK CLOCKS_PER_SEC
+
+
+UNISTD
+======
+
+Constants
+     R_OK SEEK_CUR SEEK_END SEEK_SET STDIN_FILENO STDOUT_FILENO
+     STRERR_FILENO W_OK X_OK
+
+
+WAIT
+====
+
+Constants
+     WNOHANG WUNTRACED
+
+Macros
+     WIFEXITED WEXITSTATUS WIFSIGNALED WTERMSIG WIFSTOPPED WSTOPSIG
+
+
+CREATION
+========
+
+This document generated by ./mkposixman.PL version 19960129.
+
+
+
+
+File: pm.info, Node: Parse/Lex.fr, Next: Parse/Token.fr, Prev: POSIX, Up: Module List
+
+Générateur d'analyseurs lexicaux (Alpha 1.15).
+****************************************************
+
+
+
+NAME
+====
+
+`Parse::Lex' - Générateur d'analyseurs lexicaux (Alpha 1.15).
+
+
+SYNOPSIS
+========
+
+     #!/usr/local/bin/perl
+
+     require 5.000;
+
+     use Parse::Lex;
+     @token = (
+       qw(
+          ADDOP    [-+]
+          LEFTP    [\(]
+          RIGHTP   [\)]
+          INTEGER  [1-9][0-9]*
+          NEWLINE  \n
+     
+         ),
+       qw(STRING),   [qw(" (?:[^"]+|"")* ")],
+       qw(ERROR  .*), sub {
+         die qq!can\'t analyze: "$_[1]"!;
+       }
+      );
+
+     Parse::Lex->trace;  # Class method
+     $lexer = Parse::Lex->new(@token);
+     $lexer->from(\*DATA);
+     print "Tokenization of DATA:\n";
+
+     TOKEN:while (1) {
+       $token = $lexer->next;
+       if (not $lexer->eoi) {
+         print "Line $.\t";
+         print "Type: ", $token->name, "\t";
+         print "Content:->", $token->getstring, "<-\n";
+       } else {
+         last TOKEN;
+       }
+     }
+
+     __END__
+     1+2-5
+     "multiline
+     string with an embedded \" in it"
+     this is an invalid string with an embedded \" in it"
+
+
+DESCRIPTION
+===========
+
+La classe `Parse::Lex' permet de créer des analyseurs lexicaux.  Un
+analyseur lexical est spécifié au moyen d'un liste de lexèmes
+passée en argument à la méthode new de la classe `Parse::Lex'.
+
+Les lexèmes sont des objets de la classe `Parse::Token', livré
+avec `Parse::Lex'. La définition d'un lexème comporte
+ordinairement deux arguments : un non symbolique (comme `INTEGER'),
+suivi d'une expression régulière. Si une fonction anonyme est
+donnée en troisième argument, elle est exécutée lorsque le
+lexème est reconnu.
+
+L'ordre dans lequel l'analyseur lexical examine les expressions
+régulières est déterminé par l'ordre dans lequel ces
+expressions sont passées en argument à la méthode new. Le
+lexème retourné par l'analyseur lexical correspond à la
+première expression qui s'apparie avec le début du flot de
+caractères à analyser (la stratégie est différence de celle
+adoptée par l'analyseur lexical "Lex" qui retourne la plus longue
+chaîne de toutes celles qu'il est possible de reconnaître). Le
+lexème est un objet de la classe `Parse::Token'.
+
+L'analyseur peut être utilisé pour analyser une chaîne de
+caractères isolée ou un flot de données provenant d'une
+entrée quelconque.  En fin de flot l'analyseur retourne un objet
+Token dont le nom est `EOI' (End Of Input).
+
+
+Méthodes
+-----------
+
+buffer EXPR
+buffer
+     Retourne le contenu du buffer interne à l'analyseur
+     lexical. Avec une expression en argument, place le résultat de
+     l'expression dans le buffer.
+
+eoi
+     Retourne vrai lorsqu'il n'y a plus de données à analyser.
+
+every ANON
+     Évite de devoir écrire une boucle de lecture pour analyser un
+     flot de données.  `ANON' est une fonction anonyme executée
+     après la reconnaissance de chaque lexème.
+
+     Pour segmenter la chaîne "1+2" on peut par exemple écrire :
+
+          use Parse::Lex;
+
+          $lexer = Parse::Lex->new(
+            qw(
+               ADDOP [-+]
+               INTEGER \d+
+              ));
+
+          $lexer->from("1+2");
+          $lexer->every (sub { 
+            print $_[0]->name, "\t";
+            print $_[0]->get, "\n";
+          });
+
+     Le premier argument de la fonction anonyme est l'objet Token
+     reconnu.
+
+from EXPR
+     from permet d'indiquer la source des données à analyser.
+     L'argument de cette méthode est une référence à un
+     filehandle ou une liste de chaînes de caractères. Exemples :
+
+          $lexer->from(\*DATA);
+          $lexer->from('les données à analyser');
+
+flush
+     Si la conservation des chaînes consommées est activée,
+     flush retourne et vide le buffer contenant les chaînes de
+     caractères reconnues jusqu'ici.
+
+getbuffer
+     Retourne le contenu du buffer interne à l'analyseur lexical.
+
+hold EXPR
+hold
+     Active/desactive la conservation des chaînes consommées.
+     Retourne la valeur courante. Peut être utilisée comme
+     méthode de classe.
+
+     On peut obtenir le contenu du buffer au moyen de la méthode
+     flush qui a également pour effet de vider le buffer.
+
+less EXPR
+     La valeur de EXPR est placée au début du flot de données.
+
+next
+     Provoque la recherche du prochain lexème. Retourne l'objet Token
+     reconnu.  Retourne l'objet `Token::EOI' en fin de données.
+
+new
+     Crée et retourne un nouvel analyseur lexical. L'argument de la
+     méthode est une liste de triplets comportant : le nom symbolique
+     du lexème, l'expression régulière nécessaire à sa
+     reconnaissance et éventuellement une fonction anonyme
+     exécutée lors de la reconnaissance du lexème.  Pour chaque
+     triplet, un objet de type `Parse::Token' est créé.
+
+     L'analyseur lexical construit par new cherche tour à tour à
+     apparier chaque expression régulière avec le début du flot
+     de données à analyser. L'ordre examen des expressions
+     régulières est fixé par l'ordre dans lequel elles sont
+     passées en argument à la méthode new.
+
+newset
+     Peut être utilisé pour créer un ensemble de lexèmes qui
+     ne sont pas dans l'automate d'analyse. On pourra pas exemple
+     écrire :
+
+          %keywords = 
+            qw (
+                PROC  undef
+                FUNC  undef
+                RETURN undef
+                IF    undef
+                ELSE  undef
+                WHILE undef
+                PRINT undef
+                READ  undef
+               );
+          $lexer->newset(%keywords);
+
+     et installer ces tokens dans une table des symboles de la
+     manière suivante :
+
+          foreach $name (keys %keywords) {
+            $symbol{"\L$name"} = [${$name}, ''];
+          }
+
+     `${$name}' est l'objet Token.
+
+     Lors de la phase d'analyse lexicale on pourra utiliser les tokens
+     de la manière suivante :
+
+          qw(IDENT [a-zA-Z][a-zA-Z0-9]*),  sub {		      
+             $symbol{$_[1]} = [] unless defined $symbol{$_[1]};
+             my $type = $symbol{$_[1]}[0];
+             $lexer->tokenis((not defined $type) ? $VAR : $type);
+             $_[1];
+           }
+
+     Ce qui permet d'indiquer que tout symbole dont le type est inconnu
+     est une variable.
+
+readline
+     Effectue la lecture des données sur l'entrée spécifiée
+     par la méthode from. Retourne le résultat de la lecture.
+
+reset
+     Vide le buffer interne à l'analyseur lexical et efface tout
+     token déjà reconnu.
+
+setbuffer EXPR
+     La valeur de `EXPR' est placée dans le buffer interne à
+     l'analyseur lexical.
+
+skip EXPR
+skip
+     `EXPR' est une expression régulière définissant le
+     séparateur de lexème (par défaut `[ \t]+'). Retourne ce
+     séparateur si `EXPR' est omis. Peut être utilisée comme
+     méthode de classe.
+
+token
+     Retourne l'objet correspondant au dernier lexème reconnu. En
+     l'absence de token lu, retourne un token spécial dont le nom est
+     `default token'.
+
+tokenis TOKEN
+     Force le lexème à `TOKEN'. Utile pour requalifier un
+     lexème à l'intérieur de la fonction anonyme associée
+     à ce lexème.
+
+trace OUTPUT
+trace
+     Méthode de classe qui active le mode trace.  L'activation du
+     mode trace doit avoir avant lieu avant la création de
+     l'analyseur lexical. Le mode peut être ensuite désactivé
+     par un nouvel appel de la méthode.
+
+     `OUTPUT' peut être un nom de fichier ou une référence à
+     un filehandle vers laquelle la trace va être dirigée.
+
+
+EXEMPLES
+========
+
+tokenizer.pl - Segmentation d'un flot de données au moyen de la
+classe `Parse::Lex'.
+
+every.pl - Utilisation de la méthode every.
+
+
+EXTENSIONS
+==========
+
+Il serait sans doute intéressant de pouvoir retourner la liste des
+lexèmes correspondant à l'analyse de tout un flot de
+caractères.
+
+
+AUTEUR
+======
+
+Philippe Verdret
+
+
+AVERTISSEMENT
+=============
+
+Je considère que la présente version de Token.pm/Lex.pm est
+expérimentale. Ces modules peuvent notablement évoluer en fonction
+des remarques et des suggestions que vous voudrez bien m'envoyer.
+
+
+REFERENCES
+==========
+
+Friedl, J.E.F. Mastering Regular Expressions. O'Reilly & Associates
+1996.
+
+Groc, B., & Bouhier, M. - Programmation par la syntaxe. Dunod 1990.
+
+Mason, T & Brown, D. - Lex & Yacc. O'Reilly & Associates, Inc. 1990.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Philippe Verdret. All rights reserved.  This
+module is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Parse/Token.fr, Next: Penguin/Easy, Prev: Parse/Lex.fr, Up: Module List
+
+Classe définissant les lexèmes utilisés par Parse::Lex.pm (Alpha 1.15).
+********************************************************************************
+
+
+
+NAME
+====
+
+`Parse::Token' - Classe définissant les lexèmes utilisés par
+Parse::Lex.pm (Alpha 1.15).
+
+
+SYNOPSIS
+========
+
+     require 5.000;
+
+     use Parse::Lex;
+     @token = qw(
+         ADDOP    [-+]
+         INTEGER  [1-9][0-9]*
+        );
+
+     $lexer = Parse::Lex->new(@token);
+     $lexer->from(\*DATA);
+
+     $content = $INTEGER->next;
+     if ($INTEGER->status) {
+       print "$content\n";
+     }
+     $content = $ADDOP->next;
+     if ($ADDOP->status) {
+       print "$content\n";
+     }
+     if ($INTEGER->isnext(\$content)) {
+       print "$content\n";
+     }
+     __END__
+     1+2
+
+
+DESCRIPTION
+===========
+
+Le package `Token' permet de définir les lexèmes utilisés par
+`Parse::Lex'. La méthode `Lex::new' du package `Parse::Lex' crée
+indirectement un objet de type `Token' par lexème à
+reconnaître.  Les méthodes next ou isnext du package `Token'
+permettent d'interfacer aisément l'analyseur lexical avec un
+analyseur syntaxique.
+
+Le package `Parse::Token' n'est pas destiné à être directement
+utilisé.  L'inclusion de ce package doit se faire par le biais d'un
+`use Parse::Lex'.
+
+
+Méthodes
+-----------
+
+get EXPR
+     get permet d'obtenir la valeur de l'attribut résultant de
+     l'évaluation d'EXPR.  Il est également possible d'utiliser le
+     nom de l'attribut comme nom de méthode.
+
+getstring
+     Retourne la chaîne de caractères reconnue au moyen de l'objet
+     `Token'.
+
+isnext EXPR
+isnext
+     Retourne le statut du token. La chaîne consommée est
+     disponible dans EXPR s'il s'agit d'une référence à un
+     scalaire.
+
+mean
+     Retourne la fonction anonyme définie dans l'objet `Token'.
+
+name
+     Retourne le nom symbolique de l'objet `Token'.
+
+next
+     Active la recherche du lexème défini par l'expression
+     régulière contenue dans l'objet. Si ce lexème est reconnu
+     sur le flot de caractère à analyser alors next retourne la
+     chaîne trouvée et met le statut de l'objet à vrai.
+
+new SYMBOL_NAME, REGEXP, ANONYNOUS SUB
+     Crée un objet de type `Token'. Les arguments de la méthode
+     new sont dans l'ordre : un nom symbolique, une expression
+     régulière et une fonction anonyme.
+
+     REGEXP est soit une expression régulière simple, soit une
+     référence à un tableau contenant de une à trois
+     expressions régulières. Dans ce dernier cas le lexème peut
+     être réparti sur plusieurs enregistrements. Ce peut être
+     par exemple une chaîne de caractères délimitée par des
+     guillemets, des commentaires d'un programme C, etc.
+
+     Les expressions régulières sont utilisées pour
+     reconnaître :
+
+le début du lexème,
+le "corps" du lexème, si cette seconde expression est absente `Parse::Lex' utilise "(?:.*?)",
+la fin du lexème, si cette dernière expression est absente on utilise la première.  (Attention ! La fin du lexème ne peut être à cheval sur plusieurs enregistrements).
+     Exemple.
+
+          qw(STRING), [qw(" (?:[^"\\\\]+|\\\\(?:.|\n))* ")],
+
+     Les expressions régulières permettent des chaînes
+     multilignes délimitées par des guillemets, sachant que
+     contre-oblique est utilisé pour littéraliser les guillements
+     qui apparaissent au sein de la chaîne. Remarquez le
+     quadruplement du contre-oblique.
+
+     Voici une variante de l'exemple précédent qui utilise
+     l'option s pour inclure la nouvelle-ligne dans les caractères
+     reconnus par "." :
+
+          qw(STRING), [qw(" (?s)(?:[^"\\\\]+|\\\\.)* ")],
+
+     La fonction anonyme est exécutée au moment ou le lexème
+     est reconnu par l'analyseur lexical. Cette fonction possède deux
+     arguments : $_[0] contient l'objet `Token', $_[1] la chaîne
+     reconnue par l'expression régulière. Le scalaire retourné
+     par la fonction anonyme définit la chaîne de caractères
+     mémorisée dans l'objet `Token'.
+
+     Dans la fonction anonyme vous pouvez utiliser les variables
+     positionnelles $1, $2,... sachant que $1 contient la chaîne
+     reconnue par l'expression régulière de l'objet Token.
+
+regexp
+     Retourne l'expression régulière définie dans l'objet
+     `Token'.
+
+set HASH
+     Permet de décorer un objet Token au moyen d'une liste
+     d'attribut-valeurs.
+
+     Un nom d'attribut peut être utilisé comme nom de méthode.
+
+setstring EXPR
+     La valeur de `EXPR' définit la chaîne de caractères
+     associée au lexème.
+
+status EXPR
+status
+     Indique si la dernière recherche du lexème a réussie ou
+     échouée.  `status EXPR' permet de forcer le statut à la
+     valeur dénotée par EXPR.
+
+trace OUTPUT
+trace
+     Méthode de classe qui active/désactive une trace de l'analyse
+     lexicale.
+
+     `OUTPUT' peut être un fichier ou une référence à un
+     filehandle vers laquelle la trace va être dirigée.
+
+
+GESTION DES ERREURS
+===================
+
+Pour traiter les cas de non reconnaissance de lexème vous pouvez
+définir un objet `Token' spécifique.  Si la recherche de ce token
+réussie il est alors possible d'appeler une fonction dévolue au
+traitement des erreurs.
+
+
+AUTEUR
+======
+
+Philippe Verdret.
+
+
+AVERTISSEMENT
+=============
+
+Je considère que la présente version de Token.pm/Lex.pm est
+expérimentale. Ce module peut notablement évoluer. J'aimerais
+recevoir vos remarques et vos suggestions.
+
+
+REFERENCES
+==========
+
+Friedl, J.E.F. Mastering Regular Expressions. O'Reilly & Associates
+1996.
+
+Groc, B., & Bouhier, M. - Programmation par la syntaxe. Dunod 1990.
+
+Mason, T & Brown, D. - Lex & Yacc. O'Reilly & Associates, Inc. 1990.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Philippe Verdret. All rights reserved.  This
+module is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+

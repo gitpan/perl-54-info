@@ -1,0 +1,1966 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: SGMLS/Output, Next: SGMLS/Refs, Prev: SGMLS, Up: Module List
+
+Stack-based Output Procedures
+*****************************
+
+
+
+NAME
+====
+
+SGMLS::Output - Stack-based Output Procedures
+
+
+SYNOPSIS
+========
+
+     use SGMLS::Output;
+
+To print a string to the current output destination:
+
+     output($data);
+
+To push a new output level to the filehandle DATA:
+
+     push_output('handle',DATA);
+
+To push a new output level to the file "foo.data" (which will be opened
+and closed automatically):
+
+     push_output('file','foo.data');
+
+To push a new output level to a pipe to the shell command "sort":
+
+     push_output('pipe','sort');
+
+To push a new output level *appending* to the file "foo.data":
+
+     push_output('append','foo.data');
+
+To push a new output level to an empty string:
+
+     push_output('string');
+
+To push a new output level appending to the string "David is ":
+
+     push_output('string',"David is ");
+
+To push a new output level to The Great Beyond:
+
+     push_output('nul');
+
+To revert to the previous output level:
+
+     pop_output();
+
+To revert to the previous output level, returning the contents of an
+output string:
+
+     $data = pop_output();
+
+
+DESCRIPTION
+===========
+
+This library allows redirectable, stack-based output to files, pipes,
+handles, strings, or nul.  It is especially useful for packages like
+*Note SGMLS: SGMLS,, since handlers for individual *SGML* elements can
+temporarily change and restore the default output destination.  It is
+also particularly useful for capturing the contents of an element (and
+its sub-elements) in a string.
+
+Example:
+
+     sgmls('<title>', sub{ push_output('string'); });
+     sgmls('</title>', sub{ $title = pop_output(); });
+
+In between, anything sent to output (such as CDATA) will be accumulated
+in the string returned from *pop_output()*.
+
+Example:
+
+     sgmls('<tei.header>', sub { push_output('nul'); });
+     sgmls('</tei.header>', sub { pop_output(); });
+
+All output will be ignored until the header has finished.
+
+
+AUTHOR AND COPYRIGHT
+====================
+
+Copyright 1994 and 1995 by David Megginson, `dmeggins@aix1.uottawa.ca'.
+Distributed under the terms of the Gnu General Public License (version
+2, 1991) -- see the file COPYING which is included in the *SGMLS.pm*
+distribution.
+
+
+SEE ALSO:
+=========
+
+*Note SGMLS: SGMLS,.
+
+
+
+
+File: pm.info, Node: SGMLS/Refs, Next: Safe, Prev: SGMLS/Output, Up: Module List
+
+SGMLS::Refs
+***********
+
+
+
+NAME
+====
+
+SGMLS::Refs
+
+
+SYNOPSIS
+========
+
+     use SGMLS::Refs;
+
+To create a new reference-manager object using the file "foo.refs":
+
+     my $refs = new SGMLS::Refs("foo.refs");
+
+To create a new reference-manager object using the file "foo.refs" and
+logging changes to the file "foo.log":
+
+     my $refs = new SGMLS::Refs("foo.refs","foo.log");
+
+To record a reference:
+
+     $refs->put("document title",$title);
+
+To retrieve a reference:
+
+     $title = $refs->get("document title");
+
+To return the number of references changed since the last run:
+
+     $num = $refs->changed;
+
+To print a LaTeX-like warning if any references have changed:
+
+     $refs->warn;
+
+
+DESCRIPTION
+===========
+
+This library can be used together with the *SGMLS* package to keep track
+of forward references from one run to another, like the *LaTeX* `.aux'
+files.  Each reference manager is an object which reads and then
+rewrites a file of perl source, with the file name provided by the
+caller.
+
+Example:
+
+     # Start up the reference manager before the parse.
+     sgml('start', sub { $refs = new SGMLS::Refs("foo.refs"); });
+
+     # Warn about any changed references at the end.
+     sgml('end', sub { $refs->warn; });
+
+     # Look up the title from the last parse, if available.
+     sgml('<div>', sub { 
+       my $element = shift;
+       my $id = $element->attribute(ID)->value;
+       my $title = $refs->get("title:$id") || "[no title available]";
+
+     $current_div_id = $id;
+
+     output "\\section{$title}\n\n";
+       });
+
+     # Save the title for the next parse.
+     sgml('<head>', sub { push_output('string'); });
+     sgml('</head>', sub {
+       my $title = pop_output();
+       my $id = $current_div_id;
+
+     $refs->put("title:$id",$title);
+       });
+  
+
+
+AUTHOR AND COPYRIGHT
+====================
+
+Copyright 1994 and 1995 by David Megginson, `dmeggins@aix1.uottawa.ca'.
+Distributed under the terms of the Gnu General Public License (version
+2, 1991) -- see the file COPYING which is included in the *SGMLS.pm*
+distribution.
+
+
+SEE ALSO:
+=========
+
+*Note SGMLS: SGMLS,, *Note SGMLS/Output: SGMLS/Output,.
+
+
+
+
+File: pm.info, Node: Safe, Next: Search/Dict, Prev: SGMLS/Refs, Up: Module List
+
+Compile and execute code in restricted compartments
+***************************************************
+
+
+
+NAME
+====
+
+Safe - Compile and execute code in restricted compartments
+
+
+SYNOPSIS
+========
+
+     use Safe;
+
+     $compartment = new Safe;
+
+     $compartment->permit(qw(time sort :browse));
+
+     $result = $compartment->reval($unsafe_code);
+
+
+DESCRIPTION
+===========
+
+The Safe extension module allows the creation of compartments in which
+perl code can be evaluated. Each compartment has
+
+a new namespace
+     The "root" of the namespace (i.e. "main::") is changed to a
+     different package and code evaluated in the compartment cannot
+     refer to variables outside this namespace, even with run-time glob
+     lookups and other tricks.
+
+     Code which is compiled outside the compartment can choose to place
+     variables into (or share variables with) the compartment's
+     namespace and only that data will be visible to code evaluated in
+     the compartment.
+
+     By default, the only variables shared with compartments are the
+     "underscore" variables $_ and @_ (and, technically, the less
+     frequently used %_, the _ filehandle and so on). This is because
+     otherwise perl operators which default to $_ will not work and
+     neither will the assignment of arguments to @_ on subroutine entry.
+
+an operator mask
+     Each compartment has an associated "operator mask". Recall that
+     perl code is compiled into an internal format before execution.
+     Evaluating perl code (e.g. via "eval" or "do 'file'") causes the
+     code to be compiled into an internal format and then, provided
+     there was no error in the compilation, executed.  Code evaulated in
+     a compartment compiles subject to the compartment's operator
+     mask. Attempting to evaulate code in a compartment which contains a
+     masked operator will cause the compilation to fail with an
+     error. The code will not be executed.
+
+     The default operator mask for a newly created compartment is the
+     ':default' optag.
+
+     It is important that you read the Opcode(3) module documentation
+     for more information, especially for detailed definitions of
+     opnames, optags and opsets.
+
+     Since it is only at the compilation stage that the operator mask
+     applies, controlled access to potentially unsafe operations can be
+     achieved by having a handle to a wrapper subroutine (written
+     outside the compartment) placed into the compartment. For example,
+
+          $cpt = new Safe;
+          sub wrapper {
+              # vet arguments and perform potentially unsafe operations
+          }
+          $cpt->share('&wrapper');
+
+
+WARNING
+=======
+
+The authors make *no warranty*, implied or otherwise, about the
+suitability of this software for safety or security purposes.
+
+The authors shall not in any case be liable for special, incidental,
+consequential, indirect or other similar damages arising from the use of
+this software.
+
+Your mileage will vary. If in any doubt *do not use it*.
+
+
+RECENT CHANGES
+--------------
+
+The interface to the Safe module has changed quite dramatically since
+version 1 (as supplied with Perl5.002). Study these pages carefully if
+you have code written to use Safe version 1 because you will need to
+makes changes.
+
+
+Methods in class Safe
+---------------------
+
+To create a new compartment, use
+
+     $cpt = new Safe;
+
+Optional argument is (NAMESPACE), where NAMESPACE is the root namespace
+to use for the compartment (defaults to "Safe::Root0", incremented for
+each new compartment).
+
+Note that version 1.00 of the Safe module supported a second optional
+parameter, MASK.  That functionality has been withdrawn pending deeper
+consideration. Use the permit and deny methods described below.
+
+The following methods can then be used on the compartment object
+returned by the above constructor. The object argument is implicit in
+each case.
+
+permit (OP, ...)
+     Permit the listed operators to be used when compiling code in the
+     compartment (in *addition* to any operators already permitted).
+
+permit_only (OP, ...)
+     Permit *only* the listed operators to be used when compiling code
+     in the compartment (no other operators are permitted).
+
+deny (OP, ...)
+     Deny the listed operators from being used when compiling code in
+     the compartment (other operators may still be permitted).
+
+deny_only (OP, ...)
+     Deny *only* the listed operators from being used when compiling
+     code in the compartment (all other operators will be permitted).
+
+trap (OP, ...)
+untrap (OP, ...)
+     The trap and untrap methods are synonyms for deny and permit
+     respectfully.
+
+share (NAME, ...)
+     This shares the variable(s) in the argument list with the
+     compartment.  This is almost identical to exporting variables using
+     the `Exporter(3)' in this node module.
+
+     Each NAME must be the name of a variable, typically with the
+     leading type identifier included. A bareword is treated as a
+     function name.
+
+     Examples of legal names are '$foo' for a scalar, '@foo' for an
+     array, '%foo' for a hash, '&foo' or 'foo' for a subroutine and
+     '*foo' for a glob (i.e.  all symbol table entries associated with
+     "foo", including scalar, array, hash, sub and filehandle).
+
+     Each NAME is assumed to be in the calling package. See share_from
+     for an alternative method (which share uses).
+
+share_from (PACKAGE, ARRAYREF)
+     This method is similar to share() but allows you to explicitly name
+     the package that symbols should be shared from. The symbol names
+     (including type characters) are supplied as an array reference.
+
+          $safe->share_from('main', [ '$foo', '%bar', 'func' ]);
+
+varglob (VARNAME)
+     This returns a glob reference for the symbol table entry of VARNAME
+     in the package of the compartment. VARNAME must be the name of a
+     variable without any leading type marker. For example,
+
+          $cpt = new Safe 'Root';
+          $Root::foo = "Hello world";
+          # Equivalent version which doesn't need to know $cpt's package name:
+          ${$cpt->varglob('foo')} = "Hello world";
+
+reval (STRING)
+     This evaluates STRING as perl code inside the compartment.
+
+     The code can only see the compartment's namespace (as returned by
+     the root method). The compartment's root package appears to be the
+     `main::' package to the code inside the compartment.
+
+     Any attempt by the code in STRING to use an operator which is not
+     permitted by the compartment will cause an error (at run-time of
+     the main program but at compile-time for the code in STRING).  The
+     error is of the form "%s trapped by operation mask operation...".
+
+     If an operation is trapped in this way, then the code in STRING
+     will not be executed. If such a trapped operation occurs or any
+     other compile-time or return error, then $@ is set to the error
+     message, just as with an eval().
+
+     If there is no error, then the method returns the value of the last
+     expression evaluated, or a return statement may be used, just as
+     with subroutines and *eval()*. The context (list or scalar) is
+     determined by the caller as usual.
+
+     This behaviour differs from the beta distribution of the Safe
+     extension where earlier versions of perl made it hard to mimic the
+     return behaviour of the eval() command and the context was always
+     scalar.
+
+     Some points to note:
+
+     If the entereval op is permitted then the code can use eval "..."
+     to 'hide' code which might use denied ops. This is not a major
+     problem since when the code tries to execute the eval it will fail
+     because the opmask is still in effect. However this technique would
+     allow clever, and possibly harmful, code to 'probe' the boundaries
+     of what is possible.
+
+     Any string eval which is executed by code executing in a
+     compartment, or by code called from code executing in a
+     compartment, will be eval'd in the namespace of the
+     compartment. This is potentially a serious problem.
+
+     Consider a function foo() in package pkg compiled outside a
+     compartment but shared with it. Assume the compartment has a root
+     package called 'Root'. If foo() contains an eval statement like
+     eval '$foo = 1' then, normally, $pkg::foo will be set to 1.  If
+     foo() is called from the compartment (by whatever means) then
+     instead of setting $pkg::foo, the eval will actually set
+     $Root::pkg::foo.
+
+     This can easily be demonstrated by using a module, such as the
+     Socket module, which uses eval "..." as part of an AUTOLOAD
+     function. You can 'use' the module outside the compartment and
+     share an (autoloaded) function with the compartment. If an autoload
+     is triggered by code in the compartment, or by any code anywhere
+     that is called by any means from the compartment, then the eval in
+     the Socket module's AUTOLOAD function happens in the namespace of
+     the compartment. Any variables created or used by the eval'd code
+     are now under the control of the code in the compartment.
+
+     A similar effect applies to all runtime symbol lookups in code
+     called from a compartment but not compiled within it.
+
+rdo (FILENAME)
+     This evaluates the contents of file FILENAME inside the
+     compartment.  See above documentation on the reval method for
+     further details.
+
+root (NAMESPACE)
+     This method returns the name of the package that is the root of the
+     compartment's namespace.
+
+     Note that this behaviour differs from version 1.00 of the Safe
+     module where the root module could be used to change the
+     namespace. That functionality has been withdrawn pending deeper
+     consideration.
+
+mask (MASK)
+     This is a get-or-set method for the compartment's operator mask.
+
+     With no MASK argument present, it returns the current operator mask
+     of the compartment.
+
+     With the MASK argument present, it sets the operator mask for the
+     compartment (equivalent to calling the deny_only method).
+
+
+Some Safety Issues
+------------------
+
+This section is currently just an outline of some of the things code in
+a compartment might do (intentionally or unintentionally) which can have
+an effect outside the compartment.
+
+Memory
+     Consuming all (or nearly all) available memory.
+
+CPU
+     Causing infinite loops etc.
+
+Snooping
+     Copying private information out of your system. Even something as
+     simple as your user name is of value to others. Much useful
+     information could be gleaned from your environment variables for
+     example.
+
+Signals
+     Causing signals (especially SIGFPE and SIGALARM) to affect your
+     process.
+
+     Setting up a signal handler will need to be carefully considered
+     and controlled.  What mask is in effect when a signal handler gets
+     called?  If a user can get an imported function to get an exception
+     and call the user's signal handler, does that user's restricted
+     mask get re-instated before the handler is called?  Does an
+     imported handler get called with its original mask or the user's
+     one?
+
+State Changes
+     Ops such as chdir obviously effect the process as a whole and not
+     just the code in the compartment. Ops such as rand and srand have a
+     similar but more subtle effect.
+
+
+AUTHOR
+------
+
+Originally designed and implemented by Malcolm Beattie,
+mbeattie@sable.ox.ac.uk.
+
+Reworked to use the Opcode module and other changes added by Tim Bunce
+<`Tim.Bunce@ig.co.uk'>.
+
+
+
+
+File: pm.info, Node: Search/Dict, Next: SelectSaver, Prev: Safe, Up: Module List
+
+search for key in dictionary file
+*********************************
+
+
+
+NAME
+====
+
+Search::Dict, look - search for key in dictionary file
+
+
+SYNOPSIS
+========
+
+     use Search::Dict;
+     look *FILEHANDLE, $key, $dict, $fold;
+
+
+DESCRIPTION
+===========
+
+Sets file position in FILEHANDLE to be first line greater than or equal
+(stringwise) to $key.  Returns the new file position, or -1 if an error
+occurs.
+
+The flags specify dictionary order and case folding:
+
+If *$dict* is true, search by dictionary order (ignore anything but word
+characters and whitespace).
+
+If *$fold* is true, ignore case.
+
+
+
+
+File: pm.info, Node: SelectSaver, Next: SelfLoader, Prev: Search/Dict, Up: Module List
+
+save and restore selected file handle
+*************************************
+
+
+
+NAME
+====
+
+SelectSaver - save and restore selected file handle
+
+
+SYNOPSIS
+========
+
+     use SelectSaver;
+
+     {
+        my $saver = new SelectSaver(FILEHANDLE);
+        # FILEHANDLE is selected
+     }
+     # previous handle is selected
+
+     {
+        my $saver = new SelectSaver;
+        # new handle may be selected, or not
+     }
+     # previous handle is selected
+
+
+DESCRIPTION
+===========
+
+A SelectSaver object contains a reference to the file handle that was
+selected when it was created.  If its new method gets an extra
+parameter, then that parameter is selected; otherwise, the selected file
+handle remains unchanged.
+
+When a SelectSaver is destroyed, it re-selects the file handle that was
+selected when it was created.
+
+
+
+
+File: pm.info, Node: SelfLoader, Next: Set/IntSpan, Prev: SelectSaver, Up: Module List
+
+load functions only on demand
+*****************************
+
+
+
+NAME
+====
+
+SelfLoader - load functions only on demand
+
+
+SYNOPSIS
+========
+
+     package FOOBAR;
+     use SelfLoader;
+
+     ... (initializing code)
+
+     __DATA__
+     sub {....
+
+
+DESCRIPTION
+===========
+
+This module tells its users that functions in the FOOBAR package are to
+be autoloaded from after the `__DATA__' token.  See also
+`"Autoloading"', *Note Perlsub: (perl.info)perlsub,.
+
+
+The __DATA__ token
+------------------
+
+The `__DATA__' token tells the perl compiler that the perl code for
+compilation is finished. Everything after the `__DATA__' token is
+available for reading via the filehandle FOOBAR::DATA, where FOOBAR is
+the name of the current package when the `__DATA__' token is
+reached. This works just the same as `__END__' does in package 'main',
+but for other modules data after `__END__' is not automatically
+retreivable , whereas data after `__DATA__' is.  The `__DATA__' token is
+not recognized in versions of perl prior to 5.001m.
+
+Note that it is possible to have `__DATA__' tokens in the same package
+in multiple files, and that the last `__DATA__' token in a given package
+that is encountered by the compiler is the one accessible by the
+filehandle. This also applies to `__END__' and main, i.e. if the 'main'
+program has an `__END__', but a module 'require'd (_not_ 'use'd) by that
+program has a 'package main;' declaration followed by an '`__DATA__'',
+then the `DATA' filehandle is set to access the data after the
+`__DATA__' in the module, _not_ the data after the `__END__' token in
+the 'main' program, since the compiler encounters the 'require'd file
+later.
+
+
+SelfLoader autoloading
+----------------------
+
+The SelfLoader works by the user placing the `__DATA__' token *after*
+perl code which needs to be compiled and run at 'require' time, but
+*before* subroutine declarations that can be loaded in later - usually
+because they may never be called.
+
+The SelfLoader will read from the FOOBAR::DATA filehandle to load in the
+data after `__DATA__', and load in any subroutine when it is called. The
+costs are the one-time parsing of the data after `__DATA__', and a load
+delay for the _first_ call of any autoloaded function. The benefits
+(hopefully) are a speeded up compilation phase, with no need to load
+functions which are never used.
+
+The SelfLoader will stop reading from `__DATA__' if it encounters the
+`__END__' token - just as you would expect.  If the `__END__' token is
+present, and is followed by the token DATA, then the SelfLoader leaves
+the FOOBAR::DATA filehandle open on the line after that token.
+
+The SelfLoader exports the AUTOLOAD subroutine to the package using the
+SelfLoader, and this loads the called subroutine when it is first
+called.
+
+There is no advantage to putting subroutines which will _always_ be
+called after the `__DATA__' token.
+
+
+Autoloading and package lexicals
+--------------------------------
+
+A 'my $pack_lexical' statement makes the variable $pack_lexical local
+_only_ to the file up to the `__DATA__' token. Subroutines declared
+elsewhere _cannot_ see these types of variables, just as if you declared
+subroutines in the package but in another file, they cannot see these
+variables.
+
+So specifically, autoloaded functions cannot see package lexicals (this
+applies to both the SelfLoader and the Autoloader).  The vars pragma
+provides an alternative to defining package-level globals that will be
+visible to autoloaded routines. See the documentation on vars in the
+pragma section of *Note Perlmod: (perl.info)perlmod,.
+
+
+SelfLoader and AutoLoader
+-------------------------
+
+The SelfLoader can replace the AutoLoader - just change 'use AutoLoader'
+to 'use SelfLoader' (though note that the SelfLoader exports the
+AUTOLOAD function - but if you have your own AUTOLOAD and are using the
+AutoLoader too, you probably know what you're doing), and the `__END__'
+token to `__DATA__'. You will need perl version 5.001m or later to use
+this (version 5.001 with all patches up to patch m).
+
+There is no need to inherit from the SelfLoader.
+
+The SelfLoader works similarly to the AutoLoader, but picks up the subs
+from after the `__DATA__' instead of in the 'lib/auto' directory.  There
+is a maintainance gain in not needing to run AutoSplit on the module at
+installation, and a runtime gain in not needing to keep opening and
+closing files to load subs. There is a runtime loss in needing to parse
+the code after the `__DATA__'. Details of the AutoLoader and another
+view of these distinctions can be found in that module's documentation.
+
+
+__DATA__, __END__, and the FOOBAR::DATA filehandle.
+---------------------------------------------------
+
+This section is only relevant if you want to use the `FOOBAR::DATA'
+together with the SelfLoader.
+
+Data after the `__DATA__' token in a module is read using the
+FOOBAR::DATA filehandle. `__END__' can still be used to denote the end
+of the `__DATA__' section if followed by the token DATA - this is
+supported by the SelfLoader. The `FOOBAR::DATA' filehandle is left open
+if an `__END__' followed by a DATA is found, with the filehandle
+positioned at the start of the line after the `__END__' token. If no
+`__END__' token is present, or an `__END__' token with no DATA token on
+the same line, then the filehandle is closed.
+
+The SelfLoader reads from wherever the current position of the
+`FOOBAR::DATA' filehandle is, until the EOF or `__END__'. This means
+that if you want to use that filehandle (and ONLY if you want to), you
+should either
+
+1. Put all your subroutine declarations immediately after the `__DATA__'
+token and put your own data after those declarations, using the
+`__END__' token to mark the end of subroutine declarations. You must
+also ensure that the SelfLoader reads first by calling
+'SelfLoader->load_stubs();', or by using a function which is selfloaded;
+
+or
+
+2. You should read the `FOOBAR::DATA' filehandle first, leaving the
+handle open and positioned at the first line of subroutine declarations.
+
+You could conceivably do both.
+
+
+Classes and inherited methods.
+------------------------------
+
+For modules which are not classes, this section is not relevant.  This
+section is only relevant if you have methods which could be inherited.
+
+A subroutine stub (or forward declaration) looks like
+
+     sub stub;
+
+i.e. it is a subroutine declaration without the body of the
+subroutine. For modules which are not classes, there is no real need for
+stubs as far as autoloading is concerned.
+
+For modules which ARE classes, and need to handle inherited methods,
+stubs are needed to ensure that the method inheritance mechanism works
+properly. You can load the stubs into the module at 'require' time, by
+adding the statement 'SelfLoader->load_stubs();' to the module to do
+this.
+
+The alternative is to put the stubs in before the `__DATA__' token
+BEFORE releasing the module, and for this purpose the Devel::SelfStubber
+module is available.  However this does require the extra step of
+ensuring that the stubs are in the module. If this is done I strongly
+recommend that this is done BEFORE releasing the module - it should NOT
+be done at install time in general.
+
+
+Multiple packages and fully qualified subroutine names
+======================================================
+
+Subroutines in multiple packages within the same file are supported -
+but you should note that this requires exporting the
+`SelfLoader::AUTOLOAD' to every package which requires it. This is done
+automatically by the SelfLoader when it first loads the subs into the
+cache, but you should really specify it in the initialization before the
+`__DATA__' by putting a 'use SelfLoader' statement in each package.
+
+Fully qualified subroutine names are also supported. For example,
+
+     __DATA__
+     sub foo::bar {23}
+     package baz;
+     sub dob {32}
+
+will all be loaded correctly by the SelfLoader, and the SelfLoader will
+ensure that the packages 'foo' and 'baz' correctly have the SelfLoader
+AUTOLOAD method when the data after `__DATA__' is first parsed.
+
+
+
+
+File: pm.info, Node: Set/IntSpan, Next: Set/IntegerFast, Prev: SelfLoader, Up: Module List
+
+Manages sets of integers
+************************
+
+
+
+NAME
+====
+
+Set::IntSpan - Manages sets of integers
+
+
+SYNOPSIS
+========
+
+     use Set::IntSpan qw(grep_set map_set);
+
+     $Set::IntSpan::Empty_String = $string;
+
+     $set    = new   Set::IntSpan $set_spec;
+     $valid  = valid Set::IntSpan $run_list;
+     $set    = copy  $set $set_spec;
+
+     $run_list = run_list $set;
+     @elements = elements $set;
+
+     $u_set = union      $set $set_spec;
+     $i_set = intersect  $set $set_spec;
+     $x_set = xor        $set $set_spec;
+     $d_set = diff       $set $set_spec;
+     $c_set = complement $set;
+
+     equal      $set $set_spec;
+     equivalent $set $set_spec;
+     superset   $set $set_spec;
+     subset     $set $set_spec;
+
+     $n = cardinality $set;
+
+     empty      $set;
+     finite     $set;
+     neg_inf    $set;
+     pos_inf    $set;
+     infinite   $set;
+     universal  $set;
+
+     member     $set $n;
+     insert     $set $n;
+     remove     $set $n;
+
+     $min = min $set;
+     $max = max $set;
+
+     $subset = grep_set { ... } $set;
+     $mapset = map_set  { ... } $set;
+
+     for ($element=$set->first; defined $element; $element=$set->next) { ... }
+     for ($element=$set->last ; defined $element; $element=$set->prev) { ... }
+
+     $element = $set->start($n);
+     $element = $set->current;
+
+
+REQUIRES
+========
+
+Perl 5.004, Exporter
+
+
+EXPORTS
+=======
+
+
+`@EXPORT'
+---------
+
+Nothing
+
+
+`@EXPORT_OK'
+------------
+
+`grep_set', `map_set'
+
+
+DESCRIPTION
+===========
+
+`Set::IntSpan' manages sets of integers.  It is optimized for sets that
+have long runs of consecutive integers.  These arise, for example, in
+.newsrc files, which maintain lists of articles:
+
+     alt.foo: 1-21,28,31
+     alt.bar: 1-14192,14194,14196-14221
+
+Sets are stored internally in a run-length coded form.  This provides
+for both compact storage and efficient computation.  In particular, set
+operations can be performed directly on the encoded representation.
+
+`Set::IntSpan' is designed to manage finite sets.  However, it can also
+represent some simple infinite sets, such as {x | x>n}.  This allows
+operations involving complements to be carried out consistently, without
+having to worry about the actual value of INT_MAX on your machine.
+
+
+SET SPECIFICATIONS
+==================
+
+Many of the methods take a *set specification*.  There are four kinds of
+set specifications.
+
+
+Empty
+-----
+
+If a set specification is omitted, then the empty set is assumed.  Thus,
+
+     $set = new Set::IntSpan;
+
+creates a new, empty set.  Similarly,
+
+     copy $set;
+
+removes all elements from $set.
+
+
+Object reference
+----------------
+
+If an object reference is given, it is taken to be a `Set::IntSpan'
+object.
+
+
+Array reference
+---------------
+
+If an array reference is given, then the elements of the array are taken
+to be the elements of the set.  The array may contain duplicate
+elements.  The elements of the array may be in any order.
+
+
+Run list
+--------
+
+If a string is given, it is taken to be a *run list*.  A run list
+specifies a set using a syntax similar to that in newsrc files.
+
+A run list is a comma-separated list of *runs*.  Each run specifies a
+set of consecutive integers.  The set is the union of all the runs.
+
+Runs may be written in any of several forms.
+
+
+Finite forms
+------------
+
+n
+     { n }
+
+a-b
+     {x | a<=x && x<=b}
+
+
+Infinite forms
+--------------
+
+(-n
+     {x | x<=n}
+
+n-)
+     {x | x>=n}
+
+(-)
+     The set of all integers
+
+
+Empty forms
+-----------
+
+The empty set is consistently written as '' (the null string).  It is
+also denoted by the special form '-' (a single dash).
+
+
+Restrictions
+------------
+
+The runs in a run list must be disjoint, and must be listed in
+increasing order.
+
+Valid characters in a run list are 0-9, '(', ')', '-' and ','.  White
+space and underscore (_) are ignored.  Other characters are not allowed.
+
+
+Examples
+--------
+
+ -
+     { }
+
+ 1
+     { 1 }
+
+ 1-2
+     { 1, 2 }
+
+ -5--1
+     { -5, -4, -3, -2, -1 }
+
+ (-)
+     the integers
+
+ (--1
+     the negative integers
+
+ 1-3, 4, 18-21
+     { 1, 2, 3, 4, 18, 19, 20, 21 }
+
+
+ITERATORS
+=========
+
+Each set has a single *iterator*, which is shared by all calls to
+`first', last, `start', next, `prev', and `current'.  At all times, the
+iterator is either an element of the set, or undef.
+
+`first', last, and `start' set the iterator; next, and `prev' move it;
+and `current' returns it.  Calls to these methods may be freely
+intermixed.
+
+Using next and `prev', a loop can move both forwards and backwards
+through a single set.  Using `start', a loop can iterate over portions
+of an infinite set.
+
+
+METHODS
+=======
+
+
+Creation
+--------
+
+$set = new `Set::IntSpan' *$set_spec*
+     Creates and returns a `Set::IntSpan' object.  The initial contents
+     of the set are given by *$set_spec*.
+
+$ok = `valid' `Set::IntSpan' $run_list
+     Returns true if $run_list is a valid run list.  Otherwise, returns
+     false and leaves an error message in $@.
+
+$set = copy $set *$set_spec*
+     Copies *$set_spec* into $set.  The previous contents of $set are
+     lost.  For convenience, copy returns $set.
+
+$run_list = `run_list' $set
+     Returns a run list that represents $set.  The run list will not
+     contain white space.  $set is not affected.
+
+     By default, the empty set is formatted as '-'; a different string
+     may be specified in `$Set::IntSpan::Empty_String'.
+
+*@elements* = `elements' $set
+     Returns an array containing the elements of $set.  The elements
+     will be sorted in numerical order.  In scalar context, returns an
+     array reference.  $set is not affected.
+
+
+Set operations
+--------------
+
+$u_set = `union' $set *$set_spec*
+     Returns the set of integers in either $set or *$set_spec*.
+
+$i_set = `intersect' $set *$set_spec*
+     Returns the set of integers in both $set and *$set_spec*.
+
+$x_set = `xor' $set *$set_spec*
+     Returns the set of integers in $set or *$set_spec*, but not both.
+
+$d_set = `diff' $set *$set_spec*
+     Returns the set of integers in $set but not in *$set_spec*.
+
+$c_set = `complement' $set
+     Returns the set of integers that are not in $set.
+
+For all set operations, a new `Set::IntSpan' object is created and
+returned.  The operands are not affected.
+
+
+Comparison
+----------
+
+`equal' $set *$set_spec*
+     Returns true iff $set and *$set_spec* contain the same elements.
+
+`equivalent' $set *$set_spec*
+     Returns true iff $set and *$set_spec* contain the same number of
+     elements.  All infinite sets are equivalent.
+
+`superset' $set *$set_spec*
+     Returns true iff $set is a superset of *$set_spec*.
+
+`subset' $set *$set_spec*
+     Returns true iff $set is a subset of *$set_spec*.
+
+
+Cardinality
+-----------
+
+$n = `cardinality' $set
+     Returns the number of elements in $set.  Returns -1 for infinite
+     sets.
+
+empty $set
+     Returns true iff $set is empty.
+
+`finite' $set
+     Returns true iff $set is finite.
+
+`neg_inf' $set
+     Returns true iff $set contains {x | x<n} for some n.
+
+`pos_inf' $set
+     Returns true iff $set contains {x | x>n} for some n.
+
+`infinite' $set
+     Returns true iff $set is infinite.
+
+universal $set
+     Returns true iff $set contains all integers.
+
+
+Membership
+----------
+
+`member' $set $n
+     Returns true iff the integer $n is a member of $set.
+
+insert $set $n
+     Inserts the integer $n into $set.  Does nothing if $n is already a
+     member of $set.
+
+remove $set $n
+     Removes the integer $n from $set.  Does nothing if $n is not a
+     member of $set.
+
+
+Extrema
+-------
+
+min $set
+     Returns the smallest element of $set, or undef if there is none.
+
+max $set
+     Returns the largest element of $set, or undef if there is none.
+
+
+Iterators
+---------
+
+$set->`first'
+     Sets the iterator for $set to the smallest element of $set.  If
+     there is no smallest element, sets the iterator to undef.  Returns
+     the iterator.
+
+$set->last
+     Sets the iterator for $set to the largest element of $set.  If
+     there is no largest element, sets the iterator to undef.  Returns
+     the iterator.
+
+$set->`start'($n)
+     Sets the iterator for $set to $n.  If $n is not an element of $set,
+     sets the iterator to undef.  Returns the iterator.
+
+$set->next
+     Sets the iterator for $set to the next element of $set.  If there
+     is no next element, sets the iterator to undef.  Returns the
+     iterator.
+
+     next will return undef only once; the next call to next will reset
+     the iterator to the smallest element of $set.
+
+$set->`prev'
+     Sets the iterator for $set to the previous element of $set.  If
+     there is no previous element, sets the iterator to undef.  Returns
+     the iterator.
+
+     `prev' will return undef only once; the next call to `prev' will
+     reset the iterator to the largest element of $set.
+
+$set->`current'
+     Returns the iterator for $set.
+
+
+FUNCTIONS
+=========
+
+$sub_set = `grep_set' { ... } $set
+     Evaluates the BLOCK for each integer in $set (locally setting $_ to
+     each integer) and returns a `Set::IntSpan' object containing those
+     integers for which the BLOCK returns TRUE.
+
+     Returns undef if $set is infinite.
+
+$map_set = `map_set' { ... } $set
+     Evaluates the BLOCK for each integer in $set (locally setting $_ to
+     each integer) and returns a `Set::IntSpan' object containg all the
+     integers returned as results of all those evaluations.
+
+     Evaluates the BLOCK in list context, so each element of $set may
+     produce zero, one, or more elements in the returned set.
+
+     Returns undef if $set is infinite.
+
+
+CLASS VARIABLES
+===============
+
+`$Set::IntSpan::Empty_String'
+     `$Set::IntSpan::Empty_String' contains the string that is returned
+     when `run_list' is called on the empty set.  `$Empty_String' is
+     initially '-'; alternatively, it may be set to ''.  Other values
+     should be avoided, to ensure that `run_list' always returns a valid
+     run list.
+
+     `run_list' accesses `$Empty_String' through a reference stored in
+     $set->{`empty_string'}.  Subclasses that wish to override the value
+     of `$Empty_String' can reassign this reference.
+
+
+DIAGNOSTICS
+===========
+
+Any method (except `valid') will die if it is passed an invalid run
+list.
+
+`Set::IntSpan::_copy_run_list: Bad syntax:' *$runList*
+     (F) $run_list has bad syntax
+
+`Set::IntSpan::_copy_run_list: Bad order:' *$runList*
+     (F) $run_list has overlapping runs or runs that are out of order.
+
+`Set::IntSpan::elements: infinite set'
+     (F) An infinte set was passed to `elements'.
+
+Out of memory!
+     (X) `elements' $set can generate an "Out of memory!"  message on
+     sufficiently large finite sets.
+
+
+NOTES
+=====
+
+
+Traps
+-----
+
+Beware of forms like
+
+     union $set [1..5];
+
+This passes an element of @set to union, which is probably not what you
+want.  To force interpretation of $set and [1..5] as separate arguments,
+use forms like
+
+     union $set +[1..5];
+
+or
+
+     $set->union([1..5]);
+
+
+Cardinality
+-----------
+
+You cannot use the obvious comparison routine
+
+     { $a->cardinality <=> $b->cardinality }
+
+to sort sets by size, because `cardinality' returns -1 for infinte sets.
+(All the non-negative integers were taken. Sorry.)
+
+Instead, you have to write something like
+
+     {  my $a_card = $a->cardinality;
+        my $b_card = $b->cardinality;
+   
+        $a_card == $b_card and return  0;
+        $a_card <  0       and return  1;
+        $b_card <  0       and return -1;
+        $a_card <=> $b_card                }
+
+
+grep_set and map_set
+--------------------
+
+`grep_set' and `map_set' make it easy to construct sets for which the
+internal representation used by `Set::IntSpan' is *not* small.
+Consider:
+
+     $billion = new Set::IntSpan '0-1_000_000_000';   # OK
+     $odd     = grep_set { $_ & 1 } $billion;         # trouble
+     $even    = map_set  { $_ * 2 } $billion;         # double trouble
+
+
+Error handling
+--------------
+
+There are two common approaches to error handling: exceptions and return
+codes.  There seems to be some religion on the topic, so `Set::IntSpan'
+provides support for both.
+
+To catch exceptions, protect method calls with an eval:
+
+     $run_list = <STDIN>;
+     eval { $set = new Set::IntSpan $run_list };
+     $@ and print "$@: try again\n";
+
+To check return codes, use an appropriate method call to validate
+arguments:
+
+     $run_list = <STDIN>;
+     if (valid Set::IntSpan $run_list) 
+        { $set = new Set::IntSpan $run_list }
+     else
+        { print "$@ try again\n" }
+
+Similarly, use `finite' to protect calls to `elements':
+
+     finite $set and @elements = elements $set;
+
+Calling `elements' on a large, finite set can generate an "Out of
+memory!" message, which cannot (easily) be trapped.  Applications that
+must retain control after an error can use `intersect' to protect calls
+to `elements':
+
+     @elements = elements { intersect $set "-1_000_000 - 1_000_000" };
+
+or check the size of $set first:
+
+     finite $set and cardinality $set < 2_000_000 and @elements = elements $set;
+
+
+Limitations
+-----------
+
+Although `Set::IntSpan' can represent some infinite sets, it does *not*
+perform infinite-precision arithmetic.  Therefore, finite elements are
+restricted to the range of integers on your machine.
+
+
+Roots
+-----
+
+The sets implemented here are based on a Macintosh data structure called
+a *region*.  See Inside Macintosh for more information.
+
+
+AUTHOR
+======
+
+Steven McDougall, swmcd@world.std.com
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996, 1997 Steven McDougall.  All rights reserved.  This
+module is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Set/IntegerFast, Next: Set/IntegerRange, Prev: Set/IntSpan, Up: Module List
+
+Sets of Integers
+****************
+
+
+
+NAME
+====
+
+Set::IntegerFast - Sets of Integers
+
+Easy manipulation of sets of integers (intervals from zero to some
+positive integer)
+
+
+SYNOPSIS
+========
+
+Please refer to `Bit::Vector(3)' in this node for an overview and
+description of the methods supplied by this module!
+
+
+DESCRIPTION
+===========
+
+This module is kept "alive" for backward compatibility only; it is
+strongly recommended that you use the "Bit::Vector" module in your
+application(s) instead!
+
+You will need to apply the following changes to your existing
+application(s):
+
+     "Set::IntegerFast"    -->    "Bit::Vector"         (required)
+
+     "Empty_Interval("     -->    "Interval_Empty("     (recommended)
+     "Fill_Interval("      -->    "Interval_Fill("      (recommended)
+     "Flip_Interval("      -->    "Interval_Flip("      (recommended)
+     "Delete("             -->    "Bit_On("             (recommended)
+     "Insert("             -->    "Bit_Off("            (recommended)
+     "flip("               -->    "bit_flip("           (recommended)
+     "in("                 -->    "bit_test("           (recommended)
+     "in("                 -->    "contains("           (alternative)
+     "inclusion("          -->    "subset("             (recommended)
+
+Please refer to the file "CHANGES" in the "Bit::Vector" distribution for
+more details!
+
+
+SEE ALSO
+========
+
+Bit::Vector(3), Set::IntegerRange(3), Math::MatrixBool(3),
+Math::MatrixReal(3), DFA::Kleene(3), Math::Kleene(3), Graph::Kruskal(3).
+
+
+VERSION
+=======
+
+This man page documents "Set::IntegerFast" version 4.2.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995, 1996, 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE
+=======
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Set/IntegerRange, Next: Shell, Prev: Set/IntegerFast, Up: Module List
+
+Sets of Integers
+****************
+
+
+
+NAME
+====
+
+Set::IntegerRange - Sets of Integers
+
+Easy manipulation of sets of integers (arbitrary intervals)
+
+
+SYNOPSIS
+========
+
+
+METHODS
+-------
+
+     Version
+         $version = $Set::IntegerRange::VERSION;
+
+     new
+         $set = new Set::IntegerRange($lower,$upper);
+         $set = Set::IntegerRange->new($lower,$upper);
+         $set = $any_set->new($lower,$upper);
+
+     Resize
+         $set->Resize($lower,$upper);
+
+     Size
+         ($lower,$upper) = $set->Size();
+
+     Empty
+         $set->Empty();
+
+     Fill
+         $set->Fill();
+
+     Flip
+         $set->Flip();
+
+     Interval_Empty
+         $set->Interval_Empty($lower,$upper);
+         $set->Empty_Interval($lower,$upper); # (deprecated)
+
+     Interval_Fill
+         $set->Interval_Fill($lower,$upper);
+         $set->Fill_Interval($lower,$upper);  # (deprecated)
+
+     Interval_Flip
+         $set->Interval_Flip($lower,$upper);
+         $set->Flip_Interval($lower,$upper);  # (deprecated)
+
+     Interval_Scan_inc
+         while (($min,$max) = $set->Interval_Scan_inc($start))
+
+     Interval_Scan_dec
+         while (($min,$max) = $set->Interval_Scan_dec($start))
+
+     Bit_Off
+         $set->Bit_Off($index);
+         $set->Delete($index);                # (deprecated)
+
+     Bit_On
+         $set->Bit_On($index);
+         $set->Insert($index);                # (deprecated)
+
+     bit_flip
+         $bit = $set->bit_flip($index);
+         if ($set->bit_flip($index))
+         $bit = $set->flip($index);           # (deprecated)
+         if ($set->flip($index))              # (deprecated)
+
+     bit_test
+         $bit = $set->bit_test($index);
+         if ($set->bit_test($index))
+         $bit = $set->contains($index);
+         if ($set->contains($index))
+         $bit = $set->in($index);             # (deprecated)
+         if ($set->in($index))                # (deprecated)
+
+     Norm
+         $norm = $set->Norm();
+
+     Min
+         $min = $set->Min();
+
+     Max
+         $max = $set->Max();
+
+     Union
+         $set1->Union($set2,$set3);           # in-place is possible!
+
+     Intersection
+         $set1->Intersection($set2,$set3);    # in-place is possible!
+
+     Difference
+         $set1->Difference($set2,$set3);      # in-place is possible!
+
+     ExclusiveOr
+         $set1->ExclusiveOr($set2,$set3);     # in-place is possible!
+
+     Complement
+         $set1->Complement($set2);            # in-place is possible!
+
+     is_empty
+         if ($set->is_empty())
+
+     is_full
+         if ($set->is_full())
+
+     equal
+         if ($set1->equal($set2))
+
+     subset
+         if ($set1->subset($set2))
+         if ($set1->inclusion($set2))         # (deprecated)
+
+     lexorder
+         if ($set1->lexorder($set2))
+
+     Compare
+         $cmp = $set1->Compare($set2);
+
+     Copy
+         $set1->Copy($set2);
+
+     Shadow
+         $other_set = $some_set->Shadow();
+
+     Clone
+         $twin_set = $some_set->Clone();
+
+     to_ASCII
+         $string = $set->to_ASCII();          # e.g., "-8..-5,-1..2,4,6..9"
+
+     from_ASCII
+         eval { $set->from_ASCII($string); };
+
+     to_String
+         $string = $set->to_String();         # e.g., "0007AF1E"
+
+     from_String
+         eval { $set->from_String($string); };
+
+     BitVector
+         $set->BitVector->any_Bit_Vector_method();
+
+
+OVERLOADED OPERATORS
+--------------------
+
+     # "$index" is a number or a Perl scalar variable containing a
+     # number which represents the set containing only that element:
+
+     Emptyness
+         if ($set) # if not empty
+         if (! $set) # if empty
+         unless ($set) # if empty
+
+     Equality
+         if ($set1 == $set2)
+         if ($set1 != $set2)
+         if ($set == $index)
+         if ($set != $index)
+
+     Lexical Comparison
+         $cmp = $set1 cmp $set2;
+         if ($set1 lt $set2)
+         if ($set1 le $set2)
+         if ($set1 gt $set2)
+         if ($set1 ge $set2)
+         if ($set1 eq $set2)
+         if ($set1 ne $set2)
+         $cmp = $set cmp $index;
+         if ($set lt $index)
+         if ($set le $index)
+         if ($set gt $index)
+         if ($set ge $index)
+         if ($set eq $index)
+         if ($set ne $index)
+
+     String Conversion
+         $string = "$set";
+         print "\$set = '$set'\n";
+
+     Union
+         $set1 = $set2 + $set3;
+         $set1 += $set2;
+         $set1 = $set2 | $set3;
+         $set1 |= $set2;
+         $set1 = $set2 + $index;
+         $set += $index;
+         $set1 = $set2 | $index;
+         $set |= $index;
+
+     Intersection
+         $set1 = $set2 * $set3;
+         $set1 *= $set2;
+         $set1 = $set2 & $set3;
+         $set1 &= $set2;
+         $set1 = $set2 * $index;
+         $set *= $index;
+         $set1 = $set2 & $index;
+         $set &= $index;
+
+     Difference
+         $set1 = $set2 - $set3;
+         $set1 -= $set2;
+         $set1 = $set2 - $set1;
+         $set1 = $set2 - $index;
+         $set1 = $index - $set2;
+         $set -= $index;
+
+     ExclusiveOr
+         $set1 = $set2 ^ $set3;
+         $set1 ^= $set2;
+         $set1 = $set2 ^ $index;
+         $set ^= $index;
+
+     Complement
+         $set1 = -$set2;
+         $set1 = ~$set2;
+         $set = -$set;
+         $set = ~$set;
+
+     Subset Relationship
+         if ($set1 <= $set2)
+
+     True Subset Relationship
+         if ($set1 < $set2)
+
+     Superset Relationship
+         if ($set1 >= $set2)
+
+     True Superset Relationship
+         if ($set1 > $set2)
+
+     Norm
+         $norm = abs($set);
+
+
+DESCRIPTION
+===========
+
+This class lets you dynamically create sets of arbitrary intervals of
+integers and perform all the basic operations for sets on them (for a
+list of available methods and operators, see above).
+
+See `Bit::Vector(3)' in this node for more details!
+
+
+SEE ALSO
+========
+
+Bit::Vector(3), Set::IntegerFast(3), Math::MatrixBool(3),
+Math::MatrixReal(3), DFA::Kleene(3), Math::Kleene(3), Graph::Kruskal(3).
+
+
+VERSION
+=======
+
+This man page documents "Set::IntegerRange" version 4.2.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996, 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE
+=======
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Shell, Next: Socket, Prev: Set/IntegerRange, Up: Module List
+
+run shell commands transparently within perl
+********************************************
+
+
+
+NAME
+====
+
+Shell - run shell commands transparently within perl
+
+
+SYNOPSIS
+========
+
+See below.
+
+
+DESCRIPTION
+===========
+
+     Date: Thu, 22 Sep 94 16:18:16 -0700
+     Message-Id: <9409222318.AA17072@scalpel.netlabs.com>
+     To: perl5-porters@isu.edu
+     From: Larry Wall <lwall@scalpel.netlabs.com>
+     Subject: a new module I just wrote
+
+Here's one that'll whack your mind a little out.
+
+     #!/usr/bin/perl
+
+     use Shell;
+
+     $foo = echo("howdy", "<funny>", "world");
+     print $foo;
+
+     $passwd = cat("</etc/passwd");
+     print $passwd;
+
+     sub ps;
+     print ps -ww;
+
+     cp("/etc/passwd", "/tmp/passwd");
+
+That's maybe too gonzo.  It actually exports an AUTOLOAD to the current
+package (and uncovered a bug in Beta 3, by the way).  Maybe the usual
+usage should be
+
+     use Shell qw(echo cat ps cp);
+
+Larry
+
+
+AUTHOR
+======
+
+Larry Wall
+
+
+
+
+File: pm.info, Node: Socket, Next: Sort/PolySort, Prev: Shell, Up: Module List
+
+load the C socket.h defines and structure manipulators
+******************************************************
+
+
+
+NAME
+====
+
+Socket, sockaddr_in, sockaddr_un, inet_aton, inet_ntoa - load the C
+socket.h defines and structure manipulators
+
+
+SYNOPSIS
+========
+
+     use Socket;
+
+     $proto = getprotobyname('udp');
+     socket(Socket_Handle, PF_INET, SOCK_DGRAM, $proto);
+     $iaddr = gethostbyname('hishost.com');
+     $port = getservbyname('time', 'udp');
+     $sin = sockaddr_in($port, $iaddr);
+     send(Socket_Handle, 0, 0, $sin);
+
+     $proto = getprotobyname('tcp');
+     socket(Socket_Handle, PF_INET, SOCK_STREAM, $proto);
+     $port = getservbyname('smtp');
+     $sin = sockaddr_in($port,inet_aton("127.1"));
+     $sin = sockaddr_in(7,inet_aton("localhost"));
+     $sin = sockaddr_in(7,INADDR_LOOPBACK);
+     connect(Socket_Handle,$sin);
+
+     ($port, $iaddr) = sockaddr_in(getpeername(Socket_Handle));
+     $peer_host = gethostbyaddr($iaddr, AF_INET);
+     $peer_addr = inet_ntoa($iaddr);
+
+     $proto = getprotobyname('tcp');
+     socket(Socket_Handle, PF_UNIX, SOCK_STREAM, $proto);
+     unlink('/tmp/usock');
+     $sun = sockaddr_un('/tmp/usock');
+     connect(Socket_Handle,$sun);
+
+
+DESCRIPTION
+===========
+
+This module is just a translation of the C `socket.h' file.  Unlike the
+old mechanism of requiring a translated `socket.ph' file, this uses the
+h2xs program (see the Perl source distribution) and your native C
+compiler.  This means that it has a far more likely chance of getting
+the numbers right.  This includes all of the commonly used pound-defines
+like AF_INET, SOCK_STREAM, etc.
+
+In addition, some structure manipulation functions are available:
+
+inet_aton HOSTNAME
+     Takes a string giving the name of a host, and translates that to
+     the 4-byte string (structure). Takes arguments of both the
+     'rtfm.mit.edu' type and '18.181.0.24'. If the host name cannot be
+     resolved, returns undef. For multi-homed hosts (hosts with more
+     than one address), the first address found is returned.
+
+inet_ntoa IP_ADDRESS
+     Takes a four byte ip address (as returned by inet_aton()) and
+     translates it into a string of the form 'd.d.d.d' where the 'd's
+     are numbers less than 256 (the normal readable four dotted number
+     notation for internet addresses).
+
+INADDR_ANY
+     Note: does not return a number, but a packed string.
+
+     Returns the 4-byte wildcard ip address which specifies any of the
+     hosts ip addresses. (A particular machine can have more than one ip
+     address, each address corresponding to a particular network
+     interface. This wildcard address allows you to bind to all of them
+     simultaneously.)  Normally equivalent to inet_aton('0.0.0.0').
+
+INADDR_BROADCAST
+     Note: does not return a number, but a packed string.
+
+     Returns the 4-byte 'this-lan' ip broadcast address.  This can be
+     useful for some protocols to solicit information from all servers
+     on the same LAN cable.  Normally equivalent to
+     inet_aton('255.255.255.255').
+
+INADDR_LOOPBACK
+     Note - does not return a number.
+
+     Returns the 4-byte loopback address. Normally equivalent to
+     inet_aton('localhost').
+
+INADDR_NONE
+     Note - does not return a number.
+
+     Returns the 4-byte 'invalid' ip address. Normally equivalent to
+     inet_aton('255.255.255.255').
+
+sockaddr_in PORT, ADDRESS
+sockaddr_in SOCKADDR_IN
+     In an array context, unpacks its SOCKADDR_IN argument and returns
+     an array consisting of (PORT, ADDRESS).  In a scalar context, packs
+     its (PORT, ADDRESS) arguments as a SOCKADDR_IN and returns it.  If
+     this is confusing, use pack_sockaddr_in() and unpack_sockaddr_in()
+     explicitly.
+
+pack_sockaddr_in PORT, IP_ADDRESS
+     Takes two arguments, a port number and a 4 byte IP_ADDRESS (as
+     returned by inet_aton()). Returns the sockaddr_in structure with
+     those arguments packed in with AF_INET filled in.  For internet
+     domain sockets, this structure is normally what you need for the
+     arguments in bind(), connect(), and send(), and is also returned by
+     getpeername(), getsockname() and recv().
+
+unpack_sockaddr_in SOCKADDR_IN
+     Takes a sockaddr_in structure (as returned by pack_sockaddr_in())
+     and returns an array of two elements: the port and the 4-byte
+     ip-address.  Will croak if the structure does not have AF_INET in
+     the right place.
+
+sockaddr_un PATHNAME
+sockaddr_un SOCKADDR_UN
+     In an array context, unpacks its SOCKADDR_UN argument and returns
+     an array consisting of (PATHNAME).  In a scalar context, packs its
+     PATHNAME arguments as a SOCKADDR_UN and returns it.  If this is
+     confusing, use pack_sockaddr_un() and unpack_sockaddr_un()
+     explicitly.  These are only supported if your system has
+     <`sys/un.h'>.
+
+pack_sockaddr_un PATH
+     Takes one argument, a pathname. Returns the sockaddr_un structure
+     with that path packed in with AF_UNIX filled in. For unix domain
+     sockets, this structure is normally what you need for the arguments
+     in bind(), connect(), and send(), and is also returned by
+     getpeername(), getsockname() and recv().
+
+unpack_sockaddr_un SOCKADDR_UN
+     Takes a sockaddr_un structure (as returned by pack_sockaddr_un())
+     and returns the pathname.  Will croak if the structure does not
+     have AF_UNIX in the right place.
+
+
+
+

@@ -1,0 +1,1817 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: SyslogScan/SendmailUtil, Next: SyslogScan/Summary, Prev: SyslogScan/SendmailLineTo, Up: Module List
+
+utilities for sendmail packages.
+********************************
+
+
+
+NAME
+====
+
+SendmailUtil.pm -- utilities for sendmail packages.
+
+
+SYNOPSIS
+========
+
+     use SyslogScan::SendmailUtil;
+
+     open(FH,"/var/log/syslog");
+     my $transfer;
+     while ($transfer = SyslogScan::SendmailUtil::getNextMailTranfer(\*FH))
+     {
+        # process the tranfer
+     }
+
+
+DESCRIPTION
+===========
+
+getNextMailTransfer queries a filehandle pointing to a syslog for the
+next line which is a sendmail 'To:', 'From:', and 'Clone:' lines, and
+returns a SyslogScan::SendmailLineFrom, SyslogScan::SendmailLineTo, or
+SyslogScan::SendmailLineClone object.
+
+
+canonAddress() routine
+======================
+
+The canonAddress() routine modifies the address of the Sendmail routines
+to be all-lowercase, remove enclosing brackets, and append '@localhost'
+to local addresses.  Modifying this routine will change how SyslogScan
+canonicalizes.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/SendmailLineFrom: SyslogScan/SendmailLineFrom,, *Note SyslogScan/SendmailLineTo: SyslogScan/SendmailLineTo,,
+*Note SyslogScan/SyslogEntry: SyslogScan/SyslogEntry,
+
+
+
+File: pm.info, Node: SyslogScan/Summary, Next: SyslogScan/SyslogEntry, Prev: SyslogScan/SendmailUtil, Up: Module List
+
+encapsulates a tally of how many bytes people have sent and received through sendmail
+*************************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::Summary -- encapsulates a tally of how many bytes people
+have sent and received through sendmail
+
+
+SYNOPSIS
+========
+
+     Use SyslogScan::Summary;
+     Use SyslogScan::DeliveryIterator;
+
+     my $iter = new SyslogScan::DeliveryIterator(syslogList => 
+     						[/var/log/syslog]);
+     my $summary;
+     if (defined $DOING_IT_THE_HARD_WAY_FOR_NO_PARTICULAR_REASON)
+     {
+     	# feed a series of SyslogScan::Delivery objects
+     	$summary = new SyslogScan::Summary();
+     	my $delivery;
+     	while ($delivery = $iter -> next())
+     	{
+     	    $summary -> registerDelivery($delivery);
+
+     # You would instead use:
+     # $summary -> registerDelivery($delivery,'foo\.com\.$')
+     # if you only cared to get statistics relating to how
+     # much mail users at foo.com sent or received.
+     	}
+         }
+         else
+         {
+     	# slurps up all deliveries in the iterator,
+     	# producing the same effect as the block above
+     	$summary = new SyslogScan::Summary($iter);
+         }
+
+     print $summary -> dump();
+
+     use SyslogScan::Usage;
+     my $usage = $$summary{'john_doe@foo.com'};
+     if (defined $usage)
+     {
+     	print "Here is the usage of John Doe at foo.com:\n";
+     	print $usage -> dump();
+     }
+     else
+     {
+         print "John Doe has neither sent nor received messages lately.\n";
+     }
+
+
+DESCRIPTION
+===========
+
+A SyslogScan::Summary object will 'register' a series of
+SyslogScan::Delivery objects.  All registered deliveries are grouped by
+sender and receiver e-mail addresses, and then added up.  Three sums are
+kept: Total Bytes Recieved, Total Bytes Sent, and Total Bytes Broadcast.
+
+
+Methods
+-------
+
+static new() method
+     new takes as arguments a (possibly null) list of
+     SyslogScan::DeliveryIterator objects, from which it extracts and
+     registers all queued deliveries.
+
+registerDelivery() method
+     *registerDelivery* takes as its first argument a SyslogScan::Delivery
+     object followed by up to two optional patterns.  If the first
+     pattern is specified, only those e-mail addresses which match the
+     pattern are tallied.  This enables you to create an accounting
+     summary for only those users at your site.
+
+     If the second pattern is also specified, then deliveries will only
+     be registered to the person matched by the first pattern if the
+     second pattern matches the address at 'the other end of the pipe'.
+
+     Pattern-matches are case-insensitive.  Remember the '(?!regexp)'
+     operation if you want only addresses which do _not_ match the
+     pattern to get passed through the filter.  For example, if mail to
+     or from 'support' is exempt from billing charges, note that the
+     pattern-match
+
+     /^(?!support)/
+
+     does _not_ match 'support@foo.com' but _does_ match
+     'random_guy@foo.com'.
+
+registerAllInIterators() method
+     Takes as parameters two patterns and a list of iterators, then
+     feeds deliveries in the iterators and the patterns to
+     registerDelivery().
+
+     For example:
+
+          $sum -> registerAllInIterators('foo\.com$','^(?!.*bar\.com$)',@iterList)
+
+     will bill users at foo.com for all mail extracted from @iterList
+     which was sent from foo.com to somewhere besides bar.com, or sent
+     to foo.com from somewhere besides bar.com.
+
+dump() method
+     dump returns a string containing address lines alternating with
+     usage reports.  Usage reports are in the form:
+
+          B#,Bb        S#,Sb        R#,Rb
+
+     Where:
+
+     B# is the number of messages broadcast B# is the total number of
+     bytes broadcast
+
+     S# is the number of messages sent S# is the total number of bytes
+     sent
+
+     R# is the number of messages received R# is the total number of
+     bytes received
+
+persist() method
+     *persist* takes as its single argument an output file-handle, and
+     then persists the state of the summary to the file.
+
+static restore() method
+     restore takes as its single argument an input file-handle which
+     stores the results of a previous persist() command, and then
+     returns a copy of the object in the state in which it was
+     originally persisted.
+
+addSummary() method
+     *addSummary* takes as its single argument a second
+     SyslogScan::Summary object, and then adds this second summary to
+     the $self object.
+
+
+Example of use
+--------------
+
+Suppose I have a function getTodaySummary() which gets a Summary of the
+last 24 hours of sendmail logging.
+
+     my $summary = getTodaySummary();
+     open(SUMMARY1,">summary1.sav");
+     $summary -> persist(\*SUMMARY1);
+     close(SUMMARY1);
+     exit 0;
+
+     # wait 24 hours
+
+     my $summary = getTodaySummary();
+     open(SUMMARY2,">summary2.sav");
+     $summary -> persist(\*SUMMARY2);
+     close(SUMMARY2);
+     exit 0;
+
+     # some time later, you decide you want a summary of the total
+     # for both days.  So, you write this program:
+
+     open(INSUM1,"summary1.sav");
+     my $sum = SyslogScan::Summary -> restore(\*INSUM1);
+
+     open(INSUM2,"summary2.sav");
+     my $sum2 = SyslogScan::Summary -> restore(\*INSUM2);
+
+     $sum -> addSummary($sum2);
+     print "Here is the grand total for both days:\n\n";
+     print $sum -> dump();
+
+
+Internals
+---------
+
+A SyslogScan::Summary object is a hash of SyslogScan::Usage objects,
+where the key is the e-mail address of the user in question.
+SyslogScan::Usage has its own man page which describes how to extract
+information without having to use the dump() method.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/Usage: SyslogScan/Usage,, *Note SyslogScan/DeliveryIterator: SyslogScan/DeliveryIterator,,
+*Note SyslogScan/Delivery: SyslogScan/Delivery,, *Note SyslogScan/ByGroup: SyslogScan/ByGroup,
+
+
+
+File: pm.info, Node: SyslogScan/SyslogEntry, Next: SyslogScan/Usage, Prev: SyslogScan/Summary, Up: Module List
+
+parses generic lines in syslog files.
+*************************************
+
+
+
+NAME
+====
+
+SyslogScan::SyslogEntry -- parses generic lines in syslog files.
+
+
+SYNOPSIS
+========
+
+     use SyslogScan::SyslogEntry;
+
+     open(FH,"/var/log/syslog");
+
+     my $entry;
+
+     # reads from filehandle $fh and returns an object
+     # of a subclass of SyslogEntry.
+     while ($entry = new SyslogScan::SyslogEntry (\*FH))
+     {
+     	# process $entry
+     }
+
+
+DESCRIPTION
+===========
+
+All Syslog object share these data structures: month, day, time,
+machine, executable, tag (optional), content.
+
+For example, if a syslog line looks like:
+
+Jun 13 02:32:27 satellife in.identd[25994]: connect from
+mail.missouri.edu
+
+then the line returned by 'new SyslogEntry' will return a
+SyslogEntry-derived object with at least this set of parameters:
+
+     month => Jun,
+     day => 13,
+     time => 02:32:27,
+     machine => satellife,
+     executable => in.identd,
+     tag => 25994,
+     content => connect from mail.missouri.edu,
+     unix_time => 834633147,
+     raw => Jun 13 02:32:27 satellife in.identd[25994]: connect from mail.missouri.edu
+
+Since the executable is 'in.identd', SyslogEntry.pm will look for a
+class called "SyslogScan::In_identdLine" derived from SyslogEntry, and
+attempt to call that class's parseContent method.  If no such
+In_identdLine class is in use, then the returned object is of the
+default "SyslogScan::UnsupportedEntry" class.
+
+If the In_identdLine class throws a die() exception, SyslogEntry.pm will
+catch the die() and return a "SyslogScan::BotchedEntry" object
+containing the exception in "$errorString" and the failed handler in
+"brokenHandler".
+
+"new SyslogEntry" returns the undefined value if at EOF.
+
+
+BUGS
+====
+
+In retrospect, this model of passing control to subclasses based on the
+name of the controlling program doesn't work exceptionally elegantly in
+perl.  I would probably do it more conventionally if I had it to do over
+again.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+Thanks to Allen S. Rout for his code contributions.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/SendmailLine: SyslogScan/SendmailLine,
+
+
+
+File: pm.info, Node: SyslogScan/Usage, Next: SyslogScan/WhereIs, Prev: SyslogScan/SyslogEntry, Up: Module List
+
+encapsulates the total volumes of mail broadcast, sent, and received through sendmail by a single user or group.
+****************************************************************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::Usage -- encapsulates the total volumes of mail broadcast,
+sent, and received through sendmail by a single user or group.
+
+SyslogScan::Volume -- encapsulates a number of messages along with a
+total number of bytes
+
+
+SYNOPSIS
+========
+
+# $summary is a SyslogScan::Summary object
+
+use SyslogScan::Usage; my $usage = $$summary{'john_doe@foo.com'}; $usage
+-> dump();
+
+use SyslogScan::Volume; my $broadcastVolume = $usage ->
+getBroadcastVolume(); my $sendVolume = $usage -> getSendVolume(); my
+$receiveVolume = $usage -> getReceiveVolume();
+
+print "John Doe sent $$sendVolume[0] messages with $$sendVolume[1]
+bytes\n";
+
+
+DESCRIPTION
+===========
+
+
+Broadcast, Send, and Receive
+----------------------------
+
+Volume of messages received has the obvious meaning.  Volume of messages
+sent and volume of messages broadcast require more explanation.
+
+If I send out a message which has three recipients, then for the
+purposes of the SyslogScan modules, I am *broadcasting* the message
+once, but I am *sending* it three times.
+
+
+Usage methods
+-------------
+
+new() method
+     Creates a new, empty Usage object.
+
+addUsage() method and deepCopy() method
+          # $usage1 is 4 messages of 100 bytes Received
+          # $usage2 is 1 message of 35 bytes Received
+
+          my $usageTotal = $usage1 -> deepCopy();
+          # $usageTotal is 4 messages of 100 bytes Received
+
+          $usageTotal -> addUsage($usage2);
+          # $usageTotal is 5 messages of 135 bytes Received
+
+     Note that because we used deepCopy, *$usage1* is still 4 messages
+     of 100 bytes.
+
+registerBroadcast, registerSend, registerReceive methods
+          my $usage = new SyslogScan::Usage();
+          $usage -> registerSend(512);
+          $usage -> registerSend(34);
+          $usage -> registerBroadcast(34);
+          # $usage is now 2 messages, 546 bytes Sent,
+          # and 1 message, 34 bytes Broadcast
+
+getBroadcastVolume, getSendVolume, getReceiveVolume methods
+     Returns deep copy of the applicable SyslogScan::Volume objects.
+
+static deepCopy method
+     Returns deep copy of the whole SyslogScan::Usage object.
+
+static dump
+     Returns a string containing (Message,Bytes) pairs for Broadcast,
+     Send, and Receive volumes.
+
+
+Volume methods
+--------------
+
+new() method
+     Creates a new Volume object of 0 messages, 0 bytes.
+
+deepCopy() method
+     Creates a new Volume object with the same number of messages and
+     bytes as the current Volume object.
+
+addVolume(), addSize() methods
+     addVolume() adds the volume of a second Volume object onto the
+     volume of the current Volume object.
+
+     addSize() adds on one message of the given size.
+
+          use SyslogScan::Volume;
+
+          my $volume1 = new SyslogScan::Volume();
+          $volume1 -> addSize(512);
+
+          my $volume2 = $volume1 -> deepCopy();
+          # $volume2 is 1 message, 512 bytes
+
+          $volume2 -> addSize(31);
+          # $volume2 is 2 messages, 543 bytes
+
+          $volume2 -> addVolume($volume1);
+          # $volume2 is 3 messages, 1055 bytes
+
+          $volume2 -> addVolume($volume2);
+          # $volume2 is 6 messages, 2110 bytes
+
+getMessageCount, getByteCount
+     Gets the number of messages and the total number of bytes,
+     respectively.
+
+dump()
+     Returns the string "getMessageCount(),getByteCount()"
+
+
+Volume internals
+----------------
+
+A Volume is simply a two-element array of ($messages, $bytes).
+
+$$volume[0] is the number of messages $$volume[1] is the number of bytes
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/Summary: SyslogScan/Summary,
+
+
+
+File: pm.info, Node: SyslogScan/WhereIs, Next: Tcl, Prev: SyslogScan/Usage, Up: Module List
+
+return full path of syslog file where mail messages are logged
+**************************************************************
+
+
+
+NAME
+====
+
+SyslogScan::WhereIs::guess -- return full path of syslog file where mail
+messages are logged
+
+
+SYNOPSIS
+========
+
+     my $syslogPath =
+         new SyslogScan::Whereis::guess("/etc/syslog.conf");
+
+
+DESCRIPTION
+===========
+
+Scans a syslog configuration file to try to figure out where "mail.info"
+messages are sent.  Default configuration file is "/etc/syslog.conf".
+
+Returns undef if the syslog file cannot be determined.
+
+
+BUGS
+====
+
+It might have been more elegant to return an array of syslog files; this
+would, as a bonus, permit multiple syslogs to be returned if mail
+messages go to more than one place.
+
+
+AUTHOR and COPYRIGHT
+====================
+
+The author (Rolf Harold Nelson) can currently be e-mailed as
+rolf@usa.healthnet.org.
+
+This code is Copyright (C) SatelLife, Inc. 1996.  All rights reserved.
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+In no event shall SatelLife be liable to any party for direct, indirect,
+special, incidental, or consequential damages arising out of the use of
+this software and its documentation (including, but not limited to, lost
+profits) even if the authors have been advised of the possibility of
+such damage.
+
+
+SEE ALSO
+========
+
+*Note SyslogScan/DeliveryIterator: SyslogScan/DeliveryIterator,
+
+
+
+File: pm.info, Node: Tcl, Next: TeX, Prev: SyslogScan/WhereIs, Up: Module List
+
+Tcl extension module for Perl
+*****************************
+
+
+
+NAME
+====
+
+Tcl - Tcl extension module for Perl
+
+
+DESCRIPTION
+===========
+
+The Tcl extension module gives access to the Tcl library with
+functionality and interface similar to the C functions of Tcl.  In other
+words, you can
+
+create Tcl interpreters
+     The Tcl interpreters so created are Perl objects whose destructors
+     delete the interpreters cleanly when appropriate.
+
+execute Tcl code in an interpreter
+     The code can come from strings, files or Perl filehandles.
+
+bind in new Tcl procedures
+     The new procedures can be either C code (with addresses presumably
+     obtained using *dl_open* and *dl_find_symbol*) or Perl subroutines
+     (by name, reference or as anonymous subs). The (optional)
+     deleteProc callback in the latter case is another perl subroutine
+     which is called when the command is explicitly deleted by name or
+     else when the destructor for the interpreter object is explicitly
+     or implicitly called.
+
+Manipulate the result field of a Tcl interpreter
+Set and get values of variables in a Tcl interpreter
+Tie perl variables to variables in a Tcl interpreter
+     The variables can be either scalars or hashes.
+
+
+Methods in class Tcl
+--------------------
+
+To create a new Tcl interpreter, use
+
+     $i = new Tcl;
+
+The following methods and routines can then be used on the Perl object
+returned (the object argument omitted in each case).
+
+Init ()
+     Invoke *Tcl_Init* on the interpeter.
+
+Eval (STRING)
+     Evaluate script STRING in the interpreter. If the script returns
+     successfully (TCL_OK) then the Perl return value corresponds to
+     interp->result otherwise a die exception is raised with the $@
+     variable corresponding to interp->result. In each case,
+     *corresponds* means that if the method is called in scalar context
+     then the string interp->result is returned but if the method is
+     called in list context then interp->result is split as a Tcl list
+     and returned as a Perl list.
+
+GlobalEval (STRING)
+     Evalulate script STRING at global level. Otherwise, the same as
+     Eval() above.
+
+EvalFile (FILENAME)
+     Evaluate the contents of the file with name FILENAME. Otherwise,
+     the same as Eval() above.
+
+EvalFileHandle (FILEHANDLE)
+     Evaluate the contents of the Perl filehandle FILEHANDLE. Otherwise,
+     the same as Eval() above. Useful when using the filehandle DATA to
+     tack on a Tcl script following an __END__ token.
+
+call (PROC, ARG, ...)
+     Looks up procedure PROC in the interpreter and invokes it directly
+     with arguments (ARG, ...) without passing through the Tcl
+     parser. For example, spaces embedded in any ARG will not cause it
+     to be split into two Tcl arguments before being passed to PROC.
+
+result ()
+     Returns the current interp->result field. List v. scalar context is
+     handled as in Eval() above.
+
+CreateCommand (CMDNAME, CMDPROC, CLIENTDATA, DELETEPROC)
+     Binds a new procedure named CMDNAME into the interpreter. The
+     CLIENTDATA and DELETEPROC arguments are optional. There are two
+     cases:
+
+     (1) CMDPROC is the address of a C function
+
+     (presumably obtained using *dl_open* and *dl_find_symbol*. In this
+     case CLIENTDATA and DELETEPROC are taken to be raw data of the
+     ClientData and deleteProc field presumably obtained in a similar
+     way.
+
+     (2) CMDPROC is a Perl subroutine
+
+     (either a sub name, a sub reference or an anonymous sub). In this
+     case CLIENTDATA can be any perl scalar (e.g. a ref to some other
+     data) and DELETEPROC must be a perl sub too. When CMDNAME is
+     invoked in the Tcl interpeter, the arguments passed to the Perl sub
+     CMDPROC are
+
+          (CLIENTDATA, INTERP, LIST)
+
+     where INTERP is a Perl object for the Tcl interpreter which called
+     out and LIST is a Perl list of the arguments CMDNAME was called
+     with.  As usual in Tcl, the first element of the list is CMDNAME
+     itself.  When CMDNAME is deleted from the interpreter (either
+     explicitly with DeleteCommand or because the destructor for the
+     interpeter object is called), it is passed the single argument
+     CLIENTDATA.
+
+DeleteCommand (CMDNAME)
+     Deletes command CMDNAME from the interpreter. If the command was
+     created with a DELETEPROC (see CreateCommand above), then it is
+     invoked at this point. When a Tcl interpreter object is destroyed
+     either explicitly or implicitly, an implicit DeleteCommand happens
+     on all its currently registered commands.
+
+SetResult (STRING)
+     Sets interp->result to STRING.
+
+AppendResult (LIST)
+     Appends each element of LIST to interp->result.
+
+AppendElement (STRING)
+     Appends STRING to interp->result as an extra Tcl list element.
+
+ResetResult ()
+     Resets interp->result.
+
+SplitList (STRING)
+     Splits STRING as a Tcl list. Returns a Perl list or the empty list
+     if there was an error (i.e. STRING was not a properly formed Tcl
+     list).  In the latter case, the error message is left in
+     interp->result.
+
+SetVar (VARNAME, VALUE, FLAGS)
+     The FLAGS field is optional. Sets Tcl variable VARNAME in the
+     interpreter to VALUE. The FLAGS argument is the usual Tcl one and
+     can be a bitwise OR of the constants $Tcl::GLOBAL_ONLY,
+     $Tcl::LEAVE_ERR_MSG, $Tcl::APPEND_VALUE, $Tcl::LIST_ELEMENT.
+
+SetVar2 (VARNAME1, VARNAME2, VALUE, FLAGS)
+     Sets the element VARNAME1(VARNAME2) of a Tcl array to VALUE. The
+     optional argument FLAGS behaves as in SetVar above.
+
+GetVar (VARNAME, FLAGS)
+     Returns the value of Tcl variable VARNAME. The optional argument
+     FLAGS behaves as in SetVar above.
+
+GetVar2 (VARNAME1, VARNAME2, FLAGS)
+     Returns the value of the element VARNAME1(VARNAME2) of a Tcl array.
+     The optional argument FLAGS behaves as in SetVar above.
+
+UnsetVar (VARNAME, FLAGS)
+     Unsets Tcl variable VARNAME. The optional argument FLAGS behaves as
+     in SetVar above.
+
+UnsetVar2 (VARNAME1, VARNAME2, FLAGS)
+     Unsets the element VARNAME1(VARNAME2) of a Tcl array.  The optional
+     argument FLAGS behaves as in SetVar above.
+
+
+Linking Perl and Tcl variables
+------------------------------
+
+You can tie a Perl variable (scalar or hash) into class Tcl::Var so that
+changes to a Tcl variable automatically "change" the value of the Perl
+variable. In fact, as usual with Perl tied variables, its current value
+is just fetched from the Tcl variable when needed and setting the Perl
+variable triggers the setting of the Tcl variable.
+
+To tie a Perl scalar *$scalar* to the Tcl variable *tclscalar* in
+interpreter *$interp* with optional flags *$flags* (see SetVar above),
+use
+
+     tie $scalar, Tcl::Var, $interp, "tclscalar", $flags;
+
+Omit the *$flags* argument if not wanted.
+
+To tie a Perl hash *%hash* to the Tcl array variable array in
+interpreter *$interp* with optional flags *$flags* (see SetVar above),
+use
+
+     tie %hash, Tcl::Var, $interp, "array", $flags;
+
+Omit the *$flags* argument if not wanted. Any alteration to Perl
+variable *$hash{"key"}* affects the Tcl variable *array(key)* and *vice
+versa*.
+
+
+AUTHOR
+------
+
+Malcolm Beattie, mbeattie@sable.ox.ac.uk, 23 Oct 1994.
+
+
+
+
+File: pm.info, Node: TeX, Next: TeX/DVI, Prev: Tcl, Up: Module List
+
+Perl module for parsing of `TeX'.
+*********************************
+
+
+
+NAME
+====
+
+Text::TeX -- Perl module for parsing of `TeX'.
+
+
+
+
+File: pm.info, Node: TeX/DVI, Next: TeX/DVI/Parse, Prev: TeX, Up: Module List
+
+write out DVI (Device INdependent) file
+***************************************
+
+
+
+NAME
+====
+
+TeX::DVI -- write out DVI (Device INdependent) file
+
+
+SYNOPSIS
+========
+
+     use TeX::DVI;
+     use Font::TFM;
+
+     my $dvi = new TeX::DVI "texput.dvi";
+     my $font = new_at Font::TFM "cmr10", 12;
+     $dvi->preamble();
+     $dvi->begin_page();
+     $dvi->push();
+     my $fn = $dvi->font_def($font);
+     $dvi->font($fn);
+     $dvi->word("difficulty");
+     $dvi->hskip($font->space());
+     $dvi->word("AVA");
+     $dvi->black_box($font->em_width(), $font->x_height());
+     $dvi->pop();
+     $dvi->end_page();
+     $dvi->postamble();
+
+
+DESCRIPTION
+===========
+
+Method `TeX::DVI::new' creates a new DVI object in memory and opens the
+output DVI file. After that, elements can be written into the file using
+appropriate methods.
+
+These are the methods available on the `Font::TFM' object:
+
+preamble, postamble, begin_page, end_page, push, pop
+     Writes out appropriate command of the `.dvi' file.
+
+font_def
+     The parameter is a reference to a `Font::TFM' object. Info out of
+     this object will be printed out. The method returns the internal
+     number of the font in this `.dvi' file.
+
+font
+     Writes out the font_sel command, the parametr is the number
+     returned by font_def.
+
+hskip, vskip
+     Skips.
+
+black_box
+     Creates a black box, can be used for hrules and vrules.
+
+special
+     Writes out the special command, one parameter is written as the
+     command.
+
+word
+     Writes out a word given as the first parameter. The currently
+     selected font is used to gather information about ligatures and
+     kernings.
+
+
+CHANGES
+=======
+
+0.04 Sun Jun  1 13:28:41 MET DST 1997
+     Bug fix.
+
+0.03 Sun Feb 16 13:55:26 MET 1997
+     `TeX::DVI::word' no longer does the lig/kern expansion but calls
+     `Font::TFM::expand'.
+
+     Little/big endian incompatibility fixed.
+
+     Name set to `TeX::DVI' instead of just `DVI'.
+
+0.02 Thu Feb 13 20:43:38 MET 1997
+     First version released/announced on public.
+
+
+BUGS
+====
+
+The error handling is rather weak -- the modul currently assumes you
+know why you call the method you call.
+
+
+VERSION
+=======
+
+0.04
+
+
+SEE ALSO
+========
+
+Font::TFM, perl(1).
+
+
+AUTHOR
+======
+
+(c) 1996, 1997 Jan Pazdziora, adelton@fi.muni.cz
+
+at Faculty of Informatics, Masaryk University, Brno
+
+
+
+
+File: pm.info, Node: TeX/DVI/Parse, Next: TeX/Hyphen, Prev: TeX/DVI, Up: Module List
+
+parses TeX's DVI output file
+****************************
+
+
+
+NAME
+====
+
+TeX::DVI::Parse - parses TeX's DVI output file
+
+
+SYNOPSIS
+========
+
+     use TeX::DVI::Parse;
+     my $dvi_parse = new TeX::DVI::Parse("test.dvi");
+     $dvi_parse->parse();
+
+
+DESCRIPTION
+===========
+
+I have created this module on request from Mirka Misáková. She wanted
+to do some post-processing on the DVI file and I said that it will be
+better to parse the DVI file directly, instead of the output of the
+*dvitype* program.
+
+As the result there is this module *TeX::DVI::Parse* that recognizes all
+commands from the DVI file and for each command found it calls method of
+appropriate name, if defined in the class.
+
+The example above is not very reasonable because the core
+*TeX::DVI::Parse* module doesn't itself define any methods for the
+DVI commands. You will probably want to inherit a new class and define
+the functions yourself:
+
+     packages My_Parse_DVI;
+     use TeX::DVI::Parse;
+     @ISA = qw( TeX::DVI::Parse );
+
+     sub set_char
+     	{
+     	my ($self, $ord, $char) = @_;
+     	## print the info or something;
+     	}
+
+As an example there is class *TeX::DVI::Print* coming in this file, so
+you can do
+
+     use TeX::DVI::Parse;
+     my $dvi_parse = new TeX::DVI::Print("test.dvi");
+     $dvi_parse->parse();
+
+and get listing of DVI's content printed in (hopefully) readable form.
+
+
+Methods
+-------
+
+For creating new classes, a documentation of expected methods names and
+their parameters is necessary, so here is the list. The names come from
+the *dvitype* documentation and that is also the basic reference for the
+meaning of the parameters. Note that each method receives as the first
+two parameters $self and `$ord', reference to the parsing object and the
+byte value of the command as found in the DVI file.  These are mandatory
+so only the other parameters to each method are listed below.
+
+set_char - typeset character and shift right by its width
+     $char - specifies the ordinal value of the character.
+
+put_char - as set_char but without moving
+     $char - ordinal value of the character.
+
+set_rule - typeset black rectangle and shift to the right
+     `$height', $width - dimensions of the rectangle.
+
+put_rule - as set_rule without moving
+     `$height', $width - dimensions of the rectangle.
+
+nop - no operation
+     no parameter
+
+bop - begin of page
+     `$number[0]' .. `$number[9]', $prev_page - the ten numbers that
+     specify the page, the pointer to the start of the previous page.
+
+eop - end of page
+     no parameter
+
+push - push to the stack
+     no parameter
+
+pop - pop from the stack
+     no parameter
+
+right - move right
+     $value - how much to move.
+
+move_w, move_x, down, move_y, move_z - move position
+     all take one parameter, $value.
+
+fnt_def - define font
+     `$k', $c, $s, $d, `$a', `$l', $n - number of the font, checksum,
+     scale factor, design size, length of the directory and length of
+     the filename, name of the font.
+
+fnt_num - select font
+     $k - number of the font.
+
+special - generic DVI primitive
+     `$k', $x - length of the special and its data.
+
+preamble
+     `$i', `$num', `$den', `$mag', `$k', $x - ID of the format,
+     numerator and denumerator of the multiplication fraction,
+     magnification, length of the comment and comment.
+
+post - postamble
+     `$p', `$num', `$den', `$mag', `$l', `$u', $s, $t - pointer to the
+     last page, the next three are as in preamble, maximal dimensions
+     (`$l' and `$u'), maximal depth of the stack and the final page
+     number.
+
+post_post - post postamble
+     `$q', `$i', $dummy - pointer to the postamble, ID and the last
+     fill.
+
+undefined_command - for byte that has no other meaning
+     no parameter
+
+
+CHANGES
+=======
+
+- 0.02 Thu Jul 17 19:53:45 MET DST 1997
+     The first release publicly announced.
+
+
+VERSION
+=======
+
+0.02
+
+
+SEE ALSO
+========
+
+Font::TFM, TeX::DVI, perl(1).
+
+
+AUTHOR
+======
+
+(c) 1997 Jan Pazdziora, adelton@fi.muni.cz
+
+at Faculty of Informatics, Masaryk University, Brno
+
+
+
+
+File: pm.info, Node: TeX/Hyphen, Next: Term/ANSIColor, Prev: TeX/DVI/Parse, Up: Module List
+
+hyphenate words using TeX's patterns
+************************************
+
+
+
+NAME
+====
+
+TeX::Hyphen -- hyphenate words using TeX's patterns
+
+
+SYNOPSIS
+========
+
+     use TeX::Hyphen;
+     my $hyp = new TeX::Hyphen "hyphen.tex";
+     my $word = "representation";
+     my @points = $hyp->hyphenate($word);
+     print $hyp->visualize($word), "\n";
+
+
+DESCRIPTION
+===========
+
+Constructor TeX::Hyphen::new() creates a new Hyphen object and loads the
+file with patterns into memory. Then you can ask it for hyphenation of a
+word. If no file is specified, the default `hyphen.tex', that is
+appended at the end of this module, is used instead.
+
+Method TeX::Hyphen::hyphenate() returns list of places where the word
+can be divided, TeX::Hyphen::visualize() can be used to show them.  The
+example above should give `rep-re-sen-ta-tion'.
+
+Variables *$TeX::Hyphen::LEFTMIN* and *$TeX::Hyphen::RIGHTMIN* can be
+used to restrict minimal starting and ending substring where it is not
+possible to hyphenate. They both default to 2 but should be changed to
+match the paratemers used to generate the patterns.
+
+Variable *$TeX::Hyphen::DEBUG* will tell on standard error output the
+alocation of buckets.
+
+The file with hyphenation patterns may contain `\'' and `\v' accents,
+used in the Czech (and other) languages.
+
+
+CHANGES
+=======
+
+0.06 Mon Jul 21 18:53:26 MET DST 1997
+     Exception table handling added -- error spotted by Jon Orwant.
+
+0.05 Wed Jul  9 14:49:42 MET DST 1997
+     Added the default `hyphen.tex' into the module and possibility to
+     call the constructior without argument to get this default pattern
+     file.
+
+0.04 Wed Apr  9 15:41:32 MET DST 1997
+     Hash lookup made faster.
+
+     Method TeX::Hyphen::visualize() only takes one argument, it calls
+     hyphenate().
+
+0.03 Sun Feb 16 13:55:26 MET 1997
+     Hash lookup made faster.
+
+     Original name *Hyphen* chaged to *TeX::Hyphen*.
+
+
+VERSION
+=======
+
+0.06
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+AUTHOR
+======
+
+(c) 1997 Jan Pazdziora, adelton@fi.muni.cz
+
+at Faculty of Informatics, Masaryk University, Brno
+
+
+
+
+File: pm.info, Node: Term/ANSIColor, Next: Term/Cap, Prev: TeX/Hyphen, Up: Module List
+
+Color screen output using ANSI escape sequences
+***********************************************
+
+
+
+NAME
+====
+
+Term::ANSIColor - Color screen output using ANSI escape sequences
+
+
+SYNOPSIS
+========
+
+     use Term::ANSIColor;
+     print color 'bold blue';
+     print "This text is bold blue.\n";
+     print color 'reset';
+     print "This text is normal.\n";
+     print colored ("Yellow on magenta.\n", 'yellow on_magenta');
+     print "This text is normal.\n";
+
+     use Term::ANSIColor qw(:constants);
+     print BOLD, BLUE, "This text is in bold blue.\n", RESET;
+
+     use Term::ANSIColor qw(:constants);
+     $Term::ANSIColor::AUTORESET = 1;
+     print BOLD BLUE "This text is in bold blue.\n";
+     print "This text is normal.\n";
+
+
+DESCRIPTION
+===========
+
+This module has two interfaces, one through color() and colored() and
+the other through constants.
+    
+color() takes any number of strings as arguments and considers them to
+be space-separated lists of attributes.  It then forms and returns the
+escape sequence to set those attributes.  It doesn't print it out, just
+returns it, so you'll have to print it yourself if you want to (this is
+so that you can save it as a string, pass it to something else, send it
+to a file handle, or do anything else with it that you might care to).
+
+The recognized attributes (all of which should be fairly intuitive) are
+clear, reset, bold, underline, underscore, blink, reverse, concealed,
+black, red, green, yellow, blue, magenta, on_black, on_red, on_green,
+on_yellow, on_blue, on_magenta, on_cyan, and on_white.  Case is not
+significant.  Underline and underscore are equivalent, as are clear and
+reset, so use whichever is the most intuitive to you.  The color alone
+sets the foreground color, and on_color sets the background color.
+
+Note that attributes, once set, last until they are unset (by sending
+the attribute "reset").  Be careful to do this, or otherwise your
+attribute will last after your script is done running, and people get
+very annoyed at having their prompt and typing changed to weird colors.
+
+As an aid to help with this, colored() takes a scalar as the first
+argument and any number of attribute strings as the second argument and
+returns the scalar wrapped in escape codes so that the attributes will
+be set as requested before the string and reset to normal after the
+string.  Normally, colored() just puts attribute codes at the beginning
+and end of the string, but if you set $Term::ANSIColor::EACHLINE to some
+string, that string will be considered the line delimiter and the
+attribute will be set at the beginning of each line of the passed string
+and reset at the end of each line.  This is often desirable if the
+output is being sent to a program like a pager that can be confused by
+attributes that span lines.  Normally you'll want to set
+$Term::ANSIColor::EACHLINE to `"\n"' to use this feature.
+
+Alternately, if you import `:constants', you can use the constants
+CLEAR, RESET, BOLD, UNDERLINE, UNDERSCORE, BLINK, REVERSE, CONCEALED,
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, ON_BLACK, ON_RED, ON_GREEN,
+ON_YELLOW, ON_BLUE, ON_MAGENTA, ON_CYAN, and ON_WHITE directly.  These
+are the same as color('attribute') and can be used if you prefer typing:
+
+     print BOLD BLUE ON_WHITE "Text\n", RESET;
+
+to
+
+     print colored ("Text\n", 'bold blue on_white');
+
+When using the constants, if you don't want to have to remember to add
+the `, RESET' at the end of each print line, you can set
+$Term::ANSIColor::AUTORESET to a true value.  Then, the display mode
+will automatically be reset if there is no comma after the constant.  In
+other words, with that variable set:
+
+     print BOLD BLUE "Text\n";
+
+will reset the display mode afterwards, whereas:
+
+     print BOLD, BLUE, "Text\n";
+
+will not.
+
+The subroutine interface has the advantage over the constants interface
+in that only 2 soubrutines are exported into your namespace, verses 22
+in the constants interface.  On the flip side, the constants interface
+has the advantage of better compile time error checking, since
+misspelled names of colors or attributes in calls to color() and
+colored() won't be caught until runtime whereas misspelled names of
+constants will be caught at compile time.  So, polute your namespace
+with almost two dozen subrutines that you may not even use that oftin,
+or risk a silly bug by mistyping an attribute.  Your choice, TMTOWTDI
+after all.
+
+
+DIAGNOSTICS
+===========
+
+Invalid attribute name %s
+     You passed an invalid attribute name to either color() or
+     colored().
+
+Identifier %s used only once: possible typo
+     You probably mistyped a constant color name such as:
+
+          print FOOBAR "This text is color FOOBAR\n";
+
+     It's probably better to always use commas after constant names in
+     order to force the next error.
+
+No comma allowed after filehandle
+     You probably mistyped a constant color name such as:
+
+          print FOOBAR, "This text is color FOOBAR\n";
+
+     Generating this fatal compile error is one of the main advantages
+     of using the constants interface, since you'll immediately know if
+     you mistype a color name.
+
+Bareword %s not allowed while "strict subs" in use
+     You probably mistyped a constant color name such as:
+
+          $Foobar = FOOBAR . "This line should be blue\n";
+
+     or:
+
+          @Foobar = FOOBAR, "This line should be blue\n";
+
+     This will only show up under use strict (another good reason to run
+     under use strict).
+
+
+RESTRICTIONS
+============
+
+It would be nice if one could leave off the commas around the constants
+entirely and just say:
+
+     print BOLD BLUE ON_WHITE "Text\n" RESET;
+
+but the syntax of Perl doesn't allow this.  You need a comma after the
+string.  (Of course, you may consider it a bug that commas between all
+the constants aren't required, in which case you may feel free to insert
+commas unless you're using $Term::ANSIColor::AUTORESET.)
+
+For easier debuging, you may prefer to always use the commas when not
+setting $Term::ANSIColor::AUTORESET so that you'll get a fatal compile
+error rather than a warning.
+
+
+AUTHORS
+=======
+
+Original idea (using constants) by Zenin (zenin@best.com), reimplemented
+using subs by Russ Allbery (rra@cs.stanford.edu), and then combined with
+the original idea by Russ with input from Zenin.
+
+
+
+
+File: pm.info, Node: Term/Cap, Next: Term/Complete, Prev: Term/ANSIColor, Up: Module List
+
+Perl termcap interface
+**********************
+
+
+
+NAME
+====
+
+Term::Cap - Perl termcap interface
+
+
+SYNOPSIS
+========
+
+     require Term::Cap;
+     $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
+     $terminal->Trequire(qw/ce ku kd/);
+     $terminal->Tgoto('cm', $col, $row, $FH);
+     $terminal->Tputs('dl', $count, $FH);
+     $terminal->Tpad($string, $count, $FH);
+
+
+DESCRIPTION
+===========
+
+These are low-level functions to extract and use capabilities from a
+terminal capability (termcap) database.
+
+The *Tgetent* function extracts the entry of the specified terminal type
+*TERM* (defaults to the environment variable *TERM*) from the database.
+
+It will look in the environment for a *TERMCAP* variable.  If
+found, and the value does not begin with a slash, and the terminal
+type name is the same as the environment string *TERM*, the
+*TERMCAP* string is used instead of reading a termcap file.  If
+it does begin with a slash, the string is used as a path name of the
+termcap file to search.  If *TERMCAP* does not begin with a slash and
+name is different from *TERM*, *Tgetent* searches the files
+`$HOME/.termcap', `/etc/termcap', and `/usr/share/misc/termcap', in that
+order, unless the environment variable *TERMPATH* exists, in which case
+it specifies a list of file pathnames (separated by spaces or colons) to
+be searched *instead*.  Whenever multiple files are searched and a tc
+field occurs in the requested entry, the entry it names must be found in
+the same file or one of the succeeding files.  If there is a `:tc=...:'
+in the *TERMCAP* environment variable string it will continue the search
+in the files as above.
+
+*OSPEED* is the terminal output bit rate (often mistakenly called
+the baud rate).  *OSPEED* can be specified as either a POSIX
+termios/SYSV termio speeds (where 9600 equals 9600) or an old BSD-style
+speeds (where 13 equals 9600).
+
+*Tgetent* returns a blessed object reference which the user can
+then use to send the control strings to the terminal using *Tputs* and
+*Tgoto*.  It calls croak on failure.
+
+*Tgoto* decodes a cursor addressing string with the given parameters.
+
+The output strings for *Tputs* are cached for counts of 1 for performance.
+*Tgoto* and *Tpad* do not cache.  `$self->{_xx}' is the raw termcap
+data and `$self->{xx}' is the cached version.
+
+     print $terminal->Tpad($self->{_xx}, 1);
+
+*Tgoto*, *Tputs*, and *Tpad* return the string and will also
+output the string to $FH if specified.
+
+The extracted termcap entry is available in the object as
+`$self->{TERMCAP}'.
+
+
+EXAMPLES
+========
+
+     # Get terminal output speed
+     require POSIX;
+     my $termios = new POSIX::Termios;
+     $termios->getattr;
+     my $ospeed = $termios->getospeed;
+
+     # Old-style ioctl code to get ospeed:
+     #     require 'ioctl.pl';
+     #     ioctl(TTY,$TIOCGETP,$sgtty);
+     #     ($ispeed,$ospeed) = unpack('cc',$sgtty);
+
+     # allocate and initialize a terminal structure
+     $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
+
+     # require certain capabilities to be available
+     $terminal->Trequire(qw/ce ku kd/);
+
+     # Output Routines, if $FH is undefined these just return the string
+
+     # Tgoto does the % expansion stuff with the given args
+     $terminal->Tgoto('cm', $col, $row, $FH);
+
+     # Tputs doesn't do any % expansion.
+     $terminal->Tputs('dl', $count = 1, $FH);
+
+
+
+
+File: pm.info, Node: Term/Complete, Next: Term/Gnuplot, Prev: Term/Cap, Up: Module List
+
+Perl word completion module
+***************************
+
+
+
+NAME
+====
+
+Term::Complete - Perl word completion module
+
+
+SYNOPSIS
+========
+
+     $input = complete('prompt_string', \@completion_list);
+     $input = complete('prompt_string', @completion_list);
+
+
+DESCRIPTION
+===========
+
+This routine provides word completion on the list of words in the array
+(or array ref).
+
+The tty driver is put into raw mode using the system command `stty raw
+-echo' and restored using `stty -raw echo'.
+
+The following command characters are defined:
+
+<tab>
+     Attempts word completion.  Cannot be changed.
+
+^D
+     Prints completion list.  Defined by *$Term::Complete::complete*.
+
+^U
+     Erases the current input.  Defined by *$Term::Complete::kill*.
+
+<del>, <bs>
+     Erases one character.  Defined by *$Term::Complete::erase1* and
+     *$Term::Complete::erase2*.
+
+
+DIAGNOSTICS
+===========
+
+Bell sounds when word completion fails.
+
+
+BUGS
+====
+
+The completion charater <tab> cannot be changed.
+
+
+AUTHOR
+======
+
+Wayne Thompson
+
+
+
+
+File: pm.info, Node: Term/Gnuplot, Next: Term/Query, Prev: Term/Complete, Up: Module List
+
+lowlevel graphics using gnuplot drawing routines.
+*************************************************
+
+
+
+NAME
+====
+
+Term::Gnuplot - lowlevel graphics using gnuplot drawing routines.
+
+
+USAGE
+=====
+
+     use Term::Gnuplot ':ALL';
+     change_term('dumb') or die "Cannot set terminal.\n";
+     init();
+     graphics();
+     $xmax = xmax();
+     $ymax = ymax();
+     linetype(-2);
+     move(0,0);
+     vector($xmax-1,0);
+     vector($xmax-1,$ymax-1);
+     vector(0,$ymax-1);
+     vector(0,0);
+     justify_text(LEFT);
+     put_text(h_char()*5, $ymax - v_char()*3,"Terminal Test, Perl");
+     $x = $xmax/4;
+     $y = $ymax/4;
+     $xl = h_tic()*5;
+     $yl = v_tic()*5;
+     linetype(2);
+     arrow($x,$y,$x+$xl,$y,1);
+     arrow($x,$y,$x+$xl/2,$y+$yl,1);
+     arrow($x,$y,$x,$y+$yl,1);
+     arrow($x,$y,$x-$xl/2,$y+$yl,0);
+     arrow($x,$y,$x-$xl,$y,1);
+     arrow($x,$y,$x-$xl,$y-$yl,1);
+     arrow($x,$y,$x,$y-$yl,1);
+     arrow($x,$y,$x+$xl,$y-$yl,1);
+     text();
+     Term::Gnuplot::reset();
+
+
+EXPORTS
+=======
+
+None by default.
+
+
+Exportable
+----------
+
+     change_term test_term init_terminal
+     LEFT CENTRE RIGHT 
+     name description xmax ymax v_char h_char v_tic h_tic
+     init scale graphics linetype move vector point text_angle
+     justify_text put_text arrow text
+
+
+Export tags
+-----------
+
+:ALL for all stuff, `:SETUP' for the first row above, `:JUSTIFY' for the
+second, `:FIELDS' for the third, `:METHODS' for the rest.
+
+
+SEMANTIC
+========
+
+Below I include the contents of the file `term/README' from gnuplot
+distribution. It explains the meaning of the above methods. All is
+supported under Perl but the `options' method. The discription below
+includes underscores, that are deleted in the perl interface.
+
+The only functions that are not included are `change_term($newname)',
+test_term() and init_terminal(), that should be
+self-explanatory. Currently it is impossible to find names of supported
+terminals, this would require patch to gnuplot.
+
+
+gnuplot `term/README'
+=====================
+
+DOCUMENTATION FOR GNUPLOT TERMINAL DRIVER WRITERS
+
+By Russell Lang 1/90
+
+Information on each terminal device driver is contained in term.c and
+the term/*.trm files.  Each driver is contained in a .trm file and is
+#include'd into term.c.  Each driver has a set of initialisers in term.c
+for term_tbl[], an array of struct termentry.
+
+Here is the definition of the struct termentry from plot.h:
+
+     struct termentry {
+     	char *name;
+     	char *description;
+     	unsigned int xmax,ymax,v_char,h_char,v_tic,h_tic;
+     	FUNC_PTR options,init,reset,text,scale,graphics,move,vector,linetype,
+     		put_text,text_angle,justify_text,point,arrow;
+     };
+
+Here's a brief description of each variable:
+
+The char *name is a pointer to a string containing the name of the
+terminal.  This name is used by the 'set terminal' and 'show terminal'
+commands.  The name must be unique and must not be confused with an
+abbreviation of another name.  For example if the name "postscript"
+exists, it is not possible to have another name "postscript2".  Keep the
+name under 15 characters.
+
+The char *description is a pointer to a string containing a description
+of the terminal, which is displayed in response to the 'set terminal'
+command.  Keep the description under 60 characters.
+
+xmax is the maximum number of points in the x direction.  The range of
+points used by gnuplot is 0 to xmax-1.
+
+ymax is the maximum number of points in the y direction.  The range of
+points used by gnuplot is 0 to ymax-1.
+
+v_char is the height of characters, in the same units as xmax and ymax.
+The border for labelling at the top and bottom of the plot is calculated
+using v_char.  v_char is used as the vertical line spacing for
+characters.
+
+h_char is the width of characters, in the same units as xmax and ymax.
+The border for labelling at the left and right of the plot is calculated
+using h_char.  If the _justify_text function returns FALSE, h_char is
+used to justify text right or centre.  If characters are not fixed
+width, then the _justify_text function must correctly justify the text.
+
+v_tic is the vertical size of tics along the x axis, in the same units
+as ymax.
+
+h_tic is the horizontal size of tics along the y axis, in the same units
+as xmax.
+
+Here's a brief description of what each term.c function does:
+
+_options() Called when terminal type is selected.  This procedure should
+parse options on the command line.  A list of the currently selected
+options should be stored in term_options[] in a form suitable for use
+with the set term command.  term_options[] is used by the save command.
+Use options_null() if no options are available.
+
+_init() Called once, when the device is first selected.  This procedure
+should set up things that only need to be set once, like handshaking and
+character sets etc...
+
+_reset() Called when gnuplot is exited, the output device changed or the
+terminal type changed.  This procedure should reset the device, possibly
+flushing a buffer somewhere or generating a form feed.
+
+_scale(xs,ys) Called just before _graphics(). This takes the x and y
+scaling factors as information. If the terminal would like to do its own
+scaling, it returns TRUE. Otherwise, it can ignore the information and
+return FALSE: do_plot will do the scaling for you. null_scale is
+provided to do just this, so most drivers can ignore this function
+entirely. The Latex driver is currently the only one providing its own
+scaling.
+
+_graphics() Called just before a plot is going to be displayed.  This
+procedure should set the device into graphics mode.  Devices which can't
+be used as terminals (like plotters) will probably be in graphics mode
+always and therefore won't need this.
+
+_text() Called immediately after a plot is displayed.  This procedure
+should set the device back into text mode if it is also a terminal, so
+that commands can be seen as they're typed.  Again, this will probably
+do nothing if the device can't be used as a terminal.
+
+_move(x,y) Called at the start of a line.  The cursor should move to the
+(x,y) position without drawing.
+
+_vector(x,y) Called when a line is to be drawn.  This should display a
+line from the last (x,y) position given by _move() or _vector() to this
+new (x,y) position.
+
+_linetype(lt) Called to set the line type before text is displayed or
+line(s) plotted.  This procedure should select a pen color or line style
+if the device has these capabilities.
+
+lt is an integer from -2 to 0 or greater.
+
+An lt of -2 is used for the border of the plot.
+
+An lt of -1 is used for the X and Y axes.
+
+lt 0 and upwards are used for plots 0 and upwards.
+
+If _linetype() is called with lt greater than the available line types,
+it should map it to one of the available line types.  Most drivers
+provide 9 different linetypes (lt is 0 to 8).
+
+_put_text(x,y,str) Called to display text at the (x,y) position, while
+in graphics mode.  The text should be vertically (with respect to the
+text) justified about (x,y).  The text is rotated according to
+_text_angle and then horizontally (with respect to the text) justified
+according to _justify_text.
+
+_text_angle(ang) Called to rotate the text angle when placing the y
+label.  If ang = 0 then text is horizontal.  If ang = 1 then text is
+vertically upwards.  Returns TRUE if text can be rotated, FALSE
+otherwise.
+
+_justify_text(mode) Called to justify text left, right or centre.
+
+If mode = LEFT then text placed by _put_text is flushed left against
+(x,y).
+
+If mode = CENTRE then centre of text is at (x,y).
+
+If mode = RIGHT then text is placed flushed right against (x,y).
+
+Returns TRUE if text can be justified Returns FALSE otherwise and then
+_put_text assumes text is flushed left; justification of text is then
+performed by calculating the text width using strlen(text) * h_char.
+
+_point(x,y,point) Called to place a point at position (x,y).  point is
+-1 or an integer from 0 upwards.  6 point types (numbered 0 to 5) are
+normally provided.  Point type -1 is a dot.  If point is more than the
+available point types then it should be mapped back to one of the
+available points.  Two _point() functions called do_point() and
+line_and_point() are provided in term.c and should be suitable for most
+drivers.  do_point() draws the points in the current line type.  If your
+driver uses dotted line types (generally because it is monochrome), you
+should use line_and_point() which changes to line type 0 before drawing
+the point.  line type 0 should be solid.
+
+_arrow(sx,sy,ex,ey,head) Called to draw an arrrow from (sx,sy) to
+(ex,ey).  A head is drawn on the arrow if head = TRUE.  An _arrow()
+function called do_arrow() is provided in term.c which will draw arrows
+using the _move() and _vector() functions.  Drivers should use do_arrow
+unless it causes problems.
+
+The following should illustrate the order in which calls to these
+routines are made:
+
+     _init()
+       _scale(xs,ys)
+       _graphics()
+         _linetype(lt)
+         _move(x,y)
+         _vector(x,y)
+     	  _point(x,y,point)
+         _text_angle(angle)
+         _justify(mode)
+         _put_text(x,y,text)
+         _arrow(sx,sy,ex,ey)
+       _text()
+       _graphics()
+         .
+         .
+       _text()
+     _reset()
+
+
+
+

@@ -1,0 +1,1884 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: DBI/DBD, Next: DBI/FAQ, Prev: DBI, Up: Module List
+
+DBD Driver Writer's Guide (draft)
+*********************************
+
+
+
+NAME
+====
+
+DBI::DBD - DBD Driver Writer's Guide (draft)
+
+
+SYNOPSIS
+========
+
+     perldoc DBI::FAQ
+
+
+VERSION and VOLATILITY
+======================
+
+     $Revision: 1.5 $
+     $Date: 1997/07/22 23:17:50 $
+
+This document is very much a minimal draft which will need to be revised
+frequently (and extensively).
+
+The changes will occur both because the DBI specification is changing
+and hence the requirements on DBD drivers change, and because feedback
+from people reading this document will suggest improvements to it.
+
+Please read the DBI documentation first and fully, including the DBI
+FAQ.
+
+
+DESCRIPTION
+===========
+
+This document is primarily intended to help people writing new database
+drivers for the Perl Database Interface (Perl DBI).  It may also help
+others interested in discovering why the internals of a DBD driver are
+written the way they are.
+
+This is a guide.  Few (if any) of the statements in it are completely
+authoritative under all possible circumstances.  This means you will
+need to use judgement in applying the guidelines in this document.
+
+
+REGISTERING A NEW DRIVER
+========================
+
+Before writing a new driver, it is in your interests to find out whether
+there already is a driver for your database.  If there is such a driver,
+it should be easier to make use of it than to write your own.
+
+     [...More info TBS...]
+
+
+Locating drivers
+----------------
+
+The primary web-site for locating Perl software is `http:' in this node.
+You should look under the various modules listings for the software you
+are after.  Two of the main pages you should look at are:
+
+     http://www.perl.org/CPAN/modules/by-category/07_Database_Interfaces/DBI
+
+     http://www.perl.org/CPAN/modules/by-category/07_Database_Interfaces/DBD
+
+The primary web-site for locating DBI software and information is
+http://www.hermetica.com/technologia/DBI.
+
+
+DBI Mailing Lists
+-----------------
+
+There are 2 main and one auxilliary mailing lists for people working
+with DBI.  The primary lists are dbi-users@fugue.com for general users
+of DBI and DBD drivers, and dbi-dev@fugue.com mainly for DBD driver
+writers (don't join the dbi-dev list unless you have a good reason).
+The auxilliary list is dbi-announce@fugue.com for announcing new
+releases of DBI or DBD drivers.
+
+You can join these lists by accessing the web-site `http:' in this node.
+If you have not got web access, you may send a request to
+dbi-request@fugue.com, but this will be handled manually when the people
+in charge find the time to deal with it.  Use the web-site.
+
+You should also consider monitoring the comp.lang.perl newsgroups.
+
+
+Registering a new driver
+------------------------
+
+Before going through any official registration process, you will need to
+establish that there is no driver already in the works.  You'll do that
+by asking the DBI mailing lists whether there is such a driver
+available, or whether anybody is working on one.
+
+     [...More info TBS...]
+
+
+CREATING A NEW DRIVER
+=====================
+
+Creating a new driver from scratch will always be a daunting task.  You
+can and should greatly simplify your task by taking a good reference
+driver implementation and modifying that to match the database product
+for which you are writing a driver.
+
+The de facto reference driver is the one for DBD::Oracle, written by Tim
+Bunce who is also the author of the DBI package. The DBD::Oracle module
+is a good example of a driver implemented around a C-level API.
+
+The DBD::ODBC module is also a good reference for a driver implemented
+around an SQL CLI or ODBC based C-level API.
+
+The DBD::Informix driver is a good reference for a driver implemented
+using 'embedded SQL'.
+
+     [...More info TBS...]
+
+
+REQUIREMENTS ON A DRIVER
+========================
+
+T.B.S.
+
+
+CODE TO BE WRITTEN
+==================
+
+A minimal driver will contain 7 files plus some tests.  Assuming that
+your driver is called DBD::Driver, these files are:
+
+Driver.pm
+Driver.xs
+Driver.h
+dbdimp.h
+dbdimp.c
+Makefile.PL
+README
+MANIFEST
+
+Driver.pm
+---------
+
+The Driver.pm file defines the Perl module DBD::Driver for your driver.
+It will define a package DBD::Driver along with some version
+information, some variable definitions, and a function driver() which
+will have a more or less standard structure.
+
+It will also define a package DBD::Driver::dr (which will define the
+driver() and connect() methods), and a package DBD::Driver::db (which
+will define a function prepare() etc), and a package DBD::Driver::st.
+
+Each of these classes may define a function errstr(), which will simply
+relay its arguments to DBD::Driver::errstr() and implicitly return the
+value from DBD::Driver::errstr().  The DBD::Driver::errstr() function is
+actually defined in Driver.xs.
+
+The Driver.pm file will also contain the documentation specific to
+DBD::Driver in the format used by perldoc.
+
+
+Driver.xs
+---------
+
+Driver.xs should look like this:
+
+     #include "Driver.h"
+
+     DBISTATE_DECLARE;
+
+     MODULE = DBD::Driver    PACKAGE = DBD::Driver
+
+     INCLUDE: Driver.xsi
+
+     MODULE = DBD::Driver    PACKAGE = DBD::Driver::st
+
+
+Driver.h
+--------
+
+Driver.h should look like this:
+
+     #define NEED_DBIXS_VERSION 9
+
+     #include <DBIXS.h>      /* installed by the DBI module  */
+
+     #include "dbdimp.h"
+
+     #include <dbd_xsh.h>     /* installed by the DBI module  */
+
+
+Implementation header dbdimp.h
+------------------------------
+
+T.B.S
+
+
+Implementation source dbdimp.c
+------------------------------
+
+T.B.S
+
+
+Makefile.PL
+-----------
+
+Driver.xs should look like this:
+
+     use 5.004;
+     use ExtUtils::MakeMaker;
+     use Config;
+     use strict;
+     use DBI 0.86;
+     use DBI::DBD;
+
+     my %opts = (
+       NAME => 'DBD::Driver',
+       VERSION_FROM => 'Driver.pm',
+       clean => { FILES=> 'Driver.xsi' },
+       dist  => { DIST_DEFAULT=> 'clean distcheck disttest ci tardist',
+                   PREOP => '$(MAKE) -f Makefile.old distdir' },
+
+Add other options here as needed. See ExtUtils::MakeMaker for more info.
+
+     );
+
+     WriteMakefile(%opts);
+
+     exit(0);
+
+     sub MY::postamble {
+       return dbd_postamble();
+     }
+
+
+README file
+-----------
+
+The README file should describe the pre-requisites for the build
+process, the actual build process, and how to report errors.  Note that
+users will find ways of breaking the driver build and test process which
+you would never dream possible.  Therefore, you need to write this
+document defensively and precisely.  Also, it is in your interests to
+ensure that your tests work as widely as possible.  As always, use the
+README from one of the established drivers as a basis for your own.
+
+     [...More info TBS...]
+
+
+MANIFEST
+--------
+
+The MANIFEST will be used by the Makefile'd dist target to build the
+distribution tar file that is uploaded to CPAN.
+
+
+Tests
+-----
+
+The test process should conform as closely as possibly to the Perl
+standard test harness.
+
+In particular, most of the tests should be run in the t sub-directory,
+and should simply produce an 'ok' when run under 'make test'.  For
+details on how this is done, see the Camel book and the section in
+Chapter 7, "The Standard Perl Library" on Test::Harness.
+
+The tests may need to adapt to the type of database which is being used
+for testing, and to the privileges of the user testing the driver.  The
+DBD::Informix test code has to adapt in a number of places to the type
+of database to which it is connected as different Informix databases
+have different capabilities.
+
+     [...More info TBS...]
+
+
+METHODS WHICH DO NOT NEED TO BE WRITTEN
+=======================================
+
+The DBI code implements the majority of the methods which are accessed
+using the notation DBI->function(), the only exceptions being
+DBI->connect() and DBI->data_sources() which require support from the
+driver.
+
+DBI->available_drivers() DBI->neat_list() DBI->neat()
+DBI->dump_results() DBI->func() The DBI code implements the following
+documented driver, database and statement functions which do not need to
+be written by the DBD driver writer.
+
+$dbh->do()
+     The default implementation of this function prepares, executes and
+     destroys the statement.  This should be replaced if there is a
+     better way to implement this, such as EXECUTE IMMEDIATE.
+
+$h->err()
+     See the comments on $h->errstr() below.
+
+$h->state()
+     See the comments on $h->errstr() below.
+
+$h->trace()
+     The DBD driver does not need to worry about this routine at all.
+
+$h->{ChopBlanks}
+     This attribute needs to be honured during fetch operations, but
+     does not need to be handled by the attribute handling code.
+
+$h->{RaiseError}
+     The DBD driver does not need to worry about this attribute at all.
+
+$h->{PrintError}
+     The DBD driver does not need to worry about this attribute at all.
+
+$sth->bind_col()
+     Assuming the driver uses the DBIS->get_fbav() function (see below),
+     the driver does not need to do anything about this routine.
+
+$sth->bind_columns()
+     Regardless of whether the driver uses DBIS->get_fbav(), the driver
+     does not need to do anything about this routine as it simply
+     iteratively calls $sth->bind_col().
+
+The DBI code implements a default implementation of the following
+functions which do not need to be written by the DBD driver writer
+unless the default implementation is incorrect for the Driver.
+
+$dbh->quote()
+     This should only be written if the database does not accept the
+     ANSI SQL standard for quoting strings, with the string enclosed in
+     single quotes and any embedded single quotes replaced by two
+     consecutive single quotes.
+
+$h->errstr()
+     As documented previously, this routine should currently be written
+     for each sub-package (dr, db, st).  It is not clear why the
+     $h->state and $h->err routines are not treated symmetrically.
+
+$dbh->ping()
+     This should only be written if there is a simple, efficient way to
+     determine whether the connection to the database is still alive.
+     Many drivers will accept the default, do-nothing implementation.
+
+
+OTHER MISCELLANEOUS INFORMATION
+===============================
+
+Many details still T.B.S.
+
+
+The imp_xyz_t types
+-------------------
+
+T.B.S.
+
+
+Using DBIc_IMPSET_on
+--------------------
+
+The driver code which initializes a handle should use DBIc_IMPSET_on()
+as soon as its state is such that the cleanup code must be called.  When
+this happens is determined by your driver code.
+
+Failure to call this can lead to corruption of data structures.  For
+example, DBD::Informix maintains a linked list of database handles in
+the driver, and within each handle, a linked list of statements.  Once a
+statement is added to the linked list, it is crucial that it is cleaned
+up (removed from the list).  When DBIc_IMPSET_on() was being called too
+late, it was able to cause all sorts of problems.
+
+
+Using DBIc_is(), DBIc_on() and DBIc_off()
+-----------------------------------------
+
+Once upon a long time ago, the only way of handling the attributes such
+as DBIcf_IMPSET, DBIcf_WARN, DBIcf_COMPAT etc was through macros such
+as:
+
+     DBIc_IMPSET     DBIc_IMPSET_on      DBIc_IMPSET_off
+     DBIc_WARN       DBIc_WARN_on        DBIc_WARN_off
+     DBIc_COMPAT     DBIc_COMPAT_on      DBIc_COMPAT_off
+
+Each of these took an imp_xyz pointer as an argument.
+
+Since then, new attributes have been added such as ChopBlanks,
+RaiseError and PrintError, and these do not have the full set of macros.
+The approved method for handling these is now the triplet of macros:
+
+     DBIc_is(imp, flag)
+     DBIc_has(imp, flag)    an alias for DBIc_is
+     DBIc_on(imp, flag)
+     DBIc_off(imp, flag)
+
+Consequently, the DBIc_IMPSET family of macros is now deprecated and new
+drivers should avoid using them, even though the older drivers will
+probably continue to do so for quite a while yet.
+
+
+Using DBIS->get_fbav()
+----------------------
+
+The $sth->bind_col() and $sth->bind_columns() documented in the DBI
+specification do not have to be implemented by the driver writer becuase
+DBI takes care of the details for you.  However, the key to ensuring
+that bound columns work is to call the function DBIS->get_fbav() in the
+code which fetches a row of data.  This returns an AV, and each element
+of the AV contains the SV which should be set to contain the returned
+data.
+
+
+ACKNOWLEDGEMENTS
+================
+
+Tim Bunce (tim.bunce@ig.co.uk) - for writing DBI and managing the DBI
+specification and the DBD::Oracle driver.
+
+
+AUTHOR
+======
+
+Jonathan Leffler (johnl@informix.com)
+
+
+
+
+File: pm.info, Node: DBI/FAQ, Next: DBI/W32ODBC, Prev: DBI/DBD, Up: Module List
+
+The Frequently Asked Questions for the Perl5 Database Interface
+***************************************************************
+
+
+
+NAME
+====
+
+DBI::FAQ -- The Frequently Asked Questions for the Perl5 Database
+Interface
+
+
+SYNOPSIS
+========
+
+     perldoc DBI::FAQ
+
+
+VERSION
+=======
+
+This document is currently at version *0.35*, as of *June 20th, 1997*.
+
+
+DESCRIPTION
+===========
+
+This document serves to answer the most frequently asked questions on
+both the DBI Mailing Lists and personally to members of the DBI
+development team.
+
+
+Basic Information & Information Sources
+=======================================
+
+
+1.1 What is DBI, DBperl, Oraperl and *perl?
+-------------------------------------------
+
+To quote Tim Bunce, the architect and author of DBI:
+
+     ``DBI is a database access Application Programming Interface (API)
+       for the Perl Language. The DBI API Specification defines a set
+       of functions, variables and conventions that provide a consistent
+       database interface independant of the actual database being used.''
+
+In simple language, the DBI interface allows users to access multiple
+database types transparently. So, if you connecting to an Oracle,
+Informix, mSQL, Sybase or whatever database, you don't need to know the
+underlying mechanics of the interface. The API defined by DBI will work
+on all these database types.
+
+A similar benefit is gained by the ability to connect to two *different*
+databases of different vendor within the one perl script, *ie*, I want
+to read data from an Oracle database and insert it back into an Informix
+database all within one program. The DBI layer allows you to do this
+simply and powerfully.
+
+*DBperl* is the old name for the interface specification. It's usually
+now used to denote perl4 modules on database interfacing, such as,
+*oraperl*, *isqlperl*, *ingperl* and so on. These interfaces
+didn't have a standard API and are generally *not* supported.
+
+Here's a list of old DBperl's, their corresponding DBI counterparts and
+support information. *Please note*, the author's listed here generally
+*do not* maintain the DBI module for the same database. These email
+addresses are unverified and should only be used for queries concerning the
+perl4 modules listed below. DBI driver queries should be directed to the
+*dbi-users* mailing list.
+
+     Perl4 Name Database Author DBI Driver
+     ----------  --------          ------                  ----------
+     Sybperl     Sybase            Michael Peppler         DBD::Sybase
+                                   <mpeppler@itf.ch>
+     Oraperl     Oracle 6 & 7      Kevin Stock             DBD::Oracle
+                                   <dbi-users@fugue.com>
+     Ingperl     Ingres            Tim Bunce &             DBD::Ingres
+                                   Ted Lemon
+                                   <dbi-users@fugue.com>
+     Interperl   Interbase         Buzz Moschetti          DBD::Interbase
+                                   <buzz@bear.com>
+     Uniperl     Unify 5.0         Rick Wargo              None
+                                   <rickers@coe.drexel.edu>
+     Pgperl      Postgres          Igor Metz               DBD::Pg
+                                   <metz@iam.unibe.ch>
+     Btreeperl   NDBM              John Conover            SDBM?
+                                   <john@johncon.com>
+     Ctreeperl   C-Tree            John Conover            None
+                                   <john@johncon.com>
+     Cisamperl   Informix C-ISAM   Mathias Koerber         None
+                                   <mathias@unicorn.swi.com.sg>
+     Duaperl     X.500 Directory   Eric Douglas            None
+                 User Agent
+
+However, some DBI modules have DBperl emulation layers, so,
+*DBD::Oracle* for example comes with an Oraperl emulation layer, which
+allows you to run legacy oraperl scripts without modification. The
+emulation layer translates the oraperl API calls into the corresponding
+DBI calls.
+
+Here's a table of emulation layer information:
+
+     Module          Emulation Layer     Status
+     ------          ---------------     ------
+     DBD::Oracle     Oraperl             Complete
+     DBD::Ingres     Ingperl             Complete
+     DBD::Informix   Isqlperl            Under development
+     DBD::Sybase     Sybperl             Working? ( Needs verification )
+     DBD::mSQL       Msqlperl            Experimentally released with 
+                                         DBD::mSQL-0.61
+
+The *Msqlperl* emulation is a special case. *Msqlperl* is a perl5 driver
+for mSQL databases, but does not conform to the DBI Specification. It's
+use is being deprecated in favour of DBD::mSQL. *Msqlperl* may be
+downloaded from CPAN *via*:
+
+     http://www.perl.com/cgi-bin/cpan_mod?module=Msqlperl
+
+
+1.2. Where can I get it from?
+-----------------------------
+
+DBI is primarily distributed from:
+
+     ftp://ftp.demon.co.uk/pub/perl/db
+
+The Comprehensive Perl Archive Network resources should be used for
+retrieving up-to-date versions of the drivers.  Local CPAN sites may be
+accessed *via* Tom Christiansen's splendid *CPAN multiplexer* program
+located at:
+
+     http://www.perl.com/CPAN/
+
+For more specific version information and exact URLs of drivers, please
+see the DBI drivers list and the DBI module pages which can be found on:
+
+     http://www.hermetica.com/technologia/perl/DBI
+
+
+1.3. Where can I get more information?
+--------------------------------------
+
+There are a few information sources on DBI.
+
+*DBI Specification*
+          http://www.hermetica.com/technologia/perl/DBI/doc/dbispec
+
+     There are two specifications available at this link, the new DBI
+     Draft Specification which is a rapidly evolving document as Tim
+     Bunce and the development team drive towards a stable interface,
+     and the old historical DBperl Specification out of which the
+     current DBI interface evolved.
+
+     The latter document should be regarded as being of historical
+     interest only and should not serve as a programming manual, or
+     authoratative in any sense. However, it is still a very useful
+     reference source.
+
+*POD documentation*
+     PODs are chunks of documentation usually embedded within perl
+     programs that document the code ``*in place*'', providing a useful
+     resource for programmers and users of modules. POD for DBI and
+     drivers is beginning to become more commonplace, and documentation
+     for these modules can be read with the following commands.
+
+     The DBI Specification
+          The POD for the DBI Specification can be read with the:
+
+               perldoc DBI
+
+          command.
+
+     Frequently Asked Questions
+          This document, the *Frequently Asked Questions* is also
+          available as POD documentation! You can read this on your own
+          system by typing:
+
+               perldoc DBI::FAQ
+
+          This may be more convenient to persons not permanently, or
+          conveniently, connected to the Internet but the document may
+          not be the latest version.
+
+     Oraperl
+          Users of the Oraperl emulation layer bundled with
+          *DBD::Oracle*, may read up on how to program with the Oraperl
+          interface by typing:
+
+               perldoc Oraperl
+
+          This will produce an updated copy of the original oraperl man
+          page written by Kevin Stock for perl4. The oraperl API is
+          fully listed and described there.
+
+     DBD::mSQL
+          Users of the DBD::mSQL module may read about some of the
+          private functions and quirks of that driver by typing:
+
+               perldoc DBD::mSQL
+
+     POD in general
+          Information on writing POD, and on the philosophy of POD in
+          general, can be read by typing:
+
+               perldoc perlpod
+
+          Users with the Tk module installed may be interested to learn
+          there is a Tk-based POD reader available called `tkpod', which
+          formats POD in a convenient and readable way.
+
+*Rambles, Tidbits and Observations*
+          http://www.hermetica.com/technologia/perl/DBI/tidbits
+
+     There are a series of occasional rambles from various people on the
+     DBI mailing lists who, in an attempt to clear up a simple point,
+     end up drafting fairly comprehensive documents. These are quite
+     often varying in quality, but do provide some insights into the
+     workings of the interfaces.
+
+*``DBI -- The perl5 Database Interface''*
+     This is an article written by Alligator Descartes and Tim Bunce on
+     the structure of DBI. It was published in issue 5 of ``*The Perl
+     Journal*''.  It's *extremely* good. Go buy the magazine. In fact,
+     buy all of them!  ``The Perl Journal''s WWW site is:
+
+          http://www.tpj.com
+
+*``DBperl''*
+     This article, published in the November 1996 edition of ``Dr. Dobbs
+     Journal'' concerned *DBperl*. The author of this edition apparently
+     did not bother to contact any of the DBI development team members
+     for verification of the information contained within his
+     article. Several reviews of the article on the *dbi-users* mailing
+     list were disparaging, to say the least.  The fact the article was
+     written about *DBperl* instead of DBI hints at the staleness of the
+     information.  However, we include the reference for completeness'
+     sake.
+
+*``The Perl5 Database Interface''*
+     This item is a book to be written by Alligator Descartes ( for it
+     is me ) and published by O'Reilly and Associates this coming
+     Winter.
+
+     Here is the putative table of contents for the book.
+
+          * Introduction
+               + Databases
+               + CGI / WWW
+               + perl
+          * Basic Database Concepts
+               + Types of Database
+                    o Flat File
+                    o AnyDBM
+                    o RDBMS
+               + Using Which Database For What...
+          * SQL
+               + Why SQL?
+               + Structuring Information In Databases
+               + Retrieving Data From Databases
+               + Manipulating Data and Data Structures
+          * DBI Architecture
+          * Programming with DBI
+               + DBI Initialization
+               + Handles
+                    o Driver Handles
+                    o Database Handles
+                    o Statement Handles
+               + Connection and Disconnection
+               + Handling Errors
+               + Issuing Simple Queries
+               + Executing Atomic Statements
+               + Statement MetaData
+               + More perl-ish Statements
+               + Binding
+               + Transaction Handling
+               + Utility Methods
+               + Handle Attributes and Dynamic Variables
+          * DBI and ODBC
+          * The Database Drivers
+               + DBD::Oracle and oraperl
+               + DBD::Informix and isqlperl
+               + DBD::mSQL and Msqlperl
+          * Case Studies
+               + DBI and the WWW
+               + Data Migration and Warehousing
+               + Administration Software
+          * Appendix: API Reference / Specification
+          * Appendix: Resources
+
+*README files*
+     The README files included with each driver occasionally contains
+     some very useful information ( no, really! ) that may be pertinent
+     to the user.  Please read them. It makes our worthless existences
+     more bearable. These can all be read from the main DBI WWW page at:
+
+          http://www.hermetica.com/technologia/perl/DBI
+
+*Mailing Lists*
+     There are three mailing lists for DBI run by Ted Lemon. These can
+     all be subscribed to and unsubscribed from *via* the World Wide Web
+     at the URL of:
+
+          http://www.fugue.com/dbi
+
+     If you cannot successfully use the WWW form on the above page,
+     please subscribe to the list in the following manner:
+
+          Email: 'dbi-XXX-request@fugue.com' with a message body of
+          'subscribe'
+
+     Where 'dbi-XXX' is the name of the mailing list you are interested
+     in.  But note that your request will be handled by a human and may
+     take some time.
+
+     The lists that users may participate in are:
+
+     *dbi-announce*
+          This mailing list is for announcements only. Very low
+          traffic. The announcements are usually posted on the main DBI
+          WWW page.
+
+     *dbi-dev*
+          This mailing list is intended for the use of developers
+          discussing ideas and concepts for the DBI interface, API and
+          driver mechanics.  Only any use for developers, or interested
+          parties. Low traffic.
+
+     *dbi-users*
+          This mailing list is a general discussion list used for bug
+          reporting, problem discussion and general enquiries. Medium
+          traffic.
+
+*Mailing List Archives*
+     *US Mailing List Archives*
+               http://outside.organic.com/mail-archives/dbi-users/
+
+          Searchable hypermail archives of the three mailing lists, and
+          some of the much older traffic have been set up for users to
+          browse.
+
+     *European Mailing List Archives*
+               http://www.rosat.mpe-garching.mpg.de/mailing-lists/PerlDB-Interest
+
+          As per the US archive above.
+
+
+Compilation Problems
+====================
+
+
+2.1. Compilation problems or "It fails the test!"
+-------------------------------------------------
+
+First off, consult the online information about the module, beit DBI
+itself, or a DBD, and see if it's a known compilation problem on your
+architecture. These documents can be found at:
+
+     http://www.hermetica.com/technologia/perl/DBI
+
+If it's a known problem, you'll probably have to wait till it gets
+fixed. If you're *really* needing it fixed, try the following:
+
+*Attempt to fix it yourself*
+     This technique is generally *not* recommended to the faint-hearted.
+     If you do think you have managed to fix it, then, send a patch file
+     ( context diff ) to the author with an explanation of:
+
+        * What the problem was, and test cases, if possible.
+
+        * What you needed to do to fix it. Please make sure you mention
+          everything.
+
+        * Platform information, database version, perl version (`perl
+          -V'), module version and DBI version.
+
+*Email the author* Do *NOT* whinge!
+     Please email the address listed in the WWW pages for whichever
+     driver you are having problems with. Do *not* directly email the
+     author at a known address unless it corresponds with the one
+     listed. Some authors, including Tim Bunce, specifically do not want
+     mail sent directly to them.
+
+     We tend to have real jobs to do, and we do read the mailing lists
+     for problems. Besides, we may not have access to <*insert your
+     favourite brain-damaged platform here*> and couldn't be of any
+     assistance anyway! Apologies for sounding harsh, but that's the way
+     of it!
+
+     However, you might catch one of these creative genii at 3am when
+     we're doing this sort of stuff anyway, and get a patch within 5
+     minutes. The atmosphere in the DBI circle is that we do appreciate
+     the users' problems, since we work in similar environments.
+
+     If you are planning to email the author, please furnish as much
+     information as possible, *ie*:
+
+        * ALL the information asked for in the README file for the
+          problematic module. And we mean ALL of it. We don't put lines
+          like that in documentation for the good of our health, or to
+          meet obscure README file standards of length.
+
+        * If you have a core dump, try the *Devel::CoreStack* module for
+          generating a stack trace from the core dump. Send us that too.
+          *Devel::CoreStack* can be found on CPAN at:
+
+               http://www.perl.com/cgi-bin/cpan_mod?module=Devel::CoreStack
+
+        * Module versions, perl version, test cases, operating system
+          versions and *any other pertinent information*.
+
+     Remember, the more information you send us, the quicker we can
+     track problems down. If you send us no useful information, expect
+     nothing back.
+
+*Email the dbi-users Mailing List*
+     It's usually a fairly intelligent idea to *cc* the mailing list
+     anyway with problems. The authors all read the lists, so you lose
+     nothing by mailing there.
+
+
+Platform and Driver Issues
+==========================
+
+
+3.1 What's the difference between ODBC and DBI?
+-----------------------------------------------
+
+Good question! To be filled in more detail! Meanwhile see the notes at
+the end of the DBI README file.
+
+
+3.2 Is DBI supported under Windows 95 / NT platforms?
+-----------------------------------------------------
+
+Finally, yes! Jeff Urlwin has been working diligently on building DBI
+and *DBD::Oracle* under these platforms, and, with the advent of a
+stabler perl and a port of *MakeMaker*, the project has come on by great
+leaps and bounds.
+
+Recent DBI and *DBD::Oracle* modules will build and work out-of-the-box
+on Win32 with the standard perl 5.004 (or later) version of perl.
+
+If you have to use the old non-standard ActiveWare perl port you can't
+use the standard DBI and DBD::Oracle modules out-of-the-box. Details of
+the changes required and pre-patched versions can be found at:
+
+     http://www.hermetica.com/technologia/perl/DBI/win32
+
+
+3.3 Can I access Microsoft Access or SQL-Server databases with DBI?
+-------------------------------------------------------------------
+
+     Contributed by Tim Bunce and Jeff Urlwin
+
+Supplied with DBI-0.79 ( and later ) is an experimental DBI 'emulation
+layer' for the *Win32::ODBC* module. It's called *DBI::W32ODBC* and is,
+at the moment, very minimal. You will need the *Win32::ODBC* module
+available from:
+
+     http://www.roth.net
+
+Given its status, problem reports without fixes are likely to be
+ignored.  You will also need the *Win32 DBI patch kit* as supplied by
+Jeff Urlwin, which you can locate by reading the previous question's
+answer.
+
+To get back to the question, theoretically, yes, you can access
+Microsoft Access and SQL-Server databases from DBI *via* ODBC!
+
+
+3.4 Is the a DBD for <*insert favourite database here*>?
+--------------------------------------------------------
+
+Is is listed on the DBI drivers page?
+
+     http://www.hermetica.com/technologia/perl/DBI/DBD
+
+If not, no. A complete absence of a given database driver from that page
+means that no-one has announced any intention to work on it.
+
+A corollary of the above statement implies that if you see an
+announcement for a driver *not* on the above page, there's a good chance
+it's not actually a DBI driver, and may not conform to the
+specifications. Therefore, questions concerning problems with that code
+should *not* really be addressed to the DBI Mailing Lists.
+
+
+3.5 What's DBM? And why should I use DBI instead?
+-------------------------------------------------
+
+Extracted from ``*DBI - The Database Interface for Perl 5*'':
+
+     ``UNIX was originally blessed with simple file-based ``databases'', namely
+     the dbm system. dbm lets you store data in files, and retrieve
+     that data quickly. However, it also has serious drawbacks.
+
+     File Locking
+
+     The dbm systems did not allow particularly robust file locking
+     capabilities, nor any capability for correcting problems arising through
+     simultaneous writes [ to the database ].
+
+     Arbitrary Data Structures
+
+     The dbm systems only allows a single fixed data structure:
+     key-value pairs. That value could be a complex object, such as a
+     [ C ] struct, but the key had to be unique. This was a large
+     limitation on the usefulness of dbm systems.
+
+     However, dbm systems still provide a useful function for users with
+     simple datasets and limited resources, since they are fast, robust and 
+     extremely well-tested. Perl modules to access dbm systems have now
+     been integrated into the core Perl distribution via the
+     AnyDBM_File module.''
+
+To sum up, DBM is a perfectly satisfactory solution for essentially
+read-only databases, or small and simple datasets with a single
+user. However, for more powerful and scaleable datasets, not to mention
+robust transactional locking, users are recommended to use DBI.
+
+
+3.6 When will mSQL-2 be supported?
+----------------------------------
+
+As of *DBD::mSQL-0.61*, there has been support for *mSQL-2*.  However,
+there is no real support for any of the new methods added to the core
+mSQL library regarding index support yet. These are forthcoming and will
+be accessible *via* `func()' methods private to DBD::mSQL.  You can read
+more about these private methods in the DBD::mSQL POD that can be found
+by typing:
+
+     perldoc DBD::mSQL
+
+provided you have DBD::mSQL correctly installed.
+
+
+3.7 What database do you recommend me using?
+--------------------------------------------
+
+This is a particularly thorny area in which an objective answer is
+difficult to come by, since each dataset, proposed usage and system
+configuration differs from person to person.
+
+From the current author's point of view, if the dataset is relatively
+small, being tables of less than 1 million rows, and less than 1000
+tables in a given database, then mSQL is a perfectly acceptable solution
+to your problem. This database is extremely cheap, is wonderfully robust
+and has excellent support. More information is available on the Hughes
+Technology WWW site at:
+
+     http://www.hughes.com.au
+
+If the dataset is larger than 1 million row tables or 1000 tables, or if
+you have either more money, or larger machines, I would recommend the
+*Oracle RDBMS*.  Oracle's WWW site is an excellent source of more
+information.
+
+     http://www.oracle.com
+
+Informix is another high-end RDBMS that is worth considering. There are
+several differences between Oracle and Informix which are too complex
+for this document to detail. Information on Informix can be found on
+their WWW site at:
+
+     http://www.informix.com
+
+In the case of WWW fronted applications, mSQL may be a better option due
+to slow connection times between a CGI script and the Oracle RDBMS and
+also the amount of resource each Oracle connection will consume. mSQL is
+lighter resource-wise and faster.
+
+These views are not necessarily representative of anyone else's opinions,
+and do not reflect any corporate sponsorship or views. They are provided
+*as-is*.
+
+
+3.8 Is <*insert feature here*> supported in DBI?
+------------------------------------------------
+
+Given that we're making the assumption that the feature you have
+requested is a non-standard database-specific feature, then the answer
+will be no.
+
+DBI reflects a *generic* API that will work for most databases, and has
+no database-specific functionality defined.
+
+However, driver authors may, if they so desire, include hooks to
+database-specific functionality through the `func()' method defined in
+the DBI API.  Script developers should note that use of functionality
+provided *via* the `func()' methods is unlikely to be portable across
+databases.
+
+
+Programming Questions
+=====================
+
+
+4.1 Is DBI any use for CGI programming?
+---------------------------------------
+
+In a word, yes! DBI is hugely useful for CGI programming! In fact, I
+would tentatively say that CGI programming is one of two top uses for
+DBI.
+
+DBI confers the ability to CGI programmers to power WWW-fronted
+databases to their users, which provides users with vast quantities of
+ordered data to play with. DBI also provides the possibility that, if a
+site is receiving far too much traffic than their database server can
+cope with, they can upgrade the database server behind the scenes with
+no alterations to the CGI scripts.
+
+
+4.2 How do I get faster connection times with DBD::Oracle and CGI?
+------------------------------------------------------------------
+
+     Contributed by John D. Groenveld
+
+The Apache `httpd' maintains a pool of `httpd' children to service
+client requests.
+
+Using the Apache *mod_perl* module by *Doug MacEachern*, the perl
+interpreter is embedded with the `httpd' children. The CGI, DBI, and
+your other favorite modules can be loaded at the startup of each
+child. These modules will not be reloaded unless changed on disk.
+
+For more information on Apache, see the Apache Project's WWW site:
+
+     http://www.apache.org
+
+The *mod_perl* module can be downloaded from CPAN *via*:
+
+     http://www.perl.com/cgi-bin/cpan_mod?module=mod_perl
+
+
+4.3 How do I get persistent connections with DBI and CGI?
+---------------------------------------------------------
+
+     Contributed by John D. Groenveld
+
+Using Edmund Mergl's Apache::DBI module, database logins are stored in a
+hash with each of these `httpd' child. If your application is based on a
+single database user, this connection can be started with each child.
+Currently, database connections cannot be shared between `httpd'
+children.
+
+Apache::DBI can be downloaded from CPAN *via*:
+
+     http://www.perl.com/cgi-bin/cpan_mod?module=Apache::DBI
+
+
+4.4 ``My perl script runs from the command line, but fails under the `httpd'!'' Why?
+------------------------------------------------------------------------------------
+
+Basically, a good chance this is occurring is due to the fact that the
+user that you ran it from the command line as has a correctly configured
+set of environment variables, in the case of *DBD::Oracle*, variables
+like `$ORACLE_HOME', `$ORACLE_SID' or `TWO_TASK'.
+
+The `httpd' process usually runs under the user id of `nobody', which
+implies there is no configured environment. Any scripts attempting to
+execute in this situation will correctly fail.
+
+To solve this problem, set the environment for your database in a `BEGIN
+{ }' block at the top of your script. This will generally solve the
+problem.
+
+Similarly, you should check your `httpd' error logfile for any clues, as
+well as the very valuable ``Idiot's Guide To Solving Perl / CGI
+Problems'' and ``Perl CGI Programming FAQ'' for further information. It
+is unlikely the problem is DBI-related.
+
+The ``Idiot's Guide To Solving Perl / CGI Problems'' can be located at:
+
+     http://www.perl.com/perl/faq/index.html
+
+as can the ``Perl CGI Programming FAQ''. Read *BOTH* these documents
+carefully! They will probably save you many hours of work.
+
+
+5.1 Can I do multi-threading with DBI?
+--------------------------------------
+
+As of the current date of this FAQ ( *see top of page* ), no. perl does
+not support multi-threading. However, multi-threading is expected to
+become part of the perl core distribution as of version 5.005, which
+implies that DBI may support multi-threading fairly soon afterwards.
+
+For some OCI example code for Oracle that has multi-threaded `SELECT'
+statements, see:
+
+     http://www.hermetica.com/technologia/oracle/oci/orathreads.tar.gz
+
+
+5.2 How do I handle BLOB data with DBI?
+---------------------------------------
+
+To be written.
+
+
+5.3 How can I invoke stored procedures with DBI?
+------------------------------------------------
+
+There is currently no standard way to call stored procedures with DBI.
+However, if the database lets you use SQL to call stored procedures then
+the DBI and DBD driver probably will to.
+
+For example, assuming that you have created a stored procedure within an
+Oracle database, you can use `$dbh'->`do()' to immediately execute the
+procedure:
+
+     $dbh->do( "BEGIN someProcedure END;" );	# Oracle specific
+
+
+5.4 How can I get return values from stored procedures with DBI?
+----------------------------------------------------------------
+
+     Note: This is Oracle specific. Contributed by Jeff Urlwin
+
+     $sth = $dbh->prepare( "BEGIN foo(:1, :2, :3); END;" )  # Oracle specific
+                || die $sth->errstr;
+     $sth->bind_param(1, $a) || die $sth->errstr;
+     $sth->bind_param_inout(2, \$path, 2000)    || die $sth->errstr;
+     $sth->bind_param_inout(3, \$success, 2000) || die $sth->errstr;
+     $sth->execute || die $sth->errstr;
+
+Note the error checking, it may seem like extra work but it'll probably
+save you hours in the long run. See $sth->{RaiseError} and
+$sth->{printError} in the DBI docs for easier ways to get the same
+effect.
+
+
+5.5 How can I create or drop a database with DBI?
+-------------------------------------------------
+
+Database creation and deletion are concepts that are too abstract
+to be adequately supported by DBI. For example, Oracle does not support the
+concept of dropping a database at all! Also, in Oracle, the database
+*server* essentially *is* the database, whereas in mSQL, the
+server process runs happily without any databases created in it. The
+problem is too disparate to attack easily.
+
+Some drivers, therefore, support database creation and deletion through
+the private `func()' methods. You should check the documentation for the
+drivers you are using to see if they support this mechanism.
+
+
+5.6 How can I commit or rollback a statement with DBI?
+------------------------------------------------------
+
+To be written. See the commit or rollback methods in the DBI docs.
+
+
+5.7 How are NULL values handled by DBI?
+---------------------------------------
+
+NULL values in DBI are specified to be treated as the value undef.
+NULLs can be inserted into databases as NULL, for example:
+
+     $rv = $dbh->do( "INSERT INTO table VALUES( NULL )" );
+
+but when queried back, the NULLs should be tested against undef.  This
+is standard across all drivers.
+
+
+5.8 What are these `func()' methods all about?
+----------------------------------------------
+
+The `func()' method is defined within DBI as being an entry point for
+database-specific functionality, *eg*, the ability to create or drop
+databases. Invoking these driver-specific methods is simple, for
+example, to invoke a `createDatabase' method that has one argument, we
+would write:
+
+     $rv = $dbh->func( 'argument', 'createDatabase' );
+
+Software developers should note that the `func()' methods are
+non-portable between databases.
+
+
+Support and Training
+====================
+
+The Perl5 Database Interface is *FREE* software. IT COMES WITHOUT
+WARRANTY OF ANY KIND. See the DBI README and DBI documentation for more
+details.
+
+However, some organizations are providing either technical support or
+training programs on DBI. The present author has no knowledge as to the
+quality of these services. The links are included for reference purposes
+only.
+
+
+Commercial Support
+------------------
+
+The Perl Clinic
+     The Perl Clinic can arrange commercial support contracts for Perl, DBI,
+     *DBD::Oracle* and Oraperl. Support is provided by the company with whom
+     Tim Bunce, author of DBI and DBD::Oracle, works. For more
+     information on their services, please see:
+
+          http://www.perl.co.uk/tpc
+
+     for more details.
+
+
+Training
+--------
+
+No training programs are known at this time.
+
+
+Other References
+================
+
+In this section, we present some miscellaneous WWW links that may be of
+some interest to DBI users. These are not verified and may result in
+unknown sites or missing documents.
+
+     http://www-ccs.cs.umass.edu/db.html
+     http://www.odmg.org/odmg93/updates_dbarry.html
+     http://www.jcc.com/sql_stnd.html
+
+
+AUTHOR
+======
+
+Alligator Descartes <*descarte@hermetica.com*>
+
+
+COPYRIGHT
+=========
+
+This document is Copyright (c)1994-1997 Alligator Descartes, with
+portions Copyright (c)1994-1997 their original authors. This module is
+released under the 'Artistic' license which you can find in the perl
+distribution.
+
+This document is Copyright (c)1997 Alligator Descartes. All rights
+reserved.  Permission to distribute this document, in full or in part,
+via email, Usenet, ftp archives or http is granted providing that no
+charges are involved, reasonable attempt is made to use the most current
+version and all credits and copyright notices are retained ( the AUTHOR
+and COPYRIGHT sections ).  Requests for other distribution rights,
+including incorporation into commercial products, such as books,
+magazine articles or CD-ROMs should be made to Alligator Descartes
+<*descarte@hermetica.com*>.
+
+
+
+
+File: pm.info, Node: DBI/W32ODBC, Next: DFA/Kleene, Prev: DBI/FAQ, Up: Module List
+
+An experimental DBI emulation layer for Win32::ODBC
+***************************************************
+
+
+
+NAME
+====
+
+DBI::W32ODBC - An experimental DBI emulation layer for Win32::ODBC
+
+
+SYNOPSIS
+========
+
+     use DBI::W32ODBC;
+
+     # apart from the line above everything is just the same as with
+     # the real DBI when using a basic driver with few features.
+
+     $dbh = DBI->connect(...);
+
+     $rc  = $dbh->do($statement);
+
+     $sth = $dbh->prepare($statement);
+
+     $rc = $sth->execute;
+
+     @row_ary = $sth->fetchrow;
+     $row_ref = $sth->fetch;
+
+     $rc = $sth->finish;
+
+     $rv = $sth->rows;
+
+     $rc = $dbh->disconnect;
+
+     $sql = $dbh->quote($string);
+
+     $rv  = $h->err;
+     $str = $h->errstr;
+
+
+DESCRIPTION
+===========
+
+THIS IS A VERY EXPERIMENTAL PURE PERL DBI EMULATION LAYER FOR
+Win32::ODBC
+
+It was developed for use with an Access database and the quote() method
+is very likely to need reworking.
+
+If you can improve this code I'd be interested in hearing out it. If you
+are having trouble using it please respect the fact that it's very
+experimental.
+
+
+
+
+File: pm.info, Node: DFA/Kleene, Next: Data/Dumper, Prev: DBI/W32ODBC, Up: Module List
+
+Kleene's Algorithm for Deterministic Finite Automata
+****************************************************
+
+
+
+NAME
+====
+
+DFA::Kleene - Kleene's Algorithm for Deterministic Finite Automata
+
+Calculates the "language" (set of words) accepted (= recognized) by a
+Deterministic Finite Automaton
+
+See `Math::Kleene(3)' in this node for the theory behind this algorithm!
+
+
+SYNOPSIS
+========
+
+   * `use DFA::Kleene qw(initialize define_accepting_states'
+     `define_delta kleene example);'
+
+   * `use DFA::Kleene qw(:all);'
+
+   * `&initialize(6,"ab");'
+
+     Define the number of states (state #1 is the "start" state!) of
+     your Deterministic Finite Automaton and the alphabet used (as a
+     string containing all characters which are part of the alphabet).
+
+   * `&define_accepting_states(2,3,4,5);'
+
+     Define which states are "accepting states" in your Deterministic
+     Finite Automaton (list of state numbers).
+
+   * `&define_delta(1,'a',4);'
+
+     Define the state transition function "delta" (arguments are: "from"
+     state, character (or empty string!) read during the transition,
+     "to" state).
+
+     You need several calls to this function in order to build a
+     complete transition table describing your Deterministic Finite
+     Automaton.
+
+   * `@language = &kleene();'
+
+     Returns a (sorted) list of regular expressions describing the
+     language (= set of patterns) recognized ("accepted") by your
+     Deterministic Finite Automaton.
+
+   * `&example();'
+
+     Calculates the language of a sample Deterministic Finite Automaton.
+
+     Prints a (sorted) list of regular expressions which should be
+     equivalent to the following regular expression:
+
+          (a(a)*b)*a(a)*(b)*
+
+     This is the same as
+
+          ((a+)b)*(a+)b*
+
+
+DESCRIPTION
+===========
+
+The routines in this module allow you to define a Deterministic Finite
+Automaton and to compute the "language" (set of "words" or "patterns")
+accepted (= recognized) by it.
+
+Actually, a list of regular expressions is generated which describe the
+same language (set of patterns) as the one accepted by your
+Deterministic Finite Automaton.
+
+The output generated by this module can easily be modified to produce
+Perl-style regular expressions which can actually be used to recognize
+words (= patterns) contained in the language defined by your
+Deterministic Finite Automaton.
+
+Other modules in this series (variants of Kleene's algorithm):
+
+   * Math::MatrixBool (see "Kleene()")
+
+   * Math::MatrixReal (see "kleene()")
+
+
+SEE ALSO
+========
+
+Math::MatrixBool(3), Math::MatrixReal(3), Math::Kleene(3),
+Set::IntegerRange(3), Set::IntegerFast(3), Bit::Vector(3).
+
+
+VERSION
+=======
+
+This man page documents "DFA::Kleene" version 1.0.
+
+
+AUTHOR
+======
+
+Steffen Beyer <sb@sdm.de>.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996, 1997 by Steffen Beyer. All rights reserved.
+
+
+LICENSE
+=======
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Data/Dumper, Next: Data/Flow, Prev: DFA/Kleene, Up: Module List
+
+stringified perl data structures, suitable for both printing and eval
+*********************************************************************
+
+
+
+NAME
+====
+
+Data::Dumper - stringified perl data structures, suitable for both
+printing and eval
+
+
+SYNOPSIS
+========
+
+     use Data::Dumper;
+
+     # simple procedural interface
+     print Dumper($foo, $bar);
+
+     # extended usage with names
+     print Data::Dumper->Dump([$foo, $bar], [qw(foo *ary)]);
+
+     # configuration variables
+     {
+       local $Data::Dump::Purity = 1;
+       eval Data::Dumper->Dump([$foo, $bar], [qw(foo *ary)]);
+     }
+
+     # OO usage
+     $d = Data::Dumper->new([$foo, $bar], [qw(foo *ary)]);
+        ...
+     print $d->Dump;
+        ...
+     $d->Purity(1);
+     $d->Terse(1);
+     $d->Deepcopy(1);
+     eval $d->Dump;
+
+
+DESCRIPTION
+===========
+
+Given a list of scalars or reference variables, writes out their
+contents in perl syntax. The references can also be objects.  The
+contents of each variable is output in a single Perl statement.
+
+The return value can be evaled to get back the original reference
+structure. Bear in mind that a reference so created will not preserve
+pointer equalities with the original reference.
+
+Handles self-referential structures correctly.  Any references that are
+the same as one of those passed in will be marked `$VAR'n (where n is a
+numeric suffix), and other duplicate references to substructures within
+`$VAR'n will be appropriately labeled using arrow notation.  You can
+specify names for individual values to be dumped if you use the `Dump()'
+method, or you can change the default `$VAR' prefix to something else.
+See `$Data::Dumper::Varname' in this node and `$Data::Dumper::Terse' in
+this node below.
+
+The default output of self-referential structures can be evaled, but the
+nested references to `$VAR'n will be undefined, since a recursive
+structure cannot be constructed using one Perl statement.  You can set
+the `Purity' flag to 1 to get additional statements that will correctly
+fill in these references.
+
+In the extended usage form, the references to be dumped can be given
+user-specified names.  If a name begins with a *, the output will
+describe the dereferenced type of the supplied reference for hashes and
+arrays.  Output of names will be avoided where possible if the `Terse'
+flag is set.
+
+Several styles of output are possible, all controlled by setting the
+`Indent' flag.  See `Configuration Variables or Methods' in this node
+below for details.
+
+
+Methods
+-------
+
+*PACKAGE*->new(*ARRAYREF [*, *ARRAYREF]*)
+     Returns a newly created `Data::Dumper' object.  The first argument
+     is an anonymous array of values to be dumped.  The optional second
+     argument is an anonymous array of names for the values.  The names
+     need not have a leading `$' sign, and must be comprised of
+     alphanumeric characters.  You can begin a name with a * to specify
+     that the dereferenced type must be dumped instead of the reference
+     itself, for ARRAY and HASH references.
+
+     The prefix specified by $Data::Dumper::Varname will be used with a
+     numeric suffix if the name for a value is undefined.
+
+     Data::Dumper will catalog all references encountered while dumping
+     the values. Cross-references (in the form of names of substructures
+     in perl syntax) will be inserted at all possible points, preserving
+     any structural interdependencies in the original set of values.
+     Structure traversal is depth-first, and proceeds in order from the
+     first supplied value to the last.
+
+*$OBJ*->Dump  *or*  *PACKAGE*->Dump(*ARRAYREF [*, *ARRAYREF]*)
+     Returns the stringified form of the values stored in the object
+     (preserving the order in which they were supplied to new), subject
+     to the configuration options below.  In an array context, it
+     returns a list of strings corresponding to the supplied values.
+
+     The second form, for convenience, simply calls the new method on
+     its arguments before dumping the object immediately.
+
+*$OBJ*->Dumpxs  *or*  *PACKAGE*->Dumpxs(*ARRAYREF [*, *ARRAYREF]*)
+     This method is available if you were able to compile and install
+     the XSUB extension to `Data::Dumper'. It is exactly identical to
+     the `Dump' method above, only about 4 to 5 times faster, since it
+     is written entirely in C.
+
+*$OBJ*->Seen(*[HASHREF]*)
+     Queries or adds to the internal table of already encountered
+     references.  You must use Reset to explicitly clear the table if
+     needed.  Such references are not dumped; instead, their names are
+     inserted wherever they are encountered subsequently.
+
+     Expects a anonymous hash of name => value pairs.  Same rules apply
+     for names as in new.  If no argument is supplied, will return the
+     "seen" list of name => value pairs, in an array context.
+
+*$OBJ*->Values(*[ARRAYREF]*)
+     Queries or replaces the internal array of values that will be
+     dumped.
+
+*$OBJ*->Names(*[ARRAYREF]*)
+     Queries or replaces the internal array of user supplied names for
+     the values that will be dumped.
+
+*$OBJ*->Reset
+     Clears the internal table of "seen" references.
+
+
+Functions
+---------
+
+Dumper(LIST)
+     Returns the stringified form of the values in the list, subject to
+     the configuration options below.  The values will be named `$VAR'n
+     in the output, where n is a numeric suffix.  Will return a list of
+     strings in an array context.
+
+DumperX(LIST)
+     Identical to the `Dumper()' function above, but this calls the XSUB
+     implementation.  Only available if you were able to compile and
+     install the XSUB extensions in `Data::Dumper'.
+
+
+Configuration Variables or Methods
+----------------------------------
+
+Several configuration variables can be used to control the kind of
+output generated when using the procedural interface.  These variables
+are usually localized in a block so that other parts of the code are not
+affected by the change.
+
+These variables determine the default state of the object created by
+calling the new method, but cannot be used to alter the state of the
+object thereafter.  The equivalent method names should be used instead
+to query or set the internal state of the object.
+
+$Data::Dumper::Indent  *or*  *$OBJ*->Indent(*[NEWVAL]*)
+     Controls the style of indentation.  It can be set to 0, 1, 2 or 3.
+     Style 0 spews output without any newlines, indentation, or spaces
+     between list items.  It is the most compact format possible that
+     can still be called valid perl.  Style 1 outputs a readable form
+     with newlines but no fancy indentation (each level in the structure
+     is simply indented by a fixed amount of whitespace).  Style 2 (the
+     default) outputs a very readable form which takes into account the
+     length of hash keys (so the hash value lines up).  Style 3 is like
+     style 2, but also annotates the elements of arrays with their index
+     (but the comment is on its own line, so array output consumes twice
+     the number of lines).  Style 2 is the default.
+
+$Data::Dumper::Purity  *or*  *$OBJ*->Purity(*[NEWVAL]*)
+     Controls the degree to which the output can be evaled to recreate
+     the supplied reference structures.  Setting it to 1 will output
+     additional perl statements that will correctly recreate nested
+     references.  The default is 0.
+
+$Data::Dumper::Pad  *or*  *$OBJ*->Pad(*[NEWVAL]*)
+     Specifies the string that will be prefixed to every line of the
+     output.  Empty string by default.
+
+$Data::Dumper::Varname  *or*  *$OBJ*->Varname(*[NEWVAL]*)
+     Contains the prefix to use for tagging variable names in the
+     output. The default is "VAR".
+
+$Data::Dumper::Useqq  *or*  *$OBJ*->Useqq(*[NEWVAL]*)
+     When set, enables the use of double quotes for representing string
+     values.  Whitespace other than space will be represented as
+     `[\n\t\r]', "unsafe" characters will be backslashed, and
+     unprintable characters will be output as quoted octal integers.
+     Since setting this variable imposes a performance penalty, the
+     default is 0.  The `Dumpxs()' method does not honor this flag yet.
+
+$Data::Dumper::Terse  *or*  *$OBJ*->Terse(*[NEWVAL]*)
+     When set, Data::Dumper will emit single, non-self-referential
+     values as atoms/terms rather than statements.  This means that the
+     `$VAR'n names will be avoided where possible, but be advised that
+     such output may not always be parseable by eval.
+
+$Data::Dumper::Freezer  *or*  $*OBJ*->Freezer(*[NEWVAL]*)
+     Can be set to a method name, or to an empty string to disable the
+     feature.  Data::Dumper will invoke that method via the object
+     before attempting to stringify it.  This method can alter the
+     contents of the object (if, for instance, it contains data
+     allocated from C), and even rebless it in a different package.  The
+     client is responsible for making sure the specified method can be
+     called via the object, and that the object ends up containing only
+     perl data types after the method has been called.  Defaults to an
+     empty string.
+
+$Data::Dumper::Toaster  *or*  $*OBJ*->Toaster(*[NEWVAL]*)
+     Can be set to a method name, or to an empty string to disable the
+     feature.  Data::Dumper will emit a method call for any objects that
+     are to be dumped using the syntax `bless(DATA, CLASS)-'METHOD()>.
+     Note that this means that the method specified will have to perform
+     any modifications required on the object (like creating new state
+     within it, and/or reblessing it in a different package) and then
+     return it.  The client is responsible for making sure the method
+     can be called via the object, and that it returns a valid object.
+     Defaults to an empty string.
+
+$Data::Dumper::Deepcopy  *or*  $*OBJ*->Deepcopy(*[NEWVAL]*)
+     Can be set to a boolean value to enable deep copies of structures.
+     Cross-referencing will then only be done when absolutely essential
+     (i.e., to break reference cycles).  Default is 0.
+
+
+Exports
+-------
+
+Dumper
+
+EXAMPLE
+=======
+
+Run these code snippets to get a quick feel for the behavior of this
+module.  When you are through with these examples, you may want to add
+or change the various configuration variables described above, to see
+their behavior.  (See the testsuite in the Data::Dumper distribution for
+more examples.)
+
+     use Data::Dumper;
+
+     package Foo;
+     sub new {bless {'a' => 1, 'b' => sub { return "foo" }}, $_[0]};
+
+     package Fuz;                       # a weird REF-REF-SCALAR object
+     sub new {bless \($_ = \ 'fu\'z'), $_[0]};
+
+     package main;
+     $foo = Foo->new;
+     $fuz = Fuz->new;
+     $boo = [ 1, [], "abcd", \*foo,
+              {1 => 'a', 023 => 'b', 0x45 => 'c'}, 
+              \\"p\q\'r", $foo, $fuz];
+
+     ########
+     # simple usage
+     ########
+
+     $bar = eval(Dumper($boo));
+     print($@) if $@;
+     print Dumper($boo), Dumper($bar);  # pretty print (no array indices)
+
+     $Data::Dumper::Terse = 1;          # don't output names where feasible
+     $Data::Dumper::Indent = 0;         # turn off all pretty print
+     print Dumper($boo), "\n";
+
+     $Data::Dumper::Indent = 1;         # mild pretty print
+     print Dumper($boo);
+
+     $Data::Dumper::Indent = 3;         # pretty print with array indices
+     print Dumper($boo);
+
+     $Data::Dumper::Useqq = 1;          # print strings in double quotes
+     print Dumper($boo);
+
+
+     ########
+     # recursive structures
+     ########
+
+
+     @c = ('c');
+     $c = \@c;
+     $b = {};
+     $a = [1, $b, $c];
+     $b->{a} = $a;
+     $b->{b} = $a->[1];
+     $b->{c} = $a->[2];
+     print Data::Dumper->Dump([$a,$b,$c], [qw(a b c)]);
+
+
+     $Data::Dumper::Purity = 1;         # fill in the holes for eval
+     print Data::Dumper->Dump([$a, $b], [qw(*a b)]); # print as @a
+     print Data::Dumper->Dump([$b, $a], [qw(*b a)]); # print as %b
+
+
+     $Data::Dumper::Deepcopy = 1;       # avoid cross-refs
+     print Data::Dumper->Dump([$b, $a], [qw(*b a)]);
+
+
+     $Data::Dumper::Purity = 0;         # avoid cross-refs
+     print Data::Dumper->Dump([$b, $a], [qw(*b a)]);
+
+
+     ########
+     # object-oriented usage
+     ########
+
+
+     $d = Data::Dumper->new([$a,$b], [qw(a b)]);
+     $d->Seen({'*c' => $c});            # stash a ref without printing it
+     $d->Indent(3);
+     print $d->Dump;
+     $d->Reset;                         # empty the seen cache
+     $d->Purity(0);
+     print join "----\n", $d->Dump;
+
+
+     ########
+     # persistence
+     ########
+
+
+     package Foo;
+     sub new { bless { state => 'awake' }, shift }
+     sub Freeze {
+         my $s = shift;
+     	print STDERR "preparing to sleep\n";
+     	$s->{state} = 'asleep';
+     	return bless $s, 'Foo::ZZZ';
+     }
+
+     package Foo::ZZZ;
+     sub Thaw {
+         my $s = shift;
+     	print STDERR "waking up\n";
+     	$s->{state} = 'awake';
+     	return bless $s, 'Foo';
+     }
+
+     package Foo;
+     use Data::Dumper;
+     my $a = Foo->new;
+     my $b = Data::Dumper->new([$a], ['c']);
+     $b->Freezer('Freeze');
+     $b->Toaster('Thaw');
+     my $c = $b->Dump;
+     print $c;
+     my $d = eval $c;
+     print Data::Dumper->Dump([$d], ['d']);
+
+
+BUGS
+====
+
+Due to limitations of Perl subroutine call semantics, you cannot pass an
+array or hash.  Prepend it with a `\' to pass its reference instead.
+This will be remedied in time, with the arrival of prototypes in later
+versions of Perl.  For now, you need to use the extended usage form, and
+prepend the name with a * to output it as a hash or array.
+
+`Data::Dumper' cheats with CODE references.  If a code reference is
+encountered in the structure being processed, an anonymous subroutine
+that contains the string '"DUMMY"' will be inserted in its place, and a
+warning will be printed if `Purity' is set.  You can eval the result,
+but bear in mind that the anonymous sub that gets created is just a
+placeholder.  Someday, perl will have a switch to cache-on-demand the
+string representation of a compiled piece of code, I hope.
+
+The `Useqq' flag is not honored by `Dumpxs()' (it always outputs strings
+in single quotes).
+
+SCALAR objects have the weirdest looking bless workaround.
+
+
+AUTHOR
+======
+
+Gurusamy Sarathy gsar@umich.edu
+
+Copyright (c) 1996 Gurusamy Sarathy. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+VERSION
+=======
+
+Version 2.07 (7 December 1996)
+
+
+SEE ALSO
+========
+
+perl(1)
+
+
+
+

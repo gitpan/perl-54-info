@@ -1,0 +1,2234 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Math/PRSG, Next: Math/Spline, Prev: Math/MatrixReal, Up: Module List
+
+Perl interface to pseudo random sequence generator function.
+************************************************************
+
+
+
+NAME
+====
+
+PRSG - Perl interface to pseudo random sequence generator function.
+
+
+SYNOPSIS
+========
+
+     use Math::PRSG;
+
+
+
+DESCRIPTION
+===========
+
+This perl extension implements a (159, 31, 0) LFSR, giving a period of
+160 bits.  This can then be used as a RNG if seeded well (ie. with 160
+bits of entropy) and if the output is fed through a message digest
+function (in order to prevent any prediction).
+
+
+FUNCTIONS
+=========
+
+new
+          my $prsg = new PRSG $seed;
+
+     Create a new PRSG object.  A 160 bit (20-byte) $seed must be
+     provided, which is used to seed the LFSR.
+
+seed
+          $prsg->seed($rnd);
+
+     Seed the LFSR with $rnd.
+
+clock
+          $value = $prsg->clock();
+
+     Clock the LFSR, returning the new register value as a 20-byte
+     string.
+
+
+COPYRIGHT
+=========
+
+Systemics Ltd ( http://www.systemics.com/ )
+
+
+
+File: pm.info, Node: Math/Spline, Next: Math/Trig, Prev: Math/PRSG, Up: Module List
+
+SYNOPSIS          require Math::Spline;     $spline=new Math::Spline(\@x,\@y)     $y_interp=$spline->evaluate($x);
+==================================================================================================================
+
+     use Math::Spline qw(spline linsearch binsearch);
+     use Math::Derivative qw(Derivative2);
+     @y2=Derivative2(\@x,\@y);
+     $index=binsearch(\@x,$x);
+     $index=linsearch(\@x,$x,$index);
+     $y_interp=spline(\@x,\@y,\@y2,$index,$x);
+
+
+DESCRIPTION
+===========
+
+This package provides cubic spline interpolation of numeric data. The
+data is passed as references to two arrays containing the x and y
+ordinates. It may be used as an exporter of the numerical functions or,
+more easily as a class module.
+
+The *Math::Spline* class constructor new takes references to the arrays
+of x and y ordinates of the data. An interpolation is performed using
+the *evaluate* method, which, when given an x ordinate returns the
+interpolate y ordinate at that value.
+
+The *spline* function takes as arguments references to the x and y
+ordinate array, a reference to the 2nd derivatives (calculated using
+*Derivative2*, the low index of the interval in which to interpolate
+and the x ordinate in that interval. Returned is the interpolated y
+ordinate. Two functions are provided to look up the appropriate index in
+the array of x data. For random calls *binsearch* can be used - give a
+reference to the x ordinates and the x loopup value it returns the low
+index of the interval in the data in which the value lies. Where the
+lookups are strictly in ascending sequence (e.g. if interpolating to
+produce a higher resolution data set to draw a curve) the *linsearch*
+function may more efficiently be used. It performs like *binsearch*, but
+requires a third argument being the previous index value, which is
+incremented if necessary.
+
+
+NOTE
+====
+
+requires Math::Derivative module
+
+
+EXAMPLE
+=======
+
+     require Math::Spline;
+     my @x=(1,3,8,10);
+     my @y=(1,2,3,4);						    
+     $spline=new Math::Spline(\@x,\@y);
+     print $spline->evaluate(5)."\n";
+
+produces the output
+
+2.44
+
+
+HISTORY
+=======
+
+$Log: Spline.pm,v $ Revision 1.1 1995/12/26 17:28:17 willijar Initial
+revision
+
+
+BUGS
+====
+
+Bug reports or constructive comments are welcome.
+
+
+AUTHOR
+======
+
+John A.R. Williams <J.A.R.Williams@aston.ac.uk>
+
+
+SEE ALSO
+========
+
+"Numerical Recipies: The Art of Scientific Computing" W.H. Press,
+B.P. Flannery, S.A. Teukolsky, W.T. Vetterling.  Cambridge University
+Press. ISBN 0 521 30811 9.
+
+
+
+
+File: pm.info, Node: Math/Trig, Next: Math/TrulyRandom, Prev: Math/Spline, Up: Module List
+
+trigonometric functions
+***********************
+
+
+
+NAME
+====
+
+Math::Trig - trigonometric functions
+
+
+SYNOPSIS
+========
+
+     use Math::Trig;
+
+     $x = tan(0.9);
+     $y = acos(3.7);
+     $z = asin(2.4);
+
+     $halfpi = pi/2;
+
+     $rad = deg2rad(120);
+
+
+DESCRIPTION
+===========
+
+Math::Trig defines many trigonometric functions not defined by the
+core Perl which defines only the `sin()' and `cos()'.  The constant
+*pi* is also defined as are a few convenience functions for angle
+conversions.
+
+
+TRIGONOMETRIC FUNCTIONS
+=======================
+
+The tangent
+
+     tan
+
+The cofunctions of the sine, cosine, and tangent (cosec/csc and
+cotan/cot are aliases)
+
+     csc cosec sec cot cotan
+
+The arcus (also known as the inverse) functions of the sine, cosine, and
+tangent
+
+     asin acos atan
+
+The principal value of the arc tangent of y/x
+
+     atan2(y, x)
+
+The arcus cofunctions of the sine, cosine, and tangent (acosec/acsc and
+acotan/acot are aliases)
+
+     acsc acosec asec acot acotan
+
+The hyperbolic sine, cosine, and tangent
+
+     sinh cosh tanh
+
+The cofunctions of the hyperbolic sine, cosine, and tangent (cosech/csch
+and cotanh/coth are aliases)
+
+     csch cosech sech coth cotanh
+
+The arcus (also known as the inverse) functions of the hyperbolic sine,
+cosine, and tangent
+
+     asinh acosh atanh
+
+The arcus cofunctions of the hyperbolic sine, cosine, and tangent
+(acsch/acosech and acoth/acotanh are aliases)
+
+     acsch acosech asech acoth acotanh
+
+The trigonometric constant *pi* is also defined.
+
+     $pi2 = 2 * pi;
+
+
+ERRORS DUE TO DIVISION BY ZERO
+------------------------------
+
+The following functions
+
+     tan
+     sec
+     csc
+     cot
+     asec
+     acsc
+     tanh
+     sech
+     csch
+     coth
+     atanh
+     asech
+     acsch
+     acoth
+
+cannot be computed for all arguments because that would mean dividing by
+zero. These situations cause fatal runtime errors looking like this
+
+     cot(0): Division by zero.
+     (Because in the definition of cot(0), the divisor sin(0) is 0)
+     Died at ...
+
+For the `csc', `cot', `asec', `acsc', `csch', `coth', `asech', `acsch',
+the argument cannot be `0' (zero). For the `atanh', `acoth', the
+argument cannot be 1 (one). For the tan, `sec', tanh, `sech', the
+argument cannot be *pi/2 + k * pi*, where k is any integer.
+
+
+SIMPLE (REAL) ARGUMENTS, COMPLEX RESULTS
+----------------------------------------
+
+Please note that some of the trigonometric functions can break out from
+the *real axis* into the *complex plane*. For example `asin(2)' has no
+definition for plain real numbers but it has definition for complex
+numbers.
+
+In Perl terms this means that supplying the usual Perl numbers (also
+known as scalars, please see *Note Perldata: (perl.info)perldata,) as
+input for the trigonometric functions might produce as output results
+that no more are simple real numbers: instead they are complex numbers.
+
+The Math::Trig handles this by using the Math::Complex package which
+knows how to handle complex numbers, please see *Note Math/Complex:
+Math/Complex, for more information. In practice you need not to worry
+about getting complex numbers as results because the Math::Complex takes
+care of details like for example how to display complex numbers. For
+example:
+
+     print asin(2), "\n";
+    
+     should produce something like this (take or leave few last decimals):
+
+     1.5707963267949-1.31695789692482i
+
+That is, a complex number with the real part of approximately `1.571'
+and the imaginary part of approximately `-1.317'.
+
+
+ANGLE CONVERSIONS
+=================
+
+(Plane, 2-dimensional) angles may be converted with the following
+functions.
+
+     $radians  = deg2rad($degrees);
+     $radians  = grad2rad($gradians);
+
+     $degrees  = rad2deg($radians);
+     $degrees  = grad2deg($gradians);
+
+     $gradians = deg2grad($degrees);
+     $gradians = rad2grad($radians);
+
+The full circle is 2 *pi* radians or *360* degrees or *400* gradians.
+
+
+BUGS
+====
+
+Saying `use Math::Trig;' exports many mathematical routines in the
+caller environment and even overrides some (sin, cos).  This is
+construed as a feature by the Authors, actually... ;-)
+
+The code is not optimized for speed, especially because we use
+Math::Complex and thus go quite near complex numbers while doing the
+computations even when the arguments are not. This, however, cannot be
+completely avoided if we want things like `asin(2)' to give an answer
+instead of giving a fatal runtime error.
+
+
+AUTHORS
+=======
+
+Jarkko Hietaniemi <`jhi@iki.fi'> and Raphael Manfredi
+<`Raphael_Manfredi@grenoble.hp.com'>.
+
+
+
+
+File: pm.info, Node: Math/TrulyRandom, Next: Math/VecStat, Prev: Math/Trig, Up: Module List
+
+Perl interface to a truly random number generator function
+**********************************************************
+
+
+
+NAME
+====
+
+TrulyRandom - Perl interface to a truly random number generator function
+
+
+SYNOPSIS
+========
+
+     use Math::TrulyRandom;
+
+     $random = truly_random_value();
+
+
+DESCRIPTION
+===========
+
+The *TrulyRandom* module provides an ability to generate truly random
+numbers from within Perl programs.  The source of the randomness is from
+interrupt timing discrepancies.
+
+
+EXAMPLE
+=======
+
+     $random = truly_random_value();
+
+
+BUGS
+====
+
+The random numbers take a long time (in computer terms) to generate, so
+are only really useful for seeding pseudo random sequence generators.
+
+
+COPYRIGHT
+=========
+
+This implementation derives from the truly random number generator
+function developed by Matt Blaze and Don Mitchell, and is copyright of
+AT&T.  Other parts of this perl extension are copyright of Systemics Ltd
+( http://www.systemics.com/ ).
+
+
+
+File: pm.info, Node: Math/VecStat, Next: Msql, Prev: Math/TrulyRandom, Up: Module List
+
+Some basic numeric stats on vectors
+***********************************
+
+
+
+NAME
+====
+
+     Math::VecStat - Some basic numeric stats on vectors
+
+
+SYNOPSIS
+========
+
+     use Math::VecStat qw(max min maxabs minabs sum average);
+     $max=max(@vector);
+     $max=max(\@vector);
+     ($max,$imax)=max(@vector);
+     ($max,$imax)=max(\@vector);
+     $min=min(@vector);
+     $min=min(\@vector);
+     ($max,$imin)=min(@vector);
+     ($max,$imin)=min(\@vector);
+     $max=maxabs(@vector);
+     $max=maxabs(\@vector);
+     ($max,$imax)=maxabs(@vector);
+     ($max,$imax)=maxabs(\@vector);
+     $min=minabs(@vector);
+     $min=minabs(\@vector);
+     ($max,$imin)=minabs(@vector);
+     ($max,$imin)=minabs(\@vector);
+     $sum=sum($v1,$v2,...);
+     $sum=sum(@vector);
+     $sum=sum(\@vector);
+     $average=average($v1,$v2,...);
+     $av=average(@vector);
+     $av=average(\@vector);
+
+
+DESCRIPTION
+===========
+
+     This package procides some basic statistics on numerical
+     vectors. All the subroutines can take a copy of the vector, or,
+     preferably for efficiency, a reference to the vector to be operated
+     on.
+
+max(@vector), max(\@vector)
+     return the maximum value of given values or vector. In an array
+     context returns the value and the index in the array where it
+     occurs.
+
+min(@vector), min(\@vector)
+     return the minimum value of given values or vector, In an array
+     context returns the value and the index in the array where it
+     occurs.
+
+maxabs(@vector), maxabs(\@vector)
+     return the maximum value of absolute of the given values or
+     vector. In an array context returns the value and the index in the
+     array where it occurs.
+
+minabs(@vector), minabs(\@vector)
+     return the minimum value of the absolute of the given values or
+     vector, In an array context returns the value and the index in the
+     array where it occurs.
+
+sum($v1,$v2,...), sum(@vector), sum(\@vector)
+     return the sum of the given values or vector
+
+average($v1,$v2,..), average(@vector), average(\@vector)
+     return the average of the given values or vector
+
+
+HISTORY
+=======
+
+     $Log: VecStat.pm,v $
+     Revision 1.5  1997/02/26 17:20:37  willijar
+     Added line before pod header so pod2man installs man page correctly
+
+     Revision 1.4  1996/02/20 07:53:10  willijar
+     Added ability to return index in array contex to max and min
+     functions. Added minabs and maxabs functions.
+     Thanks to Mark Borges <mdb@cdc.noaa.gov> for these suggestions.
+
+     Revision 1.3  1996/01/06 11:03:30  willijar
+     Fixed stupid bug that crept into looping in min and max functions
+
+     Revision 1.2  1995/12/26 09:56:38  willijar
+     Oops - removed xy data functions.
+
+     Revision 1.1  1995/12/26 09:39:07  willijar
+     Initial revision
+
+
+BUGS
+====
+
+Let me know. I welcome any appropriate additions for this package.
+
+
+AUTHOR
+======
+
+John A.R. Williams <J.A.R.Williams@aston.ac.uk>
+
+
+
+
+File: pm.info, Node: Msql, Next: Msql/Integrat, Prev: Math/VecStat, Up: Module List
+
+Perl interface to the mSQL database
+***********************************
+
+
+
+NAME
+====
+
+Msql - Perl interface to the mSQL database
+
+
+SYNOPSIS
+========
+
+     use Msql;
+	
+     $dbh = Msql->connect;
+     $dbh = Msql->connect($host);
+     $dbh = Msql->connect($host, $database);
+	
+     $dbh->selectdb($database);
+	
+     @arr = $dbh->listdbs;
+     @arr = $dbh->listtables;
+	
+     $quoted_string = $dbh->quote($unquoted_string);
+     $error_message = $dbh->errmsg;
+
+     $sth = $dbh->listfields($table);
+     $sth = $dbh->query($sql_statement);
+	
+     @arr = $sth->fetchrow;
+     %hash = $sth->fetchhash;
+	
+     $sth->dataseek($row_number);
+
+     $sth->as_string;
+
+     @indices = $sth->listindices                   # only in mSQL 2.0
+     @arr = $dbh->listindex($table,$index)          # only in mSQL 2.0
+     ($step,$value) = $dbh->getsequenceinfo($table) # only in mSQL 2.0
+
+
+DESCRIPTION
+===========
+
+This package is designed as close as possible to its C API
+counterpart. The manual that comes with mSQL describes most things you
+need. Due to popular demand it was decided though, that this interface
+does not use StudlyCaps (see below).
+
+Internally you are dealing with the two classes `Msql' and
+`Msql::Statement'. You will never see the latter, because you reach it
+through a statement handle returned by a query or a listfields
+statement. The only class you name explicitly is Msql. It offers you the
+connect command:
+
+     $dbh = Msql->connect;
+     $dbh = Msql->connect($host);
+     $dbh = Msql->connect($host, $database);
+
+This connects you with the desired host/database. With no argument or
+with an empty string as the first argument it connects to the UNIX
+socket (usually /dev/msql), which has a much better performance than the
+TCP counterpart. A database name as the second argument selects the
+chosen database within the connection. The return value is a database
+handle if the connect succeeds, otherwise the return value is undef.
+
+You will need this handle to gain further access to the database.
+
+     $dbh->selectdb($database);
+
+If you have not chosen a database with the connect command, or if you
+want to change the connection to a different database using a database
+handle you have got from a previous connect, then use selectdb.
+
+     $sth = $dbh->listfields($table);
+     $sth = $dbh->query($sql_statement);
+
+These two work rather similar as descibed in the mSQL manual. They
+return a statement handle which lets you further explore what the server
+has to tell you. On error the return value is undef. The object returned
+by listfields will not know about the size of the table, so a numrows()
+on it will return the string "N/A";
+
+     @arr = $dbh->listdbs();
+     @arr = $dbh->listtables;
+
+An array is returned that contains the requested names without any
+further information.
+
+     @arr = $sth->fetchrow;
+
+returns an array of the values of the next row fetched from the
+server. Similar does
+
+     %hash = $sth->fetchhash;
+
+return a complete hash. The keys in this hash are the column names of
+the table, the values are the table values. Be aware, that when you have
+a table with two identical column names, you will not be able to use
+this method without trashing one column. In such a case, you should use
+the fetchrow method.
+
+     $sth->dataseek($row_number);
+
+lets you specify a certain offset of the data associated with the
+statement handle. The next fetchrow will then return the appropriate row
+(first row being 0).
+
+
+No close statement
+------------------
+
+Whenever the scalar that holds a database or statement handle loses its
+value, Msql chooses the appropriate action (frees the result or closes
+the database connection). So if you want to free the result or close the
+connection, choose to do one of the following:
+
+undef the handle
+use the handle for another purpose
+let the handle run out of scope
+exit the program.
+
+Error messages
+--------------
+
+A static method in the Msql class is ->errmsg(), which returns the
+current value of the msqlErrMsg variable that is provided by the C
+API. There's also a global variable $Msql::db_errstr, which always holds
+the last error message. The former is reset with the next executed
+command, the latter not.
+
+
+The -w switch
+-------------
+
+With Msql the -w switch is your friend! If you call your perl program
+with the -w switch you get the warnings from ->errmsg on STDERR. This is
+a handy method to get the error messages from the msql server without
+coding it into your program.
+
+If you want to know in greater detail what's going on, set the
+environment variables that are described in David's manual. David's
+debugging aid is excellent, there's nothing to be added.
+
+If you want to use the -w switch but do not want to see the error
+messages from the msql daemon, you can set the variable $Msql::QUIET to
+some true value, and they will be supressed.
+
+
+->quote($str [, $length])
+-------------------------
+
+returns the argument enclosed in single ticks ('') with any special
+character escaped according to the needs of the API. Currently this
+means, any single tick within the string is escaped with a backslash and
+backslashes are doubled. Currently (as of msql-1.0.16) the API does not
+allow to insert binary nulls into tables. The quote method does not fix
+this deficiency.
+
+If you pass undefined values to the quote method, it returns the string
+NULL.
+
+If a second parameter is passed to quote, the result is truncated to
+that many characters.
+
+
+NULL fields
+-----------
+
+NULL fields in tables are returned to perl as undefined values.
+
+
+Metadata
+--------
+
+Now lets reconsider the above methods with regard to metadata.
+
+
+Database Handle
+---------------
+
+As said above you get a database handle with
+
+     $dbh = Msql->connect($host, $database);
+
+The database handle knows about the socket, the host, and the database
+it is connected to.
+
+You get at the three values with the methods
+
+     $scalar = $dbh->sock;
+     $scalar = $dbh->host;
+     $scalar = $dbh->database;
+
+database returns undef, if you have connected without or with only one
+argument.
+
+
+Statement Handle
+----------------
+
+Two constructor methods return a statement handle:
+
+     $sth = $dbh->listfields($table);
+     $sth = $dbh->query($sql_statement);
+
+$sth knows about all metadata that are provided by the API:
+
+     $scalar = $sth->numrows;    
+     $scalar = $sth->numfields;  
+
+     @arr  = $sth->table;       the names of the tables of each column
+     @arr  = $sth->name;        the names of the columns
+     @arr  = $sth->type;        the type of each column, defined in msql.h
+     	                     and accessible via Msql::CHAR_TYPE,
+     	                     &Msql::INT_TYPE, &Msql::REAL_TYPE,
+     @arr  = $sth->isnotnull;   array of boolean
+     @arr  = $sth->isprikey;    array of boolean
+     @arr  = $sth->length;      array of the length of each field in bytes
+
+The six last methods return an array in array context and an array
+reference (see *Note Perlref: (perl.info)perlref, and `perlldsc' in this
+node for details) when called in a scalar context. The scalar context is
+useful, if you need only the name of one column, e.g.
+
+     $name_of_third_column = $sth->name->[2]
+
+which is equivalent to
+
+     @all_column_names = $sth->name;
+     $name_of_third_column = $all_column_names[2];
+
+
+New in mSQL 2.0
+---------------
+
+The query() function in the API returns the number of rows affected by a
+query. To cite the mSQL API manual, this means...
+
+     If the return code is greater than 0, not only does it imply
+     success, it also indicates the number of rows "touched" by the query
+     (i.e. the number of rows returned by a SELECT, the number of rows
+     modified by an update, or the number of rows removed by a delete).
+
+As we are returning a statement handle on selects, we can easily check
+the number of rows returned. For non-selects we behave just the same as
+mSQL-2.
+
+To find all indices associated with a table you can call the
+`listindices()' method on a statement handle. To find out the columns
+included in an index, you can call the `listindex($table,$index)' method
+on a database handle.
+
+There are a few new column types in mSQL 2. You can access their numeric
+value with these functions defined in the Msql package: IDENT_TYPE,
+NULL_TYPE, TEXT_TYPE, DATE_TYPE, UINT_TYPE, MONEY_TYPE, TIME_TYPE,
+IDX_TYPE, SYSVAR_TYPE.
+
+You cannot talk to a 1.0 server with a 2.0 client.
+
+You cannot link to a 1.0 library and to a 2.0 library *at the same
+time*. So you may want to build two different Msql modules at a time,
+one for 1.0, another for 2.0, and load whichever you need. Check out
+what the -I switch in perl is for.
+
+Everything else seems to remain backwards compatible.
+
+
+@EXPORT
+-------
+
+For historical reasons the constants CHAR_TYPE, INT_TYPE, and REAL_TYPE
+are in @EXPORT instead of @EXPORT_OK. This means, that you always have
+them imported into your namespace. I consider it a bug, but not such a
+serious one, that I intend to break old programs by moving them into
+EXPORT_OK.
+
+
+Connecting to different port(s) [only for mSQL-1.*.*]
+-----------------------------------------------------
+
+The mSQL API allows you to interface to a different port than the
+default that is compiled into your copy. To use this feature you have to
+set the environment variable MSQL_TCP_PORT. You can do so at any time in
+your program with the command
+
+     $ENV{'MSQL_TCP_PORT'} = 1234; # or 1112 or 1113 or 4333 or 4334
+
+Any subsequent connect() will establish a connection to the specified
+port.
+
+For connect()s to the UNIX socket of the local machine use
+MSQL_UNIX_PORT instead.
+
+
+Displaying whole tables in one go
+---------------------------------
+
+A handy method to show the complete contents of a statement handle is
+the as_string method. This works similar to the msql monitor with a few
+exceptions:
+
+the width of a column
+     is calculated by examining the width of all entries in that column
+
+control characters
+     are mapped into their backslashed octal representation
+
+backslashes
+     are doubled (`\\ instead of \')
+
+numeric values
+     are adjusted right (both integer and floating point values)
+
+The differences are illustrated by the following table:
+
+Input to msql (a real carriage return here replaced with ^M):
+
+     CREATE TABLE demo (
+       first_field CHAR(10),
+       second_field INT
+     ) \g
+
+     INSERT INTO demo VALUES ('new
+     line',2)\g
+     INSERT INTO demo VALUES ('back\\slash',1)\g
+     INSERT INTO demo VALUES ('cr^Mcrnl
+     nl',3)\g
+
+Output of msql:
+
+     +-------------+--------------+
+     | first_field | second_field |
+     +-------------+--------------+
+     | new
+         line    | 2            |
+     | back\slash  | 1            |
+         crnlr
+         nl  | 3            |
+     +-------------+--------------+
+
+Output of pmsql:
+
+     +----------------+------------+
+     |first_field     |second_field|
+     +----------------+------------+
+     |new\012line     |           2|
+     |back\\slash     |           1|
+     |cr\015crnl\012nl|           3|
+     +----------------+------------+
+
+
+Version information
+-------------------
+
+The version of MsqlPerl is always stored in $Msql::VERSION as it is perl
+standard.
+
+The mSQL API implements methods to access some internal configuration
+parameters: gethostinfo, getserverinfo, and getprotoinfo.  All three are
+available both as class methods or via a database handle. But under no
+circumstances they are associated with a database handle. All three
+return global variables that reflect the last connect() command within
+the current program. This means, that all three return empty strings or
+zero *before* the first call to connect().
+
+
+Administration
+--------------
+
+shutdown, createdb, dropdb, reloadacls are all accessible via a database
+handle and implement the corresponding methods to what msqladmin does.
+
+The mSQL engine does not permit that these commands are invoked by other
+users than the administrator ofthe database. So please make sure to
+check the return and error code when you issue one of them.
+
+
+StudlyCaps
+----------
+
+Real Perl Programmers (C) usually don't like to type ListTables but
+prefer *list_tables* or *listtables*. The mSQL API uses StudlyCaps
+everywhere and so did early versions of MsqlPerl. Beginning with
+$VERSION 1.06 all methods are internally in lowercase, but may be
+written however you please. Case is ignored and you may use the
+underline to improve readability.
+
+The price for using different method names is neglectible. Any method
+name you use that can be transformed into a known one, will only be
+defined once within a program and will remain an alias until the program
+terminates. So feel free to run fetch_row or connecT or ListDBs as in
+your old programs. These, of course, will continue to work.
+
+
+PREREQUISITES
+=============
+
+mSQL is a database server and an API library written by David Hughes. To
+use the adaptor you definitely have to install these first.
+
+
+AUTHOR
+======
+
+andreas koenig `koenig@franz.ww.TU-Berlin.DE'
+
+
+SEE ALSO
+========
+
+Alligator Descartes wrote a database driver for Tim Bunce's DBI. I
+recommend anybody to carefully watch the development of this module
+(DBD::mSQL). Msql is a simple, stable, and fast module, and it will be
+supported for a long time. But it's a dead end. I expect in the medium
+term, that the DBI efforts result in a richer module family with better
+support and more functionality. Alligator maintains an interesting page
+on the DBI development: http://www.hermetica.com/
+
+
+
+
+File: pm.info, Node: Msql/Integrat, Next: Msql/RDBMS, Prev: Msql, Up: Module List
+
+Holds common code to MsqlPerl and DBD::mSQL
+*******************************************
+
+
+
+NAME
+====
+
+Msql::Integrat - Holds common code to MsqlPerl and DBD::mSQL
+
+
+SYNOPSIS
+========
+
+use Msql::Integrat; unshift @ISA, 'Msql::Integrat';
+
+
+DESCRIPTION
+===========
+
+Msql::Integrat stands for *The MsqlPerl/DBD::mSQL Integration Project*.
+
+The Msql::Integrat module contains code that is shared by Msql and
+DBD::mSQL. It is not intended to be used by the enduser directly. The
+developer most probably finds code here that has been broken out of
+either Msql.pm or DBD/mSQL.pm or their XS counterparts.
+
+
+AUTHORS
+=======
+
+Parts derived from DBD::mSQL are most probably originally written by
+Alligator Descartes, parts from Msql are mostly by Andreas König.
+
+
+HISTORY
+=======
+
+The history of this project starts in fall 1995, when Tim Bunce asked me
+(Andreas König) if I'd be willing to write the mSQL binding for the
+DBI. By that time MsqlPerl was one year old, had its first 16 happy
+users and approached stability.
+
+I gave Tim an Okay, but after a while I realized that Schwartzian
+transforms are nothing compared to Tim's code. Whereas Randal's
+oneliners usually consist of one line perl, Tim populates dozens of
+files, heaps of packages and stacks of stacks of macros and all that in
+C! In other words, I didn't quite get on the track.
+
+A few months later Alligator Descartes volunteered to do the job
+instead. That was a great relief for me and I encouraged him to use the
+slogan he had suggested: DBD::mSQL be the MsqlPerl killer.
+
+It didn't work out. After two years maintaining the DBD::mSQL Alligator
+still had not killed MsqlPerl. Instead MsqlPerl became much more
+popular. What's up, we asked ourselves. I for one do not like the
+overall waste of energy that results from two modules doing the same
+thing. Moreover `mysql' was born in about 1996, a clone of mSQL, and as
+it should be for a clone, the inventor of `mysql' ported both `MsqlPerl'
+and DBD::mSQL to `mysql'. So we had 4 modules all about the same
+thing. Rats.
+
+Well, to cut a long story short: this project has been started in the
+hope that we can unify the 4 into one. We'll see how well it works out
+this time.
+
+
+
+
+File: pm.info, Node: Msql/RDBMS, Next: NDBM_File, Prev: Msql/Integrat, Up: Module List
+
+Relational Database Management System for Msql
+**********************************************
+
+
+
+NAME
+====
+
+*Msql::RDBMS* - Relational Database Management System for Msql
+
+
+SYNOPSIS
+========
+
+     use Msql::RDBMS;
+
+     $rdbms = new Msql::RDBMS;
+     $rdbms->show;
+
+
+DESCRIPTION
+===========
+
+This is a fully catalog driven database management system for Perl 5 and
+mini-SQL. You should use it in conjunction with the sqldef.pl script,
+found in the utility/ subdirectory of the installation; this script will
+generate data definition language for your tables.
+
+
+GENERATING DATA DEFINITION LANGUAGE
+===================================
+
+You must pass the name of a schema definition file to sqldef.pl (an
+example, *schema.def*, is included in the examples/ subdirectory of the
+distribution).  Example usage:
+
+     sqldef.pl schema.def
+
+The above example will send the data definition language to STDOUT. To
+send it to mini-SQL (this will wipe out all of the data in the specified
+database):
+
+     sqldef.pl schema.def | msql database-name
+
+The *schema.def* file contains a little bit of documentation on how the
+data is organized within the file, and how you can set up your own
+tables.
+
+
+USAGE
+=====
+
+You can call up the entire Relational Database Management System from
+your browser with a URL like this:
+
+     http://bozos.on.the.bus/sample.cgi?db=demo
+
+Where *sample.cgi* is a Perl script containing the three lines of code
+shown in SYNOPSIS.
+
+
+DEBUGGING
+=========
+
+You can get some debugging information, which consists of a CGI::dump,
+and an SQL statement, if relevant, by including debug=1 in the URL.
+
+
+TODO
+====
+
+     Generate forms for interactive data definition.
+     Enforce referential integrity (cascade/block deletes).
+     * Add support for many-to-many relationships.
+     * Enforce uniqueness for label columns.
+     * Add fancy display options that support automagic hyperlinking of
+        URLs and email addresses.
+
+* denotes feature present in the original PHP/FI version.
+
+
+AUTHOR
+======
+
+Brian Jepson <bjepson@conan.ids.net>
+
+You may distribute this under the same terms as Perl itself.
+
+
+SEE ALSO
+========
+
+CGI::CGI, CGI::Carp, Msql, File::Counterfile
+
+
+
+
+File: pm.info, Node: NDBM_File, Next: NNML/Server, Prev: Msql/RDBMS, Up: Module List
+
+Tied access to ndbm files
+*************************
+
+
+
+NAME
+====
+
+NDBM_File - Tied access to ndbm files
+
+
+SYNOPSIS
+========
+
+     use NDBM_File;
+
+     tie(%h, 'NDBM_File', 'Op.dbmx', O_RDWR|O_CREAT, 0640);
+
+     untie %h;
+
+
+DESCRIPTION
+===========
+
+See `tie', *Note Perlfunc: (perl.info)perlfunc,
+
+
+
+
+File: pm.info, Node: NNML/Server, Next: Net/Bind, Prev: NDBM_File, Up: Module List
+
+a minimal NNTP server
+*********************
+
+
+
+NAME
+====
+
+NNML::Server - a minimal NNTP server
+
+
+SYNOPSIS
+========
+
+     perl -MNNML::Server -e server
+     perl -MNNML::Server -e unspool
+
+
+DESCRIPTION
+===========
+
+*NNML::Server* server implements a minimal NNTP server. It is (hope-)
+fully conformant to rfc977. In addition the commands `XOVER' and
+`AUTHINFO' are implemented.
+
+Supported commands:
+
+     ARTICLE, AUTHINFO, BODY, GROUP, HEAD, HELP, IHAVE, LAST, LIST,
+     MODE, NEWGROUPS, NEWNEWS, NEXT, POST, QUIT, SLAVE, STAT
+
+     XOVER, XHDR, LIST NEWSGROUPS ng-spec
+
+     The main reason for writing this was to synchronize my mail directories
+     across different hosts. The Mail directories are MH-Style with a F<.overview>
+     file in each folder and an F<active> file in the base
+     directory. These are maintained by the B<Emacs> B<Gnus> backend
+     B<NNML>. To get started, you can generate/update this files using the
+     B<overview> program. Upon C<POST> and C<IHAVE> commands this files
+     will also be updated.
+
+To start from scratch use:
+
+     touch /tmp/active;
+     perl -MNNML::Server -e 'server(base => "/tmp", port => 3000)'
+
+To export your mh-Mail use:
+
+     perl overview -base ~/Mail
+     perl -MNNML::Server -e 'server(base => "$ENV{HOME}/Mail", port => 3000)'
+
+The command POST and *IHAVE* honour the `Newsgroups' header *if* not
+overwritten by the `X-Nnml-Groups' header. Articles will contain an
+appropriate `X-Nnml-Groups' header when retrieved by message-id.
+
+When the client submits the `SLAVE' command, all forther post requests
+are spooled in `$Config-'spool> (usually `~/Mail/NNML.spool') for
+performance reasons. You can process the spooled articles by submitting
+the `XUNSPOOL' command or by calling
+
+     perl -MNNML::Server -e unspool
+
+Rejected articles will be saven in `$Config-'bad> (usually
+`~/Mail/NNML.bad')
+
+
+AUTHORIZATION
+=============
+
+To enable access restrictions use:
+
+     perl -MNNML::Auth -e "NNML::Auth::add_user($ENV{LOGANME}, 'passwd', \
+       'read', 'write', 'admin')"
+
+If *base*`/passwd' exists, three levels of authorization are recognized:
+
+admin
+     Users with permission admin may shut down the server using `SHUT'.
+     Also these users may create new groups simply by posting to them.
+     Permission admin is also required for the `XUNSPOOL' command.
+
+write
+     Users with permission write may use the POST and *IHAVE* commands.
+
+read
+     All other commands require the read permission.
+
+
+FEATURES
+========
+
+Version 1.06 implements the `MODE GZIP' command. After submiting this
+commands, all articles, heads and bodies will be piped through `gzip
+-cf | mimencode'. The server will recognize post requeste using the
+same pipe automatically. This will speed up *nnmirror* if the line is
+sufficiant slow.
+
+
+BUGS
+====
+
+The server handles multiple connections in a single thread. So a hung
+POST or `IHAVE' would block all connections. Therfore a post request is
+interrupted if the server could not read any bytes for 30 seconds. The
+Client is notified by message 441. If the client continues to send the
+article, it is interpreted by the command loop.
+
+
+SEE ALSO
+========
+
+The *overview*(1) and *nnmirror*(1) manpages.
+
+
+AUTHOR
+======
+
+Ulrich Pfeifer <`pfeifer@ls6.informatik.uni-dortmund.de'>
+
+
+
+
+File: pm.info, Node: Net/Bind, Next: Net/Bind/Resolv, Prev: NNML/Server, Up: Module List
+
+load various Net::Bind modules
+******************************
+
+
+
+NAME
+====
+
+Net::Bind - load various Net::Bind modules
+
+
+SYNOPSIS
+========
+
+     use Net::Bind;
+
+
+DESCRIPTION
+===========
+
+`Net::Bind' provides a simple mechanism to load all of the `Net::Bind'
+modules in one fell swoop.
+
+Currently, this includes the following modules:
+
+     Net::Bind::Resolv
+
+Futures releases will include:
+
+     Net::Bind::Boot
+     Net::Bind::Zone
+     Net::Bind::Dump
+     Net::Bind::Conf
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/Bind/Resolv, Next: Net/Bind/Utils, Prev: Net/Bind, Up: Module List
+
+a class to munge /etc/resolv.conf data.
+***************************************
+
+
+
+NAME
+====
+
+Net::Bind::Resolv - a class to munge /etc/resolv.conf data.
+
+
+SYNOPSIS
+========
+
+`use Net::Bind::Resolv;'
+
+
+DESCRIPTION
+===========
+
+This class provides an object oriented perl interface to
+`/etc/resolv.conf' data.
+
+Here is an example snippet of code:
+
+     use Net::Bind::Resolv;
+     my $res = new Net::Bind::Resolv('/etc/resolv.conf');
+     print $res->domain, "\n";
+
+Or how about:
+
+     use Net::Bind::Resolv;
+     use IO::File;
+     my $res = new Net::Bind::Resolv;
+     $res->comment("Programmatically generated\nDo not edit by hand");
+     $res->domain('arf.fz');
+     $res->nameservers('0.0.0.0');
+     $res->options('debug');
+     print $res->as_string;
+
+
+METHODS
+=======
+
+
+new([$filename])
+----------------
+
+Returns a reference to a new `Net::Bind::Resolv' object.  If $filename
+is given then use that pass the value to a call to `read_from_file'.
+
+
+read_from_string($string)
+-------------------------
+
+Populates the object with the parsed contents of `$string'.  Returns 1
+is no errors were encounters, otherwise it returns `0'.
+
+The following directives are understood.
+
+   * domain DOMAIN
+   * search SEARCHLIST...
+
+     If a search directive and domain directive are found in the same
+     file, the last one encountered will be recorded and all previous
+     ones will be ignored.
+
+   * nameserver IP_ADDR
+
+     Each instance of a nameserver directive will cause the given
+     `IP_ADDR' to be remembered.
+
+   * sortlist SORTLIST...
+   * options OPTIONS...
+
+There are very few requirements placed on the data in `$string'.
+Multiple entries of certain directives, while technically incorrect,
+will cause the last occurrence of the given directive to be the one
+remembered.  If there is sufficient precedence for this to be otherwise,
+let me know.
+
+There is no requirement for the arguments to the directives to be valid
+pieces of data.  That job is delagated to local policy methods to be
+applied against the object.
+
+
+read_from_file($filename)
+-------------------------
+
+Populates the object with the parsed contents of $filename.  This really
+just a wrapper around `read_from_string'.  Returns `0' if errors were
+encountered, otherwise it returns 1.
+
+
+clear
+-----
+
+Zeros out the internal data in the object.  This needs to be done if
+multiple `read_from_string' methods are called on a given
+`Net::Bind::Resolv' object and you do not want to retain the previous
+values in the object.
+
+
+domain([$domain])
+-----------------
+
+Returns the value of the domain directive.  If `$domain' is specified,
+then set the domain to the given value and the searchlist, if defined in
+the object, is undefined.
+
+
+nameservers([@values])
+----------------------
+
+Returns (in order) the list of nameserver entries.  If called in an
+array context it returns an array, otherwise it returns an array
+reference.
+
+If `@values' is specified, then set the nameserver list to the given
+values.  Any items in `@values' that are list references are
+dereferences as they are added.
+
+
+searchlist([@values])
+---------------------
+
+Returns an array reference containing the items for the search
+directive.  If called in an array context it returns an array, otherwise
+it returns an array reference.
+
+If a list of values is specified, then set the searchlist to those
+values and the domain, if defined in the object, is undefined.  Any
+items in `@values' that are list references are dereferenced as they are
+added.
+
+
+sortlist([@values])
+-------------------
+
+Returns an array reference containing the items for the `sortlist'
+directive.  If called in an array context it returns an array, otherwise
+it returns an array reference.
+
+If a list of values is specified, then set the sortlist to those values.
+Any items in `@values' that are list references are dereferenced as they
+are added.
+
+
+options([@values])
+------------------
+
+Returns the items for the `options' directive.  If called in an array
+context it returns an array, otherwise it returns an array reference.
+
+If a list of values is specified, then set the options to those values.
+Any items in `@values' that are list references are dereferenced as they
+are added.
+
+
+comments([@strings])
+--------------------
+
+Returns the comments for the object.  If called in an array context it
+returns an array, otherwise it returns an array reference.
+
+If a list of strings is specified, then set the comments to those values
+after splitting the items on a `NEWLINE' boundary.  This allows several
+combinations of arrays, array refs, or strings with embedded newlines to
+be specified.  There is no need to prefix any of the comment lines with
+a comment character (`[;\#]'); the as_string automagically commentifies
+(:-) the comment strings.
+
+Any items in `@strings' that are list references are dereferenced as
+they are added.
+
+
+as_string
+---------
+
+Returns a string representing the contents of the object.  Technically,
+this string could be used to populate a `resolv.conf' file, but use
+print for that.  The <print> method is a wrapper around this method.
+The data is generated in the following order:
+
+     comments
+     domain	(mutually exclusive with search)
+     search	(mutually exclusive with domain)
+     nameservers   (one line for each nameserver entry)
+     sortlist
+     options
+
+
+print($fh)
+----------
+
+A wrapper around as_string that prints a valid `resolver(5)'
+representation of the data in the object to the given filehandle.
+
+
+check([$policy])
+----------------
+
+Performs a policy/validity check of the data contained in the object
+using the given subroutine `&policy'.  The given `$policy' routine is
+called as `&$policy($self)'.  If `$policy' is not given it defaults to
+using default_policy_check.  It returns the return status of the policy
+check routine.
+
+
+default_policy_check
+--------------------
+
+A simple wrapper around various `check_*' methods.
+
+
+check_domain
+------------
+
+Returns 1 if the domain member of the object is defined and is a valid
+rfc1035 domain name, otherwise returns `0'.
+
+
+check_searchlist
+----------------
+
+Returns 1 if the searchlist member of the object is defined and contains
+only valid rfc1035 domain names, otherwise returns `0'.
+
+
+check_nameservers
+-----------------
+
+Returns 1 if the nameservers member of the object is defined and
+contains only ip-addresses, otherwise returns `0'.
+
+Uses `valid_ip' to do the real work.
+
+
+check_sortlist
+--------------
+
+Returns 1 if the sortlist member of the object is defined and contains
+only ip-address/netmasks, otherwise returns `0'.
+
+Uses `valid_netmask' to do the real work.
+
+
+check_options
+-------------
+
+Returns 1 if the options member of the object is empty or contains only
+valid options, otherwise returns `0'.
+
+Currently recognized options are:
+
+   * debug
+   * ndots:N
+
+qtynameservers
+--------------
+
+
+Returns the quantity of nameserver entries present.
+
+
+CAVEATS
+=======
+
+The `read_from_{file|string}' methods and the print method are not
+isomorphic.  Given an arbitrary file or string which is read in, the
+output of print is not guaranteed to be an exact duplicate of the
+original file.  In the special case of files that are generated with
+this module, the results will be isomorphic, assuming no modifications
+were made to the data between when it was read in and subsequently
+written back out.
+
+Since Net::Bind::Resolv does not impose many requirements on the values
+of the various directives present in a `/etc/resolv.conf' file, it is
+important to apply the appropriate policy methods against the object
+before writing it to a file that will be used by the resolver.  Consider
+yourself warned!
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/Bind/Utils, Next: Net/Cmd, Prev: Net/Bind/Resolv, Up: Module List
+
+various routines common across Net::Bind packages.
+**************************************************
+
+
+
+NAME
+====
+
+Net::Bind::Utils - various routines common across Net::Bind packages.
+
+
+DESCRIPTION
+===========
+
+A catch-all place for various routines that useful across most, if not
+all, of the `Net::Bind' interfaces.
+
+This module is not designed to be subclassable.
+
+
+ROUTINES
+========
+
+
+valid_domain($domain)
+---------------------
+
+Returns 1 if the given `$domain' string is defined and is a valid
+rfc1035 domain name, otherwise returns `0'.
+
+
+valid_ip($ip)
+-------------
+
+Returns 1 if the given `$ip' string is defined and is an ip address,
+otherwise returns `0'.
+
+The check for a valid ip address is currently very simple minded.  It
+merely checks for a dotted-quad with all non-negative numbers with no
+number larger than 254.
+
+
+valid_netmask($netmask)
+-----------------------
+
+Returns 1 if the given `$netmask' string is defined and is a netmask,
+otherwise return `0'.
+
+The check for a valid netmask is currently very simple minded.  It
+merely checks for a dotted-quad with all non-negative numbers with no
+number larger than 255.
+
+
+AUTHOR
+======
+
+Kevin Johnson <`kjj@pobox.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Kevin Johnson <kjj@pobox.com>.
+
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/Cmd, Next: Net/DNS, Prev: Net/Bind/Utils, Up: Module List
+
+Network Command class (as used by FTP, SMTP etc)
+************************************************
+
+
+
+NAME
+====
+
+Net::Cmd - Network Command class (as used by FTP, SMTP etc)
+
+
+SYNOPSIS
+========
+
+     use Net::Cmd;
+
+     @ISA = qw(Net::Cmd);
+
+
+DESCRIPTION
+===========
+
+`Net::Cmd' is a collection of methods that can be inherited by a sub
+class of IO::Handle. These methods implement the functionality required
+for a command based protocol, for example FTP and SMTP.
+
+
+USER METHODS
+============
+
+These methods provide a user interface to the `Net::Cmd' object.
+
+debug ( VALUE )
+     Set the level of debug information for this object. If `VALUE' is
+     not given then the current state is returned. Otherwise the state
+     is changed to `VALUE' and the previous state returned.
+
+     Set the level of debug information for this object. If no argument
+     is given then the current state is returned. Otherwise the state is
+     changed to $valueand the previous state returned.  Different
+     packages may implement different levels of debug but, a non-zero
+     value result in copies of all commands and responses also being
+     sent to STDERR.
+
+     If `VALUE' is undef then the debug level will be set to the default
+     debug level for the class.
+
+     This method can also be called as a static method to set/get the
+     default debug level for a given class.
+
+message ()
+     Returns the text message returned from the last command
+
+code ()
+     Returns the 3-digit code from the last command. If a command is
+     pending then the value 0 is returned
+
+ok ()
+     Returns non-zero if the last code value was greater than zero and
+     less than 400. This holds true for most command servers. Servers
+     where this does not hold may override this method.
+
+status ()
+     Returns the most significant digit of the current status code. If a
+     command is pending then `CMD_PENDING' is returned.
+
+datasend ( DATA )
+     Send data to the remote server, converting LF to CRLF. Any line
+     starting with a '.' will be prefixed with another '.'.  `DATA' may
+     be an array or a reference to an array.
+
+dataend ()
+     End the sending of data to the remote server. This is done by
+     ensuring that the data already sent ends with CRLF then sending
+     '.CRLF' to end the transmission. Once this data has been sent
+     dataend calls response and returns true if response returns CMD_OK.
+
+
+CLASS METHODS
+=============
+
+These methods are not intended to be called by the user, but used or
+over-ridden by a sub-class of `Net::Cmd'
+
+debug_print ( DIR, TEXT )
+     Print debugging information. DIR denotes the direction *true* being
+     data being sent to the server. Calls debug_text before printing to
+     STDERR.
+
+debug_text ( TEXT )
+     This method is called to print debugging information. TEXT is the
+     text being sent. The method should return the text to be printed
+
+     This is primarily meant for the use of modules such as FTP where
+     passwords are sent, but we do not want to display them in the
+     debugging information.
+
+command ( CMD [, ARGS, ... ])
+     Send a command to the command server. All arguments a first joined
+     with a space character and CRLF is appended, this string is then
+     sent to the command server.
+
+     Returns undef upon failure
+
+unsupported ()
+     Sets the status code to 580 and the response text to 'Unsupported
+     command'.  Returns zero.
+
+response ()
+     Obtain a response from the server. Upon success the most
+     significant digit of the status code is returned. Upon failure,
+     timeout etc., undef is returned.
+
+parse_response ( TEXT )
+     This method is called by response as a method with one argument. It
+     should return an array of 2 values, the 3-digit status code and a
+     flag which is true when this is part of a multi-line response and
+     this line is not the list.
+
+getline ()
+     Retrieve one line, delimited by CRLF, from the remote
+     server. Returns undef upon failure.
+
+     NOTE: If you do use this method for any reason, please remember to
+     add some debug_print calls into your method.
+
+ungetline ( TEXT )
+     Unget a line of text from the server.
+
+read_until_dot ()
+     Read data from the remote server until a line consisting of a
+     single '.'.  Any lines starting with '..' will have one of the '.'s
+     removed.
+
+     Returns a reference to a list containing the lines, or undef upon
+     failure.
+
+
+EXPORTS
+=======
+
+`Net::Cmd' exports six subroutines, five of these, `CMD_INFO', `CMD_OK',
+`CMD_MORE', `CMD_REJECT' and `CMD_ERROR' ,correspond to possible results
+of response and status. The sixth is `CMD_PENDING'.
+
+
+AUTHOR
+======
+
+Graham Barr <gbarr@ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995-1997 Graham Barr. All rights reserved.  This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: Net/DNS, Next: Net/DNS/Header, Prev: Net/Cmd, Up: Module List
+
+Perl interface to the DNS resolver
+**********************************
+
+
+
+NAME
+====
+
+Net::DNS - Perl interface to the DNS resolver
+
+
+SYNOPSIS
+========
+
+`use Net::DNS;'
+
+
+DESCRIPTION
+===========
+
+Net::DNS is a collection of Perl modules that act as a Domain Name
+System (DNS) resolver.  It allows the programmer to perform DNS queries
+that are beyond the capabilities of gethostbyname and gethostbyaddr.
+
+The programmer should be somewhat familiar with the format of
+a DNS packet and its various sections.  See RFC 1035 or
+*DNS and BIND* (Albitz & Liu) for details.
+
+
+Resolver Objects
+----------------
+
+A resolver object is an instance of the `Net::DNS::Resolver' class.  A
+program can have multiple resolver objects, each maintaining its own
+state information such as the nameservers to be queried, whether
+recursion is desired, etc.
+
+
+Packet Objects
+--------------
+
+`Net::DNS::Resolver' queries return `Net::DNS::Packet' objects.  Packet
+objects have five sections:
+
+   * The header section, a `Net::DNS::Header' object.
+
+   * The question section, a list of `Net::DNS::Question' objects.
+
+   * The answer section, a list of `Net::DNS::RR' objects.
+
+   * The authority section, a list of `Net::DNS::RR' objects.
+
+   * The additional section, a list of `Net::DNS::RR' objects.
+
+The `Net::DNS::Update' package is a front-end to `Net::DNS::Packet' for
+creating packet objects to be used in dynamic updates.
+
+
+Header Objects
+--------------
+
+`Net::DNS::Header' objects represent the header section of a DNS packet.
+
+
+Question Objects
+----------------
+
+`Net::DNS::Question' objects represent the question section of a DNS
+packet.
+
+
+RR Objects
+----------
+
+`Net::DNS::RR' is the base class for DNS resource record (RR) objects in
+the answer, authority, and additional sections of a DNS packet.
+
+Don't assume that RR objects will be of the type you requested -- always
+check an RR object's type before calling any of its methods.
+
+
+METHODS
+=======
+
+See the manual pages listed above for other class-specific methods.
+
+
+version
+-------
+
+     print Net::DNS->version, "\n";
+
+Returns the version of Net::DNS.
+
+
+mx
+--
+
+     # Use a default resolver -- can't get an error string this way.
+     use Net::DNS;
+     @mx = mx("foo.com");
+
+     # Use your own resolver object.
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     @mx = mx($res, "foo.com");
+
+Returns a list of `Net::DNS::RR::MX' objects representing the MX records
+for the specified name; the list will be sorted by preference.  Returns
+an empty list if the query failed or no MX records were found.
+
+This method does not look up A records -- it only performs MX queries.
+
+See `' in this node for a more complete example.
+
+
+yxrrset
+-------
+
+Use this method to add an "RRset exists" prerequisite to a dynamic
+update packet.  There are two forms, value-independent and
+value-dependent:
+
+     # RRset exists (value-independent)
+     $packet->push("pre", yxrrset("foo.bar.com A"));
+
+Meaning: At least one RR with the specified name and type must exist.
+
+     # RRset exists (value-dependent)
+     $packet->push("pre", yxrrset("foo.bar.com A 10.1.2.3"));
+
+Meaning: At least one RR with the specified name and type must exist and
+must have matching data.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+nxrrset
+-------
+
+Use this method to add an "RRset does not exist" prerequisite to a
+dynamic update packet.
+
+     $packet->push("pre", nxrrset("foo.bar.com A"));
+
+Meaning: No RRs with the specified name and type can exist.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+yxdomain
+--------
+
+Use this method to add a "name is in use" prerequisite to a dynamic
+update packet.
+
+     $packet->push("pre", yxdomain("foo.bar.com"));
+
+Meaning: At least one RR with the specified name must exist.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+nxdomain
+--------
+
+Use this method to add a "name is not in use" prerequisite to a dynamic
+update packet.
+
+     $packet->push("pre", nxdomain("foo.bar.com"));
+
+Meaning: No RR with the specified name can exist.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+rr_add
+------
+
+Use this method to add RRs to a zone.
+
+     $packet->push("update", rr_add("foo.bar.com A 10.1.2.3"));
+
+Meaning: Add this RR to the zone.
+
+RR objects created by this method should be added to the "update"
+section of a dynamic update packet.  The TTL defaults to 86400 seconds
+(24 hours) if not specified.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+rr_del
+------
+
+Use this method to delete RRs from a zone.  There are three forms:
+delete an RRset, delete all RRsets, and delete an RR.
+
+     # Delete an RRset.
+     $packet->push("update", rr_del("foo.bar.com A"));
+
+Meaning: Delete all RRs having the specified name and type.
+
+     # Delete all RRsets.
+     $packet->push("update", rr_del("foo.bar.com"));
+
+Meaning: Delete all RRs having the specified name.
+
+     # Delete an RR.
+     $packet->push("update", rr_del("foo.bar.com A 10.1.2.3"));
+
+Meaning: Delete all RRs having the specified name, type, and data.
+
+RR objects created by this method should be added to the "update"
+section of a dynamic update packet.
+
+Returns a `Net::DNS::RR' object or undef if the object couldn't be
+created.
+
+
+EXAMPLES
+========
+
+The following examples show how to use the `Net::DNS' modules.  See the
+other manual pages and the demo scripts included with the source code
+for additional examples.
+
+See the `Net::DNS::Update' manual page for an example of performing
+dynamic updates.
+
+
+Look up a host's addresses.
+---------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $query = $res->search("foo.bar.com");
+     if ($query) {
+         foreach $rr ($query->answer) {
+             next unless $rr->type eq "A";
+             print $rr->address, "\n";
+         }
+     }
+     else {
+         print "query failed: ", $res->errorstring, "\n";
+     }
+
+
+Find the nameservers for a domain.
+----------------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $query = $res->query("foo.com", "NS");
+     if ($query) {
+         foreach $rr ($query->answer) {
+             next unless $rr->type eq "NS";
+             print $rr->nsdname, "\n";
+         }
+     }
+     else {
+         print "query failed: ", $res->errorstring, "\n";
+     }
+
+
+Find the MX records for a domain.
+---------------------------------
+
+     use Net::DNS;
+     $name = "foo.com";
+     $res = new Net::DNS::Resolver;
+     @mx = mx($res, $name);
+     if (@mx) {
+         foreach $rr (@mx) {
+             print $rr->preference, " ", $rr->exchange, "\n";
+         }
+     }
+     else {
+         print "can't find MX records for $name: ", $res->errorstring, "\n";
+     }
+
+
+Print a domain's SOA record in zone file format.
+------------------------------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $query = $res->query("foo.com", "SOA");
+     if ($query) {
+         ($query->answer)[0]->print;
+     }
+     else {
+         print "query failed: ", $res->errorstring, "\n";
+     }
+
+
+Perform a zone transfer and print all the records.
+--------------------------------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $res->nameservers("ns.foo.com");
+     @zone = $res->axfr("foo.com");
+     foreach $rr (@zone) {
+         $rr->print;
+     }
+
+
+Perform a background query and do some other work while waiting for the answer.
+-------------------------------------------------------------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $socket = $res->bgsend("foo.bar.com");
+     until ($res->bgisready($socket)) {
+         # do some work here while waiting for the answer
+         # ...and some more here
+     }
+     $packet = $res->bgread($socket);
+     $packet->print;
+
+
+Send a background query and use select to determine when the answer has arrived.
+--------------------------------------------------------------------------------
+
+     use Net::DNS;
+     $res = new Net::DNS::Resolver;
+     $socket = $res->bgsend("foo.bar.com");
+     $rin = "";
+     vec($rin, $socket->fileno, 1) = 1;
+     # Add more descriptors to $rin if desired.
+     $timeout = 5;
+     $nfound = select($rout=$rin, undef, undef, $timeout);
+     if ($nfound < 1) {
+         print "timed out after $timeout seconds\n";
+     }
+     elsif (vec($rout, $socket->fileno, 1) == 1) {
+         $packet = $res->bgread($socket);
+         $packet->print;
+     }
+     else {
+         # Check for the other descriptors.
+     }
+
+
+BUGS
+====
+
+`Net::DNS' is slow.  Real slow.
+
+For other items to be fixed, please see the TODO file included with the
+source distribution.
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1997 Michael Fuhr.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+AUTHOR INFORMATION
+==================
+
+Michael Fuhr <mfuhr@dimensional.com>
+http://www.dimensional.com/~mfuhr/perldns/
+
+
+SEE ALSO   `perl(1)' in this node, *Note Net/DNS/Resolver: Net/DNS/Resolver,, *Note Net/DNS/Packet: Net/DNS/Packet,, *Note Net/DNS/Update: Net/DNS/Update,, *Note Net/DNS/Header: Net/DNS/Header,, *Note Net/DNS/Question: Net/DNS/Question,, *Note Net/DNS/RR: Net/DNS/RR,, RFC 1035, *DNS and BIND* by Paul Albitz & Cricket Liu
+==================================================================================================================================================================================================================================================================================================================================
+
+
+
+

@@ -1,0 +1,1766 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: IO/Pipe, Next: IO/Pty, Prev: IO/Handle, Up: Module List
+
+supply object methods for pipes
+*******************************
+
+
+
+NAME
+====
+
+IO::pipe - supply object methods for pipes
+
+
+SYNOPSIS
+========
+
+     use IO::Pipe;
+
+     $pipe = new IO::Pipe;
+
+     if($pid = fork()) { # Parent
+         $pipe->reader();
+
+     while(<$pipe> {
+     		....
+     }
+
+     }
+     elsif(defined $pid) { # Child
+         $pipe->writer();
+
+     print $pipe ....
+     	}
+
+     or
+
+     $pipe = new IO::Pipe;
+
+     $pipe->reader(qw(ls -l));
+
+     while(<$pipe>) {
+         ....
+     }
+
+
+DESCRIPTION
+===========
+
+IO::Pipe provides an interface to createing pipes between processes.
+
+
+CONSTRCUTOR
+===========
+
+new ( [READER, WRITER] )
+     Creates a IO::Pipe, which is a reference to a newly created symbol
+     (see the Symbol package). `IO::Pipe::new' optionally takes two
+     arguments, which should be objects blessed into IO::Handle, or a
+     subclass thereof. These two objects will be used for the system
+     call to pipe. If no arguments are given then method handles is
+     called on the new IO::Pipe object.
+
+     These two handles are held in the array part of the GLOB until
+     either reader or writer is called.
+
+
+METHODS
+=======
+
+reader ([ARGS])
+     The object is re-blessed into a sub-class of IO::Handle, and
+     becomes a handle at the reading end of the pipe. If `ARGS' are
+     given then fork is called and `ARGS' are passed to exec.
+
+writer ([ARGS])
+     The object is re-blessed into a sub-class of IO::Handle, and
+     becomes a handle at the writing end of the pipe. If `ARGS' are
+     given then fork is called and `ARGS' are passed to exec.
+
+handles ()
+     This method is called during construction by `IO::Pipe::new' on the
+     newly created IO::Pipe object. It returns an array of two objects
+     blessed into `IO::Pipe::End', or a subclass thereof.
+
+
+SEE ALSO
+========
+
+*Note IO/Handle: IO/Handle,
+
+
+AUTHOR
+======
+
+Graham Barr <bodg@tiuk.ti.com>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: IO/Pty, Next: IO/Seekable, Prev: IO/Pipe, Up: Module List
+
+Pseudo TTY object class
+***********************
+
+
+
+NAME
+====
+
+IO::Pty - Pseudo TTY object class
+
+
+SYNOPSIS
+========
+
+     use IO::Pty;
+
+     $pty = new IO::Pty;
+
+     $slave  = $pty->slave;
+
+     foreach $val (1..10) {
+     	print $pty "$val\n";
+     	$_ = <$slave>;
+     	print "$_"; 
+     }            
+
+     close($slave);
+
+
+DESCRIPTION
+===========
+
+`IO::Pty' provides an interface to allow the creation of a pseudo tty.
+
+`IO::Pty' inherits from IO::Handle and so provide all the methods
+defined by the IO::Handle package.
+
+
+CONSTRUCTOR
+===========
+
+new
+     The new contructor take no arguments and returns a new object which
+     the master side of the pseudo tty.
+
+
+METHODS
+=======
+
+slave
+     The slave method will return a new `IO::Pty' object which
+     represents the slave side of the pseudo tty
+
+ttyname
+     Returns the name of the pseudo tty. On UNIX machines this will be
+     the pathname of the device.
+
+
+SEE ALSO
+========
+
+*Note IO/Handle: IO/Handle,
+
+
+AUTHOR
+======
+
+Graham Barr <`gbarr@ti.com'>
+
+Based on original Ptty module by Nick Ing-Simmons <`nik@tiuk.ti.com'>
+
+
+COPYRIGHT
+=========
+
+Most of the C code used in the XS file is covered by the GNU GENERAL
+PUBLIC LICENSE, See COPYING
+
+All other code is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: IO/Seekable, Next: IO/Select, Prev: IO/Pty, Up: Module List
+
+supply seek based methods for I/O objects
+*****************************************
+
+
+
+NAME
+====
+
+IO::Seekable - supply seek based methods for I/O objects
+
+
+SYNOPSIS
+========
+
+     use IO::Seekable;
+     package IO::Something;
+     @ISA = qw(IO::Seekable);
+
+
+DESCRIPTION
+===========
+
+IO::Seekable does not have a constuctor of its own as is intended to be
+inherited by other IO::Handle based objects. It provides methods which
+allow seeking of the file descriptors.
+
+If the C functions fgetpos() and fsetpos() are available, then
+`IO::File::getpos' returns an opaque value that represents the current
+position of the IO::File, and `IO::File::setpos' uses that value to
+return to a previously visited position.
+
+See *Note Perlfunc: (perl.info)perlfunc, for complete descriptions of
+each of the following supported IO::Seekable methods, which are just
+front ends for the corresponding built-in functions:
+
+     seek
+     tell
+
+
+SEE ALSO
+========
+
+*Note Perlfunc: (perl.info)perlfunc,, 
+`"I', *Note Perlop: (perl.info)perlop,, `"I', *Note IO/Handle:
+IO/Handle, `"I', *Note IO/File: IO/File,
+
+
+HISTORY
+=======
+
+Derived from FileHandle.pm by Graham Barr <bodg@tiuk.ti.com>
+
+
+
+
+File: pm.info, Node: IO/Select, Next: IO/Socket, Prev: IO/Seekable, Up: Module List
+
+OO interface to the select system call
+**************************************
+
+
+
+NAME
+====
+
+IO::Select - OO interface to the select system call
+
+
+SYNOPSIS
+========
+
+     use IO::Select;
+
+     $s = IO::Select->new();
+
+     $s->add(\*STDIN);
+     $s->add($some_handle);
+
+     @ready = $s->can_read($timeout);
+
+     @ready = IO::Select->new(@handles)->read(0);
+
+
+DESCRIPTION
+===========
+
+The IO::Select package implements an object approach to the system
+select function call. It allows the user to see what IO handles, see
+*Note IO/Handle: IO/Handle,, are ready for reading, writing or have an
+error condition pending.
+
+
+CONSTRUCTOR
+===========
+
+new ( [ HANDLES ] )
+     The constructor creates a new object and optionally initialises it
+     with a set of handles.
+
+
+METHODS
+=======
+
+add ( HANDLES )
+     Add the list of handles to the IO::Select object. It is these
+     values that will be returned when an event occurs. IO::Select keeps
+     these values in a cache which is indexed by the fileno of the
+     handle, so if more than one handle with the same fileno is
+     specified then only the last one is cached.
+
+     Each handle can be an IO::Handle object, an integer or an array
+     reference where the first element is a IO::Handle or an integer.
+
+remove ( HANDLES )
+     Remove all the given handles from the object. This method also
+     works by the fileno of the handles. So the exact handles that were
+     added need not be passed, just handles that have an equivalent
+     fileno
+
+exists ( HANDLE )
+     Returns a true value (actually the handle itself) if it is present.
+     Returns undef otherwise.
+
+handles
+     Return an array of all registered handles.
+
+can_read ( [ TIMEOUT ] )
+     Return an array of handles that are ready for reading. `TIMEOUT' is
+     the maximum amount of time to wait before returning an empty
+     list. If `TIMEOUT' is not given and any handles are registered then
+     the call will block.
+
+can_write ( [ TIMEOUT ] )
+     Same as can_read except check for handles that can be written to.
+
+has_error ( [ TIMEOUT ] )
+     Same as can_read except check for handles that have an error
+     condition, for example EOF.
+
+count ()
+     Returns the number of handles that the object will check for when
+     one of the `can_' methods is called or the object is passed to the
+     select static method.
+
+bits()
+     Return the bit string suitable as argument to the core select()
+     call.
+
+bits()
+     Return the bit string suitable as argument to the core select()
+     call.
+
+select ( READ, WRITE, ERROR [, TIMEOUT ] )
+     select is a static method, that is you call it with the package
+     name like new. READ, `WRITE' and `ERROR' are either undef or
+     IO::Select objects. `TIMEOUT' is optional and has the same effect
+     as for the core select call.
+
+     The result will be an array of 3 elements, each a reference to an
+     array which will hold the handles that are ready for reading,
+     writing and have error conditions respectively. Upon error an empty
+     array is returned.
+
+
+EXAMPLE
+=======
+
+Here is a short example which shows how IO::Select could be used to
+write a server which communicates with several sockets while also
+listening for more connections on a listen socket
+
+     use IO::Select;
+     use IO::Socket;
+
+     $lsn = new IO::Socket::INET(Listen => 1, LocalPort => 8080);
+     $sel = new IO::Select( $lsn );
+
+     while(@ready = $sel->can_read) {
+         foreach $fh (@ready) {
+             if($fh == $lsn) {
+                 # Create a new socket
+                 $new = $lsn->accept;
+                 $sel->add($new);
+             }
+             else {
+                 # Process socket
+
+     # Maybe we have finished with the socket
+     $sel->remove($fh);
+     $fh->close;
+                 }
+             }
+         }
+
+
+AUTHOR
+======
+
+Graham Barr <`Graham.Barr@tiuk.ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1995 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: IO/Socket, Next: IPC/Open2, Prev: IO/Select, Up: Module List
+
+Object interface to socket communications
+*****************************************
+
+
+
+NAME
+====
+
+IO::Socket - Object interface to socket communications
+
+
+SYNOPSIS
+========
+
+     use IO::Socket;
+
+
+DESCRIPTION
+===========
+
+IO::Socket provides an object interface to creating and using
+sockets. It is built upon the *Note IO/Handle: IO/Handle, interface and
+inherits all the methods defined by *Note IO/Handle: IO/Handle,.
+
+IO::Socket only defines methods for those operations which are common to
+all types of socket. Operations which are specified to a socket in a
+particular domain have methods defined in sub classes of IO::Socket
+
+IO::Socket will export all functions (and constants) defined by *Note
+Socket: Socket,.
+
+
+CONSTRUCTOR
+===========
+
+new ( [ARGS] )
+     Creates an IO::Socket, which is a reference to a newly created
+     symbol (see the Symbol package). new optionally takes arguments,
+     these arguments are in key-value pairs.  new only looks for one key
+     `Domain' which tells new which domain the socket will be in. All
+     other arguments will be passed to the configuration method of the
+     package for that domain, See below.
+
+
+METHODS
+=======
+
+See *Note Perlfunc: (perl.info)perlfunc, for complete descriptions of
+each of the following supported IO::Socket methods, which are just front
+ends for the corresponding built-in functions:
+
+     socket
+     socketpair
+     bind
+     listen
+     accept
+     send
+     recv
+     peername (getpeername)
+     sockname (getsockname)
+
+Some methods take slightly different arguments to those defined in *Note
+Perlfunc: (perl.info)perlfunc, in attempt to make the interface more
+flexible. These are
+
+accept([PKG])
+     perform the system call accept on the socket and return a new
+     object. The new object will be created in the same class as the
+     listen socket, unless `PKG' is specified. This object can be used
+     to communicate with the client that was trying to connect. In a
+     scalar context the new socket is returned, or undef upon
+     failure. In an array context a two-element array is returned
+     containing the new socket and the peer address, the list will be
+     empty upon failure.
+
+     Additional methods that are provided are
+
+timeout([VAL])
+     Set or get the timeout value associated with this socket. If called
+     without any arguments then the current setting is returned. If
+     called with an argument the current setting is changed and the
+     previous value returned.
+
+sockopt(OPT [, VAL])
+     Unified method to both set and get options in the SOL_SOCKET
+     level. If called with one argument then getsockopt is called,
+     otherwise setsockopt is called.
+
+sockdomain
+     Returns the numerical number for the socket domain type. For
+     example, for a AF_INET socket the value of &AF_INET will be
+     returned.
+
+socktype
+     Returns the numerical number for the socket type. For example, for
+     a SOCK_STREAM socket the value of &SOCK_STREAM will be returned.
+
+protocol
+     Returns the numerical number for the protocol being used on the
+     socket, if known. If the protocol is unknown, as with an AF_UNIX
+     socket, zero is returned.
+
+
+SUB-CLASSES
+===========
+
+
+IO::Socket::INET
+----------------
+
+IO::Socket::INET provides a constructor to create an AF_INET domain
+socket and some related methods. The constructor can take the following
+options
+
+     PeerAddr	Remote host address          <hostname>[:<port>]
+     PeerPort	Remote port or service       <service>[(<no>)] | <no>
+     LocalAddr	Local host bind	address      hostname[:port]
+     LocalPort	Local host bind	port         <service>[(<no>)] | <no>
+     Proto	Protocol name                "tcp" | "udp" | ...
+     Type	Socket type                  SOCK_STREAM | SOCK_DGRAM | ...
+     Listen	Queue size for listen
+     Reuse	Set SO_REUSEADDR before binding
+     Timeout	Timeout	value for various operations
+
+If Listen is defined then a listen socket is created, else if the socket
+type, which is derived from the protocol, is SOCK_STREAM then connect()
+is called.
+
+The `PeerAddr' can be a hostname or the IP-address on the "xx.xx.xx.xx"
+form.  The `PeerPort' can be a number or a symbolic service name.  The
+service name might be followed by a number in parenthesis which is used
+if the service is not known by the system.  The `PeerPort' specification
+can also be embedded in the `PeerAddr' by preceding it with a ":".
+
+Only one of Type or Proto needs to be specified, one will be assumed
+from the other.  If you specify a symbolic `PeerPort' port, then the
+constructor will try to derive Type and Proto from the service name.
+
+Examples:
+
+     $sock = IO::Socket::INET->new(PeerAddr => 'www.perl.org',
+                                   PeerPort => 'http(80)',
+                                   Proto    => 'tcp');
+
+     $sock = IO::Socket::INET->new(PeerAddr => 'localhost:smtp(25)');
+
+     $sock = IO::Socket::INET->new(Listen    => 5,
+                                   LocalAddr => 'localhost',
+                                   LocalPort => 9000,
+                                   Proto     => 'tcp');
+
+
+METHODS
+-------
+
+sockaddr ()
+     Return the address part of the sockaddr structure for the socket
+
+sockport ()
+     Return the port number that the socket is using on the local host
+
+sockhost ()
+     Return the address part of the sockaddr structure for the socket in
+     a text form xx.xx.xx.xx
+
+peeraddr ()
+     Return the address part of the sockaddr structure for the socket on
+     the peer host
+
+peerport ()
+     Return the port number for the socket on the peer host.
+
+peerhost ()
+     Return the address part of the sockaddr structure for the socket on
+     the peer host in a text form xx.xx.xx.xx
+
+
+IO::Socket::UNIX
+----------------
+
+IO::Socket::UNIX provides a constructor to create an AF_UNIX domain
+socket and some related methods. The constructor can take the following
+options
+
+     Type    	Type of socket (eg SOCK_STREAM or SOCK_DGRAM)
+     Local   	Path to local fifo
+     Peer    	Path to peer fifo
+     Listen  	Create a listen socket
+
+
+METHODS
+-------
+
+hostpath()
+     Returns the pathname to the fifo at the local end
+
+peerpath()
+     Returns the pathanme to the fifo at the peer end
+
+
+SEE ALSO
+========
+
+*Note Socket: Socket,, *Note IO/Handle: IO/Handle,
+
+
+AUTHOR
+======
+
+Graham Barr <`Graham.Barr@tiuk.ti.com'>
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996 Graham Barr. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+
+
+File: pm.info, Node: IPC/Open2, Next: IPC/Open3, Prev: IO/Socket, Up: Module List
+
+open a process for both reading and writing
+*******************************************
+
+
+
+NAME
+====
+
+IPC::Open2, open2 - open a process for both reading and writing
+
+
+SYNOPSIS
+========
+
+     use IPC::Open2;
+     $pid = open2(\*RDR, \*WTR, 'some cmd and args');
+       # or
+     $pid = open2(\*RDR, \*WTR, 'some', 'cmd', 'and', 'args');
+
+
+DESCRIPTION
+===========
+
+The open2() function spawns the given $cmd and connects $rdr for reading
+and $wtr for writing.  It's what you think should work when you try
+
+     open(HANDLE, "|cmd args|");
+
+The write filehandle will have autoflush turned on.
+
+If $rdr is a string (that is, a bareword filehandle rather than a glob
+or a reference) and it begins with ">&", then the child will send output
+directly to that file handle.  If $wtr is a string that begins with
+"<&", then WTR will be closed in the parent, and the child will read
+from it directly.  In both cases, there will be a dup(2) instead of a
+pipe(2) made.
+
+open2() returns the process ID of the child process.  It doesn't return
+on failure: it just raises an exception matching `/^open2:/'.
+
+
+WARNING
+=======
+
+It will not create these file handles for you.  You have to do this
+yourself.  So don't pass it empty variables expecting them to get filled
+in for you.
+
+Additionally, this is very dangerous as you may block forever.  It
+assumes it's going to talk to something like *bc*, both writing to it
+and reading from it.  This is presumably safe because you "know" that
+commands like *bc* will read a line at a time and output a line at a
+time.  Programs like sort that read their entire input stream first,
+however, are quite apt to cause deadlock.
+
+The big problem with this approach is that if you don't have control
+over source code being run in the child process, you can't control what
+it does with pipe buffering.  Thus you can't just open a pipe to `cat
+-v' and continually read and write a line from it.
+
+
+SEE ALSO
+========
+
+See *Note IPC/Open3: IPC/Open3, for an alternative that handles STDERR
+as well.  This function is really just a wrapper around open3().
+
+
+
+
+File: pm.info, Node: IPC/Open3, Next: IPC/Shareable, Prev: IPC/Open2, Up: Module List
+
+open a process for reading, writing, and error handling
+*******************************************************
+
+
+
+NAME
+====
+
+IPC::Open3, open3 - open a process for reading, writing, and error
+handling
+
+
+SYNOPSIS
+========
+
+     $pid = open3(\*WTRFH, \*RDRFH, \*ERRFH,
+     		    'some cmd and args', 'optarg', ...);
+
+
+DESCRIPTION
+===========
+
+Extremely similar to open2(), open3() spawns the given $cmd and connects
+RDRFH for reading, WTRFH for writing, and ERRFH for errors.  If ERRFH is
+'', or the same as RDRFH, then STDOUT and STDERR of the child are on the
+same file handle.  The WTRFH will have autoflush turned on.
+
+If WTRFH begins with "<&", then WTRFH will be closed in the parent, and
+the child will read from it directly.  If RDRFH or ERRFH begins with
+">&", then the child will send output directly to that file handle.  In
+both cases, there will be a dup(2) instead of a pipe(2) made.
+
+If you try to read from the child's stdout writer and their stderr
+writer, you'll have problems with blocking, which means you'll want to
+use select(), which means you'll have to use sysread() instead of normal
+stuff.
+
+open3() returns the process ID of the child process.  It doesn't return
+on failure: it just raises an exception matching `/^open3:/'.
+
+
+WARNING
+=======
+
+It will not create these file handles for you.  You have to do this
+yourself.  So don't pass it empty variables expecting them to get filled
+in for you.
+
+Additionally, this is very dangerous as you may block forever.  It
+assumes it's going to talk to something like *bc*, both writing to it
+and reading from it.  This is presumably safe because you "know" that
+commands like *bc* will read a line at a time and output a line at a
+time.  Programs like sort that read their entire input stream first,
+however, are quite apt to cause deadlock.
+
+The big problem with this approach is that if you don't have control
+over source code being run in the child process, you can't control what
+it does with pipe buffering.  Thus you can't just open a pipe to `cat
+-v' and continually read and write a line from it.
+
+
+
+
+File: pm.info, Node: IPC/Shareable, Next: IPC/Signal, Prev: IPC/Open3, Up: Module List
+
+share Perl variables between processes
+**************************************
+
+
+
+NAME
+====
+
+IPC::Shareable - share Perl variables between processes
+
+
+SYNOPSIS
+========
+
+     use IPC::Shareable;
+     tie($scalar, IPC::Shareable, $glue, { %options });
+     tie(%hash, IPC::Shareable, $glue, { %options });
+
+
+CONVENTIONS
+===========
+
+The occurrence of a number in square brackets, as in [N], in the text of
+this document refers to a numbered note in the `' in this node.
+
+
+DESCRIPTION
+===========
+
+IPC::Shareable allows you to tie a a variable to shared memory making it
+easy to share the contents of that variable with other Perl processes.
+Currently either scalars or hashes can be tied; tying of arrays remains
+a work in progress.  However, the variable being tied may contain
+arbitrarily complex data structures - including references to arrays,
+hashes of hashes, etc.
+
+The association between variables in distinct processes is provided by
+*$glue*.  This is an integer number or 4 character string[1] that serves
+as a common identifier for data across process space.  Hence the
+statement
+
+     tie($scalar, IPC::Shareable, 'data');
+
+in program one and the statement
+
+     tie($variable, IPC::Shareable, 'data');
+
+in program two will bind $scalar in program one and $variable in program
+two.  There is no pre-set limit to the number of processes that can bind
+to data; nor is there a pre-set limit to the size or complexity of the
+underlying data of the tied variables[2].
+
+The bound data structures are all linearized (using Raphael Manfredi's
+Storable module) before being slurped into shared memory.  Upon
+retrieval, the original format of the data structure is recovered.
+Semaphore flags are used for versioning and managing a per-process
+cache, allowing quick retrieval of data when, for instance, operating on
+a tie()d variable in a tight loop.
+
+
+OPTIONS
+=======
+
+Options are specified by passing a reference to a hash as the fourth
+argument to the tie function that enchants a variable.  Alternatively
+you can pass a reference to a hash as the third argument; IPC::Shareable
+will then look at the field named *'key'* in this hash for the value of
+*$glue*.  So,
+
+     tie($variable, IPC::Shareable, 'data', \%options);
+
+is equivalent to
+
+     tie($variable, IPC::Shareable, { 'key' => 'data', ... });
+
+When defining an options hash, values that match the word *'no'* in a
+case-insensitive manner are treated as false.  Therefore, setting
+`$options{'create'} = 'No';' is the same as `$options{'create'} = 0;'.
+
+The following fields are recognized in the options hash.
+
+key
+     The *'key'* field is used to determine the *$glue* if *$glue* was
+     not present in the call to tie().  This argument is then, in turn,
+     used as the KEY argument in subsequent calls to shmget() and
+     semget().  If this field is not provided, a value of IPC_PRIVATE is
+     assumed, meaning that your variables cannot be shared with other
+     processes. (Note that setting *$glue* to 0 is the same as using
+     IPC_PRIVATE.)
+
+create
+     If *'create'* is set to a true value, IPC::Shareable will create a
+     new binding associated with *$glue* if such a binding does not
+     already exist.  If *'create'* is false, calls to tie() will fail
+     (returning undef) if such a binding does not already exist.  This
+     is achieved by ORing IPC_PRIVATE into FLAGS argument of calls to
+     shmget() when create is true.
+
+exclusive
+     If *'exclusive'* field is set to a true value, calls to tie() will
+     fail (returning undef) if a data binding associated with *$glue*
+     already exists.  This is achieved by ORing IPC_ IPC_EXCL into the
+     FLAGS argument of calls to shmget() when *'exclusive'* is true.
+
+mode
+     The mode argument is an octal number specifying the access
+     permissions when a new data binding is being created.  These access
+     permission are the same as file access permissions in that 0666 is
+     world readable, 0600 is readable only by the effective UID of the
+     process creating the shared variable, etc.  If not provided, a
+     default of 0666 (world readable and writable) will be assumed.
+
+destroy
+     If set to a true value, the data binding will be destroyed when the
+     process calling tie() exits (gracefully)[3].
+
+
+EXAMPLES
+========
+
+In a file called *server*:
+
+     #!/usr/bin/perl -w
+     use IPC::Shareable;
+     $glue = 'data';
+     %options = (
+         'create' => 'yes',
+         'exclusive' => 'no',
+         'mode' => 0644,
+         'destroy' => 'yes',
+     );
+     tie(%colours, IPC::Shareable, $glue, { %options }) or
+         die "server: tie failed\n";
+     %colours = (
+         'red' => [
+              'fire truck',
+              'leaves in the fall',
+         ],
+         'blue' => [
+              'sky',
+              'police cars',
+         ],
+     );
+     (print("server: there are 2 colours\n"), sleep 5)
+         while scalar keys %colours == 2;
+     print "server: here are all my colours:\n";
+     foreach $colour (keys %colours) {
+         print "server: these are $colour: ",
+             join(', ', @{$colours{$colour}}), "\n";
+     }
+     exit;
+
+In a file called *client*
+
+     #!/usr/bin/perl -w
+     use IPC::Shareable;
+     $glue = 'data';
+     %options = (
+         'key' => 'paint',
+         'create' => 'no',
+         'exclusive' => 'no',
+         'mode' => 0644,
+         'destroy' => 'no',
+         );
+     tie(%colours, IPC::Shareable, $glue, { %options }) or
+         die "client: tie failed\n";
+     foreach $colour (keys %colours) {
+         print "client: these are $colour: ",
+             join(', ', @{$colours{$colour}}), "\n";
+     }
+     delete $colours{'red'};
+     exit;
+
+And here is the output (the sleep commands in the command line prevent
+the output from being interrupted by shell prompts):
+
+     bash$ ( ./server & ) ; sleep 10 ; ./client ; sleep 10
+     server: there are 2 colours
+     server: there are 2 colours
+     server: there are 2 colours
+     client: these are blue: sky, police cars
+     client: these are red: fire truck, leaves in the fall
+     server: here are all my colours:
+     server: these are blue: sky, police cars
+
+
+RETURN VALUES
+=============
+
+Calls to tie() that try to implement IPC::Shareable will return true if
+successful, undef otherwise.
+
+
+INTERNALS
+=========
+
+When a variable is tie()d, a blessed reference to a SCALAR is created.
+(This is true even if it is a HASH being tie()d.)  The value thereby
+referred is an integer[4] ID that is used as a key in a hash called
+*%IPC::Shareable::Shm_Info*; this hash is created and maintained by
+IPC::Shareable to manage the variables it has tie()d.  When
+IPC::Shareable needs to perform an operation on a tie()d variable, it
+dereferences the blessed reference to perform a lookup in
+*%IPC::Shareable::Shm_Info* for the information needed to proceed.
+
+*%IPC::Shareable::Shm_Info* has the following structure:
+
+     %IPC::Shareable::Shm_Info = (
+
+     # - The id of an enchanted variable
+     $id => {
+
+     # -  A literal indicating the variable type
+     'type' => 'SCALAR' || 'HASH',
+
+     # - Shm segment IDs for this variable
+     'frag_id' => {
+         '0' => $id_1, # - ID of first shm segment
+         '1' => $id_2, # - ID of next shm segment
+         ... # - etc
+     },
+
+     # - ID of associated semaphores
+     'sem_id' => $semid,
+
+     # - The I<$glue> used when tie() was called
+     'key' => $glue,
+
+     # - The value of FLAGS for shmget() calls.
+     'flags' => $flags,
+
+     # - Destroy shm segements on exit?
+     'destroy' => $destroy,
+
+     # - Data cache
+     'DATA' => \$data || \%data,
+
+     # - The version number of the cached data
+     'version' => $version,
+     },
+            ...
+        );
+
+Perhaps the most important thing to note the existence of the
+*'DATA'* and *'version'* fields: data for all tie()d variables is
+stored locally in a per-process cache.  When storing data, the values of
+the semaphores referred to by *$Shm_Info{$id}{'sem_id'}* are changed to
+indicate to the world a new version of the data is available. When
+retrieving data for a tie()d variables, the values of these semaphores
+are examined to see if another process has created a more recent version
+than the cached version.  If a more recent version is available, it will
+be retrieved from shared memory and used. If no more recent version has
+been created, the cached version is used[5].
+
+Another important thing to know is that IPC::Shareable allocates shared
+memory of a constant size SHM_BUFSIZ, where SHM_BUFSIZ is defined in
+this module.  If the amount of (serialized) data exceeds this value, it
+will be fragmented into multiple segments during a write operation and
+reassembled during a read operation.
+
+
+AUTHOR
+======
+
+Benjamin Sugars <bsugars@canoe.ca>
+
+
+NOTES
+=====
+
+
+Footnotes from the above sections
+---------------------------------
+
+  1. If *$glue* is longer than 4 characters, only the 4 most significant
+     characters are used.  These characters are turned into integers by
+     unpack()ing them.  If *$glue* is less than 4 characters, it is
+     space padded.
+
+  2. IPC::Shareable provides no pre-set limits, but the system does.
+     Namely, there are limits on the number of shared memory segments
+     that can be allocated and the total amount of memory usable by
+     shared memory.
+
+  3. If the process has been smoked by an untrapped signal, the binding
+     will remain in shared memory.  If you're cautious, you might try
+
+          $SIG{INT} = \&catch_int;
+          sub catch_int {
+              exit;
+          }
+          ...
+          tie($variable, IPC::Shareable, 'data', { 'destroy' => 'Yes!' });
+
+     which will at least clean up after your user hits CTRL-C because
+     IPC::Shareable's DESTROY method will be called.  Or, maybe you'd
+     like to leave the binding in shared memory, so subsequent process
+     can recover the data...
+
+  4. The integer happens to be the shared memory ID of the first shared
+     memory segment used to store the variable's data.
+
+  5. The exception to this is when the FIRSTKEY and NEXTKEY methods are
+     implemented, presumably because of a call to each() or keys().  In
+     this case, the cached value is ALWAYS used until the end of the
+     cached hash has been reached.  Then the cache is refreshed with the
+     public version (if the public version is more recent).
+
+     The reason for this is that if a (changed) public version is
+     retrieved in the middle of a loop implemented via each() or keys(),
+     chaos could result if another process added or removed a key from
+     the hash being iterated over.  To guard against this, the cached
+     version is always used during such cases.
+
+
+General Notes
+-------------
+
+o
+     As mentioned in `' in this node, shared memory segments are
+     acquired with sizes of SHM_BUFSIZ.  SHM_BUFSIZ's largest possible
+     value is nominally SHMMAX, which is highly system-dependent.
+     Indeed, for some systems it may be defined at boot time.  If you
+     can't seem to tie() any variables, it may be that SHM_BUFSIZ is set
+     a value that exceeds SHMMAX on your system.  Try reducing the size
+     of this constant and recompiling the module.
+
+o
+     The class contains a translation of the constants defined in the
+     <sys/ipc.h>, <sys/shm.h>, and <sys/sem.h> header files.  These
+     constants are used internally by the class and cannot be imported
+     into a calling environment.  To do that, use IPC::SysV instead.
+     Indeed, I would have used IPC::SysV myself, but I haven't been able
+     to get it to compile on any system I have access to :-(.
+
+o
+     There is a program called ipcs(1/8) that is available on at least
+     Solaris and Linux that might be useful for cleaning moribund shared
+     memory segments or semaphore sets produced by bugs in either
+     IPC::Shareable or applications using it.
+
+o
+     Set the variable *$IPC::Shareable::Debug* to a true value to produce
+     *many* verbose debugging messages on the standard error (I don't use
+     the Perl debugger as much as I should... )
+
+
+BUGS
+====
+
+Certainly; this is alpha software.
+
+The first bug is that I do not know what all the bugs are. If you
+discover an anomaly, send me an email at bsugars@canoe.ca.
+
+Variables that have been declared local with my() and subsequently
+tie()d can act in a bizarre fashion if you store references in them.
+You can try not not using my() in these cases, or go through extra pain
+when dereferencing them, like this:
+
+     #!/usr/bin/perl
+     use IPC::Shareable;
+     my $scalar;
+     tie($scalar, IPC::Shareable, { 'destroy' => 'yes' });
+     $scalar = [ 0 .. 9 ];
+     @array = @$scalar;
+     for (0 .. 9) {
+         print "$array[$_]\n"; # $$scalar won't work after 'my $scalar;'
+     }
+
+I suspect the reason for this is highly mystical and requires a wizard
+to explain.
+
+
+SEE ALSO
+========
+
+perl(1), perltie(1), Storable(3), shmget(2) and other SysV IPC man
+pages.
+
+
+
+
+File: pm.info, Node: IPC/Signal, Next: IPC/SysV/Msg, Prev: IPC/Shareable, Up: Module List
+
+Utility functions dealing with signals
+**************************************
+
+
+
+NAME
+====
+
+IPC::Signal - Utility functions dealing with signals
+
+
+SYNOPSIS
+========
+
+     $number = sig_num $name;
+     $name   = sig_name $number;
+
+     sig_translate_setup;
+     $number = $Sig_num{$name};
+     $name   = $Sig_name[$number];
+
+
+DESCRIPTION
+===========
+
+This module contains utility functions for dealing with signals.
+
+Nothing is exported by default.
+
+sig_num *chopped-signal-name*
+     Returns the signal number of the signal whose name (sans `SIG') is
+     *chopped-signal-name*, or undef if there is no such signal.
+
+     This function is prototyped to take a single scalar argument.
+
+sig_name *signal-number*
+     Returns the chopped signal name (like `HUP') of signal number
+     *signal-number*, or undef if there is no such signal.
+
+     This function is prototyped to take a single scalar argument.
+
+sig_translate_setup
+     If you want to use the @Sig_name and %Sig_num variables directly
+     you must call sig_translate_setup to initialize them.  This isn't
+     necessary if you only use the function interfaces sig_name() and
+     sig_num().
+
+     This function is prototyped to take no arguments.
+
+%Sig_num
+     A hash with chopped signal name keys (like `HUP') and integer
+     signal number values.
+
+*@Sig_name*
+     An array mapping signal numbers to chopped signal names (like
+     `HUP').
+
+
+AUTHOR
+======
+
+Roderick Schertler <`roderick@argon.org'>
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: IPC/SysV/Msg, Next: IPC/SysV/MsgDS, Prev: IPC/Signal, Up: Module List
+
+SYNOPSIS
+========
+
+     use IPC::SysV::Msg qw(msg_create_queue ...);
+
+     $key = 55;
+     $qid = msg_get_queue_id($key);
+     $qid = msg_create_queue($key,'rw-rw--w-');
+     msg_add_to_queue($qid,$type,$string,$nowait);
+     $ds = msg_get_queue_status($qid);
+     $ds->set_uid_gid_mode_qbytes($uid, $gid, $mode, $qbytes);
+     msg_set_queue_status($qid,$ds);
+     ($type,$str) = msg_remove_from_queue($qid,$size,$type,$nowait,$noerror);
+     msg_remove_queue_id($qid);
+
+
+DESCRIPTION
+===========
+
+This module provides wrappers to msgctl, msgrcv, msgsnd and msgget.
+Where undef is returned, you can check the $! status for the various
+error types.
+
+msg_get_queue_id KEY
+     Wraps the msgget function for accessing message queue ids.  Returns
+     the msgqid (a number) of the queue data structure to which KEY is
+     already associated. Returns undef if that queue does not exist.
+
+msg_create_queue KEY, MODE
+     Wraps the msgget function for creating message queues.  It takes a
+     KEY which should be a positive integer, and a MODE which should be
+     9 bit mode or a string in the format: 'RW-RW-RW-' where R is 'r' or
+     '-', W is 'w' or '-' .
+
+     It returns the msgqid (a number) of the queue data structure
+     created, or undef if the queue could not be created. Specifically,
+     this will return undef if you try to create a queue on a key which
+     is already associated to an existing queue.
+
+msg_add_to_queue QID, TYPE, STRING [,NOWAIT]
+     Wraps msgsnd. Adds a message to the queue specified by QID. The
+     message added contains the type TYPE and the string STRING. If
+     NOWAIT is true, then the msgsnd will not block, otherwise it will
+     until the message could be added to the queue.
+
+msg_remove_from_queue QID, SIZE, TYPE, [,NOWAIT [,NOERROR] ]
+     Wraps msgrcv. Tries to remove a message from the queue specified by
+     QID. If TYPE is 0, then the first message is removed; if TYPE is
+     greater than 0, the first message of type TYPE is removed; If TYPE
+     is less than 0, the first message of the lowest type that is less
+     than or equal to the absolute value of TYPE is removed. The call is
+     blocked until a message is available unless NOWAIT is true. The
+     removed message string is truncated to size SIZE if it is larger
+     than SIZE and NOERROR is true, otherwise the call fails (empty
+     array returned, error status in $!).  On success, returns an array
+     with two values, the type of the message removed, and the string it
+     contained.
+
+msg_get_queue_status QID
+     Wraps msgctl. Returns an IPC::SysV::Msg::DS object holding the
+     current status of the of the queue.
+
+msg_set_queue_status QID, DS
+     Wraps msgctl. Sets the queue status using the IPC::SysV::Msg::DS
+     object DS.
+
+msg_remove_queue_id QID
+     Wraps msgctl. Removes the given by queue id QID from the system.
+
+     Jack Shirazi
+
+          This program is free software; you can redistribute it and/or
+          modify it under the same terms as Perl itself.
+
+Version 1.0
+     Base version.
+
+
+
+
+File: pm.info, Node: IPC/SysV/MsgDS, Next: IPC/SysV/SemDS, Prev: IPC/SysV/Msg, Up: Module List
+
+SYNOPSIS
+========
+
+     require IPC::SysV::MsgDS;
+
+     use IPC::SysV qw(IPC_STAT);
+     msgctl($qid,IPC_STAT,$msqid_ds);
+
+     $msqid_ds_obj = IPC::SysV::MsgDS->new($msqid_ds);
+     $msqid_ds_obj->qnum();
+     $msqid_ds_obj->set_uid_gid_mode_qbytes($uid, $gid, $mode, $qbytes);
+     msgctl($qid,IPC_SET,$msqid_ds_obj->repack());
+     $msqid_ds_obj->perm_uid();
+     $msqid_ds_obj->perm_gid();
+     $msqid_ds_obj->perm_cuid();
+     $msqid_ds_obj->perm_cgid();
+     $msqid_ds_obj->perm_mode();
+     $msqid_ds_obj->qnum();
+     $msqid_ds_obj->qbytes();
+     $msqid_ds_obj->lspid();
+     $msqid_ds_obj->lrpid();
+     $msqid_ds_obj->stime();
+     $msqid_ds_obj->rtime();
+     $msqid_ds_obj->ctime();
+     $msqid_ds_obj->mode();
+
+
+DESCRIPTION
+===========
+
+This package provides a nice interface to a message queue id data
+structure (MSQID_DS).
+
+Given a string holding a MSQID_DS structure ($msqid_ds, for example as
+obtained with 'msgctl($qid,IPC_STAT,$msqid_ds)') you can get the object
+with
+
+     IPC::SysV::MsgDS->new($msqid_ds);
+
+This object holds the individual parts of the data structure, and has
+the following access methods to access the items returned by
+IPC::SysV::msg_unpack_msqid_ds().
+
+     $msqid_ds_obj->perm_uid()
+     $msqid_ds_obj->perm_gid()
+     $msqid_ds_obj->perm_cuid()
+     $msqid_ds_obj->perm_cgid()
+     $msqid_ds_obj->perm_mode()
+     $msqid_ds_obj->qnum() 	
+     $msqid_ds_obj->qbytes() 	
+     $msqid_ds_obj->lspid() 	
+     $msqid_ds_obj->lrpid() 	
+     $msqid_ds_obj->stime() 	
+     $msqid_ds_obj->rtime() 	
+     $msqid_ds_obj->ctime()
+
+In addition, one other access method, 'mode', accesses the perm_mode in
+a string readable format ('RW-RW-RW-').
+
+     $msqid_ds_obj->mode()
+
+One updating method is available, 'set_uid_gid_mode_qbytes' which takes
+four arguments, the UID, GID, MODE, and QBYTES, to update the parts
+perm_uid, perm_gid, perm_mode and qbytes respectively. Any of these can
+be undef, in which case the corresponding value is not altered. The
+perm_mode argument can be numeric or in 'RW-RW-RW-' format.
+
+     $msqid_ds_obj->set_uid_gid_mode_qbytes(UID,GID,MODE,QBYTES)
+
+Finally, you can retrieve the packed object for the current state of the
+object with the repack method,
+
+     $msqid_ds_obj->repack()
+
+This is useful to reset values.
+
+Jack Shirazi
+
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+Version 1.0
+     Base version.
+
+
+
+
+File: pm.info, Node: IPC/SysV/SemDS, Next: IPC/SysV/ShmDS, Prev: IPC/SysV/MsgDS, Up: Module List
+
+SYNOPSIS
+========
+
+     require IPC::SysV::SemDS;
+
+     use IPC::SysV qw(IPC_STAT IPC_SET);
+     semctl($sid,0,IPC_STAT,$semid_ds);
+
+     $semds_obj = IPC::SysV::SemDS->new($semid_ds);
+     $semds_obj->perm_mode();
+     $semds_obj->perm_gid();
+     $semds_obj->perm_uid();
+     $semds_obj->perm_cuid();
+     $semds_obj->perm_cgid();
+     $semds_obj->ctime();
+     $semds_obj->otime();
+     $semds_obj->nsems();
+     $semds_obj->mode();
+     $semds_obj->set_uid_gid_mode($uid, $gid, $mode);
+     msgctl($qid,0,IPC_SET,$semds_obj->repack());
+
+
+DESCRIPTION
+===========
+
+This package provides an interface to a semaphore id data structure
+(SEMID_DS).
+
+Given a string holding a SEMID_DS array ($semid_ds, for example as
+obtained with 'semctl($sid,0,IPC_STAT,$semid_ds)') you can get the
+object with
+
+     $semds_obj = IPC::SysV::SemDS->new($semid_ds);
+
+This object holds the individual parts of the data structure, and has
+the following access methods to access the items returned by
+IPC::SysV::sem_unpack_semid_ds().
+
+     $semds_obj->perm_mode();
+     $semds_obj->perm_gid();
+     $semds_obj->perm_uid();
+     $semds_obj->perm_cuid();
+     $semds_obj->perm_cgid();
+     $semds_obj->ctime();
+     $semds_obj->otime();
+     $semds_obj->nsems();
+
+In addition, one other access method, 'mode', accesses the perm_mode in
+a string readable format ('RW-RW-RW-').
+
+     $semds_obj->mode()
+
+One updating method is available, 'set_uid_gid_mode' which takes three
+arguments, the UID, GID, and MODE, to update the parts perm_uid,
+perm_gid, and perm_mode respectively. Any of these can be undef, in
+which case the corresponding value is not altered. The perm_mode
+argument can be numeric or in 'RW-RW-RW-' format.
+
+     $semid_ds_obj->set_uid_gid_mode(UID,GID,MODE)
+
+Finally, you can retrieve the packed object for the current state of the
+object with the repack method,
+
+     $semid_ds_obj->repack()
+
+This is useful to reset values.
+
+Jack Shirazi
+
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+Version 1.0
+     Base version.
+
+
+
+
+File: pm.info, Node: IPC/SysV/ShmDS, Next: Image/Size, Prev: IPC/SysV/SemDS, Up: Module List
+
+SYNOPSIS
+========
+
+     require IPC::SysV::ShmDS;
+
+     use IPC::SysV qw(IPC_STAT);
+     shmctl($qid,IPC_STAT,$shmid_ds);
+
+     $shmid_ds_obj = IPC::SysV::ShmDS->new($shmid_ds);
+     $shmid_ds_obj->perm_uid();
+     $shmid_ds_obj->perm_gid();
+     $shmid_ds_obj->perm_cuid();
+     $shmid_ds_obj->perm_cgid();
+     $shmid_ds_obj->perm_mode();
+     $shmid_ds_obj->segsz();
+     $shmid_ds_obj->lpid();
+     $shmid_ds_obj->cpid();
+     $shmid_ds_obj->nattch();
+     $shmid_ds_obj->atime();
+     $shmid_ds_obj->dtime();
+     $shmid_ds_obj->ctime();
+     $shmid_ds_obj->mode();
+     $shmid_ds_obj->set_uid_gid_mode($uid, $gid, $mode);
+     shmctl($qid,IPC_SET,$shmid_ds_obj->repack());
+
+
+DESCRIPTION
+===========
+
+This package provides a nice interface to a shared memory id data
+structure (SHMID_DS).
+
+Given a string holding a SHMID_DS structure ($shmid_ds, for example as
+obtained with 'shmctl($qid,IPC_STAT,$shmid_ds)') you can get the object
+with
+
+     IPC::SysV::ShmDS->new($shmid_ds);
+
+This object holds the individual parts of the data structure, and has
+the following access methods to access the items returned by
+IPC::SysV::shm_unpack_shmid_ds().
+
+     $shmid_ds_obj->perm_uid()
+     $shmid_ds_obj->perm_gid()
+     $shmid_ds_obj->perm_cuid()
+     $shmid_ds_obj->perm_cgid()
+     $shmid_ds_obj->perm_mode()
+     $shmid_ds_obj->qnum() 	
+     $shmid_ds_obj->qbytes() 	
+     $shmid_ds_obj->lspid() 	
+     $shmid_ds_obj->lrpid() 	
+     $shmid_ds_obj->stime() 	
+     $shmid_ds_obj->rtime() 	
+     $shmid_ds_obj->ctime()
+
+In addition, one other access method, 'mode', accesses the perm_mode in
+a string readable format ('RW-RW-RW-').
+
+     $shmid_ds_obj->mode()
+
+One updating method is available, 'set_uid_gid_mode' which takes three
+arguments, the UID, GID, and MODE, to update the parts perm_uid,
+perm_gid, and perm_mode respectively. Any of these can be undef, in
+which case the corresponding value is not altered. The perm_mode
+argument can be numeric or in 'RW-RW-RW-' format.
+
+     $shmid_ds_obj->set_uid_gid_mode_qbytes(UID,GID,MODE,QBYTES)
+
+Finally, you can retrieve the packed object for the current state of the
+object with the repack method,
+
+     $shmid_ds_obj->repack()
+
+This is useful to reset values.
+
+Jack Shirazi
+
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
+Version 1.0
+     Base version.
+
+
+
+
+File: pm.info, Node: Image/Size, Next: Include, Prev: IPC/SysV/ShmDS, Up: Module List
+
+read the dimensions of an image in several popular formats
+**********************************************************
+
+
+
+NAME
+====
+
+Image::Size - read the dimensions of an image in several popular formats
+
+
+SYNOPSIS
+========
+
+     use Image::Size;
+     # Get the size of globe.gif
+     ($globe_x, $globe_y) = imgsize("globe.gif");
+     # Assume X=60 and Y=40 for remaining examples
+
+     use Image::Size 'html_imgsize';
+     # Get the size as "HEIGHT=X WIDTH=Y" for HTML generation
+     $size = html_imgsize("globe.gif");
+     # $size == "HEIGHT=60 WIDTH=40"
+
+     use Image::Size 'attr_imgsize';
+     # Get the size as a list passable to routines in CGI.pm
+     @attrs = attr_imgsize("globe.gif");
+     # @attrs == ('-HEIGHT', 60, '-WIDTH', 40)
+
+     use Image::Size;
+     # Get the size of an in-memory buffer
+     ($buf_x, $buf_y) = imgsize($buf);
+
+
+DESCRIPTION
+===========
+
+The *Image::Size* library is based upon the `wwwis' script written by
+Alex Knowles *(alex@ed.ac.uk)*, a tool to examine HTML and add HEIGHT
+and WIDTH parameters to image tags. The sizes are cached internally
+based on file name, so multiple calls on the same file name (such as
+images used in bulleted lists, for example) do not result in repeated
+computations.
+
+*Image::Size* provides three interfaces for possible import:
+
+imgsize(*stream*)
+     Returns a three-item list of the X and Y dimensions (height and
+     width, in that order) and image type of *stream*. Errors are noted
+     by undefined undef value for the first two elements, and an error
+     string in the third.  The third element can be (and usually is)
+     ignored, but is useful when sizing data whose type is unknown.
+
+html_imgsize(*stream*)
+     Returns the height and width (X and Y) of *stream* pre-formatted as
+     a single string `"HEIGHT=X WIDTH=Y"' suitable for addition into
+     generated HTML IMG tags. If the underlying call to `imgsize' fails,
+     undef is returned.
+
+attr_imgsize(*stream*)
+     Returns the height and width of *stream* as part of a 4-element
+     list useful for routines that use hash tables for the manipulation
+     of named parameters, such as the Tk or CGI libraries. A typical
+     return value looks like `("-HEIGHT", X, "-WIDTH", Y)'. If the
+     underlying call to `imgsize' fails, undef is returned.
+
+By default, only `imgsize()' is imported. Any one or combination of the
+three may be imported, or all three may be with the tag *:all*.
+
+
+Input Types
+-----------
+
+The sort of data passed as *stream* can be one of three forms:
+
+string
+     If an ordinary scalar (string) is passed, it is assumed to be a
+     file name (either absolute or relative to the current working
+     directory of the process) and is searched for and opened (if found)
+     as the source of data.  Possible error messages (see DIAGNOSTICS
+     below) may include file-access problems.
+
+scalar reference
+     If the passed-in stream is a scalar reference, it is interpreted as
+     pointing to an in-memory buffer containing the image data.
+
+          # Assume that &read_data gets data somewhere (WWW, etc.)
+          $img = &read_data;
+          ($x, $y, $id) = imgsize(\$img);
+          # $x and $y are dimensions, $id is the type of the image
+
+IO::File object reference
+     The third option is to pass in an object of the IO::File class that
+     has already been instantiated on the target image file. The file
+     pointer will necessarily move, but will be restored to its original
+     position before subroutine end.
+
+          # $fh was passed in, is IO::File reference:
+          ($x, $y, $id) = imgsize($fh);
+          # Same as calling with filename, but more abstract.
+
+
+Recognizd Formats
+-----------------
+
+Image::Size understands and sizes data in the following formats:
+
+@asis{}
+     
+     GIF
+
+@asis{}
+     
+     JPG
+
+@asis{}
+     
+     XBM
+
+@asis{}
+     
+     XPM
+
+@asis{}
+     
+     PPM family (PPM/PGM/PBM)
+
+@asis{}
+     
+     PNG
+
+When using the `imgsize' interface, there is a third, unused value
+returned if the programmer wishes to save and examine it. This value is
+the three- letter identity of the data type. This is useful when
+operating on open file handles or in-memory data, where the type is as
+unknown as the size.  The two support routines ignore this third return
+value, so those wishing to use it must use the base `imgsize' routine.
+
+
+DIAGNOSTICS
+===========
+
+The base routine, `imgsize', returns undef as the first value in its
+list when an error has occured. The third element contains a descriptive
+error message.
+
+The other two routines simply return undef in the case of error.
+
+
+CAVEATS
+=======
+
+This will reliably work on perl 5.002 or newer. Perl versions prior to
+5.003 do not have the IO::File module by default, which this module
+requires. You will have to retrieve and install it, or upgrade to 5.003,
+in which it is included as part of the core.
+
+Caching of size data can only be done on inputs that are file
+names. Open file handles and scalar references cannot be reliably
+transformed into a unique key for the table of cache data. Buffers could
+be cached using the MD5 module, and perhaps in the future I will make
+that an option. I do not, however, wish to lengthen the dependancy list
+by another item at this time.
+
+
+SEE ALSO
+========
+
+`http://www.tardis.ed.ac.uk/~ark/wwwis/' for a description of `wwwis'
+and how to obtain it.
+
+
+AUTHORS
+=======
+
+Perl module interface by Randy J. Ray *(rjray@uswest.com)*, original
+image-sizing code by Alex Knowles *(alex@ed.ac.uk)* and Andrew Tong
+*(werdna@ugcs.caltech.edu)*, used with their joint permission.
+
+Some bug fixes submitted by Bernd Leibing
+*(bernd.leibing@rz.uni-ulm.de)*.  PPM/PGM/PBM sizing code
+contributed by Carsten Dominik *(dominik@strw.LeidenUniv.nl)*. Tom
+Metro *(tmetro@vl.com)* re-wrote the JPG and PNG code, and also
+provided a PNG image for the test suite. Dan Klein
+*(dvk@lonewolf.com)* contributed a re-write of the GIF
+code.
+
+
+
+

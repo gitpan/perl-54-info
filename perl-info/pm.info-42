@@ -1,0 +1,2097 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: News/Newsrc, Next: No/Dato, Prev: News/NNTPClient, Up: Module List
+
+manage newsrc files
+*******************
+
+
+
+NAME
+====
+
+News::Newsrc - manage newsrc files
+
+
+SYNOPSIS
+========
+
+     use News::Newsrc;
+
+     $newsrc   = new News::Newsrc;
+      
+     $ok       = $newsrc->load;
+     $ok       = $newsrc->load             ($file);
+      
+                 $newsrc->save;
+                 $newsrc->save_as          ($file);
+      
+     $ok       = $newsrc-> add_group       ($group,             %options);
+     $ok       = $newsrc->move_group       ($group,             %options);
+     $ok       = $newsrc-> del_group       ($group);
+      
+                 $newsrc->  subscribe      ($group,             %options);
+                 $newsrc->unsubscribe      ($group,             %options);
+      
+                 $newsrc->mark             ($group,  $article , %options);
+                 $newsrc->mark_list        ($group, \@articles, %options);
+                 $newsrc->mark_range       ($group, $from, $to, %options);
+      
+                 $newsrc->unmark           ($group,  $article , %options);
+                 $newsrc->unmark_list      ($group, \@articles, %options);
+                 $newsrc->unmark_range     ($group, $from, $to, %options);
+
+          ... if $newsrc->exists           ($group);
+          ... if $newsrc->subscribed       ($group);
+          ... if $newsrc->marked           ($group, $article);
+
+     $n        = $newsrc->  num_groups;
+     @groups   = $newsrc->      groups;
+     @groups   = $newsrc->  sub_groups;
+     @groups   = $newsrc->unsub_groups;
+
+     @articles = $newsrc->  marked_articles($group,             %options);
+     @articles = $newsrc->unmarked_articles($group, $from, $to, %options);
+
+     $articles = $newsrc->get_articles     ($group,             %options);
+     $ok       = $newsrc->set_articles     ($group, $articles,  %options);
+
+
+REQUIRES
+========
+
+Perl 5.004, Set::IntSpan 1.04
+
+
+EXPORTS
+=======
+
+Nothing
+
+
+DESCRIPTION
+===========
+
+`News::Newsrc' manages newsrc files, of the style
+
+     alt.foo: 1-21,28,31-34
+     alt.bar! 3,5,9-2900,2902
+
+Methods are provided for
+
+   * reading and writing newsrc files
+
+   * adding and removing newsgroups
+
+   * changing the order of newsgroups
+
+   * subscribing and unsubscribing from newsgroups
+
+   * testing whether groups exist and are subscribed
+
+   * marking and unmarking articles
+
+   * testing whether articles are marked
+
+   * returning lists of newsgroups
+
+   * returning lists of articles
+
+
+NEWSRC FILES
+============
+
+A newsrc file is an ASCII file that lists newsgroups and article
+numbers.  Each line of a newsrc file describes a single newsgroup.  Each
+line is divided into three fields: a group, a *subscription mark* and an
+*article list*.
+
+Lines containing only whitespace are ignored.  Whitespace within a line
+is ignored.
+
+Group
+     The group is the name of the newsgroup.  A group name may not
+     contain colons (:) or exclamation points (!).
+
+     Group names must be unique within a newsrc file.  The group name is
+     required.
+
+Subscription mark
+     The *subscription mark* is either a colon (:), for subscribed
+     groups, or an exclamation point (!), for unsubscribed groups.  The
+     subscription mark is required.
+
+Article list
+     The *article list* is a comma-separated list of positive integers.
+     The integers must be listed in increasing order.  Runs of
+     consecutive integers may be abbreviated a-b, where a is the first
+     integer in the run and b is the last.  The article list may be
+     empty.
+
+
+NEWSGROUP ORDER
+===============
+
+`News::Newsrc' preserves the order of newsgroups in a newsrc file: if a
+file is loaded and then saved, the newsgroup order will be unchanged.
+
+Methods that add or move newsgroups affect the newsgroup order.  By
+default, these methods put newsgroups at the end of the newsrc file.
+Other locations may be specified by passing an *%options* hash with a
+`where' key to the method.  Recognized locations are:
+
+`where' => `'first''
+     Put the newsgroup first.
+
+`where' => `'last''
+     Put the newsgroup last.
+
+`where' => `'alpha''
+     Put the newsgroup in alphabetical order.
+
+     If the other newsgroups are not sorted alphabetically, put the
+     group at an arbitrary location.
+
+`where' => [ `before' => *$group* ]
+     Put the group immediately before *$group*.
+
+     If *$group* does not exist, put the group last.
+
+`where' => [ `after' => *$group* ]
+     Put the group immediately after *$group*.
+
+     If *$group* does not exist, put the group last.
+
+`where' => [ number => $n ]
+     Put the group at position $n in the group list.  Indices are
+     zero-based.  Negative indices count backwards from the end of the
+     list.
+
+
+METHODS
+=======
+
+$newsrc = new `News::Newsrc'
+     Creates and returns a `News::Newsrc' object.  The object contains
+     no newsgroups.
+
+$ok = $newsrc->`load'
+$ok = $newsrc->`load'($file)
+     Loads the newsgroups in $file into $newsrc.  If $file is omitted,
+     reads `$ENV{HOME}/.newsrc'.  Any existing data in $newsrc is
+     discarded.  Returns true on success.
+
+     If $file can't be opened, `load' discards existing data from
+     $newsrc and returns null.
+
+     If $file contains invalid lines, `load' will die.  When this
+     happens, the state of $newsrc is undefined.
+
+$newsrc->save
+     Writes the contents of $newsrc back to the file from which it was
+     `load'ed.  If `load' has not been called, writes to
+     `$ENV{HOME}/.newsrc'.  In either case, if the destination *file*
+     exists, it is renamed to *file*`.bak'.
+
+     save will die if there is an error writing the file.
+
+$newsrc->`save_as'($file)
+     Writes the contents of $newsrc to $file.  If $file exists, it is
+     renamed to $file`.bak'.  Subsequent calls to save will write to
+     $file.
+
+     `save_as' will die if there is an error writing the file.
+
+$ok = $newsrc->`add_group'(*$group*, *%options*)
+     Adds *$group* to the list of newsgroups in $newsrc.
+     *$group* is initially subscribed.
+     The article list for *$group* is initially empty.
+
+     By default, 
+     *$group* is added to the end of the list of newsgroups.
+     Other locations may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+     By default, `add_group' does nothing if *$group* already exists.
+     If the replace => 1 option is provided, then `add_group' will
+     delete *$group* if it exists, and then add it.
+
+     `add_group' returns true iff *$group* was added.
+
+$ok = $newsrc->`move_group'(*$group*, *%options*)
+     Changes the position of *$group* in $newsrc according to
+     *%options*.  See `"NEWSGROUP ORDER"' in this node for details.
+
+     If *$group* does not exist, `move_group' does nothing and returns
+     false.  Otherwise, it returns true.
+
+$ok = $newsrc->`del_group'(*$group*)
+     If *$group* exists in $newsrc, `del_group' removes it and returns
+     true.  The article list for *$group* is lost.
+
+     If *$group* does not exist in $newsrc, `del_group' does nothing and
+     returns false.
+
+$newsrc->`subscribe'(*$group*, *%options*)
+     Subscribes to *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`unsubscribe'(*$group*, *%options*)
+     Unsubscribes from *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`mark'(*$group*, *$article*, *%options*)
+     Adds *$article* to the article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`mark_list'(*$group*, *\@articles*, *%options*)
+     Adds *@articles* to the article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`mark_range'(*$group*, *$from*, *$to*, *%options*)
+     Adds all the articles from *$from* to *$to*, inclusive, to the
+     article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`unmark'(*$group*, *$article*, *%options*)
+     Removes *$article* from the article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`unmark_list'(*$group*, *\@articles*, *%options*)
+     Removes *@articles* from the article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->`unmark_range'(*$group*, *$from*, *$to*, *%options*)
+     Removes all the articles from *$from* to *$to*, inclusive, from the
+     article list for *$group*.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$newsrc->exists(*$group*)
+     Returns true iff *$group* exists in $newsrc.
+
+$newsrc->`subscribed'(*$group*)
+     Returns true iff *$group* exists and is subscribed.
+
+$newsrc->`marked'(*$group*, *$article*)
+     Returns true iff *$group* exists and its article list contains
+     *$article*.
+
+$n = $newsrc->`num_groups'
+     Returns the number of groups in $newsrc.
+
+*@groups* = $newsrc->groups
+     Returns the list of groups in $newsrc, in newsrc order.  In scalar
+     context, returns an array reference.
+
+*@groups* = $newsrc->`sub_groups'
+     Returns the list of subscribed groups in $newsrc, in newsrc order.
+     In scalar context, returns an array reference.
+
+*@groups* = $newsrc->`unsub_groups'
+     Returns the list of unsubscribed groups in $newsrc, in newsrc
+     order.  In scalar context, returns an array reference.
+
+*@articles* = $newsrc->`marked_articles'(*$group*)
+     Returns the list of articles in the article list for *$group*.  In
+     scalar context, returns an array reference.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+*@articles* = $newsrc->`unmarked_articles'(*$group*, *$from*, *$to*, *%options*)
+     Returns the list of articles from *$from* to *$to*, inclusive, that
+     do *not* appear in the article list for *$group*.  In scalar
+     context, returns an array reference.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+$articles = $newsrc->`get_articles'(*$group*, *%options*)
+     Returns the article list for *$group* as a string, in the format
+     described in `"NEWSRC FILES"' in this node.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+     If you plan to do any nontrivial processing on the article list,
+     consider converting it to a `Set::IntSpan' object:
+
+          $articles = Set::IntSpan->new($newsrc->get_articles('alt.foo'))
+
+$ok = $newsrc->`set_articles'(*$group*, $articles, *%options*)
+     Sets the article list for $group.  Any existing article list is
+     lost.
+
+     $articles is a string, as described in `"NEWSRC FILES"' in this
+     node.
+
+     *$group* will be created if it does not exist.
+     Its location may be specified in *%options*; see `"NEWSGROUP
+     ORDER"' in this node for details.
+
+     If $articles does not have the format described in `"NEWSRC FILES"'
+     in this node, `set_articles' does nothing and returns false.
+     Otherwise, it returns true.
+
+
+DIAGNOSTICS
+===========
+
+News::Newsrc::load: Bad newsrc line: $file, line $.: $_
+     A line in the newsrc file does not have the format described in
+     `"NEWSRC FILES"' in this node.
+
+News::Newsrc::load: Bad article list: %file, line $.: $_
+     The article list for a newsgroup does not have the format described
+     in `"NEWSRC FILES"' in this node.
+
+News::Newsrc::save_as: Can't rename $file, $file.bak: $!
+News::Newsrc::save_as: Can't open $file: $!
+News::Newsrc::save_as: Can't write $file: $!
+
+ERROR HANDLING
+==============
+
+"Don't test for errors that you can't handle."
+
+`load' returns null if it can't open the newsrc file, and dies if the
+newsrc file contains invalid data.  This isn't as schizophrenic as it
+seems.
+
+There are several ways a program could handle an open failure on the
+newsrc file.  It could prompt the user to reenter the file name.  It
+could assume that the user doesn't have a newsrc file yet.  If it
+doesn't want to handle the error, it could go ahead and die.
+
+On the other hand, it is very difficult for a program to do anything
+sensible if the newsrc file opens successfully and then turns out to
+contain invalid data.  Was there a disk error?  Is the file corrupt?
+Did the user accidentally specify his kill file instead of his newsrc
+file?  And what are you going to do about it?
+
+Rather than try to handle an error like this, it's probably better to
+die and let the user sort things out.  By the same rational, save and
+`save_as' die on failure.
+
+Programs that must retain control can use eval{...}  to protect calls
+that may die.  For example, Perl/Tk runs all callbacks inside an
+eval{...}.  If a callback dies, Perl/Tk regains control and displays $@
+in a dialog box.  The user can then decide whether to continue or quit
+from the program.
+
+
+AUTHOR
+======
+
+Steven McDougall, swmcd@world.std.com
+
+
+SEE ALSO
+========
+
+perl(1), Set::IntSpan
+
+
+COPYRIGHT
+=========
+
+Copyright (c) 1996, 1997 Steven McDougall. All rights reserved.  This
+module is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+
+
+
+File: pm.info, Node: No/Dato, Next: No/KontoNr, Prev: News/Newsrc, Up: Module List
+
+Norwegian dates
+***************
+
+
+
+NAME
+====
+
+No::Dato - Norwegian dates
+
+
+SYNOPSIS
+========
+
+     use No::Dato qw(tekstdato helligdag helligdager);
+
+     print tekstdato(time), "\n";
+     if (helligdag(time)) {
+         print "Idag er det ", helligdag(time), "\n";
+     }
+
+     for (helligdager()) {
+         print "$_\n";
+     }
+
+
+DESCRIPTION
+===========
+
+*This documentation is written in Norwegian.*
+
+Denne modulen tilbyr funksjoner for å håndtere det som er spesielt
+med datoer på norsk.  Dette gjelder blandt annet å finne fram til
+de norske helligdagene.
+
+
+tekstdato($time)
+----------------
+
+Denne rutinen returnerer en dato formatert på formen:
+
+     Fredag, 7. Februar 1997
+
+Argumentet er en vanlig perl $time verdi.  Hvis argumentet utelates
+så benyttes dagens dato.
+
+
+helligdag($time)
+----------------
+
+Rutinen avgjør om en gitt dato er en norsk helligdag eller ikke.
+Hvis det er en helligdag så vil navnet på helligdagen bli
+returnert.  Hvis det er en vanlig hverdag så vil en tom streng (som
+er FALSE i perl) bli returnert.
+
+Argumentet kan være en vanlig $time verdi eller en streng på
+formen "ÅÅÅÅ-MM-DD".
+
+
+helligdager($year)
+------------------
+
+Denne rutinen vil returnere en liste av datostrenger, én for hver
+helligdag i året gitt som argument.  Hvis argumentet mangler vil vi
+bruke inneværende år.  Datostrengene er på formen:
+
+     "ÅÅÅÅ-MM-DD Skjærtorsdag"
+
+Dvs. datoen formattert i henhold til ISO 8601 etterfulgt av navnet på
+helligdagen.  Listen vil være sortert på dato.
+
+
+SEE ALSO
+========
+
+*Note HTTP/Date: HTTP/Date,, som kan konvertere til og fra ISO 8601 formaterte
+datoer (ÅÅÅÅ-MM-DD).
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: No/KontoNr, Next: No/PersonNr, Prev: No/Dato, Up: Module List
+
+Check Norwegian bank account numbers
+************************************
+
+
+
+NAME
+====
+
+No::KontoNr - Check Norwegian bank account numbers
+
+
+SYNOPSIS
+========
+
+     use No::KontoNr qw(kontonr_ok);
+
+     if (personnr_ok($nr)) {
+         # ...
+     }
+
+
+DESCRIPTION
+===========
+
+*This documentation is written in Norwegian.*
+
+Denne modulen kan brukes for å sjekke norske bankontonumre.  Det
+siste sifferet i et banknummer er kontrollsiffer og må stemme overens
+med resten for at det skal være et gyldig nummer.
+
+Modulen inneholder også funksjoner for å regne ut modulus 10 og
+modulus 11 kontrollsiffer.  Disse algoritmene brukes blandt annet hvis
+du vil generere KID når du skal fylle ut giroblanketter.  De finnes
+også en fuksjon som kan brukes for å formatere kronebeløp.
+
+Ingen av rutinene eksporteres implisitt.  Du må be om dem.
+
+
+FUNCTIONS
+=========
+
+
+kontonr_ok($nr)
+---------------
+
+Funksjonen kontonr_ok() vil returnere FALSE hvis kontonummeret gitt som
+argument ikke er gyldig.  Hvis nummeret er gyldig så vil funksjonen
+returnere $nr på standard form.  Nummeret som gis til kontonr_ok()
+kan inneholde blanke eller punktumer.
+
+
+kredittkortnr_ok($nr)
+---------------------
+
+Funksjonen kredittkortnr_ok() vil returnere FALSE hvis
+kredittkortnummeret gitt som argument ikke er gyldig.  Hvis nummeret er
+gyldig så vil funksjonen returnere kortselskapets navn.  Nummeret som
+gis til kredittkortnr_ok() kan inneholde blanke eller punktumer.
+
+
+nok_f($tall)
+------------
+
+Denne funksjonen vil formatere tall på formen:
+
+     300,50
+        4.300,-
+
+Det skulle passe bra når man skal skrive ut kronebeløp.
+Ørebeløpet "00" byttes ut med strengen "- ", dvs. at tallene
+laines opp korrekt hvis du høyrejusterer dem.
+
+
+mod_10($tall)
+-------------
+
+Denne funksjonen regner ut modulus 10 kontrollsifferet til tallet gitt
+som argument.  Hvis argumentet inneholder tegn som ikke er siffer så
+ignoreres de.
+
+Modulus 10 algoritmen benyttes blandt annet for å generere
+kontrollsiffer til de fleste internasjonale kredittkortnummer.
+
+
+mod_11($tall)
+-------------
+
+Denne funksjonen regner ut modulus 11 kontrollsifferet til tallet gitt
+som argument.  Hvis argumentet inneholder tegn som ikke er siffer så
+ignoreres de.  Når denne algoritmen benyttes så kan det være
+tall som det ikke finnes noe gyldig kontrollsiffer for, og da vil
+mod_11() returnere verdien undef.
+
+Modulus 11 algoritmen benyttes blandt annet for å generere
+kontrollsiffer til norske bankkontonummer.
+
+
+SEE ALSO
+========
+
+`Business::CreditCard' in this node
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: No/PersonNr, Next: No/Sort, Prev: No/KontoNr, Up: Module List
+
+Check Norwegian Social security numbers
+***************************************
+
+
+
+NAME
+====
+
+No::PersonNr - Check Norwegian Social security numbers
+
+
+SYNOPSIS
+========
+
+     use No::PersonNr qw(personnr_ok);
+
+     if (personnr_ok($nr)) {
+         # ...
+     }
+
+
+DESCRIPTION
+===========
+
+*This documentation is written in Norwegian.*
+
+Denne modulen kan brukes for å sjekke norske personnummer.  De 2
+siste siffrene i personnummerene er kontrollsiffre og må stemme
+overens med resten for at det skal være et gyldig nummer.  Modulen
+inneholder også funksjoner for å bestemme personens kjønn og
+personens fødselsdato.
+
+Ingen av rutinene eksporteres implisitt.  Du må be om dem.
+
+
+FUNCTIONS
+=========
+
+
+personnr_ok($nr)
+----------------
+
+Funksjonen personnr_ok() vil returnere FALSE hvis personnummeret gitt
+som argument ikke er gyldig.  Hvis nummeret er gyldig så vil
+funksjonen returnere $nr på standard form.  Nummeret som gis til
+personnr_ok() kan inneholde ' ' eller '-'.
+
+
+er_mann($nr)
+------------
+
+Vil returnere TRUE hvis $nr tilhører en mann.  Rutinen vil croake
+hvis nummeret er ugyldig.
+
+
+er_kvinne($nr)
+--------------
+
+Vil returnere TRUE hvis $nr tilhører en kvinne.  Rutinen vil croake
+hvis nummeret er ugyldig.
+
+
+fodt_dato($nr)
+--------------
+
+Vil returnere personens fødselsdato på formen
+"ÅÅÅÅ-MM-DD".  Rutinen returnerer undef hvis nummeret er
+ugyldig.
+
+
+BUGS
+====
+
+Takler ikke fødselsdatoer før år 1900 og etter år 2000.
+Hvis noen kan fortelle meg hva algoritmen er så ville jeg være
+takknemlig.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: No/Sort, Next: No/Telenor, Prev: No/PersonNr, Up: Module List
+
+Norwegian sorting
+*****************
+
+
+
+NAME
+====
+
+No::Sort - Norwegian sorting
+
+
+SYNOPSIS
+========
+
+     use No::Sort;
+     @sortert = no_sort @norske_ord;
+
+
+DESCRIPTION
+===========
+
+This module provde the function no_sort() which sort a ISO-8859/1
+encoded string according to Norwegian practice.  The routine works like
+the normal perl sort routine, but the optional first argument is
+special.  It can either be a reference to the strxfrm() function to use
+while sorting or a reference to a hash used to transform the words while
+sorting.
+
+You can also import the no_xfrm() function which is used for standard
+sorting.  It can be useful to base your custom transformation function
+on it.  If we for instance would like to sort "Aa" as "Å" we could
+implement it like this:
+
+     use No::Sort qw(no_sort no_xfrm);
+     sub my_xfrm {
+         my $word = shift;
+         $word =~ s/A[aA]/Å/g;
+         $word =~ s/aa/å/g;
+         no_xfrm($word);
+     }
+     @sorted = no_sort \&my_xfrm, @names;
+
+By the way, the my_xfrm shown in this example can be imported from this
+module under the name 'no_aa_xfrm':
+
+     use No::Sort qw(no_sort no_aa_xfrm);
+     @sorted = no_sort \&no_aa_xfrm, @names;
+
+If you set the $No::Sort::DEBUG variable to a TRUE value, then we will
+make some extra noise on STDOUT while sorting.
+
+The module can also export functions for up/down casing ISO-8859/1
+strings.  These functions are called latin1_uc(), latin1_lc(),
+latin1_ucfirst(), latin1_lcfirst().
+
+
+SEE ALSO
+========
+
+*Note Perllocale: (perl.info)perllocale,
+
+
+AUTHORS
+=======
+
+Hallvard B Furuseth <h.b.furuseth@usit.uio.no>, Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: No/Telenor, Next: ODBM_File, Prev: No/Sort, Up: Module List
+
+Calculate telephone call prices in Norway
+*****************************************
+
+
+
+NAME
+====
+
+No::Telenor - Calculate telephone call prices in Norway
+
+
+SYNOPSIS
+========
+
+     use No::Telenor qw(samtale_pris);
+     $kr = samtale_pris($time, 3600, "LFV");
+
+
+DESCRIPTION
+===========
+
+*This documentation is written in Norwegian.*
+
+Denne modulen inneholder funksjonen samtale_pris().  Denne funksjonen
+vil beregne prisen på en telefonsamtale gitt tidspunkt, varighet og
+takst som parameter.  Funksjonen kjenner til sanntidstakstene som ble
+innført fra og med år 1997.  Forhåpentligvis vil jeg klare å
+oppdater funksjonen etterhvert som Telenor finner på nye sprell.
+
+
+samtale_pris($start, $varighet, $takst)
+---------------------------------------
+
+Rutinen vil beregne samtale prisen i NOK.  Argumentet $start er
+starttidspunktet gitt som en standard perl 'time' verdi.  Argumentet
+$varighet er samtalens varighet i sekunder.  Argumentet $takst er en
+kort streng som forteller hvilken takst som skal brukes.  Følgende
+takser er støttet:
+
+     L     Lokaltakst
+     LFV   Lokaltakst Familie&Venner
+     R     Rikstakst
+     RFV   Rikstakst Familie&Venner
+     L+    Lokaltakst Pluss
+     R+    Rikstakst Pluss
+     M     Telenor Mobil
+     M+    Telenor Mobil Pluss
+
+
+BUGS
+====
+
+Prisberegningen kan bli unøyaktig hvis samtalen foregikk i overgangen
+mellom vinter- og sommertid eller omvendt.
+
+Jeg har heller ikke fått klarhet i hvilken takst som skal brukes
+på spesielle helligdager.  Det tas ikke hensyn til slike dager nå.
+
+
+AUTHOR
+======
+
+Gisle Aas <aas@sn.no>
+
+
+
+
+File: pm.info, Node: ODBM_File, Next: OS2/SoftInstaller, Prev: No/Telenor, Up: Module List
+
+Tied access to odbm files
+*************************
+
+
+
+NAME
+====
+
+ODBM_File - Tied access to odbm files
+
+
+SYNOPSIS
+========
+
+     use ODBM_File;
+
+     tie(%h, 'ODBM_File', 'Op.dbmx', O_RDWR|O_CREAT, 0640);
+
+     untie %h;
+
+
+DESCRIPTION
+===========
+
+See `tie', *Note Perlfunc: (perl.info)perlfunc,
+
+
+
+
+File: pm.info, Node: OS2/SoftInstaller, Next: Opcode, Prev: ODBM_File, Up: Module List
+
+Perl extension for generation of daughter packages for IBM's Software Installer.
+********************************************************************************
+
+
+
+NAME
+====
+
+OS2::SoftInstaller - Perl extension for generation of daughter packages
+for IBM's Software Installer.
+
+
+SYNOPSIS
+========
+
+     use OS2::SoftInstaller;
+     open PKG, '>my.pkg';
+     select PKG;
+     make_pkg toplevel => '.', zipfile => 'my.zip', packid => 'myzip', 
+       nozip => 0, exclude => undef, dirid => 'FILE', strip => 'emx/';
+     select STDOUT;
+     close PKG;
+
+
+DESCRIPTION
+===========
+
+
+size_date_time_pkg(name)
+------------------------
+
+Takes file name, returns an array `($size, $date,$time)', suitable for
+`SIZE', DATE, and TIME entries of SoftInstaller.
+
+
+make_pkg(...)
+-------------
+
+The function make_pkg() takes a hash-like list of arguments. The
+recognized keys are:
+
+toplevel
+     toplevel directory of the tree to duplicate.
+
+zipfile
+     name of the zipfile which corresponds to this directory in the
+     distribution.
+
+packid
+     symbolic name for this zipfile, autogenerated if needed.
+
+nozip
+     Do not generate toplevel description of the ZIP file (useful if the
+     same zipfile is used in multiple components).
+
+exclude
+     if defined, is a regexp for files to exclude from the generated
+     package file.
+
+dirid
+     id of the directory to install to (eg, FILE or AUX7).
+
+strip
+     prefix in all the files in the ZIP file which should be removed. It
+     is supposed that the default value for the directory to install to
+     (eg, FILE or AUX7) already contains this prefix. (Useful to make
+     the ZIP file appropriate for manual install as well.)
+
+We suppose that `%unzip%' has the value of something like `unzip -oj',
+`%unzip_d%' is something like -d (directory to extract), and the output
+of this script is included like this:
+
+     FILE
+       EXIT = 'setvar unzip=unzip -oj'
+
+     FILE
+       EXIT = 'setvar unzip_d=-d'
+
+     INCLUDE
+       NAME = 'my.pkg'
+
+into the parent package file.
+
+
+AUTHOR
+======
+
+Ilya Zakharevich, ilya@math.ohio-state.edu
+
+
+SEE ALSO
+========
+
+perl(1).
+
+
+
+
+File: pm.info, Node: Opcode, Next: Oraperl, Prev: OS2/SoftInstaller, Up: Module List
+
+Disable named opcodes when compiling perl code
+**********************************************
+
+
+
+NAME
+====
+
+Opcode - Disable named opcodes when compiling perl code
+
+
+SYNOPSIS
+========
+
+     use Opcode;
+
+
+DESCRIPTION
+===========
+
+Perl code is always compiled into an internal format before execution.
+
+Evaluating perl code (e.g. via "eval" or "do 'file'") causes the code to
+be compiled into an internal format and then, provided there was no
+error in the compilation, executed.  The internal format is based on
+many distinct opcodes.
+
+By default no opmask is in effect and any code can be compiled.
+
+The Opcode module allow you to define an *operator mask* to be in effect
+when perl next compiles any code.  Attempting to compile code which
+contains a masked opcode will cause the compilation to fail with an
+error. The code will not be executed.
+
+
+NOTE
+====
+
+The Opcode module is not usually used directly. See the ops pragma and
+Safe modules for more typical uses.
+
+
+WARNING
+=======
+
+The authors make *no warranty*, implied or otherwise, about the
+suitability of this software for safety or security purposes.
+
+The authors shall not in any case be liable for special, incidental,
+consequential, indirect or other similar damages arising from the use of
+this software.
+
+Your mileage will vary. If in any doubt *do not use it*.
+
+
+Operator Names and Operator Lists
+=================================
+
+The canonical list of operator names is the contents of the array
+op_name defined and initialised in file `opcode.h' of the Perl source
+distribution (and installed into the perl library).
+
+Each operator has both a terse name (its opname) and a more verbose or
+recognisable descriptive name. The opdesc function can be used to return
+a list of descriptions for a list of operators.
+
+Many of the functions and methods listed below take a list of operators
+as parameters. Most operator lists can be made up of several types of
+element. Each element can be one of
+
+an operator name (opname)
+     Operator names are typically small lowercase words like enterloop,
+     leaveloop, last, next, redo etc. Sometimes they are rather cryptic
+     like gv2cv, i_ncmp and ftsvtx.
+
+an operator tag name (optag)
+     Operator tags can be used to refer to groups (or sets) of
+     operators.  Tag names always being with a colon. The Opcode module
+     defines several optags and the user can define others using the
+     define_optag function.
+
+a negated opname or optag
+     An opname or optag can be prefixed with an exclamation mark, e.g.,
+     !mkdir.  Negating an opname or optag means remove the corresponding
+     ops from the accumulated set of ops at that point.
+
+an operator set (opset)
+     An opset as a binary string of approximately 43 bytes which holds a
+     set or zero or more operators.
+
+     The opset and opset_to_ops functions can be used to convert from a
+     list of operators to an opset and *vice versa*.
+
+     Wherever a list of operators can be given you can use one or more
+     opsets.  See also Manipulating Opsets below.
+
+
+Opcode Functions
+================
+
+The Opcode package contains functions for manipulating operator names
+tags and sets. All are available for export by the package.
+
+opcodes
+     In a scalar context opcodes returns the number of opcodes in this
+     version of perl (around 340 for perl5.002).
+
+     In a list context it returns a list of all the operator names.
+     (Not yet implemented, use @names = opset_to_ops(full_opset).)
+
+opset (OP, ...)
+     Returns an opset containing the listed operators.
+
+opset_to_ops (OPSET)
+     Returns a list of operator names corresponding to those operators
+     in the set.
+
+opset_to_hex (OPSET)
+     Returns a string representation of an opset. Can be handy for
+     debugging.
+
+full_opset
+     Returns an opset which includes all operators.
+
+empty_opset
+     Returns an opset which contains no operators.
+
+invert_opset (OPSET)
+     Returns an opset which is the inverse set of the one supplied.
+
+verify_opset (OPSET, ...)
+     Returns true if the supplied opset looks like a valid opset (is the
+     right length etc) otherwise it returns false. If an optional second
+     parameter is true then verify_opset will croak on an invalid opset
+     instead of returning false.
+
+     Most of the other Opcode functions call verify_opset automatically
+     and will croak if given an invalid opset.
+
+define_optag (OPTAG, OPSET)
+     Define OPTAG as a symbolic name for OPSET. Optag names always start
+     with a colon `:'.
+
+     The optag name used must not be defined already (define_optag will
+     croak if it is already defined). Optag names are global to the perl
+     process and optag definitions cannot be altered or deleted once
+     defined.
+
+     It is strongly recommended that applications using Opcode should
+     use a leading capital letter on their tag names since lowercase
+     names are reserved for use by the Opcode module. If using Opcode
+     within a module you should prefix your tags names with the name of
+     your module to ensure uniqueness and thus avoid clashes with other
+     modules.
+
+opmask_add (OPSET)
+     Adds the supplied opset to the current opmask. Note that there is
+     currently no mechanism for unmasking ops once they have been
+     masked.  This is intentional.
+
+opmask
+     Returns an opset corresponding to the current opmask.
+
+opdesc (OP, ...)
+     This takes a list of operator names and returns the corresponding
+     list of operator descriptions.
+
+opdump (PAT)
+     Dumps to STDOUT a two column list of op names and op descriptions.
+     If an optional pattern is given then only lines which match the
+     (case insensitive) pattern will be output.
+
+     It's designed to be used as a handy command line utility:
+
+          perl -MOpcode=opdump -e opdump
+          perl -MOpcode=opdump -e 'opdump Eval'
+
+
+Manipulating Opsets
+===================
+
+Opsets may be manipulated using the perl bit vector operators & (and), |
+(or), ^ (xor) and ~ (negate/invert).
+
+However you should never rely on the numerical position of any opcode
+within the opset. In other words both sides of a bit vector operator
+should be opsets returned from Opcode functions.
+
+Also, since the number of opcodes in your current version of perl might
+not be an exact multiple of eight, there may be unused bits in the last
+byte of an upset. This should not cause any problems (Opcode functions
+ignore those extra bits) but it does mean that using the ~ operator will
+typically not produce the same 'physical' opset 'string' as the
+invert_opset function.
+
+
+TO DO (maybe)
+=============
+
+     $bool = opset_eq($opset1, $opset2)	true if opsets are logically eqiv
+
+     $yes = opset_can($opset, @ops)	true if $opset has all @ops set
+
+     @diff = opset_diff($opset1, $opset2) => ('foo', '!bar', ...)
+
+
+Predefined Opcode Tags
+======================
+
+:base_core
+          null stub scalar pushmark wantarray const defined undef
+
+          rv2sv sassign
+
+          rv2av aassign aelem aelemfast aslice av2arylen
+
+          rv2hv helem hslice each values keys exists delete
+
+          preinc i_preinc predec i_predec postinc i_postinc postdec i_postdec
+          int hex oct abs pow multiply i_multiply divide i_divide
+          modulo i_modulo add i_add subtract i_subtract
+
+          left_shift right_shift bit_and bit_xor bit_or negate i_negate
+          not complement
+
+          lt i_lt gt i_gt le i_le ge i_ge eq i_eq ne i_ne ncmp i_ncmp
+          slt sgt sle sge seq sne scmp
+
+          substr vec stringify study pos length index rindex ord chr
+
+          ucfirst lcfirst uc lc quotemeta trans chop schop chomp schomp
+
+          match split
+
+          list lslice splice push pop shift unshift reverse
+
+          cond_expr flip flop andassign orassign and or xor
+
+          warn die lineseq nextstate unstack scope enter leave
+
+          rv2cv anoncode prototype
+
+          entersub leavesub return method -- XXX loops via recursion?
+
+          leaveeval -- needed for Safe to operate, is safe without entereval
+
+:base_mem
+     These memory related ops are not included in :base_core because
+     they can easily be used to implement a resource attack (e.g.,
+     consume all available memory).
+
+          concat repeat join range
+
+          anonlist anonhash
+
+     Note that despite the existance of this optag a memory resource
+     attack may still be possible using only :base_core ops.
+
+     Disabling these ops is a *very* heavy handed way to attempt to
+     prevent a memory resource attack. It's probable that a specific
+     memory limit mechanism will be added to perl in the near future.
+
+:base_loop
+     These loop ops are not included in :base_core because they can
+     easily be used to implement a resource attack (e.g., consume all
+     available CPU time).
+
+          grepstart grepwhile
+          mapstart mapwhile
+          enteriter iter
+          enterloop leaveloop
+          last next redo
+          goto
+
+:base_io
+     These ops enable *filehandle* (rather than filename) based input
+     and output. These are safe on the assumption that only pre-existing
+     filehandles are available for use.  To create new filehandles other
+     ops such as open would need to be enabled.
+
+          readline rcatline getc read
+
+          formline enterwrite leavewrite
+
+          print sysread syswrite send recv
+
+          eof tell seek sysseek
+
+          readdir telldir seekdir rewinddir
+
+:base_orig
+     These are a hotchpotch of opcodes still waiting to be considered
+
+          gvsv gv gelem
+
+          padsv padav padhv padany
+
+          rv2gv refgen srefgen ref
+
+          bless -- could be used to change ownership of objects (reblessing)
+
+          pushre regcmaybe regcomp subst substcont
+
+          sprintf prtf -- can core dump
+
+          crypt
+
+          tie untie
+
+          dbmopen dbmclose
+          sselect select
+          pipe_op sockpair
+
+          getppid getpgrp setpgrp getpriority setpriority localtime gmtime
+
+          entertry leavetry -- can be used to 'hide' fatal errors
+
+:base_math
+     These ops are not included in :base_core because of the risk of
+     them being used to generate floating point exceptions (which would
+     have to be caught using a $SIG{FPE} handler).
+
+          atan2 sin cos exp log sqrt
+
+     These ops are not included in :base_core because they have an
+     effect beyond the scope of the compartment.
+
+          rand srand
+
+:default
+     A handy tag name for a *reasonable* default set of ops.  (The
+     current ops allowed are unstable while development continues. It
+     will change.)
+
+          :base_core :base_mem :base_loop :base_io :base_orig
+
+     If safety matters to you (and why else would you be using the
+     Opcode module?)  then you should not rely on the definition of
+     this, or indeed any other, optag!
+
+:filesys_read
+          stat lstat readlink
+
+          ftatime ftblk ftchr ftctime ftdir fteexec fteowned fteread
+          ftewrite ftfile ftis ftlink ftmtime ftpipe ftrexec ftrowned
+          ftrread ftsgid ftsize ftsock ftsuid fttty ftzero ftrwrite ftsvtx
+
+          fttext ftbinary
+
+          fileno
+
+:sys_db
+          ghbyname ghbyaddr ghostent shostent ehostent      -- hosts
+          gnbyname gnbyaddr gnetent snetent enetent         -- networks
+          gpbyname gpbynumber gprotoent sprotoent eprotoent -- protocols
+          gsbyname gsbyport gservent sservent eservent      -- services
+
+          gpwnam gpwuid gpwent spwent epwent getlogin       -- users
+          ggrnam ggrgid ggrent sgrent egrent                -- groups
+
+:browse
+     A handy tag name for a *reasonable* default set of ops beyond the
+     :default optag.  Like :default (and indeed all the other optags)
+     its current definition is unstable while development continues. It
+     will change.
+
+     The :browse tag represents the next step beyond :default. It it a
+     superset of the :default ops and adds :filesys_read the :sys_db.
+     The intent being that scripts can access more (possibly sensitive)
+     information about your system but not be able to change it.
+
+          :default :filesys_read :sys_db
+
+:filesys_open
+          sysopen open close
+          umask binmode
+
+          open_dir closedir -- other dir ops are in :base_io
+
+:filesys_write
+          link unlink rename symlink truncate
+
+          mkdir rmdir
+
+          utime chmod chown
+
+          fcntl -- not strictly filesys related, but possibly as dangerous?
+
+:subprocess
+          backtick system
+
+          fork
+
+          wait waitpid
+
+          glob -- access to Cshell via <`rm *`>
+
+:ownprocess
+          exec exit kill
+
+          time tms -- could be used for timing attacks (paranoid?)
+
+:others
+     This tag holds groups of assorted specialist opcodes that don't
+     warrant having optags defined for them.
+
+     SystemV Interprocess Communications:
+
+          msgctl msgget msgrcv msgsnd
+
+          semctl semget semop
+
+          shmctl shmget shmread shmwrite
+
+:still_to_be_decided
+          chdir
+          flock ioctl
+
+          socket getpeername ssockopt
+          bind connect listen accept shutdown gsockopt getsockname
+
+          sleep alarm -- changes global timer state and signal handling
+          sort -- assorted problems including core dumps
+          tied -- can be used to access object implementing a tie
+          pack unpack -- can be used to create/use memory pointers
+
+          entereval -- can be used to hide code from initial compile
+          require dofile 
+
+          caller -- get info about calling environment and args
+
+          reset
+
+          dbstate -- perl -d version of nextstate(ment) opcode
+
+:dangerous
+     This tag is simply a bucket for opcodes that are unlikely to be
+     used via a tag name but need to be tagged for completness and
+     documentation.
+
+          syscall dump chroot
+
+
+SEE ALSO
+========
+
+ops(3) -- perl pragma interface to Opcode module.
+
+Safe(3) -- Opcode and namespace limited execution compartments
+
+
+AUTHORS
+=======
+
+Originally designed and implemented by Malcolm Beattie,
+mbeattie@sable.ox.ac.uk as part of Safe version 1.
+
+Split out from Safe module version 1, named opcode tags and other
+changes added by Tim Bunce <`Tim.Bunce@ig.co.uk'>.
+
+
+
+
+File: pm.info, Node: Oraperl, Next: PDL, Prev: Opcode, Up: Module List
+
+Perl access to Oracle databases for old oraperl scripts
+*******************************************************
+
+
+
+NAME
+====
+
+Oraperl - Perl access to Oracle databases for old oraperl scripts
+
+
+SYNOPSIS
+========
+
+     $lda = &ora_login($system_id, $name, $password)
+     $csr = &ora_open($lda, $stmt [, $cache])
+     &ora_bind($csr, $var, ...)
+     &ora_fetch($csr [, $trunc])
+     &ora_close($csr)
+     &ora_logoff($lda)
+
+     &ora_do($lda, $stmt)
+
+     &ora_titles($csr)
+     &ora_lengths($csr)
+     &ora_types($csr)
+     &ora_commit($lda)
+     &ora_rollback($lda)
+     &ora_autocommit($lda, $on_off)
+     &ora_version()
+
+     $ora_cache
+     $ora_long
+     $ora_trunc
+     $ora_errno
+     $ora_errstr
+     $ora_verno
+
+     $ora_debug
+
+
+DESCRIPTION
+===========
+
+Oraperl is an extension to Perl which allows access to Oracle databases.
+
+The functions which make up this extension are described in the
+following sections. All functions return a false or undefined (in the
+Perl sense) value to indicate failure.  You do not need to understand
+the references to OCI in these descriptions. They are here to help those
+who wish to extend the routines or to port them to new machines.
+
+The text in this document is largely unchanged from the original Perl4
+oraperl manual written by Kevin Stock <kstock@auspex.fr>. Any comments
+specific to the DBD::Oracle Oraperl emulation are prefixed by *DBD:*.
+
+
+Principal Functions
+-------------------
+
+The main functions for database access are &ora_login(), &ora_open(),
+&ora_bind(), &ora_fetch(), &ora_close(), &ora_do() and &ora_logoff().
+
+   * ora_login
+          $lda = &ora_login($system_id, $username, $password)
+
+
+     In order to access information held within an Oracle database, a
+     program must first log in to it by calling the &ora_login()
+     function.  This function is called with three parameters, the
+     system ID (see below) of the Oracle database to be used, and the
+     Oracle username and password. The value returned is a login
+     identifier (actually an Oracle Login Data Area) referred to below
+     as $lda.
+
+     Multiple logins may be active simultaneously. This allows a simple
+     mechanism for correlating or transferring data between databases.
+
+     Most Oracle programs (for example, SQL*Plus or SQL*Forms) examine
+     the environment variable ORACLE_SID or TWO_TASK to determine which
+     database to connect to. In an environment which uses several
+     different databases, it is easy to make a mistake, and attempt to
+     run a program on the wrong one.  Also, it is cumbersome to create a
+     program which works with more than one database
+     simultaneously. Therefore, Oraperl requires the system ID to be
+     passed as a parameter. However, if the system ID parameter is an
+     empty string then oracle will use the existing value of ORACLE_SID
+     or TWO_TASK in the usual manner.
+
+     Example:
+
+          $lda = &ora_login('personnel', 'scott', 'tiger') || die $ora_errstr;
+
+     This function is equivalent to the OCI olon and orlon functions.
+
+     *DBD:* note that a name is assumed to be a TNS alias if it does not
+     appear as the name of a SID in /etc/oratab or
+     /var/opt/oracle/oratab.  See the code in Oracle.pm for the full
+     logic of database name handling.
+
+     *DBD:* Since the returned $lda is a Perl5 reference the database login
+     identifier is now automatically released if $lda is overwritten or
+     goes out of scope.
+
+   * ora_open
+          $csr = &ora_open($lda, $statement [, $cache])
+
+
+     To specify an SQL statement to be executed, the program must call
+     the &ora_open() function. This function takes at least two
+     parameters: a login identifier (obtained from &ora_login()) and the
+     SQL statement to be executed. An optional third parameter specifies
+     the size of the row cache to be used for a SELECT statement. The
+     value returned from &ora_open() is a statement identifier (actually
+     an ORACLE Cursor) referred to below as $csr.
+
+     If the row cache size is not specified, a default size is used. As
+     distributed, the default is five rows, but this may have been
+     changed at your installation (see the &ora_version() function and
+     $ora_cache variable below).
+
+     Examples:
+
+          $csr = &ora_open($lda, 'select ename, sal from emp order by ename', 10);
+
+          $csr = &ora_open($lda, 'insert into dept values(:1, :2, :3)');
+
+     This function is equivalent to the OCI oopen and oparse
+     functions. For statements which do not contain substitution
+     variables (see the section Substitution Variables below), it also
+     uses of the oexec function. For SELECT statements, it also makes
+     use of the odescr and odefin functions to allocate memory for the
+     values to be returned from the database.
+
+   * ora_bind
+          &ora_bind($csr, $var, ...)
+
+
+     If an SQL statement contains substitution variables (see the
+     section Substitution Variables below), &ora_bind() is used to
+     assign actual values to them. This function takes a statement
+     identifier (obtained from &ora_open()) as its first parameter,
+     followed by as many parameters as are required by the statement.
+
+     Example:
+
+          &ora_bind($csr, 50, 'management', 'Paris');
+
+     This function is equivalent to the OCI obndrn and oexec statements.
+
+     The OCI obndrn function does not allow empty strings to be
+     bound. As distributed, $ora_bind therefore replaces empty strings
+     with a single space. However, a compilation option allows this
+     substitution to be suppressed, causing &ora_bind() to fail. The
+     output from the &ora_version() function specifies which is the case
+     at your installation.
+
+   * ora_fetch
+          $nfields = &ora_fetch($csr)
+
+          @data = &ora_fetch($csr [, $trunc])
+
+
+     The &ora_fetch() function is used in conjunction with a SQL SELECT
+     statement to retrieve information from a database.  This function
+     takes one mandatory parameter, a statement identifier (obtained
+     from &ora_open()).
+
+     Used in a scalar context, the function returns the number of fields
+     returned by the query but no data is actually fetched. This may be
+     useful in a program which allows a user to enter a statement
+     interactively.
+
+     Example:
+
+          $nfields = &ora_fetch($csr);
+
+     Used in an array context, the value returned is an array containing
+     the data, one element per field. Note that this will not work as
+     expected:
+
+          @data = &ora_fetch($csr) || die "...";    # WRONG
+
+     The || forces a scalar context so ora_fetch returns the number of
+     fields.
+
+     An optional second parameter may be supplied to indicate whether
+     the truncation of a LONG or LONG RAW field is to be permitted
+     (non-zero) or considered an error (zero). If this parameter is not
+     specified, the value of the global variable $ora_trunc is used
+     instead. Truncation of other datatypes is always considered a
+     error.
+
+     *DBD:* The optional second parameter to ora_fetch is not supported.
+     A DBI usage error will be generated if a second parameter is
+     supplied.  Use the global variable $ora_trunc instead. Also note
+     that the experimental DBI readblob method can be used to retrieve a
+     long:
+
+          $csr->readblob($field, $offset, $len [, \$dest, $destoffset]);
+
+     If truncation occurs, $ora_errno will be set to 1406.  &ora_fetch()
+     will complete successfully if truncation is permitted, otherwise it
+     will fail.
+
+     &ora_fetch() will fail at the end of the data or if an error
+     occurs. It is possible to distinguish between these cases by
+     testing the value of the variable $ora_errno. This will be zero for
+     end of data, non-zero if an error has occurred.
+
+     Example:
+
+          while (($deptno, $dname, $loc) = &ora_fetch($csr))
+          {
+            warn "Truncated!!!" if $ora_errno == 1406;
+            # do something with the data
+          }
+          warn $ora_errstr if $ora_errno;
+
+     This function is equivalent to the OCI ofetch function.
+
+   * ora_close
+          &ora_close($csr)
+
+
+     If an SQL statement is no longer required (for example, all the
+     data selected has been processed, or no more rows are to be
+     inserted) then the statement identifier should be released. This is
+     done by calling the &ora_close() function with the statement
+     identifier as its only parameter.
+
+     This function is equivalent to the OCI oclose function.
+
+     *DBD:* Since $csr is a Perl5 reference the statement/cursor is now
+     automatically closed if $csr is overwritten or goes out of scope.
+
+   * ora_do
+          &ora_do($lda, $statement)
+
+
+     Not all SQL statements return data or contain substitution
+     variables. In these cases the &ora_do() function may be used as an
+     alternative to &ora_open() and &ora_close().  This function takes
+     two parameters, a login identifier and the statement to be
+     executed.
+
+     Example:
+
+          &ora_do($lda, 'drop table employee');
+
+     This function is roughly equivalent to
+
+          &ora_close( &ora_open($lda, $statement) )
+
+     *DBD:* oraperl v2 used to return the string 'OK' to indicate
+     success with a zero numeric value. The Oraperl emulation now uses
+     the string '0E0' to achieve the same effect since it does not cause
+     any -w warnings when used in a numeric context.
+
+   * ora_logoff
+          &ora_logoff($lda)
+
+
+     When the program no longer needs to access a given database, the
+     login identifier should be released using the &ora_logoff()
+     function.
+
+     This function is equivalent to the OCI ologoff function.
+
+     *DBD:* Since $lda is a Perl5 reference the database login identifier
+     is now automatically released if $lda is overwritten or goes out of
+     scope.
+
+
+Ancillary Functions
+-------------------
+
+Additional functions available are: &ora_titles(), &ora_lengths(),
+&ora_types(), &ora_autocommit(), &ora_commit(), &ora_rollback() and
+&ora_version().
+
+The first three are of most use within a program which allows statements
+to be entered interactively. See, for example, the sample program sql
+which is supplied with Oraperl and may have been installed at your site.
+
+   * ora_titles
+          @titles = &ora_titles($csr)
+
+
+     A program may determine the field titles of an executed query by
+     calling &ora_titles(). This function takes a single parameter, a
+     statement identifier (obtained from &ora_open()) indicating the
+     query for which the titles are required. The titles are returned as
+     an array of strings, one for each column.
+
+     Titles are truncated to the length of the field, as reported by the
+     &ora_lengths() function.
+
+     *DBD:* oraperl v2.2 actually changed the behaviour such that the
+     titles were not truncated unless an optional second parameter was
+     true.  This was not reflected in the oraperl manual.  The Oraperl
+     emulation adopts the non truncating behaviour and doesn't support
+     the truncate parameter.
+
+   * ora_lengths
+          @lengths = &ora_lengths($csr)
+
+
+     A program may determine the length of each of the fields returned
+     by a query by calling the &ora_lengths() function.  This function
+     takes a single parameter, a statement identifier (obtained from
+     &ora_open()) indicating the query for which the lengths are
+     required. The lengths are returned as an array of integers, one for
+     each column.
+
+   * ora_types
+          @types = &ora_types($csr)
+
+
+     A program may determine the type of each of the fields returned by
+     a query by calling the &ora_types() function.  This function takes
+     a single parameter, a statement identifier (obtained from
+     &ora_open()) indicating the query for which the lengths are
+     required. The types are returned as an array of integers, one for
+     each field.
+
+     These types are defined in your OCI documentation. The correct
+     interpretation for Oracle v6 is given in the file oraperl.ph.
+
+   * ora_autocommit
+          &ora_autocommit($lda, $on_or_off)
+
+
+     Autocommit mode (in which each transaction is committed
+     immediately, without waiting for an explicit commit) may be enabled
+     or disabled using &ora_autocommit(). This function takes two
+     parameters, a login identifier (obtained from &ora_login()) and a
+     true/false value indicating whether autocommit is to be enabled
+     (non-zero) or disabled (zero).  By default, autocommit is off.
+
+     Note that autocommit can only be set per login, not per
+     statement. If you need to control autocommit by statement (for
+     example, to allow deletions to be rolled back, but insertions to be
+     committed immediately) you should make multiple calls to
+     &ora_login() and use a separate login identifier for each
+     statement.
+
+   * ora_commit, ora_rollback
+          &ora_commit($lda)
+          &ora_rollback($lda)
+
+
+     Modifications to a database may be committed or rolled back using
+     the &ora_commit() and &ora_rollback() functions.  These functions
+     take a single parameter, a login identifier obtained from
+     &ora_login().
+
+     Transactions which have been committed (either explicitly by a call
+     to &ora_commit() or implicitly through the use of
+     &ora_autocommit()) cannot be subsequently rolled back.
+
+     Note that commit and rollback can only be used per login, not per
+     statement. If you need to commit or rollback by statement you
+     should make multiple calls to &ora_login() and use a separate login
+     identifier for each statement.
+
+   * ora_version
+          &ora_version()
+
+
+     The &ora_version() function prints the version number and copyright
+     information concerning Oraperl. It also prints the values of
+     various compilation time options. It does not return any value, and
+     should not normally be used in a program.
+
+     Example:
+
+          perl -MOraperl -e 'ora_version()'
+
+          This is Oraperl, version 2, patch level 0.
+
+          Debugging is available, including the -D flag.
+          Default fetch row cache size is 5.
+          Empty bind values are replaced by a space.
+
+          Perl is copyright by Larry Wall; type oraperl -v for details.
+          Additions for oraperl: Copyright 1991, 1992, Kevin Stock.
+
+          Oraperl may be distributed under the same conditions as Perl.
+
+     This function is the equivalent of Perl's -v flag.
+
+     *DBD:* The Oraperl emulation printout is similar but not identical.
+
+
+VARIABLES
+=========
+
+Six special variables are provided, $ora_cache, $ora_long, $ora_trunc,
+$ora_errno, $ora_errstr and $ora_verno.
+
+
+Customisation Variables
+-----------------------
+
+These variables are used to dictate the behaviour of Oraperl under
+certain conditions.
+
+   * $ora_cache
+
+     The $ora_cache variable determines the default cache size used by
+     the &ora_open() function for SELECT statements if an explicit cache
+     size is not given.
+
+     It is initialised to the default value reported by &ora_version()
+     but may be set within a program to apply to all subsequent calls to
+     &ora_open(). Cursors which are already open are not affected. As
+     distributed, the default value is five, but may have been altered
+     at your installation.
+
+     As a special case, assigning zero to $ora_cache resets it to the
+     default value. Attempting to set $ora_cache to a negative value
+     results in a warning.
+
+   * $ora_long
+
+     Normally, Oraperl interrogates the database to determine the length
+     of each field and allocates buffer space accordingly.  This is not
+     possible for fields of type LONG or LONGRAW. To allocate space
+     according to the maximum possible length (65535 bytes) would
+     obviously be extremely wasteful of memory.
+
+     Therefore, when &ora_open() determines that a field is a LONG type,
+     it allocates the amount of space indicated by the $ora_long
+     variable. This is initially set to 80 (for compatibility with
+     Oracle products) but may be set within a program to whatever size
+     is required.
+
+     $ora_long is only used when fetching data, not when inserting it.
+
+   * $ora_trunc
+
+     Since Oraperl cannot determine exactly the maximum length of a LONG
+     field, it is possible that the length indicated by $ora_long is not
+     sufficient to store the data fetched. In such a case, the optional
+     second parameter to &ora_fetch() indicates whether the truncation
+     should be allowed or should provoke an error.
+
+     If this second parameter is not specified, the value of $ora_trunc
+     is used as a default. This only applies to LONG and LONGRAW data
+     types.  Truncation of a field of any other type is always
+     considered an error (principally because it indicates a bug in
+     Oraperl).
+
+
+Status Variables
+----------------
+
+These variables report information about error conditions or about
+Oraperl itself. They may only be read; a fatal error occurs if a program
+attempts to change them.
+
+   * $ora_errno
+
+     $ora_errno contains the Oracle error code provoked by the last
+     function call.
+
+     There are two cases of particular interest concerning
+     &ora_fetch(). If a LONG or LONGRAW field is truncated (and
+     truncation is allowed) then &ora_fetch() will complete successfully
+     but $ora_errno will be set to 1406 to indicate the truncation. When
+     &ora_fetch() fails, $ora_errno will be set to zero if this was due
+     to the end of data or an error code if it was due to an actual
+     error.
+
+   * $ora_errstr
+
+     The $ora_errstr variable contains the Oracle error message
+     corresponding to the current value of $ora_errno.
+
+   * $ora_verno
+
+     The $ora_verno variable contains the version number of Oraperl in
+     the form v.ppp where v is the major version number and ppp is the
+     patchlevel. For example, in Oraperl version 3, patch level 142,
+     $ora_verno would contain the value 3.142 (more or less, allowing
+     for floating point error).
+
+
+SUBSTITUTION VARIABLES
+======================
+
+Oraperl allows an SQL statement to contain substitution variables.
+These consist of a colon followed by a number.  For example, a program
+which added records to a telephone list might use the following call to
+&ora_open():
+
+     $csr = &ora_open($csr, "insert into telno values(:1, :2)");
+
+The two names :1 and :2 are called substitution variables.  The function
+&ora_bind() is used to assign values to these variables. For example,
+the following statements would add two new people to the list:
+
+     &ora_bind($csr, "Annette", "472-8836");
+     &ora_bind($csr, "Brian", "937-1823");
+
+Note that the substitution variables must be assigned consecutively
+beginning from 1 for each SQL statement, as &ora_bind() assigns its
+parameters in this order. Named substitution variables (for example,
+:NAME, :TELNO) are not permitted.
+
+*DBD:* Substitution variables are now bound as type 1 (VARCHAR2)
+and not type 5 (STRING) by default. This can alter the behaviour of SQL
+code which compares a char field with a substitution variable.  See the
+String Comparison section in the Datatypes chapter of the Oracle OCI
+manual for more details.
+
+You can work around this by using DBD::Oracle's ability to specify the
+Oracle type to be used on a per field basis:
+
+     $char_attrib = { ora_type => 5 }; # 5 = STRING (ala oraperl2.4)
+     $csr = ora_open($dbh, "select foo from bar where x=:1 and y=:2");
+     $csr->bind_param(1, $value_x, $char_attrib);
+     $csr->bind_param(2, $value_y, $char_attrib);
+     ora_bind($csr);  # bind with no parameters since we've done bind_param()'s
+
+
+DEBUGGING
+=========
+
+*DBD:* The Oraperl $ora_debug variable is not supported. However
+detailed debugging can be enabled at any time by executing
+
+     $h->debug(2);
+
+where $h is either a $lda or a $csr. If debugging is enabled on an $lda
+then it is automatically passed on to any cursors returned by
+&ora_open().
+
+
+EXAMPLE
+=======
+
+     format STDOUT_TOP =
+     Name Phone
+     ==== =====
+     .
+
+     format STDOUT =
+     @<<<<<<<<<< @>>>>>>>>>>
+     $name, $phone
+     .
+
+     die "You should use oraperl, not perl\n" unless defined &ora_login;
+     $ora_debug = shift if $ARGV[0] =~ /^\-#/;
+
+     $lda = &ora_login('t', 'kstock', 'kstock')
+               || die $ora_errstr;
+     $csr = &ora_open($lda, 'select * from telno order by name')
+               || die $ora_errstr;
+
+     $nfields = &ora_fetch($csr);
+     print "Query will return $nfields fields\n\n";
+
+     while (($name, $phone) = &ora_fetch($csr)) { write; }
+     warn $ora_errstr if $ora_errno;
+
+     die "fetch error: $ora_errstr" if $ora_errno;
+
+     do ora_close($csr) || die "can't close cursor";
+     do ora_logoff($lda) || die "can't log off Oracle";
+
+
+NOTES
+=====
+
+In keeping with the philosophy of Perl, there is no pre-defined limit to
+the number of simultaneous logins or SQL statements which may be active,
+nor to the number of data fields which may be returned by a query. The
+only limits are those imposed by the amount of memory available, or by
+Oracle.
+
+
+WARNINGS
+========
+
+The Oraperl emulation software shares no code with the original
+oraperl. It is built on top of the new Perl5 DBI and DBD::Oracle
+modules.  These modules are still evolving. (One of the goals of the
+Oraperl emulation software is to allow useful work to be done with the
+DBI and DBD::Oracle modules whilst insulating users from the ongoing
+changes in their interfaces.)
+
+It is quite possible, indeed probable, that some differences in
+behaviour will exist. These are probably confined to error handling.
+
+*All* differences in behaviour which are not documented here should be
+reported to Tim.Bunce@ig.co.uk and CC'd to dbi-users@fugue.com.
+
+
+SEE ALSO
+========
+
+Oracle Documentation
+     SQL Language Reference Manual.  Programmer's Guide to the Oracle
+     Call Interfaces.
+
+Books
+     Programming Perl by Larry Wall and Randal Schwartz.  Learning Perl
+     by Randal Schwartz.
+
+Manual Pages
+     perl(1)
+
+
+AUTHORS
+=======
+
+Perl by Larry Wall <lwall@netlabs.com>.
+
+ORACLE by Oracle Corporation, California.
+
+Original Oraperl 2.4 code and documentation by Kevin Stock
+<kstock@auspex.fr>.
+
+DBI and Oraperl emulation using DBD::Oracle by <Tim.Bunce@ig.co.uk>
+
+
+
+

@@ -1,0 +1,1494 @@
+Info file: pm.info,    -*-Text-*-
+produced by `texinfo-format-buffer'
+from file `bigpm.texi'
+using `texinfmt.el' version 2.32 of 19 November 1993.
+
+
+
+
+
+File: pm.info, Node: Apache/Status, Next: AppleII/Disk, Prev: Apache/Registry, Up: Module List
+
+Embedded interpreter status information
+***************************************
+
+
+
+NAME
+====
+
+Apache::Status - Embedded interpreter status information
+
+
+SYNOPSIS
+========
+
+     <Location /perl-status>
+     SetHandler  perl-script
+     PerlHandler Apache::Status
+     </Location>
+
+
+DESCRIPTION
+===========
+
+The *Apache::Status* module provides some information about the status
+of the Perl interpreter embedded in the server.
+
+Configure like so:
+
+     <Location /perl-status>
+     SetHandler  perl-script
+     PerlHandler Apache::Status
+     </Location>
+
+Other modules can "plugin" a menu item like so:
+
+     Apache::Status->menu_item(
+        'DBI' => "DBI connections", #item for Apache::DBI module
+        sub {
+            my($r,$q) = @_; #request and CGI objects
+            my(@strings);
+            push @strings,  "blobs of html";
+            return \@s;     #return an array ref
+        }
+     ) if Apache->module("Apache::Status"); #only if Apache::Status is loaded
+
+
+PREREQUISITES
+=============
+
+The *Devel::Symdump* module must be installed:
+
+     perl -MCPAN -e 'install "Devel::Symdump"'
+
+Or fetch from:
+http://www.perl.com/cgi-bin/cpan_mod?module=Devel::Symdump
+
+
+SEE ALSO
+========
+
+perl(1), Apache(3), Devel::Symdump(3)
+
+
+AUTHOR
+======
+
+Doug MacEachern <dougm@osf.org>
+
+
+
+
+File: pm.info, Node: AppleII/Disk, Next: AppleII/ProDOS, Prev: Apache/Status, Up: Module List
+
+Block-level access to Apple II disk image files
+***********************************************
+
+
+
+NAME
+====
+
+AppleII::Disk - Block-level access to Apple II disk image files
+
+
+SYNOPSIS
+========
+
+     use AppleII::Disk;
+     my $disk = AppleII::Disk->new('image.dsk');
+     my $data = $disk->read_block(1);  # Read block 1
+     $disk->write_block(1, $data);     # And write it back :-)
+
+
+DESCRIPTION
+===========
+
+`AppleII::Disk' provides block-level access to the Apple II disk image
+files used by most Apple II emulators.  (For information about Apple II
+emulators, try the Apple II Emulator Page at `http:' in this node.)  For
+a higher-level interface, use the *Note AppleII/ProDOS: AppleII/ProDOS,
+module.
+
+`AppleII::Disk' provides the following methods:
+
+$disk = AppleII::Disk->new($filename, [$mode])
+     Constructs a new `AppleII::Disk' object.  $filename is the name of
+     the image file.  The optional `$mode' is a string specifying how to
+     open the image.  It can consist of the following characters (*case
+     sensitive*):
+
+          r  Allow reads (this is actually ignored; you can always read)
+          w  Allow writes
+          d  Disk image is in DOS 3.3 order
+          p  Disk image is in ProDOS order
+
+     If you don't specify 'd' or 'p', then the format is guessed from
+     the filename.  '.PO' and '.HDV' files are ProDOS order, and
+     anything else is assumed to be DOS 3.3 order.
+
+     If you specify 'w' to allow writes, then the image file is created
+     if it doesn't already exist.
+
+$size = $disk->blocks([$newsize])
+     Gets or sets the size of the disk in blocks.  `$newsize' is the new
+     size of the disk in blocks.  If `$newsize' is omitted, then the
+     size is not changed.  Returns the size of the disk image in blocks.
+
+     This refers to the *logical* size of the disk image.  Blocks
+     outside the physical size of the disk image read as all zeros.
+     Writing to such a block will expand the image file.
+
+     When you create a new image file, you must use `blocks' to set its
+     size before writing to it.
+
+$contents = $disk->read_block($block)
+     Reads one block from the disk image.  $block is the block number to
+     read.
+
+$contents = $disk->read_blocks(\@blocks)
+     Reads a sequence of blocks from the disk image.  `\@blocks' is a
+     reference to an array of block numbers.
+
+$contents = $disk->read_sector($track, $sector)
+     Reads one sector from the disk image.  `$track' is the track
+     number, and `$sector' is the DOS 3.3 logical sector number.  This
+     is currently implemented only for DOS 3.3 order images.
+
+$disk->write_block($block, $contents, [$pad])
+     Writes one block to the disk image.  $block is the block number to
+     write.  $contents is the data to write.  The optional `$pad' is a
+     character to pad the block with (out to 512 bytes).  If `$pad' is
+     omitted or null, then $contents must be exactly 512 bytes.
+
+$disk->write_blocks(\@blocks, $contents, [$pad])
+     Writes a sequence of blocks to the disk image.  `\@blocks' is a
+     reference to an array of block numbers to write.  $contents is the
+     data to write.  It is broken up into 512 byte chunks and written to
+     the blocks.  The optional `$pad' is a character to pad the data
+     with (out to a multiple of 512 bytes).  If `$pad' is omitted or
+     null, then $contents must be exactly 512 bytes times the number of
+     blocks.
+
+$disk->write_sector($track, $sector, $contents, [$pad])
+     Writes one sector to the disk image.  `$track' is the track number,
+     and `$sector' is the DOS 3.3 logical sector number.  $contents is
+     the data to write.  The optional `$pad' is a character to pad the
+     sector with (out to 256 bytes).  If `$pad' is omitted or null, then
+     $contents must be exactly 256 bytes.  This is currently implemented
+     only for DOS 3.3 order images.
+
+$padded = AppleII::Disk->pad_block($data, [$pad, [$length]])
+     Pads `$data' out to `$length' bytes with `$pad'.  Returns the
+     padded string; the original is not altered.  Dies if `$data' is
+     longer than `$length'.  The default `$pad' is "\0", and the default
+     `$length' is 512 bytes.
+
+     If `$pad' is the null string (not undef), just checks to make sure
+     that `$data' is exactly `$length' bytes and returns the original
+     string.  Dies if `$data' is not exactly `$length' bytes.
+
+     `pad_block' can be called either as `AppleII::Disk->pad_block' or
+     `$disk->pad_block'.
+
+
+AUTHOR
+======
+
+Christopher J. Madsen <`ac608@yfn.ysu.edu'>
+
+
+
+
+File: pm.info, Node: AppleII/ProDOS, Next: Archive/Tar, Prev: AppleII/Disk, Up: Module List
+
+Access files on Apple II ProDOS disk images
+*******************************************
+
+
+
+NAME
+====
+
+AppleII::ProDOS - Access files on Apple II ProDOS disk images
+
+
+SYNOPSIS
+========
+
+     use AppleII::ProDOS;
+     my $vol = AppleII::ProDOS->open('image.dsk'); # Open an existing disk
+     print $vol->catalog;                  # List files in volume directory
+     my $file = $vol->get_file('Startup'); # Read file from disk
+     $vol->path('Subdir');                 # Move into a subdirectory
+     $vol->put_file($file);                # And write it back there
+
+
+DESCRIPTION
+===========
+
+`AppleII::ProDOS' provides high-level access to ProDOS volumes stored in
+the disk image files used by most Apple II emulators.  (For information
+about Apple II emulators, try the Apple II Emulator Page at `http:' in
+this node.)  It uses the *Note AppleII/Disk: AppleII/Disk, module to
+handle low-level access to image files.
+
+All the following classes have two constructors.  Constructors named
+open are for creating an object to represent existing data in the image
+file.  Constructors named new are for creating a new object to be added
+to an image file.
+
+
+`AppleII::ProDOS'
+-----------------
+
+`AppleII::ProDOS' is the primary interface to ProDOS volumes.  It
+provides the following methods:
+
+$vol = AppleII::ProDOS->new($volume, $size, $filename, [$mode])
+     Constructs a new image file and an `AppleII::ProDOS' object to
+     access it.  `$volume' is the volume name.  $size is the size in
+     blocks.  $filename is the name of the image file.  The optional
+     `$mode' is a string specifying how to open the image (see the open
+     method for details).  You always receive read and write access.
+
+$vol = AppleII::ProDOS->open($filename, [$mode])
+     Constructs an `AppleII::ProDOS' object to access an existing image
+     file.  $filename is the name of the image file.  The optional
+     `$mode' is a string specifying how to open the image.  It can
+     consist of the following characters (*case sensitive*):
+
+          r  Allow reads (this is actually ignored; you can always read)
+          w  Allow writes
+          d  Disk image is in DOS 3.3 order
+          p  Disk image is in ProDOS order
+
+$vol = AppleII::ProDOS->open($disk)
+     Constructs an `AppleII::ProDOS' object to access an existing image
+     file.  $disk is the `AppleII::Disk' object representing the image
+     file.
+
+$bitmap = $vol->bitmap
+     Returns the volume bitmap as an `AppleII::ProDOS::Bitmap' object.
+
+$dir = $vol->dir
+     Returns the current directory as an AppleII::ProDOS::Directory
+     object.
+
+$disk = $vol->disk
+     Returns the `AppleII::ProDOS::Disk' object which represents the
+     image file.
+
+$disk = $vol->disk_size
+     Returns the size of the volume in blocks.  This is the logical size
+     of the ProDOS volume, which is not necessarily the same as the
+     actual size of the image file.
+
+$name = $vol->name
+     Returns the volume name.
+
+$path = $vol->path([$newpath])
+     Gets or sets the current path.  `$newpath' is the new pathname,
+     which may be either relative or absolute.  `..' may be used to
+     specify the parent directory, but this must occur at the beginning
+     of the path (`../../dir' is valid, but `../dir/..' is not).  If
+     c<$newpath>> is omitted, then the current path is not changed.
+     Returns the current path as a string beginning and ending with `/'.
+
+$catalog = $vol->catalog
+$file = $vol->get_file($filename)
+$entry = $vol->new_dir($name)
+$vol->put_file($file)
+     These methods are passed to the current directory.  See
+     `AppleII::ProDOS::Directory' for details.
+
+
+`AppleII::ProDOS::Directory'
+----------------------------
+
+`AppleII::ProDOS::Directory' represents a ProDOS directory. It provides
+the following methods:
+
+$dir = AppleII::ProDOS::Directory->new($name, $disk, $blocks, $bitmap, [$parent, $parentNum])
+     Constructs a new `AppleII::ProDOS::Directory' object.  $name is the
+     name of the directory.  $disk is the `AppleII::Disk' to create it
+     on.  `$blocks' is a block number or an array of block numbers to
+     store the directory in.  $bitmap is the `AppleII::ProDOS::Bitmap'
+     representing the volume bitmap.  For a subdirectory, `$parent' must
+     be the block number in the parent directory where the subdirectory
+     is listed, and `$parentNum' is the entry number in that block (with
+     1 being the first entry).
+
+$dir = AppleII::ProDOS->open($disk, $block, $bitmap)
+     Constructs an `AppleII::ProDOS::Directory' object to access an
+     existing directory in the image file.  $disk is the `AppleII::Disk'
+     object representing the image file.  $block is the block number
+     where the directory begins.  $bitmap is the
+     `AppleII::ProDOS::Bitmap' representing the volume bitmap.
+
+$catalog = $dir->catalog
+     Returns the directory listing in ProDOS format with free space
+     information.
+
+@entries = $dir->entries
+     Returns the contents of the directory as a list of
+     `AppleII::ProDOS::DirEntry' objects.
+
+$entry = $dir->find_entry($filename)
+     Returns the `AppleII::ProDOS::DirEntry' object for $filename, or
+     undef if the specified file does not exist.
+
+$file = $dir->get_file($filename)
+     Retrieves a file from the directory.  $filename may be either a
+     filename or an `AppleII::ProDOS::DirEntry' object.  Returns a new
+     `AppleII::ProDOS::File' object.
+
+@entries = $dir->list_matches($pattern, [$filter])
+     Returns a list of the `AppleII::ProDOS::DirEntry' objects matching
+     the regexp `$pattern'.  If `$filter' is specified, it is either a
+     subroutine reference or one of the strings 'DIR' or '!DIR'.  'DIR'
+     matches only directories, and '!DIR' matches only regular files.
+     If `$filter' is a subroutine, it is called (as `\&$filter($entry)')
+     for each entry.  It should return true if the entry is acceptable
+     (the entry's name must still match `$pattern').  Returns the null
+     list if there are no matching entries.
+
+$entry = $dir->new_dir($name)
+     Creates a new subdirectory in the directory.  $name is the name of
+     the new subdirectory.  Returns the `AppleII::ProDOS::DirEntry'
+     object representing the new subdirectory entry.
+
+$entry = $dir->open_dir($dirname)
+     Opens a subdirectory of the directory.  `$dirname' may be either a
+     subdirectory name or an `AppleII::ProDOS::DirEntry' object.
+     Returns a new `AppleII::ProDOS::Directory' object.
+
+$dir->put_file($file)
+     Stores a file in the directory.  $file must be an
+     `AppleII::ProDOS::File' object.
+
+$dir->add_entry($entry)
+     Adds a new entry to the directory.  $entry is an
+     `AppleII::ProDOS::DirEntry' object.
+
+$dir->read_disk
+     Rereads the directory contents from the image file.  You can use
+     this to undo changes to a directory before they have been written
+     to the image file.
+
+$dir->write_disk
+     Writes the current directory contents to the image file.  You must
+     use this if you alter the directory contents in any way except the
+     high-level methods `new_dir' and `put_file', which do this
+     automatically.
+
+
+`AppleII::ProDOS::DirEntry'
+---------------------------
+
+`AppleII::ProDOS::DirEntry' provides access to directory entries.  It
+provides the following methods:
+
+$entry = AppleII::ProDOS::DirEntry->new([$num, $entry])
+     Constructs a new `AppleII::ProDOS::DirEntry' object.  `$num' is the
+     entry number in the directory, and $entry is the packed directory
+     entry.  If `$num' and $entry are omitted, then a blank directory
+     entry is created.  This is a low-level function; you shouldn't need
+     to explicitly construct DirEntry objects.
+
+$packed_entry = $entry->packed($key_block)
+     Return the directory entry in packed format.  `$key_block' is the
+     starting block number of the directory containing this entry.
+
+$access = $entry->access([$new])
+     Gets or sets the access attributes.  This is a bitfield with the
+     following entries:
+
+          0x80  File can be deleted
+          0x40  File can be renamed
+          0x20  File has changed since last backup
+          0x02  File can be written to
+          0x01  File can be read
+
+     Normal values are 0xC3 or 0xE3 for an unlocked file, and 0x01 for a
+     locked file.
+
+$auxtype = $entry->auxtype([$new])
+     Gets or sets the auxiliary type.  This is a number between 0x0000
+     and 0xFFFF.  Its meaning depends on the filetype.
+
+$creation_date = $entry->created([$date])
+     Gets or sets the creation date and time in ProDOS format.
+
+$modification_date = $entry->modified([$date])
+     Gets or sets the modification date and time in ProDOS format.
+
+$name = $entry->name([$new])
+     Gets or sets the filename.
+
+$type = $entry->type([$new])
+     Gets or sets the filetype.  This is a number between 0x00 and 0xFF.
+     Use `parse_type' to convert it to a more meaningful abbreviation.
+
+$type = $entry->short_type Returns the standard abbreviation for the
+filetype.  It is equivalent to calling
+`AppleII::ProDOS::parse_type($entry->type)'.  The following methods
+allow access to read-only fields.  They can be used to initialize a
+DirEntry object created with new, but raise an exception if the field
+already has a value.
+
+$block = $entry->block([$new])
+     Gets or sets the key block for the file.
+
+$used = $entry->blks_used([$new])
+     Gets or sets the number of blocks used by the file.
+
+$entry_num = $entry->num([$new])
+     Gets or sets the entry number in the directory.
+
+$size = $entry->size([$new])
+     Gets or sets the size of the file in bytes.
+
+$storage = $entry->storage([$new])
+     Gets or sets the storage type.
+
+
+NOTE
+====
+
+This is the point where I ran out of steam in documentation writing. :-)
+If I get at least one email from someone who'd actually read the rest of
+this documentation, I'll try to finish it.
+
+
+`AppleII::ProDOS::File'
+-----------------------
+
+`AppleII::ProDOS::File' represents a file's data and other attributes.
+
+
+`AppleII::ProDOS::Bitmap'
+-------------------------
+
+`AppleII::ProDOS::Bitmap' represents the volume bitmap.
+
+
+`AppleII::ProDOS::Index'
+------------------------
+
+`AppleII::ProDOS::Index' represents an index block.
+
+
+BUGS
+====
+
+   * This document isn't finished yet.  I haven't been working on it
+     recently, so I decided I might as well just release what I have.
+     If somebody writes me, I'm more likely to finish.  (That's a hint,
+     folks.)
+
+   * Mixed case filenames (ala GS/OS) are not supported.  All filenames
+     are converted to upper case.
+
+
+AUTHOR
+======
+
+Christopher J. Madsen <`ac608@yfn.ysu.edu'>
+
+
+
+
+File: pm.info, Node: Archive/Tar, Next: Array/Lookup, Prev: AppleII/ProDOS, Up: Module List
+
+module for manipulation of tar archives.
+****************************************
+
+
+
+NAME
+====
+
+Tar - module for manipulation of tar archives.
+
+
+SYNOPSIS
+========
+
+     use Tar;
+
+     $tar = Tar->new();
+     $tar->read("origin.tar.gz",1);
+     $tar->add_files("file/foo.c", "file/bar.c");
+     $tar->add_data("file/baz.c","This is the file contents");
+     $tar->write("files.tar");
+
+
+DESCRIPTION
+===========
+
+This module is definitely tentative, and several things will be changed
+rather shortly. The exported routines will not be exported [done], all
+the calls to croak() should be replaced with returning undef() and
+putting error messages in a package global [done].
+
+At the moment these methods are implemented:
+
+new()
+     Returns a new Tar object. If given a filename as an argument, it
+     will try to load that as a tar file. If given a true value as a
+     second argument, will assume that the tar file is compressed, and
+     will attempt to read it using `Compress::Zlib' in this node.
+
+`add_files(@filenamelist)'
+     Takes a list of filenames and adds them to the in-memory archive.
+
+`add_data($filename,$data,$opthashref)'
+     Takes a filename, a scalar full of data and optionally a reference
+     to a hash with specific options. Will add a file to the in-memory
+     archive, with name $filename and content `$data'. Specific options
+     can be set using `$opthashref', which will be documented later.
+
+`remove(@filenamelist)'
+     Removes any entries with names matching any of the given filenames
+     from the in-memory archive. String comparisons are done with eq.
+
+`read('`file.tar'',$compressed)'
+     Try to read the given tarfile into memory. If the second argument
+     is a true value, the tarfile is assumed to be compressed. Will
+     replace any previous content in `$tar'!
+
+`write('`file.tar'',$compressed)'
+     Will write the in-memory archive to disk. If no filename is given,
+     returns the entire formatted archive as a string, which should be
+     useful if you'd like to stuff the archive into a socket or a pipe
+     to gzip or something. If the second argument is true, the module
+     will try to write the file compressed.
+
+`data()'
+     Returns the in-memory archive. This is a list of references to
+     hashes, the internals of which is not currently documented.
+
+`extract(@filenames)'
+     Write files whose names are equivalent to any of the names in
+     `@filenames' to disk, creating subdirectories as neccesary. This
+     might not work too well under VMS and MacOS.
+
+
+CHANGES
+=======
+
+Version 0.05
+     Quoted lots of barewords to make `use strict;' stop complaining
+     under perl version 5.003.
+
+     Ties to `Compress::Zlib' in this node put in. Will warn if it isn't
+     available.
+
+     $tar->write() with no argument now returns the formatted archive.
+
+Version 0.04
+     Made changes to write_tar so that Solaris tar likes the resulting
+     archives better.
+
+     Protected the calls to readlink() and symlink(). AFAIK this module
+     should now run just fine on Windows NT.
+
+     Add method to write a single entry to disk (extract)
+
+     Added method to add entries entirely from scratch (add_data)
+
+     Changed name of add() to add_file()
+
+     All calls to croak() removed and replaced with returning undef and
+     setting Tar::error.
+
+     Better handling of tarfiles with garbage at the end.
+
+
+
+
+File: pm.info, Node: Array/Lookup, Next: Array/PrintCols, Prev: Archive/Tar, Up: Module List
+
+Lookup strings in arrays or hash tables with abbreviation.
+**********************************************************
+
+
+
+NAME
+====
+
+*Array::Lookup* - Lookup strings in arrays or hash tables with abbreviation.
+
+
+SYNOPSIS
+========
+
+     use Array::Lookup;
+
+     $value = lookup $key, \@keywords, \&notfound, \&toomany;
+
+     $value = lookup $key, \%keywords, \&notfound, \&toomany;
+
+     lookup_error $key, $keywords, $err, $msg;
+
+
+DESCRIPTION
+===========
+
+
+lookup
+------
+
+Lookup $key in the table `*@keywords*' and return the unambiguously
+matching keyword, if any.  If the second argument is given as a hash
+array, `*%keywords*', then lookup a matching key, with abbreviation, and
+return the value corresponding to the unambiguously matching key.
+
+If there are no matches, invoke `*&notfound*' like this:
+
+     &$notfound( $key, \@keywords, '');
+
+If there are two or more matches, invoke `*&toomany*' like this:
+
+     &$toomany( $key, \@keywords, \@matches);
+
+If either subroutine is omitted or null, then no special action is taken
+except that undef is returned for the failed lookup.
+
+Note that the third argument, the array of ambiguous matches, allows a
+common subroutine to be used for both error conditions and still
+distinguish the error.
+
+See `"lookup_error"' in this node for a standard method of handling
+lookup failures.
+
+
+lookup_error
+------------
+
+Handle an error for the lookup subroutine.  The arguments:
+
+$key
+     The search key which failed the lookup.
+
+$keywords
+     The hash or array reference containing the keywords none of which
+     matched the $key.
+
+$err
+     A flag indicating if the lookup failed because of no matches at all
+     (''), or if the lookup failed because of too many matches
+     (`\@matches');
+
+$msg
+     A format string used to format and print the error message.  It
+     should contain two printf substitution sequences: %s.  The first
+     will be substituted with the failed lookup key; the second with one
+     of the phrases: `"not found"' or `"is ambiguous"', depending upon
+     $err.
+
+     If $msg is omitted or null, a default message will be used:
+
+          "lookup failed: %s %s; use one of:\n"
+
+     followed by a listing of the strings in the $keywords array.
+
+
+EXAMPLES
+========
+
+
+Using arrays
+------------
+
+     use Array::Lookup;
+     ...
+     @keywords = qw(quit find get set show);
+     ...
+     $command = <STDIN>;
+     $command = lookup $command, \@keywords, 
+     	sub { lookup_error @_, "Unknown command '%s'; use one of:\n"; },
+     	sub { lookup_error @_, "Command '%s' %s; use one of:\n"; };
+
+
+Using hashes
+------------
+
+     use Array::Lookup;
+     ...
+     %Commands = ( 'quit' => \&quit,  'get' => \&get,  'set' => \&set,
+     	          'find' => \&find,  'show' => \&show );
+     ...
+     $input = <STDIN>;
+     $command_sub = lookup $input, \%Commands, 
+     	sub { lookup_error @_, "Unknown command '%s'; use one of:\n"; },
+     	sub { lookup_error @_, "Command '%s' %s; use one of:\n"; };
+
+
+SEE ALSO
+========
+
+*Note Array/PrintCols: Array/PrintCols,
+
+
+AUTHOR
+======
+
+Alan K. Stebbens <aks@hub.ucsb.edu>
+
+
+
+
+File: pm.info, Node: Array/PrintCols, Next: AtExit, Prev: Array/Lookup, Up: Module List
+
+Print array elements in vertically sorted columns.
+**************************************************
+
+
+
+NAME
+====
+
+print_cols - Print array elements in vertically sorted columns.
+
+
+SYNOPSIS
+========
+
+`use Array::PrintCols;'
+
+`print_cols \@array;'
+
+`print_cols \@array, $*colspec*;'
+
+`print_cols \@array, $*colspec*, $*total_width*;'
+
+`print_cols \@array, $*colspec*, $*total_width*, $*indent*;'
+
+`$Array::PrintCols::PreSorted = 0;'
+
+
+DESCRIPTION
+===========
+
+The `print_cols' subroutine prints the items of `@array' in multiple,
+alphabetically sorted vertical columns.  One, two, or three optional
+arguments may be given to `print_cols' to control the width and number
+of the columns, the total width of the output, and indentation.
+Reasonable defaults apply in the absence of the optional arguments (or
+when given as the empty string or zero).  Generally, the minimum width
+column is used when possible.
+
+If `$*col_width*' is given as a non-negative number, it is treated as
+the minimum width of the column; the actual width will be the maximum of
+this value and the lengths of all array items.
+
+If `$*col_width*' is given as a negative number, its absolute value
+value is used to determine the total number of columns.  However, it
+cannot exceed the total number of columns possible based on the maximum
+length of all the array elements.
+
+If a third argument is supplied, it is used as the total width of the
+output.  The default for this value is the value of the environment
+variable `$ENV{'COLUMNS'}', if defined, or 80.
+
+If the fourth argument is given, it is used as the indent for all lines
+printed, which subtracts from the total width of the output.  This value
+defaults to zero (ie: no indention of the output).
+
+The variable `$Array::PrintCols::PreSorted' controls whether or not the
+`print_cols' subroutine will expect its array argument to already be
+sorted.  If this variable is nil or zero, `print_cols' will cause print
+out a sorted copy of the input array.
+
+
+EXAMPLE
+=======
+
+     use Array::PrintCols;
+
+     @commands = sort qw( use list put get set quit help server );
+
+     # print in three columns with an indention of 1.
+     print_cols \@commands, -3, 0, 1;
+
+
+AUTHOR
+======
+
+Copyright (C) 1995 Alan K. Stebbens <aks@hub.ucsb.edu>
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+BUGS
+====
+
+With Perl, you cannot default intervening arguments by leaving them
+empty; you must supply a zero or empty-string ('').
+
+
+
+File: pm.info, Node: AtExit, Next: AutoLoader, Prev: Array/PrintCols, Up: Module List
+
+Register a subroutine to be invoked at program-exit time.
+*********************************************************
+
+
+
+NAME
+====
+
+atexit -- Register a subroutine to be invoked at program-exit time.
+
+rmexit -- Unregister a subroutine that was registered with atexit.
+
+
+SYNOPSIS
+========
+
+     use AtExit;
+
+     sub cleanup {
+         my @args = @_;
+         print "cleanup() executing: args = @args\n";
+     }
+
+     $_ = atexit(\&cleanup, "This call was registered first");
+     print "first call to atexit() returned $_\n";
+
+     $_ = atexit("cleanup", "This call was registered second");
+     print "second call to atexit() returned $_\n";
+
+     $_ = atexit("cleanup", "This call should've been unregistered by rmexit");
+     rmexit($_)  ||  warn "couldnt' unregister exit-sub $_!";
+
+     END {
+         print "*** Now performing program-exit processing ***\n";
+     }
+
+
+DESCRIPTION
+===========
+
+The *AtExit* module provides ANSI-C style exit processing modeled after
+the `atexit()' function in the standard C library (see `atexit(3C)' in
+this node).  Various exit processing routines may be registered by
+calling `atexit()' and passing it the desired subroutine along with any
+desired arguments. Then, at program-exit time, the subroutines
+registered with `atexit()' are invoked with their given arguments in the
+reverse order of registration (last one registered is invoked first).
+Registering the same subroutine more than once will cause that
+subroutine to be invoked once for each registration.
+
+The `atexit()' function exported by *AtExit* should be passed a
+subroutine name or reference, optionally followed by the list of
+arguments with which to invoke it at program-exit time.  Anonymous
+subroutine references passed to `atexit()' act as "closures" (which are
+described in *Note Perlref: (perl.info)perlref,).  If a subroutine name is specified (as
+opposed to a subroutine reference) then, unless the subroutine name has
+an explicit package prefix, it is assumed to be the name of a subroutine
+in the caller's current package.  A reference to the specified
+subroutine is obtained, and, if invocation arguments were specified, it
+is "wrapped up" in a closure which invokes the subroutine with the
+specified arguments.  The resulting subroutine reference is prepended to
+the front of the `@AtExit::EXIT_SUBS' list of exit-handling subroutines
+and the reference is then returned to the caller (just in case you might
+want to unregister it later using `rmexit()'). If the given subroutine could
+*not* be registered, then the value zero is returned.
+
+The `rmexit()' function exported by *AtExit* should be passed one or
+more subroutine references, each of which was returned by a previous
+call to `atexit()'. For each argument given, `rmexit()' will look for it
+in the `@AtExit::EXIT_SUBS' list of exit-handling subroutines and remove
+the first such match from the list. The value returned will be the
+number of subroutines that were successfully unregistered.
+
+At program-exit time, the `END{}' block in the *AtExit* module iterates
+over the subroutine references in the `@AtExit::EXIT_SUBS' array and
+invokes each one in turn (each subroutine is removed from the front of
+the queue immediately before it is invoked).  Note that the subroutines
+in this queue are invoked in first-to-last order (the reverse order in
+which they were registered with `atexit()').
+
+
+Invoking `atexit()' and `rmexit()' during program-exit
+------------------------------------------------------
+
+The variable `$AtExit::IGNORE_WHEN_EXITING' specifies how calls to
+`atexit()' will be handled if they occur during the time that
+subroutines registered with `atexit()' are being invoked.  By default,
+this variable is set to a non-zero value, which causes `atexit()' to
+*ignore* any calls made to it during this time (a value of zero
+will be returned). This behavior is consistent with that of the standard
+C library function of the same name. If desired however, the user may
+enable the registration of subroutines by `atexit()' during this time by
+setting `$AtExit::IGNORE_WHEN_EXITING' to zero or to the empty
+string. Just remember that any subroutines registered with `atexit()'
+during program-exit time will be placed at the *front* of the queue of
+yet-to-be-invoked exit-processing subroutines.
+
+Regardless of when it is invoked, `rmexit()' will *always* attempt to
+unregister the given subroutines (even when called during program-exit
+processing). Keep in mind however that if it is invoked during
+program-exit processing then it will *fail* to unregister any
+exit-processing subroutines that have *already been invoked* by the
+`END{}' block in the *AtExit* module (since those subroutine calls have
+already been removed from the `@AtExit::EXIT_SUBS' list).
+
+The variable `$AtExit::EXITING' may be examined to determine if routines
+registered using `atexit()' are currently in the process of being
+invoked. It will be non-zero if they are and zero otherwise.
+
+
+NOTES
+=====
+
+The usual Perl way of doing exit processing is through the use of
+`END{}' blocks (see `"Package Constructors and Destructors"', *Note Perlmod: (perl.info)perlmod,).
+The *AtExit* module implements its exit processing with an `END{}'
+block that invokes all the subroutines registered by `atexit()' in the
+array `@AtExit::EXIT_SUBS'.  If any other `END{}' block processing is
+specified in the user's code or in any other packages it uses, then the
+order in which the exit processing takes place is subject to Perl's
+rules for the order in which `END{}' blocks are processed. This may
+affect when subroutines registered with `atexit()' are invoked with
+respect to other exit processing that is to be performed. In particular,
+if `atexit()' is invoked from within an `END{}' block that executes
+*after* the `END{}' block in the *AtExit* module, then the corresponding
+subroutine that was registered will never be invoked by the *AtExit*
+module's exit-processing code.
+
+
+`END{}' block processing order
+------------------------------
+
+`END{}' blocks, including those in other packages, get called in the
+reverse order in which they appear in the code. (`atexit()' subroutines
+get called in the reverse order in which they are registered.) If a
+package gets read via "use", it will act as if the `END{}' block was
+defined at that particular part of the "main" code.  Packages read via
+"require" will be executed after the code of "main" has been parsed and
+will be seen last so will execute first (they get executed in the
+context of the package in which they exist).
+
+It is important to note that `END{}' blocks only get called on normal
+termination (which includes calls to `die()' or `Carp::croak()'). They
+do *not* get called when the program terminates *abnormally* (due to a
+signal for example) unless special arrangements have been made by the
+programmer (e.g. using a signal handler -- see `"%SIG{expr}"', *Note
+Perlvar: (perl.info)perlvar,).
+
+
+SEE ALSO
+========
+
+`atexit(3C)' in this node describes the `atexit()' function for the standard C
+library (the actual Unix manual section in which it appears may differ
+from platform to platform - try sections 3C, 3, 2C, and 2).  Further
+information on anonymous subroutines ("closures") may be found in
+*Note Perlref: (perl.info)perlref,.  For more information on `END{}' blocks, see
+`"Package Constructors and Destructors"', *Note Perlmod:
+(perl.info)perlmod,.  See `"%SIG{expr}"', *Note Perlvar:
+(perl.info)perlvar, for handling abnormal program termination.
+
+
+AUTHOR
+======
+
+Andrew Langmead <aml@world.std.com> (initial draft).
+
+Brad Appleton <Brad_Appleton-GBDA001@email.mot.com> (final version).
+
+
+
+
+File: pm.info, Node: AutoLoader, Next: AutoSplit, Prev: AtExit, Up: Module List
+
+load subroutines only on demand
+*******************************
+
+
+
+NAME
+====
+
+AutoLoader - load subroutines only on demand
+
+
+SYNOPSIS
+========
+
+     package Foo;
+     use AutoLoader 'AUTOLOAD';   # import the default AUTOLOAD subroutine
+
+     package Bar;
+     use AutoLoader;              # don't import AUTOLOAD, define our own
+     sub AUTOLOAD {
+         ...
+         $AutoLoader::AUTOLOAD = "...";
+         goto &AutoLoader::AUTOLOAD;
+     }
+
+
+DESCRIPTION
+===========
+
+The AutoLoader module works with the AutoSplit module and the `__END__'
+token to defer the loading of some subroutines until they are used
+rather than loading them all at once.
+
+To use AutoLoader, the author of a module has to place the definitions
+of subroutines to be autoloaded after an `__END__' token.  (See *Note
+Perldata: (perl.info)perldata,.)  The AutoSplit module can then be run
+manually to extract the definitions into individual files
+`auto/funcname.al'.
+
+AutoLoader implements an AUTOLOAD subroutine.  When an undefined
+subroutine in is called in a client module of AutoLoader, AutoLoader's
+AUTOLOAD subroutine attempts to locate the subroutine in a file with a
+name related to the location of the file from which the client module
+was read.  As an example, if `POSIX.pm' is located in
+`/usr/local/lib/perl5/POSIX.pm', AutoLoader will look for perl
+subroutines POSIX in `/usr/local/lib/perl5/auto/POSIX/*.al', where the
+`.al' file has the same name as the subroutine, sans package.  If such a
+file exists, AUTOLOAD will read and evaluate it, thus (presumably)
+defining the needed subroutine.  AUTOLOAD will then goto the newly
+defined subroutine.
+
+Once this process completes for a given funtion, it is defined, so
+future calls to the subroutine will bypass the AUTOLOAD mechanism.
+
+
+Subroutine Stubs
+----------------
+
+In order for object method lookup and/or prototype checking to operate
+correctly even when methods have not yet been defined it is necessary to
+"forward declare" each subroutine (as in `sub NAME;').  See
+`"SYNOPSIS"', *Note Perlsub: (perl.info)perlsub,.  Such forward
+declaration creates "subroutine stubs", which are place holders with no
+code.
+
+The AutoSplit and AutoLoader modules automate the creation of forward
+declarations.  The AutoSplit module creates an 'index' file containing
+forward declarations of all the AutoSplit subroutines.  When the
+AutoLoader module is 'use'd it loads these declarations into its callers
+package.
+
+Because of this mechanism it is important that AutoLoader is always used
+and not required.
+
+
+Using AutoLoader's AUTOLOAD Subroutine
+--------------------------------------
+
+In order to use AutoLoader's AUTOLOAD subroutine you *must* explicitly
+import it:
+
+     use AutoLoader 'AUTOLOAD';
+
+
+Overriding AutoLoader's AUTOLOAD Subroutine
+-------------------------------------------
+
+Some modules, mainly extensions, provide their own AUTOLOAD subroutines.
+They typically need to check for some special cases (such as constants)
+and then fallback to AutoLoader's AUTOLOAD for the rest.
+
+Such modules should *not* import AutoLoader's AUTOLOAD subroutine.
+Instead, they should define their own AUTOLOAD subroutines along these
+lines:
+
+     use AutoLoader;
+
+     sub AUTOLOAD {
+         my $constname;
+         ($constname = $AUTOLOAD) =~ s/.*:://;
+         my $val = constant($constname, @_ ? $_[0] : 0);
+         if ($! != 0) {
+             if ($! =~ /Invalid/) {
+                 $AutoLoader::AUTOLOAD = $AUTOLOAD;
+                 goto &AutoLoader::AUTOLOAD;
+             }
+             else {
+                 croak "Your vendor has not defined constant $constname";
+             }
+         }
+         eval "sub $AUTOLOAD { $val }";
+         goto &$AUTOLOAD;
+     }
+
+If any module's own AUTOLOAD subroutine has no need to fallback to the
+AutoLoader's AUTOLOAD subroutine (because it doesn't have any AutoSplit
+subroutines), then that module should not use AutoLoader at all.
+
+
+Package Lexicals
+----------------
+
+Package lexicals declared with my in the main block of a package using
+AutoLoader will not be visible to auto-loaded subroutines, due to the
+fact that the given scope ends at the `__END__' marker.  A module using
+such variables as package globals will not work properly under the
+AutoLoader.
+
+The vars pragma (see `"vars"', *Note Perlmod: (perl.info)perlmod,) may
+be used in such situations as an alternative to explicitly qualifying
+all globals with the package namespace.  Variables pre-declared with
+this pragma will be visible to any autoloaded routines (but will not be
+invisible outside the package, unfortunately).
+
+
+AutoLoader vs. SelfLoader
+-------------------------
+
+The AutoLoader is similar in purpose to SelfLoader: both delay the
+loading of subroutines.
+
+SelfLoader uses the `__DATA__' marker rather than `__END__'.  While this
+avoids the use of a hierarchy of disk files and the associated
+open/close for each routine loaded, SelfLoader suffers a startup speed
+disadvantage in the one-time parsing of the lines after `__DATA__',
+after which routines are cached.  SelfLoader can also handle multiple
+packages in a file.
+
+AutoLoader only reads code as it is requested, and in many cases should
+be faster, but requires a machanism like AutoSplit be used to create the
+individual files.  *Note ExtUtils/MakeMaker: ExtUtils/MakeMaker, will
+invoke AutoSplit automatically if AutoLoader is used in a module source
+file.
+
+
+CAVEATS
+=======
+
+AutoLoaders prior to Perl 5.002 had a slightly different interface.  Any
+old modules which use AutoLoader should be changed to the new calling
+style.  Typically this just means changing a require to a use, adding
+the explicit `'AUTOLOAD'' import if needed, and removing AutoLoader from
+`@ISA'.
+
+On systems with restrictions on file name length, the file corresponding
+to a subroutine may have a shorter name that the routine itself.  This
+can lead to conflicting file names.  The AutoSplit package warns of
+these potential conflicts when used to split a module.
+
+
+SEE ALSO
+========
+
+*Note SelfLoader: SelfLoader, - an autoloader that doesn't use external files.
+
+
+
+
+File: pm.info, Node: AutoSplit, Next: B/Graph, Prev: AutoLoader, Up: Module List
+
+split a package for autoloading
+*******************************
+
+
+
+NAME
+====
+
+AutoSplit - split a package for autoloading
+
+
+SYNOPSIS
+========
+
+     perl -e 'use AutoSplit; autosplit_lib_modules(@ARGV)' ...
+
+     use AutoSplit; autosplit($file, $dir, $keep, $check, $modtime);
+
+for perl versions 5.002 and later:
+
+     perl -MAutoSplit -e 'autosplit($ARGV[0], $ARGV[1], $k, $chk, $modtime)' ...
+
+
+DESCRIPTION
+===========
+
+This function will split up your program into files that the AutoLoader
+module can handle. It is used by both the standard perl libraries and by
+the MakeMaker utility, to automatically configure libraries for
+autoloading.
+
+The `autosplit' interface splits the specified file into a hierarchy
+rooted at the directory $dir. It creates directories as needed to
+reflect class hierarchy, and creates the file `autosplit.ix'. This file
+acts as both forward declaration of all package routines, and as
+timestamp for the last update of the hierarchy.
+
+The remaining three arguments to `autosplit' govern other options to the
+autosplitter. If the third argument, *$keep*, is false, then any
+pre-existing `*.al' files in the autoload directory are removed if they
+are no longer part of the module (obsoleted functions). The fourth
+argument, *$check*, instructs `autosplit' to check the module currently
+being split to ensure that it does include a use specification for the
+AutoLoader module, and skips the module if AutoLoader is not
+detected. Lastly, the *$modtime* argument specifies that `autosplit' is
+to check the modification time of the module against that of the
+`autosplit.ix' file, and only split the module if it is newer.
+
+Typical use of AutoSplit in the perl MakeMaker utility is via the
+command-line with:
+
+     perl -e 'use AutoSplit; autosplit($ARGV[0], $ARGV[1], 0, 1, 1)'
+
+Defined as a Make macro, it is invoked with file and directory
+arguments; `autosplit' will split the specified file into the specified
+directory and delete obsolete `.al' files, after checking first that the
+module does use the AutoLoader, and ensuring that the module is not
+already currently split in its current form (the modtime test).
+
+The `autosplit_lib_modules' form is used in the building of perl. It
+takes as input a list of files (modules) that are assumed to reside in a
+directory lib relative to the current directory. Each file is sent to
+the autosplitter one at a time, to be split into the directory
+*lib/auto*.
+
+In both usages of the autosplitter, only subroutines defined following
+the perl special marker *__END__* are split out into separate
+files. Some routines may be placed prior to this marker to force their
+immediate loading and parsing.
+
+
+CAVEATS
+=======
+
+Currently, AutoSplit cannot handle multiple package specifications
+within one file.
+
+
+DIAGNOSTICS
+===========
+
+AutoSplit will inform the user if it is necessary to create the
+top-level directory specified in the invocation. It is preferred that
+the script or installation process that invokes AutoSplit have created
+the full directory path ahead of time. This warning may indicate that
+the module is being split into an incorrect path.
+
+AutoSplit will warn the user of all subroutines whose name causes
+potential file naming conflicts on machines with drastically limited (8
+characters or less) file name length. Since the subroutine name is used
+as the file name, these warnings can aid in portability to such systems.
+
+Warnings are issued and the file skipped if AutoSplit cannot locate
+either the *__END__* marker or a "package Name;"-style specification.
+
+AutoSplit will also emit general diagnostics for inability to create
+directories or files.
+
+
+
+
+File: pm.info, Node: B/Graph, Next: BSD/Resource, Prev: AutoSplit, Up: Module List
+
+Perl compiler backend to produce graphs of OP trees
+***************************************************
+
+
+
+NAME
+====
+
+B::Graph - Perl compiler backend to produce graphs of OP trees
+
+
+SYNOPSIS
+========
+
+     perl -MO=Graph,-text prog.pl >graph.txt
+
+     perl -MO=Graph,-vcg prog.pl >graph.vcg
+     xvcg graph.vcg
+
+     perl -MO=Graph,-dot prog.pl | dot -Tps >graph.ps
+
+
+DESCRIPTION
+===========
+
+This module is a backend to the perl compiler (B::*) which, instead of
+outputting bytecode or C based on perl's compiled version of a program,
+writes descriptions in graph-description languages specifying graphs
+that show the program's structure. It currently generates descriptions
+for the VCG tool
+(`http://www.cs.uni-sb.de/RW/users/sander/html/gsvcg1.html') and Dot
+(part of the graph visualization toolkit from AT&T:
+`http://www.research.att.com/sw/tools/graphviz/'). It also can produce
+plain text output (which is more useful for debugging the module itself
+than anything else, though you might be able to make cut the nodes out
+and make a mobile or something similar).
+
+
+OPTIONS
+=======
+
+Like any other compiler backend, this module needs to be invoked using
+the O module to run correctly:
+
+     perl -MO=Graph,-opt,-opt,-opt program.pl
+     OR
+     perl -MO=Graph,-opt,obj -e 'print "Hello, world!\n"'
+     OR EVEN
+     perl -e 'use O qw(Graph -opt obj obj); print "hi!\n";'
+
+`Obj' is the name of a perl variable whose contents will be examined.
+It can't be a my() variable, and it shouldn't have a prefix symbol
+('$@^*'), though you can specify a package -- the name will be used to
+look up a GV, whose various fields will lead to the scalar, array, and
+other values that correspond to the named variable. If no object is
+specified, the whole main program, including the CV that points to its
+pad, will be displayed.
+
+Each of the the `opt's can come from one of the following (each set is
+mutually exclusive; case and underscores are insignificant):
+
+
+-text, -vcg, -dot
+-----------------
+
+Produce output of the appropriate type. The default is '-text', which
+isn't useful for much of anything (it does draw some nice ASCII boxes,
+though).
+
+
+-addrs, -no_addrs
+-----------------
+
+Each of the nodes on the graph produced corresponds to a C structure
+that has an address and includes pointers to other structures. The
+module uses these addresses to decide how to draw edges, but it makes
+the graph more compact if they aren't printed. The default is
+'-no_addrs'.
+
+
+-compile_order, -run_order
+--------------------------
+
+The collection of OPs that perl compiles a script into has two different
+layers of structure. It has a tree structure which corresponds roughly
+to the synactic nesting of constructs in the source text, and a roughly
+linked-list representation, essentially a postorder traversal of this
+tree, which is used at runtime to decide what to do next.  The graph can
+be drawn to emphasize one structure or the other. The former,
+'compile_order', is the default, as it tends to lead to graphs with
+aspect ratios close to those of standard paper.
+
+
+-SVs, -no_SVs
+-------------
+
+If OPs represent a program's compiled code, SVs represent its data. This
+includes literal numbers and strings (IVs, NVs, PVs, PVIVs, and PVNVs),
+regular arrays, hashes, and references (AVs, HVs, and RVs), but also the
+structures that correspond to individual variables (special HVs for
+symbol tables and GVs to represent values within them, and special AVs
+that hold my() variables (as well as compiler temporaries)), structures
+that keep track of code (CVs), and a variety of others. The default is
+to display all these too, to give a complete picture, but if you aren't
+in a holistic mood, you can make them disappear.
+
+
+-ellipses, -rhombs
+------------------
+
+The module tries to give the nodes representing SVs a different shape
+from those of OPs. OPs are usually rectangular, so two obvious shapes
+for SVs are ellipses and rhombuses (stretched diamonds). This option
+currently only makes a difference for VCG (ellipse is the default).
+
+
+-stashes, -no_stashes
+---------------------
+
+The hashes that perl uses to represent symbol tables are called
+'stashes'.  Since every GV has a pointer back to its stash, it's
+virtually inevitable for the links in a graph to lead to the main
+stash. Unfortunately stashes, especially the main one, can be quite big,
+and lead to forests of other structures -- there's one GV and another SV
+for each magic variable, plus all of @INC and %ENV, and so on. To
+prevent information overload, then, the display of stashes is disabled
+by default.
+
+
+WHAT DOES THIS ALL MEAN?
+========================
+
+
+SvFLAGS abbreviations
+---------------------
+
+     Pb     SVs_PADBUSY   reserved for tmp or my already
+     Pt     SVs_PADTMP    in use as tmp
+     Pm     SVs_PADMY     in use a "my" variable
+     T      SVs_TEMP      string is stealable?
+     O      SVs_OBJECT    is "blessed"
+     Mg     SVs_GMG       has magical get method
+     Ms     SVs_SMG       has magical set method
+     Mr     SVs_RMG       has random magical methods
+     I      SVf_IOK       has valid public integer value
+     N      SVf_NOK       has valid public numeric (float) value
+     P      SVf_POK       has valid public pointer (string) value
+     R      SVf_ROK       has a valid reference pointer
+     F      SVf_FAKE      glob or lexical is just a copy
+     L      SVf_OOK       has valid offset value (mnemonic: lvalue)
+     B      SVf_BREAK     refcnt is artificially low
+     Ro     SVf_READONLY  may not be modified
+     (i)    SVp_IOK       has valid non-public integer value
+     (n)    SVp_NOK       has valid non-public numeric value
+     (p)    SVp_POK       has valid non-public pointer value
+     S      SVp_SCREAM    has been studied?
+     V      SVf_AMAGIC    has magical overloaded methods
+
+
+op_flags abbreviations
+----------------------
+
+     V      OPf_WANT_VOID    Want nothing (void context)
+     S      OPf_WANT_SCALAR  Want single value (scalar context)
+     L      OPf_WANT_LIST    Want list of any length (list context)
+     K      OPf_KIDS         There is a firstborn child.
+     P      OPf_PARENS       This operator was parenthesized.
+                              (Or block needs explicit scope entry.)
+     R      OPf_REF          Certified reference.
+                              (Return container, not containee).
+     M      OPf_MOD          Will modify (lvalue).
+     T      OPf_STACKED      Some arg is arriving on the stack.
+     *      OPf_SPECIAL      Do something weird for this op (see op.h)        
+
+
+AUTHOR
+======
+
+Stephen McCamant <alias@mcs.com>
+
+
+SEE ALSO
+========
+
+`dot(1)' in this node, `xvcg(1)' in this node, `perl(1)' in this node,
+`perlguts(1)' in this node.
+
+
+
+
